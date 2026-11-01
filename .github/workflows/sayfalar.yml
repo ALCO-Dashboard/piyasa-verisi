@@ -39,7 +39,7 @@ jobs:
 
       - name: Gerekli paketleri kur
         run: |
-          pip install requests cryptography certifi
+          pip install requests cryptography certifi openpyxl
           npm install --no-save --no-audit --no-fund xlsx@0.18.5
 
       - name: Yayındaki siteyi al

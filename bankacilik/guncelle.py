@@ -531,6 +531,18 @@ def main():
         json.dump(D[f], open(os.path.join(veri_dizin, f + ".json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
         if os.path.exists(os.path.join(veri_dizin, f + ".enc.json")):
             os.remove(os.path.join(veri_dizin, f + ".enc.json"))
+    try:                                                             # Yatırım Vekaleti piyasa verisi (elle yüklenen Excel)
+        sys.path.insert(0, KOK)
+        import yv
+        g = yv.derle(os.path.join(KOK, "yv"))
+        yol = os.path.join(veri_dizin, "yv.json")
+        if g:
+            json.dump({"groups": {g["code"]: g}}, open(yol, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+            log(f"Yatırım vekaleti: {len(g['series'])} seri, son {g['dates'][-1]}")
+        elif os.path.exists(yol):
+            os.remove(yol)
+    except Exception as e:
+        log(f"Yatırım vekaleti verisi derlenemedi: {type(e).__name__}: {e}")
     html = open(os.path.join(KOK, "sayfa.html"), encoding="utf-8").read()
     html = html.replace("/*PARA_POLITIKASI*/", open(os.path.join(KOK, "para_politikasi.js"), encoding="utf-8").read(), 1)
     html = html.replace("<body>", "<body>" + MENU, 1) if "<body>" in html else MENU + html

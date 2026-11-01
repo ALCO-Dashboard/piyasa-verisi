@@ -123,6 +123,13 @@ input[type=search]{border:1px solid var(--line);background:var(--surface);border
 .split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;align-items:start}
 @media (max-width:900px){.split{grid-template-columns:minmax(0,1fr)}}
 .up{color:var(--up)} .down{color:var(--down)}
+.tdata .tdb{display:flex;justify-content:flex-end;margin-top:4px}
+.tdw{margin-top:8px;max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.tdw table{font-size:11.5px;width:100%;border-collapse:collapse}
+.tdw th,.tdw td{padding:4px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.tdw th{text-transform:none;letter-spacing:0;position:sticky;top:0;background:var(--surface);font-weight:600;white-space:normal;min-width:90px;vertical-align:bottom;font-size:11px;line-height:1.25}
+.tdw th:first-child,.tdw td:first-child{text-align:left;color:var(--muted);min-width:70px}
+.tdw th i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
 .tflt{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:2px 0 10px}
 .tflt .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
 .tflt .seg button{border:0;background:none;padding:7px 18px;font:inherit;font-weight:600;font-size:13.5px;color:var(--ink-2);cursor:pointer}
@@ -214,6 +221,7 @@ td .sm.up{color:var(--up)} td .sm.down{color:var(--down)}
 /* TCMB yerleşimi */
 .tlayout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:14px;align-items:start}
 @media (max-width:900px){.tlayout{grid-template-columns:minmax(0,1fr)}.tnav{position:static;max-height:none}}
+@media print{.tlayout:not(.hidden),.stack:not(.hidden){display:block!important}.stack>*{margin-bottom:12px}.chart svg{max-height:330px}.tnav,.tdata .tdb,details.tser:not([open]){display:none!important}}
 .tnav{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px;position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto}
 .tsec summary{list-style:none;cursor:pointer;margin:4px 0;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);display:flex;gap:8px;align-items:flex-start}
 .tsec summary::-webkit-details-marker{display:none}
@@ -388,7 +396,7 @@ async function decrypt(env, password) {
   const key = await crypto.subtle.deriveKey({ name: "PBKDF2", hash: "SHA-256", salt: b64(env.salt), iterations: env.iter || 250000 }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
   return gunzip(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(env.iv) }, key, b64(env.ct)));
 }
-const FILES = ["bddk_haftalik", "bddk_aylik", "evds", "politika"];
+const FILES = ["bddk_haftalik", "bddk_aylik", "evds", "politika", "yv"];
 async function fetchJSON(u) { const r = await fetch(u, { cache: "no-cache" }); if (!r.ok) throw new Error(r.status); return r.json(); }
 async function loadAll() {
   const out = {};
@@ -401,7 +409,7 @@ const S = {
   tab: "bddk",
   bFreq: store.get("bv.freq") || "w", bA: null, bB: null, bGroups: (store.get("bv.groups") || "katilim").split(","), bCur: store.get("bv.cur") || "Toplam", bTables: {},
   bColOverride: {}, bChk: {}, bIdx: {}, bOpenN: new Set(),
-  tSub: "pp", tTopics: {}, tAB: {}, tClosed: new Set(), tBank: store.get("bv.tbank") || "katilim", tA: null, tB: null, tSel: {}, tRange: "1Y", tCur: {}, tTyp: {}, tOpen: new Set(),
+  tSub: "pp", tTopics: {}, tAB: {}, tClosed: new Set(), tBank: store.get("bv.tbank") || "katilim", tA: null, tB: null, tSel: {}, tRange: "1Y", tCur: {}, tTyp: {}, tOpen: new Set(), tData: new Set(),
   aSel: [], aIndex: false, aRange: "2Y", aSrc: "all",
 };
 let D = null;
@@ -853,6 +861,8 @@ const TOPICS = {
       { id: "kartmetre", name: "BKM kartlı ödeme endeksi", g: { genel: "bie_kartmetre" } },
       { id: "kart_tutar", name: "Banka ve kredi kartı harcama tutarı", g: { genel: "bie_kkhartut" } },
       { id: "kart_adet", name: "Banka ve kredi kartı işlem adedi", g: { genel: "bie_kkislade" } } ] },
+    { section: "Yatırım Vekaleti Piyasa Verisi", items: [
+      { id: "yv_piyasa", name: "Yatırım vekaleti oranları (özel / kamu)", g: { genel: "yv_piyasa" } } ] },
   ],
   aylik: [
     { section: "Bilançolar", items: [
@@ -899,7 +909,7 @@ function tSections() {
 const tHas = (it, bank) => !!(it.g[bank] || it.g.genel);
 function tBanks() { const ks = new Set(tSections().flatMap(s => s.items.flatMap(it => Object.keys(it.g)))); return GROUPS.filter(g => ks.has(g.key)); }
 function defaultSel(g) {
-  const pref = { bie_kt100h: ["TP.KTF17", "TP.KTFTUK", "TP.KTF12"], bie_kt200h: ["TP.KBK.TRY.1", "TP.KBK.TRY.KBTFTUK", "TP.KBK.TRY.18"], bie_mt100h: ["TP.TRY.MT06", "TP.TRY.MT02", "TP.TRY.MT05"], bie_mt200h: ["TP.KBH.TRY.30", "TP.KBH.TRY.6", "TP.KBH.TRY.2128"], bie_hpbitablo5: ["TP.HPBITABLO5.1", "TP.HPBITABLO5.12"] }[g.code];
+  const pref = { bie_kt100h: ["TP.KTF17", "TP.KTFTUK", "TP.KTF12"], bie_kt200h: ["TP.KBK.TRY.1", "TP.KBK.TRY.KBTFTUK", "TP.KBK.TRY.18"], bie_mt100h: ["TP.TRY.MT06", "TP.TRY.MT02", "TP.TRY.MT05"], bie_mt200h: ["TP.KBH.TRY.30", "TP.KBH.TRY.6", "TP.KBH.TRY.2128"], yv_piyasa: ["YV.TRY.ON.OZEL", "YV.TRY.ON.KAMU", "YV.TRY.1A.OZEL", "YV.TRY.1A.KAMU"], bie_hpbitablo5: ["TP.HPBITABLO5.1", "TP.HPBITABLO5.12"] }[g.code];
   const have = (pref || []).filter(c => g.vals[c]);
   if (have.length) return have;
   const tot = g.series.filter(s => /TOPLAM/i.test(s.name) && g.vals[s.code]).slice(0, 3).map(s => s.code);
@@ -920,14 +930,14 @@ function tResolve(it) {
   return [D.e.groups[it.g[nb]], `${gName(S.tBank)} için yayımlanmıyor, ${gName(nb)} gösteriliyor`];
 }
 // Seri adından para birimi (TL/ABD doları/Euro) ve mevduat türü (Mevduat/Tasarruf/Ticari)
-const CUR_ORD = ["TRY", "USD", "EUR"], CUR_LAB = { TRY: "TRY", USD: "USD", EUR: "EUR" }, TYP_ORD = ["Mevduat", "Tasarruf", "Ticari"];
+const CUR_ORD = ["TRY", "USD", "EUR"], CUR_LAB = { TRY: "TRY", USD: "USD", EUR: "EUR" }, TYP_ORD = ["Mevduat", "Tasarruf", "Ticari", "Özel", "Kamu"];
 function tMeta(g) {
   if (g.meta) return g.meta;
   const meta = {};
   for (const s of g.series) {
     const n = s.name || "";
     const cur = /\(\s*TL\b/.test(n) ? "TRY" : /\(\s*Euro\b/i.test(n) ? "EUR" : /\(\s*ABD dolar/i.test(n) ? "USD" : null;
-    const typ = /Mevduat/i.test(n) ? (/Tasarruf/i.test(n) ? "Tasarruf" : /Ticari/i.test(n) ? "Ticari" : "Mevduat") : null;
+    const typ = /Mevduat/i.test(n) ? (/Tasarruf/i.test(n) ? "Tasarruf" : /Ticari/i.test(n) ? "Ticari" : "Mevduat") : /Özel Bankalar/.test(n) ? "Özel" : /Kamu Bankaları/.test(n) ? "Kamu" : null;
     meta[s.code] = { cur, typ, base: n.replace(/\s*\(\s*(TL|Euro|ABD doları)[\s,)][\s\S]*$/i, "").trim() };
   }
   const has = (k, ord) => ord.filter(x => g.series.some(s => meta[s.code][k] === x));
@@ -937,7 +947,7 @@ function tMeta(g) {
 function tFilter(g) {
   const meta = tMeta(g), code = g.code;
   if (g.curs.length > 1 && !g.curs.includes(S.tCur[code])) S.tCur[code] = g.curs.includes("TRY") ? "TRY" : g.curs[0];
-  if (g.typs.length > 1 && !(S.tTyp[code] || []).length) S.tTyp[code] = [g.typs.includes("Mevduat") ? "Mevduat" : g.typs[0]];
+  if (g.typs.length > 1 && !(S.tTyp[code] || []).length) S.tTyp[code] = g.typs.includes("Mevduat") ? ["Mevduat"] : g.typs.slice();
   const cur = S.tCur[code], typs = S.tTyp[code] || [];
   return c => { const m = meta[c]; if (!m) return true; return (g.curs.length < 2 || !m.cur || m.cur === cur) && (g.typs.length < 2 || !m.typ || typs.includes(m.typ)); };
 }
@@ -991,9 +1001,19 @@ function drawTChart(code) {
   if (!sel.length) { sub.textContent = ""; el.innerHTML = '<div class="empty">Grafikte göstermek için tablodan seri işaretleyin.</div>'; return; }
   let series = sel.map((c, i) => ({ name: g.idx[c]?.name || c, color: pal[i], data: clipT(g.dates.map((d, k) => [d, ok(g.vals[c][k]) ? g.vals[c][k] * sc : null, toTime(d)]), S.tRange) }));
   const mx = Math.max(0, ...series.flatMap(s => s.data.map(p => Math.abs(p[1] || 0)))), as = axisScale(g.kind, mx);
+  const raw = series.map(s => ({ name: s.name, color: s.color, data: s.data }));
   series.forEach(s => s.data = s.data.map(p => [p[0], ok(p[1]) ? p[1] / as.k : null, p[2]]));
   sub.textContent = as.lab + ((S.tSel[code] || []).length > 8 ? " · grafikte ilk 8 seri" : "");
   lineChart(el, { series, yFmt: v => nf(as.d).format(v) });
+  // "Veri" düğmesi: grafikteki serilerin değerleri, çizgi renkleriyle
+  const open = S.tData.has(code), foot = el.appendChild(Object.assign(document.createElement("div"), { className: "tdata" }));
+  foot.innerHTML = `<div class="tdb"><button class="chip sm" data-tdata="${code}" aria-pressed="${open}">${open ? "Veriyi gizle" : "Veri"}</button></div>`;
+  if (open) {
+    const ds = [...new Set(raw.flatMap(s => s.data.filter(p => ok(p[1])).map(p => p[0])))].sort().reverse();
+    const mp = raw.map(s => Object.fromEntries(s.data.map(p => [p[0], p[1]])));
+    const unit = g.kind === "pct" ? "%" : g.kind === "tl" ? "milyon TL" : g.kind === "usd" ? "milyon ABD doları" : "";
+    foot.insertAdjacentHTML("beforeend", `<div class="tdw"><table><thead><tr><th>Tarih${unit ? ` <small>${unit}</small>` : ""}</th>${raw.map(s => `<th style="color:${s.color}"><i style="background:${s.color}"></i>${esc(s.name)}</th>`).join("")}</tr></thead><tbody>${ds.map(d => `<tr><td>${dShort(d)}</td>${mp.map((m, i) => `<td style="color:${raw[i].color}">${fmtFull(m[d], g.kind)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+  }
 }
 function renderTcmb() {
   $$("#tSub button").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === S.tSub));
@@ -1026,6 +1046,7 @@ function bindTcmb() {
   });
   $("#tPanels").addEventListener("click", e => {
     const q = e.target.closest("button[data-q]"); if (q) { S.tAB[q.dataset.q].A = +q.dataset.i; renderTcmb(); return; }
+    const td = e.target.closest("button[data-tdata]"); if (td) { const c = td.dataset.tdata; S.tData.has(c) ? S.tData.delete(c) : S.tData.add(c); drawTChart(c); return; }
     const cu = e.target.closest("button[data-cur]"); if (cu) {
       const code = cu.closest("article").dataset.g, g = D.e.groups[code], nc = cu.dataset.cur;
       S.tSel[code] = [...new Set((S.tSel[code] || []).map(c => tTwin(g, c, nc, null)).filter(Boolean))]; S.tCur[code] = nc; renderTcmb(); return; }
@@ -1055,6 +1076,7 @@ $("#tabs").onclick = e => {
 let rz, lastW = innerWidth; addEventListener("resize", () => { if (Math.abs(innerWidth - lastW) < 40) return; lastW = innerWidth; clearTimeout(rz); rz = setTimeout(renderPane, 150); });
 
 function start(raw) {
+  if (raw.yv && raw.yv.groups) { raw.evds = raw.evds || { groups: {} }; Object.assign(raw.evds.groups, raw.yv.groups); }
   D = { w: modelWeekly(raw.bddk_haftalik), m: modelMonthly(raw.bddk_aylik), e: prepEvds(raw.evds), p: raw.politika || null };
   if (!D.w && D.m) S.bFreq = "m";
   if (S.bFreq === "m" && !D.m && D.w) S.bFreq = "w";
