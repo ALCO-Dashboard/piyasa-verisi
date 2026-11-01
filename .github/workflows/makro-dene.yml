@@ -4,7 +4,7 @@ on:
     branches: [makro-veri]
     paths: ["makro/guncelle.py", ".github/workflows/makro-dene.yml"]
 permissions:
-  contents: read
+  contents: write
 jobs:
   dene:
     runs-on: ubuntu-latest
@@ -35,7 +35,10 @@ jobs:
           print('GRUPLAR', sorted(D.get('tufe',{}).get('groups',{}))); g=D.get('tufe',{}).get('groups',{}); k=sorted(g)[-1] if g else None; print(k, g.get(k) if k else None)
           print('RAPOR', D.get('rapor'))
           PY
-      - uses: actions/upload-artifact@v4
-        with:
-          name: makro
-          path: out/makro/data/makro.json
+      - name: Test verisini dala yaz
+        run: |
+          cd out
+          git init -q -b makro-test-data
+          git config user.name bot; git config user.email bot@users.noreply.github.com
+          git add -A; git commit -q -m test
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" makro-test-data

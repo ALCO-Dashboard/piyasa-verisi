@@ -142,10 +142,10 @@ button.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(-
   </section>
   <section id="pPiyasa" class="hidden">
     <div class="subtabs" role="group" aria-label="Piyasa konu"><button aria-pressed="true">Faiz &amp; Swap</button></div>
-    <h2 class="sec">Gecelik referans oranlar ve TPP</h2>
+    <h2 class="sec">Gecelik oranlar ve hacim</h2>
     <div class="kpis" id="pKpi"></div>
     <div class="card">
-      <div class="cardhead"><div><h3>TLREF · TLREFK · TPP O/N</h3><div class="sub">Oranlar sol eksen (%), TPP O/N işlem hacmi sağ eksen (milyar TL)</div></div><span class="chips" id="pRange"></span></div>
+      <div class="cardhead"><div><h3>TLREF · TLREFK · Repo O/N · TPP O/N</h3><div class="sub">Oranlar sol eksen (%), işlem hacmi sağ eksen (milyar TL)</div></div><span class="chips" id="pRange"></span></div>
       <div class="legend" id="pLeg"></div>
       <div class="chart" id="pChart"></div>
     </div>
@@ -174,7 +174,7 @@ const pp = v => ok(v) ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v), 2)
 
 let D = null;
 const S = { tab: "makro", inf: "tufe", mode: "yoy", infR: "2Y", sel: null, bkR: "3Y", pR: "6A",
-  bkOn: { pk_yilsonu: 1, pk_12ay: 1, reel_12ay: 1, hh_12ay: 1, tufe: 1 }, pOn: { tlref: 1, tlrefk: 1, tpp: 1, vol: 1 } };
+  bkOn: { pk_yilsonu: 1, pk_12ay: 1, reel_12ay: 1, hh_12ay: 1, tufe: 1 }, pOn: { tlref: 1, tlrefk: 1, bistrepo: 1, tpp: 1, vol_repo: 1, vol_tpp: 1 } };
 
 // ---------------------------------------------------------------- grafik
 function niceTicks(a, b, n) {
@@ -328,11 +328,18 @@ function renderBk() {
 
 // ---------------------------------------------------------------- piyasa
 const P_R = [["1A", 31], ["3A", 92], ["6A", 183], ["1Y", 366], ["Tümü", 1e5]];
-const PS = [["tlref", "TLREF", "--c1"], ["tlrefk", "TLREFK", "--c3"], ["tpp", "TPP O/N (ağ. ort.)", "--c2"], ["vol", "TPP O/N hacim", "--bar"]];
+const PS = [["tlref", "TLREF", "--c1"], ["tlrefk", "TLREFK", "--c3"], ["bistrepo", "BIST Repo O/N", "--c6"], ["tpp", "TPP O/N", "--c2"]];
+const PV = [["vol_repo", "BIST Repo O/N hacim", "bistrepo", "--vol"], ["vol_tpp", "TPP O/N hacim", "tpp", "--c4"]];
 function renderPiyasa() {
   const kp = [], son = (d, k = "rate") => { if (!d?.dates?.length) return null; const i = d.dates.length - 1; return { v: d[k][i], p: d[k][i - 1], t: d.dates[i], i }; };
   for (const [k, ad, c] of [["tlref", "TLREF", "--c1"], ["tlrefk", "TLREFK", "--c3"]]) { const x = son(D[k]); if (!x) continue;
     kp.push(`<div class="kpi" style="--kc:var(${c})"><div class="t">${ad} · gecelik</div><div class="v">${pct(x.v, 4)}</div><div class="s">Önceki güne göre <span class="${cls(x.v - x.p, 1e-6)}">${bp(ok(x.p) ? (x.v - x.p) / 100 : null)}</span></div><div class="d">${gunAd(x.t)} · Borsa İstanbul</div></div>`); }
+  const r = son(D.bistrepo);
+  if (r) {
+    const v = D.bistrepo.vol_tl[r.i];
+    kp.push(`<div class="kpi" style="--kc:var(--c6)"><div class="t">BIST Repo O/N · ağırlıklı ort.</div><div class="v">${pct(r.v)}</div><div class="s">Önceki güne göre <span class="${cls(r.v - r.p, 1e-6)}">${bp(ok(r.p) ? (r.v - r.p) / 100 : null)}</span></div><div class="d">${gunAd(r.t)} · Borsa İstanbul (EVDS)</div></div>`);
+    kp.push(`<div class="kpi" style="--kc:var(--bar)"><div class="t">BIST Repo O/N · işlem hacmi</div><div class="v">${ok(v) ? "₺" + nf(v / 1e12, 2) + " tr" : "—"}</div><div class="s">${ok(v) ? "₺" + nf(v / 1e9, 0) + " milyar" : ""}</div><div class="d">${gunAd(r.t)} · Borsa İstanbul (EVDS)</div></div>`);
+  }
   const t = son(D.tpp);
   if (t) {
     kp.push(`<div class="kpi" style="--kc:var(--c2)"><div class="t">TPP O/N · ağırlıklı ort. oran</div><div class="v">${pct(t.v)}</div><div class="s">En düşük <b>${pct(D.tpp.min[t.i])}</b> · en yüksek <b>${pct(D.tpp.max[t.i])}</b></div><div class="d">${gunAd(t.t)} · Takasbank</div></div>`);
@@ -341,22 +348,22 @@ function renderPiyasa() {
   }
   $("#pKpi").innerHTML = kp.join("") || '<div class="empty">Piyasa verisi henüz yok.</div>';
   rangeChips($("#pRange"), P_R, S.pR, k => { S.pR = k; renderPiyasa(); });
-  $("#pLeg").innerHTML = PS.filter(([k]) => k === "vol" ? D.tpp : D[k]).map(([k, ad, c]) => `<button class="chip ${S.pOn[k] ? "" : "off"}" data-k="${k}" aria-pressed="${!!S.pOn[k]}"><i style="background:var(${c})"></i>${ad}</button>`).join("");
+  $("#pLeg").innerHTML = [...PS.filter(([k]) => D[k]?.dates?.length), ...PV.filter(x => D[x[2]]?.dates?.length).map(([k, ad, , c]) => [k, ad, c])].map(([k, ad, c]) => `<button class="chip ${S.pOn[k] ? "" : "off"}" data-k="${k}" aria-pressed="${!!S.pOn[k]}"><i style="background:var(${c})"></i>${ad}</button>`).join("");
   $("#pLeg").onclick = e => { const x = e.target.closest("button[data-k]"); if (!x) return; S.pOn[x.dataset.k] = S.pOn[x.dataset.k] ? 0 : 1; renderPiyasa(); };
-  const all = [...new Set(["tlref", "tlrefk", "tpp"].flatMap(k => D[k]?.dates || []))].sort();
+  const all = [...new Set(["tlref", "tlrefk", "bistrepo", "tpp"].flatMap(k => D[k]?.dates || []))].sort();
   if (!all.length) { $("#pChart").innerHTML = '<div class="empty">Veri yok.</div>'; return; }
   const gun = P_R.find(r => r[0] === S.pR)[1], bas = new Date(Date.parse(all[all.length - 1]) - gun * 864e5).toISOString().slice(0, 10), xs = all.filter(d => d >= bas);
   const map = (d, k) => { if (!d) return xs.map(() => null); const o = {}; d.dates.forEach((t, i) => o[t] = d[k][i]); return xs.map(t => o[t] ?? null); };
   const series = [];
-  if (S.pOn.vol && D.tpp) series.push({ name: "TPP O/N hacim", type: "bar", axis: "r", color: css("--vol"), vals: map(D.tpp, "vol_tl").map(v => ok(v) ? v / 1e9 : null), fmt: v => "₺" + nf(v, 1) + " mr" });
-  for (const [k, ad, c] of PS.slice(0, 3)) if (S.pOn[k] && D[k]) series.push({ name: ad, color: css(c), span: true, vals: map(D[k], "rate"), fmt: v => pct(v, k === "tpp" ? 2 : 4) });
+  for (const [k, ad, src, c] of PV) if (S.pOn[k] && D[src]?.dates?.length) series.push({ name: ad, type: "bar", axis: "r", color: css(c), vals: map(D[src], "vol_tl").map(v => ok(v) ? v / 1e9 : null), fmt: v => "₺" + nf(v, 1) + " mr" });
+  for (const [k, ad, c] of PS) if (S.pOn[k] && D[k]?.dates?.length) series.push({ name: ad, color: css(c), span: true, vals: map(D[k], "rate"), fmt: v => pct(v, k === "tlref" || k === "tlrefk" ? 4 : 2) });
   chart($("#pChart"), { xs, series, height: 340, xFmt: gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd, yFmt: v => nf(v, v % 1 ? 1 : 0), y2Fmt: v => nf(v, 0), rScale: 2.2, label: "Gecelik oranlar ve TPP hacmi" });
 }
 
 // ---------------------------------------------------------------- akış
 function renderSrc() {
   const f = (D.failed || []).length ? ` · son çekimde alınamayan: ${D.failed.join(", ")} (önceki veri gösteriliyor)` : "";
-  $("#src").innerHTML = `Kaynaklar: <a href="https://veriportali.tuik.gov.tr" target="_blank" rel="noopener">TÜİK Veri Portalı</a> (TÜFE, Yİ-ÜFE) · <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> (Piyasa Katılımcıları Anketi, sektörel enflasyon beklentileri) · TCMB (enflasyon hedefleri, Enflasyon Raporu) · <a href="https://www.borsaistanbul.com/endeksler/tlref" target="_blank" rel="noopener">Borsa İstanbul</a> (TLREF, TLREFK) · <a href="https://www.takasbank.com.tr/tr/istatistikler/takasbank-para-piyasasi-tpp/tpp-islem-ortalamalari-raporu" target="_blank" rel="noopener">Takasbank</a> (TPP O/N). Son güncelleme ${D.updated ? new Date(D.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${f}.`;
+  $("#src").innerHTML = `Kaynaklar: <a href="https://veriportali.tuik.gov.tr" target="_blank" rel="noopener">TÜİK Veri Portalı</a> (TÜFE, Yİ-ÜFE) · <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> (Piyasa Katılımcıları Anketi, sektörel enflasyon beklentileri) · TCMB (enflasyon hedefleri, Enflasyon Raporu) · <a href="https://www.borsaistanbul.com/endeksler/tlref" target="_blank" rel="noopener">Borsa İstanbul</a> (TLREF, TLREFK) · Borsa İstanbul Repo Pazarı O/N (TCMB EVDS) · <a href="https://www.takasbank.com.tr/tr/istatistikler/takasbank-para-piyasasi-tpp/tpp-islem-ortalamalari-raporu" target="_blank" rel="noopener">Takasbank</a> (TPP O/N). Son güncelleme ${D.updated ? new Date(D.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${f}.`;
 }
 function render() {
   $$("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === S.tab));
