@@ -6,12 +6,15 @@ on:
   schedule:
     - cron: "15 4 * * *"      # her gün 07:15 (Türkiye saati)
     - cron: "15 13 * * 4,5"   # perşembe ve cuma 16:15: haftalık bülten genelde bu günlerde çıkar
+    - cron: "40 7 3-5 * *"    # ayın 3-5'i 10:40: TÜİK enflasyon bülteni
+    - cron: "45 14 * * 1-5"   # hafta içi 17:45: TLREF / repo günlük verisi
   push:
     branches: [main]
     paths:
       - "katilim/**"
       - "bankacilik/**"
       - "ortak/**"
+      - "makro/**"
       - "sayfa.html"
   workflow_dispatch:
 
@@ -39,7 +42,7 @@ jobs:
 
       - name: Gerekli paketleri kur
         run: |
-          pip install requests cryptography certifi openpyxl
+          pip install requests cryptography certifi openpyxl pypdf
           npm install --no-save --no-audit --no-fund xlsx@0.18.5
 
       - name: Yayındaki siteyi al
@@ -56,6 +59,12 @@ jobs:
           SITE_PASSWORD: ${{ secrets.SITE_PASSWORD }}
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: python bankacilik/guncelle.py --cek --site site
+
+      - name: Makro ve piyasa verisini çek
+        continue-on-error: true
+        env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: python makro/guncelle.py --site site
 
       - name: Ortak dosyaları ve TEFAS sayfasını kopyala
         run: |

@@ -161,7 +161,7 @@ const AYU = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağusto
 const NF = {}; const nf = (v, d = 2) => (NF[d] ||= new Intl.NumberFormat("tr-TR", { minimumFractionDigits: d, maximumFractionDigits: d })).format(v);
 const ok = v => v != null && isFinite(v);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-const pct = (v, d = 2) => ok(v) ? "%" + nf(v, d) : "—";
+const pct = (v, d = 2) => ok(v) ? (v < 0 ? "−%" : "%") + nf(Math.abs(v), d) : "—";
 const ayAd = m => m ? `${AYU[+m.slice(5, 7) - 1]} ${m.slice(0, 4)}` : "—";
 const ayKisa = m => `${AY[+m.slice(5, 7) - 1]} ${m.slice(2, 4)}`;
 const gunAd = d => d ? `${+d.slice(8, 10)} ${AY[+d.slice(5, 7) - 1]} ${d.slice(0, 4)}` : "—";
@@ -169,7 +169,7 @@ const gunKisa = d => `${+d.slice(8, 10)} ${AY[+d.slice(5, 7) - 1]}`;
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
 const cls = (v, e = 1e-9) => !ok(v) || Math.abs(v) < e ? "" : v > 0 ? "up" : "down";
-const bp = v => ok(v) ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v) * 100, 0)} bp` : "—";
+const bp = v => { if (!ok(v)) return "—"; const b = Math.round(v * 100); return `${b > 0 ? "+" : b < 0 ? "−" : ""}${nf(Math.abs(b), 0)} bp`; };
 const pp = v => ok(v) ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v), 2)} puan` : "—";
 
 let D = null;
@@ -194,7 +194,7 @@ function chart(el, o) {
   const m = { t: 10, r: hasR ? 58 : 14, b: 26, l: 52 };
   const ext = ax => { const v = ser.filter(s => (s.axis || "l") === ax).flatMap(s => s.vals.filter(ok)); if (!v.length) return null; let lo = Math.min(...v), hi = Math.max(...v);
     if (ser.some(s => (s.axis || "l") === ax && s.type === "bar") || o.zero) { lo = Math.min(0, lo); hi = Math.max(0, hi); }
-    const pad = (hi - lo) * .08 || 1; return [lo < 0 || o.zero ? lo - (lo < 0 ? pad : 0) : lo - pad, hi + pad]; };
+    const pad = (hi - lo) * .08 || 1, z = ser.some(s => (s.axis || "l") === ax && s.type === "bar") || o.zero; return [z ? (lo < 0 ? lo - pad : 0) : lo - pad, hi + pad]; };
   const L = ext("l"), R = hasR ? ext("r") : null;
   const tl = L ? niceTicks(L[0], L[1], 5) : [], tr = R ? niceTicks(Math.max(0, R[0]), R[1], 5) : [];
   const yl0 = L ? Math.min(L[0], tl[0]) : 0, yl1 = L ? Math.max(L[1], tl[tl.length - 1]) : 1;
@@ -333,11 +333,11 @@ const PV = [["vol_repo", "BIST Repo O/N hacim", "bistrepo", "--vol"], ["vol_tpp"
 function renderPiyasa() {
   const kp = [], son = (d, k = "rate") => { if (!d?.dates?.length) return null; const i = d.dates.length - 1; return { v: d[k][i], p: d[k][i - 1], t: d.dates[i], i }; };
   for (const [k, ad, c] of [["tlref", "TLREF", "--c1"], ["tlrefk", "TLREFK", "--c3"]]) { const x = son(D[k]); if (!x) continue;
-    kp.push(`<div class="kpi" style="--kc:var(${c})"><div class="t">${ad} · gecelik</div><div class="v">${pct(x.v, 4)}</div><div class="s">Önceki güne göre <span class="${cls(x.v - x.p, 1e-6)}">${bp(ok(x.p) ? (x.v - x.p) / 100 : null)}</span></div><div class="d">${gunAd(x.t)} · Borsa İstanbul</div></div>`); }
+    kp.push(`<div class="kpi" style="--kc:var(${c})"><div class="t">${ad} · gecelik</div><div class="v">${pct(x.v, 4)}</div><div class="s">Önceki güne göre <span class="${cls(x.v - x.p, 1e-6)}">${bp(ok(x.p) ? x.v - x.p : null)}</span></div><div class="d">${gunAd(x.t)} · Borsa İstanbul</div></div>`); }
   const r = son(D.bistrepo);
   if (r) {
     const v = D.bistrepo.vol_tl[r.i];
-    kp.push(`<div class="kpi" style="--kc:var(--c6)"><div class="t">BIST Repo O/N · ağırlıklı ort.</div><div class="v">${pct(r.v)}</div><div class="s">Önceki güne göre <span class="${cls(r.v - r.p, 1e-6)}">${bp(ok(r.p) ? (r.v - r.p) / 100 : null)}</span></div><div class="d">${gunAd(r.t)} · Borsa İstanbul (EVDS)</div></div>`);
+    kp.push(`<div class="kpi" style="--kc:var(--c6)"><div class="t">BIST Repo O/N · ağırlıklı ort.</div><div class="v">${pct(r.v)}</div><div class="s">Önceki güne göre <span class="${cls(r.v - r.p, 1e-6)}">${bp(ok(r.p) ? r.v - r.p : null)}</span></div><div class="d">${gunAd(r.t)} · Borsa İstanbul (EVDS)</div></div>`);
     kp.push(`<div class="kpi" style="--kc:var(--bar)"><div class="t">BIST Repo O/N · işlem hacmi</div><div class="v">${ok(v) ? "₺" + nf(v / 1e12, 2) + " tr" : "—"}</div><div class="s">${ok(v) ? "₺" + nf(v / 1e9, 0) + " milyar" : ""}</div><div class="d">${gunAd(r.t)} · Borsa İstanbul (EVDS)</div></div>`);
   }
   const t = son(D.tpp);
@@ -362,7 +362,8 @@ function renderPiyasa() {
 
 // ---------------------------------------------------------------- akış
 function renderSrc() {
-  const f = (D.failed || []).length ? ` · son çekimde alınamayan: ${D.failed.join(", ")} (önceki veri gösteriliyor)` : "";
+  const fl = (D.failed || []).filter(x => x !== "tpp"), f = (fl.length ? ` · son çekimde alınamayan: ${fl.join(", ")} (önceki veri gösteriliyor)` : "")
+    + (D.tpp?.dates?.length ? "" : " · TPP O/N: Takasbank otomatik erişime izin vermiyor; rapor Excel olarak yüklenirse gösterilir");
   $("#src").innerHTML = `Kaynaklar: <a href="https://veriportali.tuik.gov.tr" target="_blank" rel="noopener">TÜİK Veri Portalı</a> (TÜFE, Yİ-ÜFE) · <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> (Piyasa Katılımcıları Anketi, sektörel enflasyon beklentileri) · TCMB (enflasyon hedefleri, Enflasyon Raporu) · <a href="https://www.borsaistanbul.com/endeksler/tlref" target="_blank" rel="noopener">Borsa İstanbul</a> (TLREF, TLREFK) · Borsa İstanbul Repo Pazarı O/N (TCMB EVDS) · <a href="https://www.takasbank.com.tr/tr/istatistikler/takasbank-para-piyasasi-tpp/tpp-islem-ortalamalari-raporu" target="_blank" rel="noopener">Takasbank</a> (TPP O/N). Son güncelleme ${D.updated ? new Date(D.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${f}.`;
 }
 function render() {
