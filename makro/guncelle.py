@@ -6,7 +6,9 @@ Kaynaklar
     sektörel enflasyon beklentileri (piyasa, reel sektör, hanehalkı 12 ay sonrası)
   - TCMB: enflasyon hedefleri tablosu ve en güncel Enflasyon Raporu'ndaki yıl sonu tahminleri / ara hedefler
   - Borsa İstanbul: TLREF ve TLREFK
-  - Takasbank: TPP işlem ortalamaları (yalnızca O/N): oran ve hacim
+  - Borsa İstanbul Repo Pazarı O/N (EVDS): ağırlıklı ortalama oran ve hacim
+  - Takasbank: TPP işlem ortalamaları (yalnızca O/N): oran ve hacim. Takasbank bulut sunucularını engellediği için
+    doğrudan alınamazsa makro/tpp/*.xlsx (rapordan kopyalanan tablo) kullanılır
 
 Kullanım: python makro/guncelle.py --site site   (EVDS anahtarı EVDS_API_KEY ortam değişkeninden)
 Önceki çıktı (site/makro/data/makro.json) varsa üzerine eklenir; bir kaynak çekilemezse eski verisi korunur.
@@ -225,6 +227,34 @@ def beklentiler(anahtar):
             "codes": BEKLENTI, "updated": simdi(), "source": "TCMB EVDS (bie_pkauo, bie_enfbek)"}
 
 
+def bist_repo(anahtar):
+    """Borsa İstanbul Repo Pazarı gecelik: ağırlıklı ortalama faiz ve işlem hacmi (EVDS bie_onrepofbap)."""
+    s = oturum()
+    s.headers.update({"key": anahtar})
+    kod = ["TP.AOFOBAP", "TP.IHBAP"]
+    out, bas, bit = {}, dt.date(2019, 1, 1), dt.date.today()
+    while bas <= bit:
+        son = min(bit, bas + dt.timedelta(days=364))
+        r = s.get(EVDS + f"series={'-'.join(kod)}&startDate={bas:%d-%m-%Y}&endDate={son:%d-%m-%Y}&type=json", timeout=120, allow_redirects=False)
+        if r.status_code == 403:
+            raise RuntimeError("EVDS anahtarı reddedildi (EVDS_API_KEY)")
+        r.raise_for_status()
+        for it in r.json().get("items", []):
+            mm = re.match(r"^(\d{2})-(\d{2})-(\d{4})$", it.get("Tarih", ""))
+            if not mm:
+                continue
+            g = f"{mm.group(3)}-{mm.group(2)}-{mm.group(1)}"
+            for c in kod:
+                v = it.get(c.replace(".", "_"))
+                if v not in (None, "", "ND"):
+                    out.setdefault(g, {})[c] = float(v)
+        bas = son + dt.timedelta(days=1)
+        time.sleep(0.3)
+    tarih = sorted(t for t in out if "TP.AOFOBAP" in out[t])
+    return {"dates": tarih, "rate": [out[t]["TP.AOFOBAP"] for t in tarih], "vol_tl": [out[t].get("TP.IHBAP") for t in tarih],
+            "updated": simdi(), "source": "Borsa İstanbul Repo Pazarı O/N (TCMB EVDS, bie_onrepofbap)"}
+
+
 # ------------------------------------------------------------------ TCMB hedef ve Enflasyon Raporu
 def tablo_satirlari(html):
     out = []
@@ -324,36 +354,6 @@ def bist_oran(s, tip):
 TPP_URL = "https://www.takasbank.com.tr/tr/istatistikler/takasbank-para-piyasasi-tpp/tpp-islem-ortalamalari-raporu"
 
 
-class TppTarayici:
-    """Takasbank bot korumasını (F5) geçmek için sayfayı gerçek tarayıcıda açar, raporu sayfa içinden ister."""
-    def __enter__(self):
-        from playwright.sync_api import sync_playwright
-        self.pw = sync_playwright().start()
-        self.br = self.pw.chromium.launch(headless=not os.environ.get("DISPLAY"), args=["--disable-blink-features=AutomationControlled"])
-        ctx = self.br.new_context(user_agent=UA, locale="tr-TR", timezone_id="Europe/Istanbul", viewport={"width": 1366, "height": 900})
-        ctx.add_init_script("Object.defineProperty(navigator,'webdriver',{get:()=>undefined})")
-        self.pg = ctx.new_page()
-        self.pg.goto(TPP_URL, wait_until="domcontentloaded", timeout=90000)
-        try:
-            self.pg.wait_for_selector("input[name=posturl]", state="attached", timeout=60000)
-        except Exception:
-            metin = re.sub(r"\s+", " ", self.pg.content())[:800]
-            self.__exit__()
-            raise RuntimeError(f"TPP sayfası açılmadı (bot koruması olabilir): {metin}")
-        return self
-
-    def rapor(self, bas, son):
-        return self.pg.evaluate("""async ([b, e]) => {
-            const f = [...document.forms].find(x => x.querySelector('[name=posturl]'));
-            const fd = new FormData(f); fd.set('startDate', b); fd.set('endDate', e);
-            const r = await fetch(f.action, {method: 'POST', body: new URLSearchParams(fd)});
-            return await r.text(); }""", [bas, son])
-
-    def __exit__(self, *a):
-        self.br.close()
-        self.pw.stop()
-
-
 class TppIstek:
     def __enter__(self):
         self.s = oturum()
@@ -373,14 +373,51 @@ class TppIstek:
         pass
 
 
+def tpp_excel(onceki):
+    """makro/tpp/*.xlsx: Takasbank TPP İşlem Ortalamaları raporundan kopyalanan tablo (İşlem Tarihi, Gün, Min, Max, Ort, Hacim TL, Hacim USD, Sayı)."""
+    import glob
+    veri = {}
+    for i, t in enumerate(onceki.get("dates", [])):
+        veri[t] = {k: onceki[k][i] for k in ("rate", "min", "max", "vol_tl", "vol_usd", "count") if k in onceki}
+    dosyalar = sorted(glob.glob(os.path.join(KOK, "tpp", "*.xls*")))
+    if not dosyalar:
+        return None
+    import openpyxl
+    for yol in dosyalar:
+        wb = openpyxl.load_workbook(yol, data_only=True)
+        for ws in wb.worksheets:
+            for r in ws.iter_rows(values_only=True):
+                r = list(r)
+                if len(r) < 8 or r[0] is None:
+                    continue
+                t = r[0]
+                if isinstance(t, (dt.datetime, dt.date)):
+                    g = (t.date() if isinstance(t, dt.datetime) else t).isoformat()
+                else:
+                    m = re.match(r"(\d{2})\.(\d{2})\.(\d{4})", str(t).strip())
+                    if not m:
+                        continue
+                    g = f"{m.group(3)}-{m.group(2)}-{m.group(1)}"
+                if str(r[1]).upper().replace(" ", "") not in ("O/N", "ON"):
+                    continue
+                f = lambda x: x if isinstance(x, (int, float)) else sayi(x)
+                veri[g] = {"min": f(r[2]), "max": f(r[3]), "rate": f(r[4]), "vol_tl": f(r[5]), "vol_usd": f(r[6]), "count": f(r[7])}
+    tarih = sorted(t for t in veri if veri[t].get("rate") is not None)
+    log(f"   TPP Excel: {len(dosyalar)} dosya, {len(tarih)} gün")
+    return {"dates": tarih, **{k: [veri[t].get(k) for t in tarih] for k in ("rate", "min", "max", "vol_tl", "vol_usd", "count")},
+            "updated": simdi(), "source": "Takasbank, TPP İşlem Ortalamaları (O/N) · elle yüklenen Excel", "url": TPP_URL}
+
+
 def tpp_cek(onceki):
     try:
         with TppIstek() as k:
             return _tpp(k, onceki)
     except Exception as e:
-        log(f"   TPP doğrudan istek olmadı ({e}); tarayıcıyla deneniyor")
-    with TppTarayici() as k:
-        return _tpp(k, onceki)
+        log(f"   TPP doğrudan alınamadı: {str(e)[:160]}")
+    x = tpp_excel(onceki)
+    if x:
+        return x
+    raise RuntimeError("Takasbank bulut sunucularından gelen isteği reddediyor; makro/tpp/ klasörüne Excel yüklenebilir")
 
 
 def _tpp(k, onceki):
@@ -433,6 +470,7 @@ def main():
         ("rapor", lambda: enflasyon_raporu(s)),
         ("tlref", lambda: bist_oran(s, "tlref")),
         ("tlrefk", lambda: bist_oran(s, "tlrefk")),
+        ("bistrepo", lambda: bist_repo(anahtar) if anahtar else (_ for _ in ()).throw(RuntimeError("EVDS_API_KEY yok"))),
         ("tpp", lambda: tpp_cek(D.get("tpp", {}))),
     ]
     secim = set(x for x in a.sadece.split(",") if x)
@@ -462,7 +500,7 @@ def main():
         from durum import yaz
         if D.get("tufe", {}).get("months"):
             yaz(a.site, "tufe", D["tufe"]["months"][-1])
-        son_p = [D[k]["dates"][-1] for k in ("tlref", "tpp") if D.get(k, {}).get("dates")]
+        son_p = [D[k]["dates"][-1] for k in ("tlref", "bistrepo", "tpp") if D.get(k, {}).get("dates")]
         if son_p:
             yaz(a.site, "piyasa", max(son_p))
     except Exception as e:

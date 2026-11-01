@@ -15,12 +15,11 @@ jobs:
         with:
           python-version: "3.12"
       - run: |
-          pip install requests pypdf playwright
-          python -m playwright install --with-deps chromium
+          pip install requests pypdf openpyxl
       - name: Çek
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
-        run: xvfb-run -a python makro/guncelle.py --site out --sadece tpp
+        run: python makro/guncelle.py --site out
       - name: Özet
         run: |
           python - <<'PY'
