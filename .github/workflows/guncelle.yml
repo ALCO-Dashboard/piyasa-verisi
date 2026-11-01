@@ -25,7 +25,7 @@ jobs:
           python-version: "3.12"
 
       - name: Gerekli paketleri kur
-        run: pip install requests cryptography
+        run: pip install requests cryptography openpyxl
 
       - name: Önceki veriyi al
         run: |

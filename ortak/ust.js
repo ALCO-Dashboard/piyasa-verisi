@@ -15,10 +15,42 @@
   const saved = get("alco-theme") || get("fd-theme") || get("bv.theme"); if (saved) root.dataset.theme = saved;
   const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
   // sayfanın temasını t'ye getir (TEFAS kendi düğmesiyle grafikleri de yeniden çizer)
-  window.alcoTema = t => {
+  const temaUygula = t => {
     if ((t === "dark") !== isDark()) { const thm = document.getElementById("thm"); if (PAGE === "tefas" && thm) thm.click(); }
-    root.dataset.theme = t; set("alco-theme", t); set("fd-theme", t); set("bv.theme", t);
-    window.dispatchEvent(new Event("resize"));
+    root.dataset.theme = t; window.dispatchEvent(new Event("resize"));
+  };
+  window.alcoTema = t => { temaUygula(t); set("alco-theme", t); set("fd-theme", t); set("bv.theme", t); };
+
+  // PDF: sayfayı açık temada, başlıklı ve A4 yatay olarak yazdır ("PDF olarak kaydet")
+  const AD = { banka: "Bankacılık Verileri", katilim: "Katılım Bülteni", tefas: "TEFAS Verileri" };
+  const AYU = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+  document.head.appendChild(Object.assign(document.createElement("style"), { textContent: `
+#alcoPrintHead{display:none}
+@page{size:A3 landscape;margin:9mm}
+@media print{
+  html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#fff!important}
+  #alcoTop,header.alco-top,#atPdf,.at-noprint{display:none!important}
+  details:not([open]){display:none!important}
+  #alcoPrintHead{display:flex!important;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #c8102e;padding:0 0 6px;margin:0 0 10px;font-family:"DM Sans",system-ui,sans-serif;color:#1c1416}
+  #alcoPrintHead b{font-size:15px;font-weight:800}#alcoPrintHead b span{color:#c8102e}#alcoPrintHead small{display:block;font-size:11px;color:#7a6a6c}
+  #alcoPrintHead em{font-style:normal;font-size:12px;color:#7a6a6c;text-align:right}
+  .card,article,.box{break-inside:avoid}
+}` }));
+  window.alcoPdf = () => {
+    const now = new Date(), ad = AD[PAGE] || "Piyasa Verileri";
+    let h = document.getElementById("alcoPrintHead");
+    if (!h) { h = document.createElement("div"); h.id = "alcoPrintHead"; document.body.insertBefore(h, document.body.firstChild); }
+    h.innerHTML = `<div><b><span>DOST KATILIM</span> - PİYASA VERİLERİ (ALCO)</b><small>${ad}</small></div><em>${now.getDate()} ${AYU[now.getMonth()]} ${now.getFullYear()}<br>Veri Takip Dashboard</em>`;
+    const eskiT = document.title, eskiTema = root.dataset.theme, koyu = isDark();
+    document.title = `ALCO - ${ad} - ${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    if (koyu) temaUygula("light");
+    const bitti = () => {
+      document.title = eskiT;
+      if (koyu) { if (eskiTema) temaUygula(eskiTema); else { temaUygula("dark"); delete root.dataset.theme; } }
+      window.removeEventListener("afterprint", bitti);
+    };
+    window.addEventListener("afterprint", bitti);
+    setTimeout(() => window.print(), koyu || PAGE === "tefas" ? 1500 : 300);   // grafikler yeniden çizilsin
   };
   if (EMBED) {
     host.remove();
@@ -78,6 +110,7 @@ ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
   host.innerHTML = `<header class="alco-top"><div class="at-in"><div class="at-r1">
     <div class="at-brand"><b><span>DOST KATILIM</span> - PİYASA VERİLERİ (ALCO)</b><small>Veri Takip Dashboard</small></div>
     <div class="at-date"><b>${fmt(now)}</b><small id="atPpk">&nbsp;</small></div>
+    <button type="button" class="at-btn" id="atPdf" title="Bu sayfayı PDF olarak kaydet (yazdır → PDF olarak kaydet)">⤓ PDF</button>
     <button type="button" class="at-btn" id="atTheme"></button>
     <div class="at-fr" id="atFr"><button type="button" class="at-btn" id="atFrBtn" aria-expanded="false"><span class="dot"></span>Veri durumu</button></div>
   </div><nav class="at-tabs" aria-label="Bölümler">${TABS.map(([k, n, p]) => `<a href="${SHELL ? "#" + k : ROOT + "#" + k}" data-k="${k}"${k === PAGE ? ' aria-current="page"' : ""}>${n}<span class="b" hidden></span></a>`).join("")}</nav></div></header>`;
@@ -89,6 +122,11 @@ ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
     const t = isDark() ? "light" : "dark";
     window.alcoTema(t); lab();
     if (SHELL) document.querySelectorAll("#alcoFrames iframe").forEach(f => { try { f.contentWindow.alcoTema && f.contentWindow.alcoTema(t); } catch (e) {} });
+  };
+
+  document.getElementById("atPdf").onclick = () => {
+    if (SHELL) { const f = [...document.querySelectorAll("#alcoFrames iframe")].find(x => !x.hidden); try { if (f && f.contentWindow.alcoPdf) return f.contentWindow.alcoPdf(); } catch (e) {} if (f) { try { f.contentWindow.print(); return; } catch (e) {} } }
+    window.alcoPdf();
   };
 
   if (SHELL) { // tek sayfa: sekmeler iframe; bir kez açılan sekme bellekte kalır, geçiş anında olur
