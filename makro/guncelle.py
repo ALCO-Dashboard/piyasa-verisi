@@ -275,27 +275,28 @@ def enflasyon_raporu(s):
         r = s.get(taban + str(yil), timeout=60)
         if r.status_code != 200:
             continue
-        linkler = re.findall(r'href="([^"]*Enflasyon\+Raporu\+%d\+-\+(I{1,3}V?|IV))"' % yil, r.text)
-        if not linkler:
-            continue
+        linkler = re.findall(r'href="([^"]*Enflasyon\+Raporu\+%d\+-\+(IV|I{1,3})/?)"' % yil, r.text)
         sira = {"I": 1, "II": 2, "III": 3, "IV": 4}
-        href, no = max(linkler, key=lambda x: sira.get(x[1], 0))
-        sayfa_url = href if href.startswith("http") else TCMB + href
-        p = s.get(sayfa_url, timeout=60)
-        p.raise_for_status()
-        baslik = re.search(r"<title>\s*TCMB - ([^<]+)</title>", p.text)
-        m = re.search(r"Orta Vadeli [ÖöOo]ng[öo]r[üu]ler[\s\S]{0,600}?href=\"([^\"]+\.pdf[^\"]*)\"", p.text)
-        if not m:
-            raise RuntimeError("Enflasyon Raporu: Orta Vadeli Öngörüler PDF bağlantısı yok")
-        pdf_url = htmlmod.unescape(m.group(1))
-        pdf_url = pdf_url if pdf_url.startswith("http") else TCMB + pdf_url
-        pdf = s.get(pdf_url, timeout=120)
-        pdf.raise_for_status()
-        tah, ara = rapor_tahmin(pdf_metin(pdf.content))
-        if not tah:
-            raise RuntimeError("Enflasyon Raporu: tahmin cümlesi bulunamadı")
-        return {"ad": htmlmod.unescape(baslik.group(1)).strip() if baslik else f"Enflasyon Raporu {yil} - {no}",
-                "url": sayfa_url, "pdf": pdf_url, "tahmin": tah, "ara_hedef": ara, "updated": simdi(), "otomatik": True}
+        for href, no in sorted(set(linkler), key=lambda x: -sira.get(x[1], 0)):   # en yeniden eskiye; henüz yayımlanmamışı atla
+            sayfa_url = href if href.startswith("http") else TCMB + href
+            p = s.get(sayfa_url, timeout=60)
+            if p.status_code != 200:
+                continue
+            baslik = re.search(r"<title>\s*TCMB - ([^<]+)</title>", p.text)
+            m = re.search(r"Orta Vadeli [ÖöOo]ng[öo]r[üu]ler[\s\S]{0,800}?href=\"([^\"]+\.pdf[^\"]*)\"", p.text)
+            if not m:
+                log(f"   {yil}-{no}: Orta Vadeli Öngörüler PDF'i yok (henüz yayımlanmamış olabilir)")
+                continue
+            pdf_url = htmlmod.unescape(m.group(1))
+            pdf_url = pdf_url if pdf_url.startswith("http") else TCMB + pdf_url
+            pdf = s.get(pdf_url, timeout=120)
+            pdf.raise_for_status()
+            tah, ara = rapor_tahmin(pdf_metin(pdf.content))
+            if not tah:
+                log(f"   {yil}-{no}: tahmin cümlesi bulunamadı")
+                continue
+            return {"ad": htmlmod.unescape(baslik.group(1)).strip() if baslik else f"Enflasyon Raporu {yil} - {no}",
+                    "url": sayfa_url, "pdf": pdf_url, "tahmin": tah, "ara_hedef": ara, "updated": simdi(), "otomatik": True}
     raise RuntimeError("Enflasyon Raporu sayfası bulunamadı")
 
 
@@ -323,14 +324,59 @@ def bist_oran(s, tip):
 TPP_URL = "https://www.takasbank.com.tr/tr/istatistikler/takasbank-para-piyasasi-tpp/tpp-islem-ortalamalari-raporu"
 
 
+class TppTarayici:
+    """Takasbank bot korumasını (F5) geçmek için sayfayı gerçek tarayıcıda açar, raporu sayfa içinden ister."""
+    def __enter__(self):
+        from playwright.sync_api import sync_playwright
+        self.pw = sync_playwright().start()
+        self.br = self.pw.chromium.launch()
+        self.pg = self.br.new_page(user_agent=UA, locale="tr-TR")
+        self.pg.goto(TPP_URL, wait_until="networkidle", timeout=90000)
+        self.pg.wait_for_selector("input[name=posturl]", state="attached", timeout=60000)
+        return self
+
+    def rapor(self, bas, son):
+        return self.pg.evaluate("""async ([b, e]) => {
+            const f = [...document.forms].find(x => x.querySelector('[name=posturl]'));
+            const fd = new FormData(f); fd.set('startDate', b); fd.set('endDate', e);
+            const r = await fetch(f.action, {method: 'POST', body: new URLSearchParams(fd)});
+            return await r.text(); }""", [bas, son])
+
+    def __exit__(self, *a):
+        self.br.close()
+        self.pw.stop()
+
+
+class TppIstek:
+    def __enter__(self):
+        self.s = oturum()
+        r = self.s.get(TPP_URL, timeout=60)
+        form = re.search(r'<form[^>]*>(?:(?!</form>)[\s\S])*?name="posturl"[\s\S]*?</form>', r.text)
+        if r.status_code != 200 or not form:
+            raise RuntimeError(f"TPP: form yok (HTTP {r.status_code}, {len(r.text)} bayt)")
+        self.alanlar = dict(re.findall(r'name="([^"]+)"[^>]*?value="([^"]*)"', form.group(0)))
+        return self
+
+    def rapor(self, bas, son):
+        p = self.s.post(TPP_URL, data={**self.alanlar, "startDate": bas, "endDate": son}, headers={"Referer": TPP_URL}, timeout=90)
+        p.raise_for_status()
+        return p.text
+
+    def __exit__(self, *a):
+        pass
+
+
 def tpp_cek(onceki):
-    s = oturum()
-    r = s.get(TPP_URL, timeout=60)
-    r.raise_for_status()
-    form = re.search(r'<form[^>]*>(?:(?!</form>)[\s\S])*?name="posturl"[\s\S]*?</form>', r.text)
-    if not form:
-        raise RuntimeError("TPP: rapor formu bulunamadı (sayfa yapısı değişmiş ya da erişim engellendi)")
-    alanlar = dict(re.findall(r'name="([^"]+)"[^>]*?value="([^"]*)"', form.group(0)))
+    try:
+        with TppIstek() as k:
+            return _tpp(k, onceki)
+    except Exception as e:
+        log(f"   TPP doğrudan istek olmadı ({e}); tarayıcıyla deneniyor")
+    with TppTarayici() as k:
+        return _tpp(k, onceki)
+
+
+def _tpp(k, onceki):
     veri = {}
     for i, t in enumerate(onceki.get("dates", [])):
         veri[t] = {k: onceki[k][i] for k in ("rate", "min", "max", "vol_tl", "vol_usd", "count") if k in onceki}
@@ -338,11 +384,9 @@ def tpp_cek(onceki):
     bas = (dt.date.fromisoformat(max(veri)) - dt.timedelta(days=10)) if veri else dt.date(2023, 1, 1)
     while bas <= bugun:
         son = min(bugun, (bas.replace(day=1) + dt.timedelta(days=32)).replace(day=1) - dt.timedelta(days=1))
-        govde = {**alanlar, "startDate": f"{bas:%d.%m.%Y}", "endDate": f"{son:%d.%m.%Y}"}
-        p = s.post(TPP_URL, data=govde, headers={"Referer": TPP_URL}, timeout=90)
-        p.raise_for_status()
+        metin = k.rapor(f"{bas:%d.%m.%Y}", f"{son:%d.%m.%Y}")
         n = 0
-        for h in tablo_satirlari(p.text):
+        for h in tablo_satirlari(metin):
             if len(h) >= 8 and re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", h[0]) and h[1].upper().replace(" ", "") in ("O/N", "ON"):
                 g = dt.datetime.strptime(h[0], "%d.%m.%Y").date().isoformat()
                 veri[g] = {"min": sayi(h[2]), "max": sayi(h[3]), "rate": sayi(h[4]),
