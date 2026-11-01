@@ -1,0 +1,38 @@
+name: Makro deneme
+on:
+  push:
+    branches: [makro-veri]
+    paths: ["makro/guncelle.py", ".github/workflows/makro-dene.yml"]
+permissions:
+  contents: read
+jobs:
+  dene:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install requests pypdf
+      - name: Çek
+        env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: python makro/guncelle.py --site out
+      - name: Özet
+        run: |
+          python - <<'PY'
+          import json
+          D=json.load(open('out/makro/data/makro.json'))
+          for k,v in D.items():
+              if isinstance(v,dict):
+                  ks=list(v.keys())
+                  info={kk:(len(vv) if isinstance(vv,(list,dict)) else vv) for kk,vv in v.items() if kk in ('months','dates','rows','groups','tahmin','ara_hedef','ad')}
+                  last={kk:(vv[-1] if isinstance(vv,list) and vv else None) for kk,vv in v.items() if kk in ('months','dates','yoy','mom','rate','vol_tl','pk_yilsonu','pk_12ay','reel_12ay','hh_12ay')}
+                  print(k, info, last)
+              else: print(k, v)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: makro
+          path: out/makro/data/makro.json
