@@ -329,10 +329,17 @@ class TppTarayici:
     def __enter__(self):
         from playwright.sync_api import sync_playwright
         self.pw = sync_playwright().start()
-        self.br = self.pw.chromium.launch()
-        self.pg = self.br.new_page(user_agent=UA, locale="tr-TR")
-        self.pg.goto(TPP_URL, wait_until="networkidle", timeout=90000)
-        self.pg.wait_for_selector("input[name=posturl]", state="attached", timeout=60000)
+        self.br = self.pw.chromium.launch(headless=not os.environ.get("DISPLAY"), args=["--disable-blink-features=AutomationControlled"])
+        ctx = self.br.new_context(user_agent=UA, locale="tr-TR", timezone_id="Europe/Istanbul", viewport={"width": 1366, "height": 900})
+        ctx.add_init_script("Object.defineProperty(navigator,'webdriver',{get:()=>undefined})")
+        self.pg = ctx.new_page()
+        self.pg.goto(TPP_URL, wait_until="domcontentloaded", timeout=90000)
+        try:
+            self.pg.wait_for_selector("input[name=posturl]", state="attached", timeout=60000)
+        except Exception:
+            metin = re.sub(r"\s+", " ", self.pg.content())[:800]
+            self.__exit__()
+            raise RuntimeError(f"TPP sayfası açılmadı (bot koruması olabilir): {metin}")
         return self
 
     def rapor(self, bas, son):
@@ -353,7 +360,7 @@ class TppIstek:
         r = self.s.get(TPP_URL, timeout=60)
         form = re.search(r'<form[^>]*>(?:(?!</form>)[\s\S])*?name="posturl"[\s\S]*?</form>', r.text)
         if r.status_code != 200 or not form:
-            raise RuntimeError(f"TPP: form yok (HTTP {r.status_code}, {len(r.text)} bayt)")
+            raise RuntimeError(f"TPP: form yok (HTTP {r.status_code}, {len(r.text)} bayt): {re.sub(r'<[^>]+>|\\s+', ' ', r.text)[:300]}")
         self.alanlar = dict(re.findall(r'name="([^"]+)"[^>]*?value="([^"]*)"', form.group(0)))
         return self
 

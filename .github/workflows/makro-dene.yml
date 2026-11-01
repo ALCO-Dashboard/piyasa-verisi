@@ -20,7 +20,7 @@ jobs:
       - name: Çek
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
-        run: python makro/guncelle.py --site out --sadece rapor,tpp,tufe
+        run: xvfb-run -a python makro/guncelle.py --site out --sadece tpp
       - name: Özet
         run: |
           python - <<'PY'

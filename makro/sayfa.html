@@ -1,1 +1,378 @@
-<!doctype html><title>makro</title>
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Makro ve Piyasa Verileri · ALCO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --page:#f4f5f7; --surface:#ffffff; --surface-2:#f8f8f6; --ink:#1a1d26; --ink-2:#4f4e4a; --muted:#85837d;
+  --grid:#e7e6e0; --axis:#c3c2b7; --line:rgba(11,11,11,.10); --accent:#c8102e; --accent-wash:#fdecee;
+  --up:#0b7a0b; --down:#c62828; --bar:#9aa3b5; --bar-hi:#c8102e; --vol:rgba(110,120,140,.28);
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#eda100; --c5:#e87ba4; --c6:#6250d6; --c7:#008300;
+  --mono:"DM Mono","SF Mono",ui-monospace,Menlo,monospace; --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark; --page:#0f1012; --surface:#1a1a19; --surface-2:#222220; --ink:#f0efec; --ink-2:#c3c2b7; --muted:#8f8d86;
+  --grid:#2c2c2a; --axis:#3d3d3a; --line:rgba(255,255,255,.10); --accent:#f0525f; --accent-wash:#3a171b;
+  --up:#3fbf3f; --down:#ef6b6b; --bar:#5d6577; --bar-hi:#f0525f; --vol:rgba(160,170,190,.25);
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#9085e9; --c7:#1f9a1f;}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --page:#0f1012; --surface:#1a1a19; --surface-2:#222220; --ink:#f0efec; --ink-2:#c3c2b7; --muted:#8f8d86;
+  --grid:#2c2c2a; --axis:#3d3d3a; --line:rgba(255,255,255,.10); --accent:#f0525f; --accent-wash:#3a171b;
+  --up:#3fbf3f; --down:#ef6b6b; --bar:#5d6577; --bar-hi:#f0525f; --vol:rgba(160,170,190,.25);
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#9085e9; --c7:#1f9a1f;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+button,select{font:inherit;color:inherit}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.wrap{max-width:1500px;margin:0 auto;padding-inline:16px}
+.top .wrap{padding-block:20px 0}
+.brandtitle{margin:0;font-family:Archivo,var(--sans);font-size:26px;font-weight:800;letter-spacing:.03em;line-height:1.15;text-transform:uppercase;border-bottom:2px solid var(--ink);padding-bottom:10px}
+nav.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+nav.tabs button{font-family:Archivo,var(--sans);font-weight:700;font-size:15px;letter-spacing:.02em;text-transform:uppercase;padding:13px 10px;border:1px solid var(--line);border-bottom:3px solid var(--line);border-radius:10px;background:var(--surface);color:var(--muted);cursor:pointer}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-color:var(--accent);background:var(--accent-wash)}
+main.wrap{padding-block:16px 48px}
+.subtabs{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);margin-bottom:14px}
+.subtabs button{border:0;background:none;padding:9px 18px;font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer}
+.subtabs button+button{border-left:1px solid var(--line)}
+.subtabs button[aria-pressed="true"]{background:var(--accent);color:#fff}
+h2.sec{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px;display:flex;align-items:center;gap:10px}
+h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--kc,var(--line));border-radius:12px;padding:12px 14px;text-align:left;min-width:0}
+button.kpi{cursor:pointer;width:100%}
+button.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent);border-top-color:var(--accent)}
+.kpi .t{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-family:var(--mono);font-size:26px;font-weight:500;line-height:1.2;margin-top:4px;color:var(--ink)}
+.kpi .s{font-size:12.5px;color:var(--ink-2);margin-top:3px}
+.kpi .s b{font-family:var(--mono);font-weight:500}
+.kpi .d{font-size:11.5px;color:var(--muted);margin-top:2px}
+.up{color:var(--up)}.down{color:var(--down)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px;min-width:0}
+.cardhead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.cardhead h3{margin:0;font-size:15px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
+.cardhead .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13.5px;line-height:1.2;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-wash);font-weight:600}
+.chip i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.chip.off{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:6px 14px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.chart{position:relative;margin-top:6px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.axis text{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:8px 10px;font-size:12.5px;min-width:170px;z-index:5;display:none}
+.tip b{display:block;font-size:12px;margin-bottom:4px}
+.tip .r{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:12px}
+.tip .r span:first-child{font-family:var(--sans);color:var(--ink-2)}
+.tip .r i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
+.note{font-size:12.5px;color:var(--muted)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:14px;align-items:start}
+@media (max-width:1000px){.grid2{grid-template-columns:minmax(0,1fr)}}
+/* TÜFE ana harcama grupları */
+.grp{width:100%;border-collapse:collapse;font-size:13.5px}
+.grp th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+.grp th:first-child{text-align:left}
+.grp td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono);white-space:nowrap}
+.grp td:first-child{text-align:left;font-family:var(--sans);white-space:normal}
+.grp tr.tot td{font-weight:700;background:var(--surface-2)}
+.hb{display:inline-block;width:110px;height:10px;position:relative;vertical-align:middle;margin-right:8px;background:var(--surface-2);border-radius:3px}
+.hb i{position:absolute;top:0;bottom:0;border-radius:3px}
+.hb::after{content:"";position:absolute;top:-2px;bottom:-2px;left:50%;width:1px;background:var(--axis)}
+.hb.p::after{left:0}
+/* hedef tablosu */
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono)}
+.tbl tr.cur td{background:var(--accent-wash)}
+.tbl td.na{color:var(--muted)}
+.src{font-size:12px;color:var(--muted);margin-top:18px;line-height:1.6}
+#gate{padding:60px 16px;text-align:center;color:var(--muted)}
+.hidden{display:none!important}
+@media (max-width:640px){.kpi .v{font-size:22px}.brandtitle{font-size:21px}.hb{width:60px}}
+@media print{.tip{display:none!important}}
+</style>
+</head>
+<body>
+<div id="alcoTop"></div><script src="../ortak/ust.js" data-page="makro" data-root="../"></script>
+<header class="top"><div class="wrap">
+  <h1 class="brandtitle">Makro ve Piyasa Verileri</h1>
+  <nav class="tabs" id="tabs" role="tablist">
+    <button role="tab" data-tab="makro" aria-selected="true">Makro Veriler</button>
+    <button role="tab" data-tab="piyasa" aria-selected="false">Piyasa Verileri</button>
+  </nav>
+</div></header>
+<main class="wrap">
+  <div id="gate">Veriler yükleniyor…</div>
+  <section id="pMakro" class="hidden">
+    <div class="subtabs" role="group" aria-label="Makro konu"><button aria-pressed="true">Enflasyon</button></div>
+    <h2 class="sec">Manşet enflasyon</h2>
+    <div class="kpis" id="infKpi"></div>
+    <div class="card">
+      <div class="cardhead"><div><h3 id="infTitle"></h3><div class="sub" id="infSub"></div></div>
+        <div class="chips"><div class="seg" id="infMode"><button data-m="yoy">Yıllık</button><button data-m="mom">Aylık</button></div>
+        <span class="chips" id="infRange"></span></div></div>
+      <div class="chart" id="infChart"></div>
+      <div id="grpBox"></div>
+    </div>
+    <h2 class="sec">Hedef / tahmin</h2>
+    <div class="kpis" id="bkKpi"></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="cardhead"><div><h3>Enflasyon beklentileri</h3><div class="sub">Yıllık TÜFE beklentisi (%) · gerçekleşen yıllık TÜFE ile</div></div><span class="chips" id="bkRange"></span></div>
+        <div class="legend" id="bkLeg"></div>
+        <div class="chart" id="bkChart"></div>
+      </div>
+      <div class="card">
+        <div class="cardhead"><div><h3>TCMB hedef / gerçekleşme</h3><div class="sub" id="hdSub"></div></div></div>
+        <div id="hdTbl"></div>
+      </div>
+    </div>
+  </section>
+  <section id="pPiyasa" class="hidden">
+    <div class="subtabs" role="group" aria-label="Piyasa konu"><button aria-pressed="true">Faiz &amp; Swap</button></div>
+    <h2 class="sec">Gecelik referans oranlar ve TPP</h2>
+    <div class="kpis" id="pKpi"></div>
+    <div class="card">
+      <div class="cardhead"><div><h3>TLREF · TLREFK · TPP O/N</h3><div class="sub">Oranlar sol eksen (%), TPP O/N işlem hacmi sağ eksen (milyar TL)</div></div><span class="chips" id="pRange"></span></div>
+      <div class="legend" id="pLeg"></div>
+      <div class="chart" id="pChart"></div>
+    </div>
+  </section>
+  <div class="src" id="src"></div>
+</main>
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const AY = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+const AYU = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+const NF = {}; const nf = (v, d = 2) => (NF[d] ||= new Intl.NumberFormat("tr-TR", { minimumFractionDigits: d, maximumFractionDigits: d })).format(v);
+const ok = v => v != null && isFinite(v);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const pct = (v, d = 2) => ok(v) ? "%" + nf(v, d) : "—";
+const ayAd = m => m ? `${AYU[+m.slice(5, 7) - 1]} ${m.slice(0, 4)}` : "—";
+const ayKisa = m => `${AY[+m.slice(5, 7) - 1]} ${m.slice(2, 4)}`;
+const gunAd = d => d ? `${+d.slice(8, 10)} ${AY[+d.slice(5, 7) - 1]} ${d.slice(0, 4)}` : "—";
+const gunKisa = d => `${+d.slice(8, 10)} ${AY[+d.slice(5, 7) - 1]}`;
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+const cls = (v, e = 1e-9) => !ok(v) || Math.abs(v) < e ? "" : v > 0 ? "up" : "down";
+const bp = v => ok(v) ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v) * 100, 0)} bp` : "—";
+const pp = v => ok(v) ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v), 2)} puan` : "—";
+
+let D = null;
+const S = { tab: "makro", inf: "tufe", mode: "yoy", infR: "2Y", sel: null, bkR: "3Y", pR: "6A",
+  bkOn: { pk_yilsonu: 1, pk_12ay: 1, reel_12ay: 1, hh_12ay: 1, tufe: 1 }, pOn: { tlref: 1, tlrefk: 1, tpp: 1, vol: 1 } };
+
+// ---------------------------------------------------------------- grafik
+function niceTicks(a, b, n) {
+  if (a === b) { a -= 1; b += 1; }
+  const step0 = (b - a) / n, mag = Math.pow(10, Math.floor(Math.log10(step0))), r = step0 / mag;
+  const step = (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * mag, out = [];
+  for (let v = Math.floor(a / step) * step; v <= b + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+// xs: kategori dizisi; series: [{name,color,vals,type:'line'|'bar',axis:'l'|'r',dash,barColors}]
+function chart(el, o) {
+  el.innerHTML = "";
+  const xs = o.xs, n = xs.length, ser = o.series.filter(s => s.vals.some(ok));
+  if (!n || !ser.length) { el.innerHTML = '<div class="empty">Seçili dönemde veri yok.</div>'; return; }
+  const W = Math.max(320, el.clientWidth || 700), H = o.height || 320;
+  const hasR = ser.some(s => s.axis === "r");
+  const m = { t: 10, r: hasR ? 58 : 14, b: 26, l: 52 };
+  const ext = ax => { const v = ser.filter(s => (s.axis || "l") === ax).flatMap(s => s.vals.filter(ok)); if (!v.length) return null; let lo = Math.min(...v), hi = Math.max(...v);
+    if (ser.some(s => (s.axis || "l") === ax && s.type === "bar") || o.zero) { lo = Math.min(0, lo); hi = Math.max(0, hi); }
+    const pad = (hi - lo) * .08 || 1; return [lo < 0 || o.zero ? lo - (lo < 0 ? pad : 0) : lo - pad, hi + pad]; };
+  const L = ext("l"), R = hasR ? ext("r") : null;
+  const tl = L ? niceTicks(L[0], L[1], 5) : [], tr = R ? niceTicks(Math.max(0, R[0]), R[1], 5) : [];
+  const yl0 = L ? Math.min(L[0], tl[0]) : 0, yl1 = L ? Math.max(L[1], tl[tl.length - 1]) : 1;
+  const yr0 = R ? Math.min(Math.max(0, R[0]), tr[0]) : 0, yr1 = R ? Math.max(R[1], tr[tr.length - 1]) * (o.rScale || 1) : 1;
+  const iw = W - m.l - m.r, ih = H - m.t - m.b, bw = iw / n;
+  const X = i => m.l + bw * (i + .5), YL = v => m.t + (1 - (v - yl0) / (yl1 - yl0)) * ih, YR = v => m.t + (1 - (v - yr0) / (yr1 - yr0)) * ih;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label || "Grafik")}"><g class="axis">`;
+  for (const t of tl) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${YL(t)}" y2="${YL(t)}" stroke="var(--grid)"/><text x="${m.l - 7}" y="${YL(t) + 4}" text-anchor="end">${o.yFmt ? o.yFmt(t) : nf(t, 0)}</text>`;
+  if (R) for (const t of tr) if (YR(t) >= m.t - 1) s += `<text x="${W - m.r + 7}" y="${YR(t) + 4}" text-anchor="start">${o.y2Fmt ? o.y2Fmt(t) : nf(t, 0)}</text>`;
+  if (L && yl0 < 0 && yl1 > 0) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${YL(0)}" y2="${YL(0)}" stroke="var(--axis)"/>`;
+  const nx = Math.max(2, Math.min(o.maxX || 8, Math.floor(iw / 80))), step = Math.max(1, Math.ceil(n / nx));
+  for (let i = n - 1; i >= 0; i -= step) s += `<text x="${X(i)}" y="${H - 6}" text-anchor="${i === n - 1 ? "end" : "middle"}">${o.xFmt ? o.xFmt(xs[i]) : xs[i]}</text>`;
+  s += `<line x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}" stroke="var(--axis)"/></g>`;
+  const bars = ser.filter(x => x.type === "bar"), nb = bars.length;
+  bars.forEach((b, k) => { const Y = b.axis === "r" ? YR : YL, base = Y(b.axis === "r" ? yr0 : Math.max(yl0, Math.min(0, yl1))), w = Math.max(1, bw * (nb > 1 ? .8 / nb : .72));
+    b.vals.forEach((v, i) => { if (!ok(v)) return; const y = Y(v), x = X(i) - (nb > 1 ? bw * .4 - w * k : w / 2);
+      s += `<rect x="${x.toFixed(2)}" y="${Math.min(y, base).toFixed(2)}" width="${w.toFixed(2)}" height="${Math.max(.5, Math.abs(base - y)).toFixed(2)}" rx="${w > 6 ? 2 : 0}" fill="${b.barColors ? b.barColors[i] : b.color}" data-i="${i}"/>`; }); });
+  for (const l of ser.filter(x => x.type !== "bar")) {
+    const Y = l.axis === "r" ? YR : YL; let d = "", pen = false;
+    l.vals.forEach((v, i) => { if (!ok(v)) { if (!l.span) pen = false; return; } d += `${pen ? "L" : "M"}${X(i).toFixed(2)},${Y(v).toFixed(2)}`; pen = true; });
+    s += `<path d="${d}" fill="none" stroke="${l.color}" stroke-width="${l.width || 2}" stroke-linejoin="round" ${l.dash ? `stroke-dasharray="${l.dash}"` : ""}/>`;
+    const li = l.vals.map(ok).lastIndexOf(true); if (li >= 0 && !l.noDot) s += `<circle cx="${X(li)}" cy="${Y(l.vals[li])}" r="3" fill="${l.color}"/>`;
+  }
+  s += `<line class="cur" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" stroke="var(--axis)" stroke-dasharray="3 3" visibility="hidden"/></svg>`;
+  el.insertAdjacentHTML("beforeend", s);
+  const svg = el.querySelector("svg"), tip = el.appendChild(Object.assign(document.createElement("div"), { className: "tip" })), cur = svg.querySelector(".cur");
+  const idx = ev => { const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width; return Math.max(0, Math.min(n - 1, Math.floor((px - m.l) / bw))); };
+  svg.addEventListener("mousemove", ev => {
+    const i = idx(ev), rows = ser.filter(x => ok(x.vals[i]));
+    if (!rows.length) { tip.style.display = "none"; cur.setAttribute("visibility", "hidden"); return; }
+    cur.setAttribute("x1", X(i)); cur.setAttribute("x2", X(i)); cur.setAttribute("visibility", "visible");
+    tip.innerHTML = `<b>${esc(o.tipX ? o.tipX(xs[i]) : xs[i])}</b>` + rows.map(x => `<div class="r"><span><i style="background:${x.barColors ? x.barColors[i] : x.color}"></i>${esc(x.name)}</span><span>${x.fmt ? x.fmt(x.vals[i]) : nf(x.vals[i])}</span></div>`).join("") + (o.tipNote ? `<div class="note" style="margin-top:4px">${o.tipNote}</div>` : "");
+    tip.style.display = "block";
+    const r = el.getBoundingClientRect(), tw = tip.offsetWidth, x = ev.clientX - r.left;
+    tip.style.left = Math.min(Math.max(0, x + 14), r.width - tw) + "px"; tip.style.top = Math.max(0, ev.clientY - r.top - tip.offsetHeight - 10) + "px";
+  });
+  svg.addEventListener("mouseleave", () => { tip.style.display = "none"; cur.setAttribute("visibility", "hidden"); });
+  if (o.onClick) { svg.style.cursor = "pointer"; svg.addEventListener("click", ev => o.onClick(idx(ev))); }
+}
+const rangeChips = (el, list, cur, cb) => { el.innerHTML = list.map(([k]) => `<button class="chip" data-k="${k}" aria-pressed="${k === cur}">${k}</button>`).join(""); el.onclick = e => { const b = e.target.closest("button[data-k]"); if (b) cb(b.dataset.k); }; };
+
+// ---------------------------------------------------------------- manşet enflasyon
+const INF = { tufe: { ad: "TÜFE", uzun: "Tüketici fiyat endeksi" }, ufe: { ad: "Yİ-ÜFE", uzun: "Yurt içi üretici fiyat endeksi" } };
+const INF_R = [["1Y", 12], ["2Y", 24], ["3Y", 36], ["Tümü", 999]];
+function renderInf() {
+  const kp = [];
+  for (const k of ["tufe", "ufe"]) {
+    const d = D[k]; if (!d || !d.months?.length) continue; const i = d.months.length - 1;
+    const dy = ok(d.yoy[i - 1]) ? d.yoy[i] - d.yoy[i - 1] : null;
+    kp.push(`<button class="kpi" data-k="${k}" aria-pressed="${S.inf === k}" style="--kc:${k === "tufe" ? "var(--c1)" : "var(--c2)"}">
+      <div class="t">${INF[k].ad} · yıllık</div><div class="v">${pct(d.yoy[i])}</div>
+      <div class="s">Aylık <b>${pct(d.mom[i])}</b> · yılbaşından <b>${pct(d.ytd[i])}</b></div>
+      <div class="d">${ayAd(d.months[i])} · önceki aya göre yıllıkta <span class="${cls(-dy, .005)}">${pp(dy)}</span></div></button>`);
+  }
+  $("#infKpi").innerHTML = kp.join("") || '<div class="empty">TÜİK verisi henüz yok.</div>';
+  const d = D[S.inf]; if (!d) return;
+  $$("#infMode button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === S.mode));
+  rangeChips($("#infRange"), INF_R, S.infR, k => { S.infR = k; renderInf(); });
+  const nAy = INF_R.find(r => r[0] === S.infR)[1], a = Math.max(0, d.months.length - nAy), xs = d.months.slice(a), vals = d[S.mode].slice(a);
+  if (!S.sel || !d.months.includes(S.sel)) S.sel = d.months[d.months.length - 1];
+  const hasG = S.inf === "tufe" && D.tufe.groups;
+  const bc = xs.map(m => m === S.sel && hasG ? css("--bar-hi") : (S.inf === "tufe" ? css("--c1") : css("--c2")));
+  $("#infTitle").textContent = `${INF[S.inf].ad} — ${S.mode === "yoy" ? "yıllık" : "aylık"} değişim (%)`;
+  $("#infSub").textContent = `${INF[S.inf].uzun} · TÜİK · son ${ayAd(d.months[d.months.length - 1])}` + (hasG ? " · ana harcama grupları için sütuna tıklayın" : "");
+  chart($("#infChart"), { xs, label: $("#infTitle").textContent, height: 300, xFmt: ayKisa, tipX: ayAd, maxX: 12, yFmt: v => nf(v, S.mode === "mom" ? 1 : 0),
+    series: [{ name: INF[S.inf].ad + (S.mode === "yoy" ? " yıllık" : " aylık"), type: "bar", vals, color: bc[0], barColors: bc, fmt: v => pct(v) }],
+    onClick: hasG ? i => { S.sel = xs[i]; renderInf(); } : null });
+  renderGroups();
+}
+function renderGroups() {
+  const box = $("#grpBox");
+  if (S.inf !== "tufe" || !D.tufe?.groups) { box.innerHTML = ""; return; }
+  const g = D.tufe.groups[S.sel], pid = D.tufe.press?.[S.sel];
+  const link = pid ? ` · <a href="https://veriportali.tuik.gov.tr/tr/press/${pid}" target="_blank" rel="noopener">TÜİK bülteni</a>` : "";
+  const yil = S.mode === "yoy";
+  if (!g) { box.innerHTML = `<div class="note" style="margin-top:12px">${ayAd(S.sel)} için ana harcama grubu kırılımı yok${link}.</div>`; return; }
+  const v = yil ? g.yoy : g.mom, k = yil ? g.yoyK : g.momK;
+  if (!v) { box.innerHTML = ""; return; }
+  const mxV = Math.max(...v.map(x => Math.abs(x || 0))) || 1, mxK = Math.max(...(k || []).slice(1).map(x => Math.abs(x || 0))) || 1;
+  const bar = (x, mx, col) => { if (!ok(x)) return '<span class="hb"></span>'; const w = Math.abs(x) / mx * 50; return `<span class="hb"><i style="background:${col};${x >= 0 ? `left:50%;width:${w}%` : `right:50%;width:${w}%`}"></i></span>`; };
+  const rows = g.labels.map((l, i) => `<tr class="${i === 0 ? "tot" : ""}"><td>${esc(l)}</td><td>${bar(v[i], mxV, css("--c1"))}${pct(v[i])}</td><td>${k ? (i === 0 ? "" : bar(k[i], mxK, css("--c4"))) + (ok(k[i]) ? nf(k[i], 2) : "—") : "—"}</td></tr>`).join("");
+  box.innerHTML = `<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+    <div class="cardhead"><div><h3 style="font-size:13.5px">TÜFE ana harcama gruplarının ${yil ? "yıllık" : "aylık"} değişim oranları ve genel endeks değişimine katkıları</h3>
+    <div class="sub">${ayAd(S.sel)} · değişim %, katkı yüzde puan${link}</div></div></div>
+    <div style="overflow-x:auto"><table class="grp"><thead><tr><th>Ana harcama grubu</th><th>${yil ? "Yıllık" : "Aylık"} değişim</th><th>Katkı (puan)</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+
+// ---------------------------------------------------------------- hedef / tahmin
+const BK = [
+  ["pk_yilsonu", "PK anketi · cari yıl sonu", "--c1"], ["pk_12ay", "PK anketi · 12 ay sonrası", "--c3"],
+  ["reel_12ay", "Reel sektör · 12 ay sonrası", "--c4"], ["hh_12ay", "Hanehalkı · 12 ay sonrası", "--c5"], ["tufe", "Gerçekleşen yıllık TÜFE", "--ink"]];
+const BK_R = [["1Y", 12], ["2Y", 24], ["3Y", 36], ["5Y", 60], ["Tümü", 999]];
+function renderBk() {
+  const b = D.beklenti, rp = D.rapor, kp = [];
+  if (b?.months?.length) {
+    for (const [k, ad, c] of BK.slice(0, 4)) {
+      const arr = b[k] || [], i = arr.map(ok).lastIndexOf(true); if (i < 0) continue;
+      const j = arr.slice(0, i).map(ok).lastIndexOf(true), dv = j >= 0 ? arr[i] - arr[j] : null;
+      kp.push(`<div class="kpi" style="--kc:var(${c})"><div class="t">${ad}</div><div class="v">${pct(arr[i])}</div>
+        <div class="s">Önceki ankete göre <span class="${cls(-dv, .005)}">${pp(dv)}</span></div><div class="d">${ayAd(b.months[i])} · TCMB EVDS</div></div>`);
+    }
+  }
+  if (rp?.tahmin) {
+    const yy = Object.keys(rp.tahmin).sort(), y0 = String(new Date().getFullYear()), ys = yy.filter(y => y >= y0).slice(0, 2);
+    for (const y of ys) kp.push(`<div class="kpi" style="--kc:var(--accent)"><div class="t">TCMB tahmini · ${y} sonu</div><div class="v">${pct(rp.tahmin[y], 0)}</div>
+      <div class="s">Ara hedef <b>${ok(rp.ara_hedef?.[y]) ? pct(rp.ara_hedef[y], 0) : "—"}</b></div><div class="d">${esc(rp.ad || "Enflasyon Raporu")}</div></div>`);
+  }
+  $("#bkKpi").innerHTML = kp.join("");
+  // grafik
+  rangeChips($("#bkRange"), BK_R, S.bkR, k => { S.bkR = k; renderBk(); });
+  $("#bkLeg").innerHTML = BK.map(([k, ad, c]) => `<button class="chip ${S.bkOn[k] ? "" : "off"}" data-k="${k}" aria-pressed="${!!S.bkOn[k]}"><i style="background:var(${c})"></i>${ad}</button>`).join("");
+  $("#bkLeg").onclick = e => { const x = e.target.closest("button[data-k]"); if (!x) return; S.bkOn[x.dataset.k] = S.bkOn[x.dataset.k] ? 0 : 1; renderBk(); };
+  if (b?.months?.length) {
+    const all = [...new Set([...b.months, ...(D.tufe?.months || [])])].sort(), nAy = BK_R.find(r => r[0] === S.bkR)[1], xs = all.slice(Math.max(0, all.length - nAy));
+    const map = (ms, arr) => { const o = {}; ms.forEach((m, i) => o[m] = arr[i]); return xs.map(m => o[m] ?? null); };
+    const series = BK.filter(([k]) => S.bkOn[k]).map(([k, ad, c]) => ({ name: ad, color: css(c), span: true, fmt: v => pct(v),
+      vals: k === "tufe" ? map(D.tufe?.months || [], D.tufe?.yoy || []) : map(b.months, b[k] || []), dash: k === "tufe" ? "5 4" : null, width: k === "tufe" ? 2.4 : 2 }));
+    chart($("#bkChart"), { xs, series, height: 300, xFmt: ayKisa, tipX: ayAd, yFmt: v => nf(v, 0), label: "Enflasyon beklentileri" });
+  } else $("#bkChart").innerHTML = '<div class="empty">EVDS beklenti verisi henüz yok.</div>';
+  // hedef tablosu
+  const h = D.hedef?.rows || [], y0 = new Date().getFullYear();
+  const yrs = [...new Set([...h.map(r => r.yil), ...Object.keys(rp?.tahmin || {}).map(Number)])].sort((a, b) => b - a).slice(0, 12);
+  const rows = yrs.map(y => { const r = h.find(x => x.yil === y) || {}, t = rp?.tahmin?.[y], a = rp?.ara_hedef?.[y], g = r.gercek, dv = ok(g) && ok(r.hedef) ? g - r.hedef : null;
+    const tufe = y === y0 && D.tufe?.months?.length ? D.tufe.yoy[D.tufe.yoy.length - 1] : null;
+    return `<tr class="${y === y0 ? "cur" : ""}"><td>${y}</td><td>${ok(r.hedef) ? nf(r.hedef, 1) : "—"}</td><td class="${ok(a) ? "" : "na"}">${ok(a) ? nf(a, 1) : "—"}</td><td class="${ok(t) ? "" : "na"}">${ok(t) ? nf(t, 1) : "—"}</td>
+      <td>${ok(g) ? nf(g, 2) : ok(tufe) ? `<span title="Son açıklanan yıllık TÜFE">(${nf(tufe, 2)})</span>` : "—"}</td><td class="${cls(-dv, .005)}">${ok(dv) ? (dv > 0 ? "+" : "") + nf(dv, 2) : "—"}</td></tr>`; }).join("");
+  $("#hdTbl").innerHTML = rows ? `<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Yıl</th><th>Hedef</th><th>Ara hedef</th><th>TCMB tahmini</th><th>Gerçekleşme</th><th>Sapma</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="note" style="margin-top:8px">Yıl sonu TÜFE, %. Ara hedef ve tahmin: ${rp?.url ? `<a href="${esc(rp.url)}" target="_blank" rel="noopener">${esc(rp.ad || "Enflasyon Raporu")}</a>` : "—"}. Cari yıl için parantez içinde son açıklanan yıllık TÜFE.</div>` : '<div class="empty">Hedef verisi yok.</div>';
+  $("#hdSub").textContent = "Hedef: TCMB · tahmin ve ara hedef: en güncel Enflasyon Raporu";
+}
+
+// ---------------------------------------------------------------- piyasa
+const P_R = [["1A", 31], ["3A", 92], ["6A", 183], ["1Y", 366], ["Tümü", 1e5]];
+const PS = [["tlref", "TLREF", "--c1"], ["tlrefk", "TLREFK", "--c3"], ["tpp", "TPP O/N (ağ. ort.)", "--c2"], ["vol", "TPP O/N hacim", "--bar"]];
+function renderPiyasa() {
+  const kp = [], son = (d, k = "rate") => { if (!d?.dates?.length) return null; const i = d.dates.length - 1; return { v: d[k][i], p: d[k][i - 1], t: d.dates[i], i }; };
+  for (const [k, ad, c] of [["tlref", "TLREF", "--c1"], ["tlrefk", "TLREFK", "--c3"]]) { const x = son(D[k]); if (!x) continue;
+    kp.push(`<div class="kpi" style="--kc:var(${c})"><div class="t">${ad} · gecelik</div><div class="v">${pct(x.v, 4)}</div><div class="s">Önceki güne göre <span class="${cls(x.v - x.p, 1e-6)}">${bp(ok(x.p) ? (x.v - x.p) / 100 : null)}</span></div><div class="d">${gunAd(x.t)} · Borsa İstanbul</div></div>`); }
+  const t = son(D.tpp);
+  if (t) {
+    kp.push(`<div class="kpi" style="--kc:var(--c2)"><div class="t">TPP O/N · ağırlıklı ort. oran</div><div class="v">${pct(t.v)}</div><div class="s">En düşük <b>${pct(D.tpp.min[t.i])}</b> · en yüksek <b>${pct(D.tpp.max[t.i])}</b></div><div class="d">${gunAd(t.t)} · Takasbank</div></div>`);
+    const v = D.tpp.vol_tl[t.i], vp = D.tpp.vol_tl[t.i - 1];
+    kp.push(`<div class="kpi" style="--kc:var(--bar)"><div class="t">TPP O/N · işlem hacmi</div><div class="v">₺${nf(v / 1e9, 1)} mr</div><div class="s">$${nf((D.tpp.vol_usd[t.i] || 0) / 1e9, 2)} mr · ${nf(D.tpp.count[t.i] || 0, 0)} işlem</div><div class="d">${gunAd(t.t)} · önceki güne göre <span class="${cls(v - vp)}">${ok(vp) ? (v >= vp ? "+" : "−") + nf(Math.abs(v - vp) / 1e9, 1) + " mr" : "—"}</span></div></div>`);
+  }
+  $("#pKpi").innerHTML = kp.join("") || '<div class="empty">Piyasa verisi henüz yok.</div>';
+  rangeChips($("#pRange"), P_R, S.pR, k => { S.pR = k; renderPiyasa(); });
+  $("#pLeg").innerHTML = PS.filter(([k]) => k === "vol" ? D.tpp : D[k]).map(([k, ad, c]) => `<button class="chip ${S.pOn[k] ? "" : "off"}" data-k="${k}" aria-pressed="${!!S.pOn[k]}"><i style="background:var(${c})"></i>${ad}</button>`).join("");
+  $("#pLeg").onclick = e => { const x = e.target.closest("button[data-k]"); if (!x) return; S.pOn[x.dataset.k] = S.pOn[x.dataset.k] ? 0 : 1; renderPiyasa(); };
+  const all = [...new Set(["tlref", "tlrefk", "tpp"].flatMap(k => D[k]?.dates || []))].sort();
+  if (!all.length) { $("#pChart").innerHTML = '<div class="empty">Veri yok.</div>'; return; }
+  const gun = P_R.find(r => r[0] === S.pR)[1], bas = new Date(Date.parse(all[all.length - 1]) - gun * 864e5).toISOString().slice(0, 10), xs = all.filter(d => d >= bas);
+  const map = (d, k) => { if (!d) return xs.map(() => null); const o = {}; d.dates.forEach((t, i) => o[t] = d[k][i]); return xs.map(t => o[t] ?? null); };
+  const series = [];
+  if (S.pOn.vol && D.tpp) series.push({ name: "TPP O/N hacim", type: "bar", axis: "r", color: css("--vol"), vals: map(D.tpp, "vol_tl").map(v => ok(v) ? v / 1e9 : null), fmt: v => "₺" + nf(v, 1) + " mr" });
+  for (const [k, ad, c] of PS.slice(0, 3)) if (S.pOn[k] && D[k]) series.push({ name: ad, color: css(c), span: true, vals: map(D[k], "rate"), fmt: v => pct(v, k === "tpp" ? 2 : 4) });
+  chart($("#pChart"), { xs, series, height: 340, xFmt: gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd, yFmt: v => nf(v, v % 1 ? 1 : 0), y2Fmt: v => nf(v, 0), rScale: 2.2, label: "Gecelik oranlar ve TPP hacmi" });
+}
+
+// ---------------------------------------------------------------- akış
+function renderSrc() {
+  const f = (D.failed || []).length ? ` · son çekimde alınamayan: ${D.failed.join(", ")} (önceki veri gösteriliyor)` : "";
+  $("#src").innerHTML = `Kaynaklar: <a href="https://veriportali.tuik.gov.tr" target="_blank" rel="noopener">TÜİK Veri Portalı</a> (TÜFE, Yİ-ÜFE) · <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> (Piyasa Katılımcıları Anketi, sektörel enflasyon beklentileri) · TCMB (enflasyon hedefleri, Enflasyon Raporu) · <a href="https://www.borsaistanbul.com/endeksler/tlref" target="_blank" rel="noopener">Borsa İstanbul</a> (TLREF, TLREFK) · <a href="https://www.takasbank.com.tr/tr/istatistikler/takasbank-para-piyasasi-tpp/tpp-islem-ortalamalari-raporu" target="_blank" rel="noopener">Takasbank</a> (TPP O/N). Son güncelleme ${D.updated ? new Date(D.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${f}.`;
+}
+function render() {
+  $$("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === S.tab));
+  $("#pMakro").classList.toggle("hidden", S.tab !== "makro"); $("#pPiyasa").classList.toggle("hidden", S.tab !== "piyasa");
+  if (S.tab === "makro") { renderInf(); renderBk(); } else renderPiyasa();
+  renderSrc();
+}
+$("#tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (!b) return; S.tab = b.dataset.tab; try { history.replaceState(null, "", "#" + S.tab); } catch {} render(); };
+$("#infKpi").onclick = e => { const b = e.target.closest("button[data-k]"); if (!b) return; S.inf = b.dataset.k; renderInf(); };
+$("#infMode").onclick = e => { const b = e.target.closest("button[data-m]"); if (!b) return; S.mode = b.dataset.m; renderInf(); };
+let rz, lw = innerWidth; addEventListener("resize", () => { if (!D || Math.abs(innerWidth - lw) < 30 && !rz) { } lw = innerWidth; clearTimeout(rz); rz = setTimeout(() => { rz = null; render(); }, 150); });
+const h = location.hash.slice(1); if (h === "piyasa" || h === "makro") S.tab = h;
+fetch("data/makro.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(j => { D = j; $("#gate").remove(); render(); })
+  .catch(e => { $("#gate").textContent = "Veriler yüklenemedi (" + e.message + "). Sayfa henüz güncellenmemiş olabilir."; });
+})();
+</script>
+</body>
+</html>
