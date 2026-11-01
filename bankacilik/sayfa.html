@@ -123,6 +123,18 @@ input[type=search]{border:1px solid var(--line);background:var(--surface);border
 .split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;align-items:start}
 @media (max-width:900px){.split{grid-template-columns:minmax(0,1fr)}}
 .up{color:var(--up)} .down{color:var(--down)}
+.tflt{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:2px 0 10px}
+.tflt .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.tflt .seg button{border:0;background:none;padding:7px 18px;font:inherit;font-weight:600;font-size:13.5px;color:var(--ink-2);cursor:pointer}
+.tflt .seg button+button{border-left:1px solid var(--line)}
+.tflt .seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.ttyp{display:flex;flex-wrap:wrap;gap:6px}.chip.sm{font-size:12px;padding:3px 10px}
+details.tser{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+details.tser>summary{cursor:pointer;font-weight:600;font-size:13.5px;list-style:none;display:flex;align-items:baseline;gap:8px}
+details.tser>summary::-webkit-details-marker{display:none}
+details.tser>summary::before{content:"▸";color:var(--muted);transition:transform .15s}
+details.tser[open]>summary::before{transform:rotate(90deg)}
+details.tser>summary span{font-weight:400;font-size:12px;color:var(--muted)}
 .tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);max-width:100%}
 table{border-collapse:collapse;width:100%;font-size:14px}
 th,td{padding:8px 12px;border-bottom:1px solid var(--grid);text-align:right;white-space:nowrap}
@@ -389,7 +401,7 @@ const S = {
   tab: "bddk",
   bFreq: store.get("bv.freq") || "w", bA: null, bB: null, bGroups: (store.get("bv.groups") || "katilim").split(","), bCur: store.get("bv.cur") || "Toplam", bTables: {},
   bColOverride: {}, bChk: {}, bIdx: {}, bOpenN: new Set(),
-  tSub: "pp", tTopics: {}, tAB: {}, tClosed: new Set(), tBank: store.get("bv.tbank") || "katilim", tA: null, tB: null, tSel: {}, tRange: "2Y",
+  tSub: "pp", tTopics: {}, tAB: {}, tClosed: new Set(), tBank: store.get("bv.tbank") || "katilim", tA: null, tB: null, tSel: {}, tRange: "1Y", tCur: {}, tTyp: {}, tOpen: new Set(),
   aSel: [], aIndex: false, aRange: "2Y", aSrc: "all",
 };
 let D = null;
@@ -514,7 +526,8 @@ function axisScale(kind, maxAbs) {
   return { k: 1, lab: "değer", d: 2 };
 }
 const RANGES = [["1Y", 366], ["2Y", 731], ["3Y", 1096], ["5Y", 1827], ["Tümü", 1e7]];
-function clipT(data, key) { const days = (RANGES.find(r => r[0] === key) || [0, 1e7])[1]; const v = data.filter(p => ok(p[1])); if (!v.length) return data; const st = Math.max(...v.map(p => p[2])) - days * 864e5; return data.filter(p => p[2] >= st); }
+const T_RANGES = [["3 Ay", 92], ["1Y", 366], ["3Y", 1096], ["Tümü", 1e7]]; // TCMB panelleri
+function clipT(data, key) { const days = (RANGES.concat(T_RANGES).find(r => r[0] === key) || [0, 1e7])[1]; const v = data.filter(p => ok(p[1])); if (!v.length) return data; const st = Math.max(...v.map(p => p[2])) - days * 864e5; return data.filter(p => p[2] >= st); }
 function rangeChips(el, cur, onChange) {
   el.innerHTML = RANGES.map(([k]) => `<button class="chip" aria-pressed="${cur === k}" data-k="${k}">${k}</button>`).join("");
   el.onclick = e => { const b = e.target.closest("button"); if (!b) return; $$("button", el).forEach(x => x.setAttribute("aria-pressed", x === b)); onChange(b.dataset.k); };
@@ -906,6 +919,35 @@ function tResolve(it) {
   const nb = GROUPS.map(g => g.key).find(k => it.g[k]);
   return [D.e.groups[it.g[nb]], `${gName(S.tBank)} için yayımlanmıyor, ${gName(nb)} gösteriliyor`];
 }
+// Seri adından para birimi (TL/ABD doları/Euro) ve mevduat türü (Mevduat/Tasarruf/Ticari)
+const CUR_ORD = ["TRY", "USD", "EUR"], CUR_LAB = { TRY: "TRY", USD: "USD", EUR: "EUR" }, TYP_ORD = ["Mevduat", "Tasarruf", "Ticari"];
+function tMeta(g) {
+  if (g.meta) return g.meta;
+  const meta = {};
+  for (const s of g.series) {
+    const n = s.name || "";
+    const cur = /\(\s*TL\b/.test(n) ? "TRY" : /\(\s*Euro\b/i.test(n) ? "EUR" : /\(\s*ABD dolar/i.test(n) ? "USD" : null;
+    const typ = /Mevduat/i.test(n) ? (/Tasarruf/i.test(n) ? "Tasarruf" : /Ticari/i.test(n) ? "Ticari" : "Mevduat") : null;
+    meta[s.code] = { cur, typ, base: n.replace(/\s*\(\s*(TL|Euro|ABD doları)[\s,)][\s\S]*$/i, "").trim() };
+  }
+  const has = (k, ord) => ord.filter(x => g.series.some(s => meta[s.code][k] === x));
+  g.curs = has("cur", CUR_ORD); g.typs = has("typ", TYP_ORD);
+  return g.meta = meta;
+}
+function tFilter(g) {
+  const meta = tMeta(g), code = g.code;
+  if (g.curs.length > 1 && !g.curs.includes(S.tCur[code])) S.tCur[code] = g.curs.includes("TRY") ? "TRY" : g.curs[0];
+  if (g.typs.length > 1 && !(S.tTyp[code] || []).length) S.tTyp[code] = [g.typs.includes("Mevduat") ? "Mevduat" : g.typs[0]];
+  const cur = S.tCur[code], typs = S.tTyp[code] || [];
+  return c => { const m = meta[c]; if (!m) return true; return (g.curs.length < 2 || !m.cur || m.cur === cur) && (g.typs.length < 2 || !m.typ || typs.includes(m.typ)); };
+}
+function tFixSel(g) { // seçimi görünür serilere indir; boşsa toplamları seç
+  const vis = tFilter(g), code = g.code;
+  let sel = (S.tSel[code] || []).filter(vis);
+  if (!sel.length) { const v = g.series.filter(s => vis(s.code) && g.vals[s.code]); const tot = v.filter(s => /^\s*toplam/i.test(s.name)); sel = (tot.length ? tot : v).slice(0, 3).map(s => s.code); }
+  S.tSel[code] = sel;
+}
+function tTwin(g, c, cur, typ) { const m = tMeta(g)[c]; if (!m) return null; const t = g.series.find(s => { const x = g.meta[s.code]; return x.base === m.base && x.cur === (cur || m.cur) && x.typ === (typ || m.typ); }); return t ? t.code : null; }
 function tAB(g) {
   const n = g.dates.length, cur = S.tAB[g.code] || {};
   let B = cur.B != null && cur.B < n ? cur.B : n - 1, A = cur.A != null ? cur.A : idxBack(g.dates, B, g.weekly ? "w" : "m", 1);
@@ -917,11 +959,13 @@ function tPanel(it) {
   if (!g || !g.dates.length) return `<article class="card"><div class="empty">${esc(it.name)}: veri yok.</div></article>`;
   const key = g.code, n = g.dates.length, { A, B } = tAB(g), kind = g.kind, sc = g.scale;
   if (!S.tSel[key]) S.tSel[key] = defaultSel(g);
+  const vis = tFilter(g); tFixSel(g);
   const opt = sel => g.dates.map((d, i) => `<option value="${i}"${i === sel ? " selected" : ""}>${dLabel(d)}</option>`).reverse().join("");
   const quick = (g.weekly ? QUICK.w : QUICK.m).map(([l, k, q]) => { const i = idxBack(g.dates, B, k, q); return `<button class="chip" data-q="${key}" data-i="${i}" aria-pressed="${i === A}">${l}</button>`; }).join("");
   let rows = "";
+  let nVis = 0;
   for (const s of g.series) {
-    const arr = g.vals[s.code]; if (!arr) continue;
+    const arr = g.vals[s.code]; if (!arr || !vis(s.code)) continue; nVis++;
     const a = ok(arr[A]) ? arr[A] * sc : null, b = ok(arr[B]) ? arr[B] * sc : null;
     let dc, pc;
     if (g.flow) { let t = 0, any = false; for (let k = A + 1; k <= B; k++) if (ok(arr[k])) { t += arr[k] * sc; any = true; } const v = any ? t : null; dc = `<td class="${cls(v, 1e-9)}">${fmtVal(v, kind, true)}</td>`; pc = ""; }
@@ -931,11 +975,13 @@ function tPanel(it) {
   }
   return `<article class="card" data-g="${key}">
     <div class="cardhead"><div><h3>${esc(g.name)}</h3><div class="kv"><span>Son veri <b>${dShort(g.dates[n - 1])}</b></span>${g.flow ? "<span>Haftalık değişim · milyon ABD doları</span>" : ""}${fb ? `<span>${esc(fb)}</span>` : ""}</div></div>
-      <div class="chips">${RANGES.map(([k]) => `<button class="chip" data-rk="${k}" aria-pressed="${S.tRange === k}">${k}</button>`).join("")}</div></div>
+      <div class="chips">${T_RANGES.map(([k]) => `<button class="chip" data-rk="${k}" aria-pressed="${S.tRange === k}">${k}</button>`).join("")}</div></div>
+    ${g.curs.length > 1 || g.typs.length > 1 ? `<div class="tflt">${g.curs.length > 1 ? `<div class="seg tcur" role="group" aria-label="Para birimi">${g.curs.map(c => `<button data-cur="${c}" aria-pressed="${S.tCur[key] === c}">${CUR_LAB[c]}</button>`).join("")}</div>` : ""}${g.typs.length > 1 ? `<div class="ttyp" role="group" aria-label="Mevduat türü">${g.typs.map(t => `<button class="chip sm" data-typ="${t}" aria-pressed="${(S.tTyp[key] || []).includes(t)}">${t}</button>`).join("")}</div>` : ""}</div>` : ""}
     <div data-tsub="${key}" class="sub" style="margin-bottom:2px"></div><div data-tchart="${key}"></div>
-    <div class="bar" style="margin-top:14px"><span class="period"><select data-ta="${key}" aria-label="Başlangıç">${opt(A)}</select><span class="arrow">→</span><select data-tb="${key}" aria-label="Bitiş">${opt(B)}</select></span><div class="chips">${quick}</div>
+    <details class="tser" data-open="${key}"${S.tOpen.has(key) ? " open" : ""}><summary>Seri tablosu <span>${nVis} seri · grafiğe seri eklemek ve dönem karşılaştırmak için aç</span></summary>
+    <div class="bar" style="margin-top:12px"><span class="period"><select data-ta="${key}" aria-label="Başlangıç">${opt(A)}</select><span class="arrow">→</span><select data-tb="${key}" aria-label="Bitiş">${opt(B)}</select></span><div class="chips">${quick}</div>
       <span class="sep"></span><button class="chip" data-clear="${key}">Seçimi temizle</button></div>
-    <div class="tbl-wrap"><table><thead><tr><th class="chk"></th><th>Seri</th><th>${dShort(g.dates[A])}</th><th>${dShort(g.dates[B])}</th>${g.flow ? `<th title="${dShort(g.dates[A])} sonrasından ${dShort(g.dates[B])} dahil haftalık değişimlerin toplamı">Dönem toplamı</th>` : "<th>Değişim</th><th>%</th>"}</tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="tbl-wrap"><table><thead><tr><th class="chk"></th><th>Seri</th><th>${dShort(g.dates[A])}</th><th>${dShort(g.dates[B])}</th>${g.flow ? `<th title="${dShort(g.dates[A])} sonrasından ${dShort(g.dates[B])} dahil haftalık değişimlerin toplamı">Dönem toplamı</th>` : "<th>Değişim</th><th>%</th>"}</tr></thead><tbody>${rows}</tbody></table></div></details>
   </article>`;
 }
 function drawTChart(code) {
@@ -972,6 +1018,7 @@ function bindTcmb() {
   });
   $("#tNav").addEventListener("toggle", e => { const d = e.target.closest && e.target.closest("details[data-sec]"); if (!d) return; const k = S.tSub + "|" + d.dataset.sec; d.open ? S.tClosed.delete(k) : S.tClosed.add(k); }, true);
   $("#tBanks").onclick = e => { const b = e.target.closest("button[data-b]"); if (!b) return; S.tBank = b.dataset.b; store.set("bv.tbank", S.tBank); renderTcmb(); };
+  $("#tPanels").addEventListener("toggle", e => { const d = e.target.closest && e.target.closest("details[data-open]"); if (!d) return; d.open ? S.tOpen.add(d.dataset.open) : S.tOpen.delete(d.dataset.open); }, true);
   $("#tPanels").addEventListener("change", e => {
     const t = e.target, code = t.dataset.ta || t.dataset.tb; if (!code) return; const ab = S.tAB[code];
     if (t.dataset.ta) { ab.A = +t.value; if (ab.A >= ab.B) ab.B = Math.min(D.e.groups[code].dates.length - 1, ab.A + 1); } else { ab.B = +t.value; if (ab.A >= ab.B) ab.A = Math.max(0, ab.B - 1); }
@@ -979,6 +1026,14 @@ function bindTcmb() {
   });
   $("#tPanels").addEventListener("click", e => {
     const q = e.target.closest("button[data-q]"); if (q) { S.tAB[q.dataset.q].A = +q.dataset.i; renderTcmb(); return; }
+    const cu = e.target.closest("button[data-cur]"); if (cu) {
+      const code = cu.closest("article").dataset.g, g = D.e.groups[code], nc = cu.dataset.cur;
+      S.tSel[code] = [...new Set((S.tSel[code] || []).map(c => tTwin(g, c, nc, null)).filter(Boolean))]; S.tCur[code] = nc; renderTcmb(); return; }
+    const ty = e.target.closest("button[data-typ]"); if (ty) {
+      const code = ty.closest("article").dataset.g, g = D.e.groups[code], t = ty.dataset.typ, cur = S.tTyp[code] || [];
+      if (cur.includes(t)) { if (cur.length > 1) S.tTyp[code] = cur.filter(x => x !== t); }
+      else { S.tTyp[code] = cur.concat(t); const add = (S.tSel[code] || []).map(c => tTwin(g, c, null, t)).filter(Boolean); S.tSel[code] = [...new Set((S.tSel[code] || []).concat(add))]; }
+      renderTcmb(); return; }
     const rk = e.target.closest("button[data-rk]"); if (rk) { S.tRange = rk.dataset.rk; $$("#tPanels button[data-rk]").forEach(x => x.setAttribute("aria-pressed", x.dataset.rk === S.tRange)); $$("#tPanels article[data-g]").forEach(a => drawTChart(a.dataset.g)); return; }
     const cl = e.target.closest("button[data-clear]"); if (cl) { S.tSel[cl.dataset.clear] = []; renderTcmb(); return; }
     const tr = e.target.closest("tr.row[data-s]"); if (!tr) return;
