@@ -80,6 +80,13 @@ button.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(-
 .grid2{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:14px;align-items:start}
 @media (max-width:1000px){.grid2{grid-template-columns:minmax(0,1fr)}}
 /* TÜFE ana harcama grupları */
+details.grpd{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+details.grpd>summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+details.grpd>summary::-webkit-details-marker{display:none}
+details.grpd>summary::before{content:"▸";color:var(--muted)}details.grpd[open]>summary::before{content:"▾"}
+details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:.02em}details.grpd>summary span{font-size:12.5px;color:var(--muted)}
+.grph{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.grph select{border:1px solid var(--line);border-radius:9px;padding:6px 10px;background:var(--surface)}
 .grp{width:100%;border-collapse:collapse;font-size:13.5px}
 .grp th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
 .grp th:first-child{text-align:left}
@@ -121,8 +128,7 @@ button.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(-
     <div class="kpis" id="infKpi"></div>
     <div class="card">
       <div class="cardhead"><div><h3 id="infTitle"></h3><div class="sub" id="infSub"></div></div>
-        <div class="chips"><div class="seg" id="infMode"><button data-m="yoy">Yıllık</button><button data-m="mom">Aylık</button></div>
-        <span class="chips" id="infRange"></span></div></div>
+        <span class="chips" id="infRange"></span></div>
       <div class="chart" id="infChart"></div>
       <div id="grpBox"></div>
     </div>
@@ -173,7 +179,7 @@ const bp = v => { if (!ok(v)) return "—"; const b = Math.round(v * 100); retur
 const pp = v => ok(v) ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v), 2)} puan` : "—";
 
 let D = null;
-const S = { tab: "makro", inf: "tufe", mode: "yoy", infR: "2Y", sel: null, bkR: "3Y", pR: "6A",
+const S = { tab: "makro", infOn: new Set(["tufe:yoy"]), gMode: "yoy", gOpen: false, infR: "2Y", sel: null, bkR: "3Y", pR: "6A",
   bkOn: { pk_yilsonu: 1, pk_12ay: 1, reel_12ay: 1, hh_12ay: 1, tufe: 1 }, pSel: "tlref" };
 
 // ---------------------------------------------------------------- grafik
@@ -237,55 +243,71 @@ function chart(el, o) {
 const rangeChips = (el, list, cur, cb) => { el.innerHTML = list.map(([k]) => `<button class="chip" data-k="${k}" aria-pressed="${k === cur}">${k}</button>`).join(""); el.onclick = e => { const b = e.target.closest("button[data-k]"); if (b) cb(b.dataset.k); }; };
 
 // ---------------------------------------------------------------- manşet enflasyon
-const INF = { tufe: { ad: "TÜFE", uzun: "Tüketici fiyat endeksi" }, ufe: { ad: "Yİ-ÜFE", uzun: "Yurt içi üretici fiyat endeksi" } };
+const INF = { tufe: { ad: "TÜFE", uzun: "TÜİK" }, ufe: { ad: "Yİ-ÜFE", uzun: "TÜİK" }, web: { ad: "Web TÜFE", uzun: "webtufe.com" } };
+const ISER = [["tufe", "yoy", "--c1"], ["tufe", "mom", "--c3"], ["ufe", "yoy", "--c2"], ["ufe", "mom", "--c4"], ["web", "yoy", "--c6"], ["web", "mom", "--c5"]];
 const INF_R = [["1Y", 12], ["2Y", 24], ["3Y", 36], ["Tümü", 999]];
+function infSrc(k) {
+  if (k !== "web") return D[k]?.months?.length ? D[k] : null;
+  const w = D.webtufe; if (!w?.months?.length) return null;
+  return { months: w.months, yoy: w.yoy["TÜFE"], mom: w.mom["TÜFE"], gecici: w.guncel_ay_gecici };
+}
+const lastIdx = arr => arr ? arr.map(ok).lastIndexOf(true) : -1;
 function renderInf() {
   const kp = [];
-  for (const k of ["tufe", "ufe"]) {
-    const d = D[k]; if (!d || !d.months?.length) continue; const i = d.months.length - 1, c = k === "tufe" ? "var(--c1)" : "var(--c2)";
-    const dy = ok(d.yoy[i - 1]) ? d.yoy[i] - d.yoy[i - 1] : null, dm = ok(d.mom[i - 1]) ? d.mom[i] - d.mom[i - 1] : null;
-    kp.push(`<button class="kpi" data-k="${k}" data-m="yoy" aria-pressed="${S.inf === k && S.mode === "yoy"}" style="--kc:${c}">
-      <div class="t">${INF[k].ad} · yıllık</div><div class="v">${pct(d.yoy[i])}</div>
-      <div class="s">Önceki ay <b>${pct(d.yoy[i - 1])}</b> · <span class="${cls(-dy, .005)}">${pp(dy)}</span></div>
-      <div class="d">${ayAd(d.months[i])} · 12 aylık ort. ${pct(d.avg12[i])}</div></button>`);
-    kp.push(`<button class="kpi" data-k="${k}" data-m="mom" aria-pressed="${S.inf === k && S.mode === "mom"}" style="--kc:${c}">
-      <div class="t">${INF[k].ad} · aylık</div><div class="v">${pct(d.mom[i])}</div>
-      <div class="s">Önceki ay <b>${pct(d.mom[i - 1])}</b> · <span class="${cls(-dm, .005)}">${pp(dm)}</span></div>
-      <div class="d">${ayAd(d.months[i])} · yılbaşından ${pct(d.ytd[i])}</div></button>`);
+  for (const [k, m, c] of ISER) {
+    const d = infSrc(k); if (!d) continue; const arr = d[m], i = lastIdx(arr); if (i < 0) continue;
+    const j = arr.slice(0, i).map(ok).lastIndexOf(true), dv = j >= 0 ? arr[i] - arr[j] : null, on = S.infOn.has(k + ":" + m);
+    const gec = k === "web" && d.gecici && i === d.months.length - 1 ? " · ay içi geçici" : "";
+    const alt = k === "web" ? `${INF.web.uzun}` : m === "yoy" ? `12 aylık ort. ${pct(d.avg12?.[i])}` : `yılbaşından ${pct(d.ytd?.[i])}`;
+    kp.push(`<button class="kpi" data-s="${k}:${m}" aria-pressed="${on}" style="--kc:var(${c})">
+      <div class="t">${INF[k].ad} · ${m === "yoy" ? "yıllık" : "aylık"}</div><div class="v">${pct(arr[i])}</div>
+      <div class="s">Önceki ay <b>${pct(arr[j])}</b> · <span class="${cls(-dv, .005)}">${pp(dv)}</span></div>
+      <div class="d">${ayAd(d.months[i])}${gec} · ${alt}</div></button>`);
   }
-  $("#infKpi").innerHTML = kp.join("") || '<div class="empty">TÜİK verisi henüz yok.</div>';
-  const d = D[S.inf]; if (!d) return;
-  $$("#infMode button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === S.mode));
+  $("#infKpi").innerHTML = kp.join("") || '<div class="empty">Enflasyon verisi henüz yok.</div>';
   rangeChips($("#infRange"), INF_R, S.infR, k => { S.infR = k; renderInf(); });
-  const nAy = INF_R.find(r => r[0] === S.infR)[1], a = Math.max(0, d.months.length - nAy), xs = d.months.slice(a), vals = d[S.mode].slice(a);
-  if (!S.sel || !d.months.includes(S.sel)) S.sel = d.months[d.months.length - 1];
-  const hasG = S.inf === "tufe" && D.tufe.groups;
-  const bc = xs.map(m => m === S.sel && hasG ? css("--bar-hi") : (S.inf === "tufe" ? css("--c1") : css("--c2")));
-  $("#infTitle").textContent = `${INF[S.inf].ad} — ${S.mode === "yoy" ? "yıllık" : "aylık"} değişim (%)`;
-  $("#infSub").textContent = `${INF[S.inf].uzun} · TÜİK · son ${ayAd(d.months[d.months.length - 1])}` + (hasG ? " · ana harcama grupları için sütuna tıklayın" : "");
-  chart($("#infChart"), { xs, label: $("#infTitle").textContent, height: 300, xFmt: ayKisa, tipX: ayAd, maxX: 12, yFmt: v => nf(v, S.mode === "mom" ? 1 : 0),
-    series: [{ name: INF[S.inf].ad + (S.mode === "yoy" ? " yıllık" : " aylık"), type: "bar", vals, color: bc[0], barColors: bc, fmt: v => pct(v) }],
-    onClick: hasG ? i => { S.sel = xs[i]; renderInf(); } : null });
+  const sel = ISER.filter(([k, m]) => S.infOn.has(k + ":" + m) && infSrc(k));
+  const all = [...new Set(sel.flatMap(([k]) => infSrc(k).months))].sort();
+  const nAy = INF_R.find(r => r[0] === S.infR)[1], xs = all.slice(Math.max(0, all.length - nAy));
+  const tm = D.tufe?.months || [];
+  if (!S.sel || !tm.includes(S.sel)) S.sel = tm[tm.length - 1];
+  const alpha = (hex, on) => on || !/^#[0-9a-f]{6}$/i.test(hex) ? hex : hex + "b3";
+  const series = sel.map(([k, m, c]) => { const d = infSrc(k), o = {}; d.months.forEach((x, i) => o[x] = d[m][i]); const col = css(c);
+    return { name: `${INF[k].ad} ${m === "yoy" ? "yıllık" : "aylık"}`, type: "bar", vals: xs.map(x => o[x] ?? null), color: col, barColors: xs.map(x => alpha(col, x === S.sel)), fmt: v => pct(v) }; });
+  if (sel.length === 1) series[0].barColors = xs.map(x => x === S.sel ? css("--bar-hi") : series[0].color);
+  const ad = sel.map(([k, m]) => `${INF[k].ad} ${m === "yoy" ? "yıllık" : "aylık"}`);
+  $("#infTitle").textContent = ad.length ? ad.join(" · ") + " (%)" : "Kutulardan seri seçin";
+  $("#infSub").textContent = "Kutulara tıklayarak birden fazla seriyi aynı grafikte karşılaştırın · sütuna tıklayınca alttaki ana harcama grupları o aya geçer";
+  if (!series.length) { $("#infChart").innerHTML = '<div class="empty">Grafik için yukarıdaki kutulardan en az birini seçin.</div>'; }
+  else chart($("#infChart"), { xs, label: $("#infTitle").textContent, height: 300, xFmt: ayKisa, tipX: ayAd, maxX: 12, yFmt: v => nf(v, Math.max(...series.flatMap(s => s.vals.filter(ok))) < 10 ? 1 : 0),
+    series, onClick: i => { if (tm.includes(xs[i])) { S.sel = xs[i]; renderInf(); } } });
   renderGroups();
 }
+const gkey = l => String(l).toLocaleLowerCase("tr").replace(/[^a-zçğıöşü]/g, "").slice(0, 5);
 function renderGroups() {
   const box = $("#grpBox");
-  if (S.inf !== "tufe" || !D.tufe?.groups) { box.innerHTML = ""; return; }
-  const g = D.tufe.groups[S.sel], pid = D.tufe.press?.[S.sel];
+  if (!D.tufe?.groups) { box.innerHTML = ""; return; }
+  const g = D.tufe.groups[S.sel], pid = D.tufe.press?.[S.sel], yil = S.gMode === "yoy", w = D.webtufe;
   const link = pid ? ` · <a href="https://veriportali.tuik.gov.tr/tr/press/${pid}" target="_blank" rel="noopener">TÜİK bülteni</a>` : "";
-  const yil = S.mode === "yoy";
-  if (!g) { box.innerHTML = `<div class="note" style="margin-top:12px">${ayAd(S.sel)} için ana harcama grubu kırılımı yok${link}.</div>`; return; }
-  const v = yil ? g.yoy : g.mom, k = yil ? g.yoyK : g.momK;
-  if (!v) { box.innerHTML = ""; return; }
-  const mxV = Math.max(...v.map(x => Math.abs(x || 0))) || 1, mxK = Math.max(...(k || []).slice(1).map(x => Math.abs(x || 0))) || 1;
-  const bar = (x, mx, col) => { if (!ok(x)) return '<span class="hb"></span>'; const w = Math.abs(x) / mx * 50; return `<span class="hb"><i style="background:${col};${x >= 0 ? `left:50%;width:${w}%` : `right:50%;width:${w}%`}"></i></span>`; };
-  const rows = g.labels.map((l, i) => `<tr class="${i === 0 ? "tot" : ""}"><td>${esc(l)}</td><td>${bar(v[i], mxV, css("--c1"))}${pct(v[i])}</td><td>${k ? (i === 0 ? "" : bar(k[i], mxK, css("--c4"))) + (ok(k[i]) ? nf(k[i], 2) : "—") : "—"}</td></tr>`).join("");
-  box.innerHTML = `<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
-    <div class="cardhead"><div><h3 style="font-size:13.5px">TÜFE ana harcama gruplarının ${yil ? "yıllık" : "aylık"} değişim oranları ve genel endeks değişimine katkıları</h3>
-    <div class="sub">${ayAd(S.sel)} · değişim %, katkı yüzde puan${link}</div></div></div>
-    <div style="overflow-x:auto"><table class="grp"><thead><tr><th>Ana harcama grubu</th><th>${yil ? "Yıllık" : "Aylık"} değişim</th><th>Katkı (puan)</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  let body;
+  if (!g) body = `<div class="note">${ayAd(S.sel)} için TÜİK ana harcama grubu kırılımı yok${link}.</div>`;
+  else {
+    const v = yil ? g.yoy : g.mom, k = yil ? g.yoyK : g.momK;
+    const wi = w ? w.months.indexOf(S.sel) : -1, wmap = {};
+    if (wi >= 0) for (const gr of w.groups) wmap[gkey(gr)] = (yil ? w.yoy : w.mom)[gr][wi];
+    const wv = l => wmap[gkey(l)] ?? (gkey(l) === "tüfe" ? wmap[gkey("TÜFE")] : null);
+    const mxV = Math.max(...v.map(x => Math.abs(x || 0)), ...Object.values(wmap).map(x => Math.abs(x || 0))) || 1, mxK = Math.max(...(k || []).slice(1).map(x => Math.abs(x || 0))) || 1;
+    const bar = (x, mx, col) => { if (!ok(x)) return '<span class="hb"></span>'; const ww = Math.min(50, Math.abs(x) / mx * 50); return `<span class="hb"><i style="background:${col};${x >= 0 ? `left:50%;width:${ww}%` : `right:50%;width:${ww}%`}"></i></span>`; };
+    const rows = g.labels.map((l, i) => { const x = wv(l), f = ok(x) && ok(v[i]) ? v[i] - x : null;
+      return `<tr class="${i === 0 ? "tot" : ""}"><td>${esc(l)}</td><td>${bar(v[i], mxV, css("--c1"))}${pct(v[i])}</td><td>${k ? (i === 0 ? "" : bar(k[i], mxK, css("--c4"))) + (ok(k[i]) ? nf(k[i], 2) : "—") : "—"}</td>
+        <td>${wi >= 0 ? bar(x, mxV, css("--c6")) + pct(x) : "—"}</td><td>${ok(f) ? (f > 0 ? "+" : f < 0 ? "−" : "") + nf(Math.abs(f), 2) : "—"}</td></tr>`; }).join("");
+    body = `<div style="overflow-x:auto"><table class="grp"><thead><tr><th>Ana harcama grubu</th><th>TÜİK ${yil ? "yıllık" : "aylık"} değişim</th><th>TÜİK katkı (puan)</th><th>Web TÜFE ${yil ? "yıllık" : "aylık"}</th><th>Fark (TÜİK − Web)</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="note" style="margin-top:6px">Web TÜFE: webtufe.com, aynı ay${wi < 0 ? " için veri yok" : ""}; ana grup adları COICOP 2018'e göre eşleştirildi.</div>`;
+  }
+  box.innerHTML = `<details class="grpd" ${S.gOpen ? "open" : ""}><summary><b>TÜFE ana harcama gruplarının ${yil ? "yıllık" : "aylık"} değişim oranları ve genel endeks değişimine katkıları</b><span>${ayAd(S.sel)} · TÜİK ve Web TÜFE${link}</span></summary>
+    <div class="grph"><div class="seg" id="gMode"><button data-m="yoy" aria-pressed="${yil}">Yıllık</button><button data-m="mom" aria-pressed="${!yil}">Aylık</button></div>
+    <select id="gAy" aria-label="Ay">${Object.keys(D.tufe.groups).sort().reverse().map(m => `<option value="${m}"${m === S.sel ? " selected" : ""}>${ayAd(m)}</option>`).join("")}</select></div>${body}</details>`;
 }
-
 // ---------------------------------------------------------------- hedef / tahmin
 const BK = [
   ["pk_yilsonu", "PK anketi · cari yıl sonu", "--c1"], ["pk_12ay", "PK anketi · 12 ay sonrası", "--c3"],
@@ -333,8 +355,8 @@ function renderBk() {
 // ---------------------------------------------------------------- piyasa
 const P_R = [["1A", 31], ["3A", 92], ["6A", 183], ["1Y", 366], ["Tümü", 1e5]];
 const PSEL = {
-  tlref: { ad: "TLREF", lines: ["tlref"], bars: ["bistrepo"], not: "Hacim: TLREF'in hesaplandığı Borsa İstanbul Repo Pazarı O/N işlem hacmi" },
-  tlrefk: { ad: "TLREFK", lines: ["tlrefk"], bars: [], not: "Borsa İstanbul TLREFK için işlem hacmi yayımlamıyor" },
+  tlref: { ad: "TLREF", lines: ["tlref"], bars: ["tlref"], not: "Borsa İstanbul TLREF oranı ve hesaplamaya konu işlem hacmi (tarihsel dosya)" },
+  tlrefk: { ad: "TLREFK", lines: ["tlrefk"], bars: ["tlrefk"], not: "Borsa İstanbul TLREFK oranı ve işlem hacmi (tarihsel dosya)" },
   bistrepo: { ad: "BIST Repo O/N", lines: ["bistrepo"], bars: ["bistrepo"], not: "Borsa İstanbul Repo Pazarı gecelik ağırlıklı ortalama faiz ve işlem hacmi" },
   all: { ad: "Tümü", lines: ["tlref", "tlrefk", "bistrepo"], bars: [], not: "Oranların karşılaştırması" } };
 const PCOL = { tlref: "--c1", tlrefk: "--c3", bistrepo: "--c6" }, PAD = { tlref: "TLREF", tlrefk: "TLREFK", bistrepo: "BIST Repo O/N" };
@@ -345,14 +367,14 @@ function renderPiyasa() {
   if (!PSEL[S.pSel] || (S.pSel !== "all" && !has(S.pSel))) S.pSel = "tlref";
   for (const k of ["tlref", "tlrefk", "bistrepo"]) {
     const x = son(D[k]); if (!x) continue; const dg = k === "tlref" || k === "tlrefk" ? 4 : 2;
-    const hv = D[k].vol_tl ? D[k].vol_tl[x.i] : (k === "tlref" && has("bistrepo") ? D.bistrepo.vol_tl[D.bistrepo.dates.indexOf(x.t)] : null);
+    const hv = D[k].vol_tl ? D[k].vol_tl[lastIdx(D[k].vol_tl)] : null;
     kp.push(`<button class="kpi" data-p="${k}" aria-pressed="${S.pSel === k}" style="--kc:var(${PCOL[k]})"><div class="t">${PAD[k]} · gecelik</div><div class="v">${pct(x.v, dg)}</div>
       <div class="s">Önceki güne göre <span class="${cls(x.v - x.p, 1e-6)}">${bp(ok(x.p) ? x.v - x.p : null)}</span>${ok(hv) ? ` · hacim <b>₺${nf(hv / 1e9, 0)} mr</b>` : ""}</div>
       <div class="d">${gunAd(x.t)} · ${PKAY[k]}</div></button>`);
   }
   $("#pKpi").innerHTML = kp.join("");
   rangeChips($("#pRange"), P_R, S.pR, k => { S.pR = k; renderPiyasa(); });
-  const sel = PSEL[S.pSel], lines = sel.lines.filter(has), bars = sel.bars.filter(has);
+  const sel = PSEL[S.pSel], lines = sel.lines.filter(has), bars = sel.bars.filter(k => has(k) && D[k].vol_tl?.some(ok));
   $("#pTitle").textContent = S.pSel === "all" ? "Gecelik oranlar · karşılaştırma" : sel.ad + (bars.length ? " · oran ve işlem hacmi" : " · oran");
   $("#pSub").textContent = sel.not + (bars.length ? " · oran sol eksen (%), hacim sağ eksen (milyar TL)" : "");
   $("#pLeg").innerHTML = ["tlref", "tlrefk", "bistrepo"].filter(has).map(k => `<button class="chip" data-p="${k}" aria-pressed="${S.pSel === k}"><i style="background:var(${PCOL[k]})"></i>${PAD[k]}</button>`).join("")
@@ -381,8 +403,10 @@ function render() {
   renderSrc();
 }
 $("#tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (!b) return; S.tab = b.dataset.tab; try { history.replaceState(null, "", "#" + S.tab); } catch {} render(); };
-$("#infKpi").onclick = e => { const b = e.target.closest("button[data-k]"); if (!b) return; S.inf = b.dataset.k; S.mode = b.dataset.m || S.mode; renderInf(); };
-$("#infMode").onclick = e => { const b = e.target.closest("button[data-m]"); if (!b) return; S.mode = b.dataset.m; renderInf(); };
+$("#infKpi").onclick = e => { const b = e.target.closest("button[data-s]"); if (!b) return; const k = b.dataset.s; S.infOn.has(k) ? S.infOn.delete(k) : S.infOn.add(k); renderInf(); };
+$("#grpBox").addEventListener("click", e => { const b = e.target.closest("#gMode button[data-m]"); if (b) { e.preventDefault(); S.gMode = b.dataset.m; renderGroups(); } });
+$("#grpBox").addEventListener("change", e => { if (e.target.id === "gAy") { S.sel = e.target.value; renderInf(); } });
+$("#grpBox").addEventListener("toggle", e => { if (e.target.classList?.contains("grpd")) S.gOpen = e.target.open; }, true);
 let rz, lw = innerWidth; addEventListener("resize", () => { if (!D || Math.abs(innerWidth - lw) < 30 && !rz) { } lw = innerWidth; clearTimeout(rz); rz = setTimeout(() => { rz = null; render(); }, 150); });
 const h = location.hash.slice(1); if (h === "piyasa" || h === "makro") S.tab = h;
 fetch("data/makro.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })

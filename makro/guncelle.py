@@ -341,11 +341,44 @@ def bist_oran(s, tip):
         v = sayi(x.get("clval"))
         if x.get("date") and v is not None:
             seri[x["date"][:10]] = v
-    tarih = sorted(seri)
+    hacim = {}
+    try:                                                   # tarihsel dosya: işlem hacmi, adet, aktif üye
+        hacim = bist_tarihsel(s, tip)
+        for t, h in hacim.items():
+            seri.setdefault(t, h["rate"])
+    except Exception as e:
+        log(f"   {tip.upper()} tarihsel dosya okunamadı ({type(e).__name__}: {e}); yalnızca oran")
+    tarih = sorted(t for t in seri if seri[t] is not None)
     if not tarih:
         raise RuntimeError(f"BIST {tip}: veri yok")
-    return {"dates": tarih, "rate": [seri[t] for t in tarih], "updated": simdi(),
-            "source": f"Borsa İstanbul, {tip.upper()}"}
+    return {"dates": tarih, "rate": [seri[t] for t in tarih],
+            "vol_tl": [hacim.get(t, {}).get("vol") for t in tarih], "count": [hacim.get(t, {}).get("n") for t in tarih],
+            "members": [hacim.get(t, {}).get("uye") for t in tarih], "updated": simdi(),
+            "source": f"Borsa İstanbul, {tip.upper()} (oran ve tarihsel işlem hacmi)"}
+
+
+def bist_tarihsel(s, tip):
+    """/datum/TLREFORANI_D.zip ya da TLREFKORANI_D.zip: UTF-16 CSV; TARIH;AD;..;DEGER;REPO AOF;ISLEM HACMI;ISLEM ADEDI;AKTIF UYE;..."""
+    import zipfile
+    r = s.get(f"https://www.borsaistanbul.com/datum/{tip.upper()}ORANI_D.zip", timeout=90,
+              headers={"Referer": f"https://www.borsaistanbul.com/endeksler/{tip}"})
+    r.raise_for_status()
+    z = zipfile.ZipFile(io.BytesIO(r.content))
+    ham = z.read(z.namelist()[0])
+    metin = ham.decode("utf-16") if ham[:2] in (b"\xff\xfe", b"\xfe\xff") or b"\x00" in ham[:200] else ham.decode("utf-8", "ignore")
+    tam = lambda x: float(x.replace(",", "")) if x and x.strip() not in ("", "-") else None
+    out = {}
+    for satir in metin.splitlines():
+        h = satir.split(";")
+        m = re.match(r"(\d{2})/(\d{2})/(\d{4})$", h[0].strip()) if h else None
+        if not m or len(h) < 10:
+            continue
+        try:
+            out[f"{m.group(3)}-{m.group(2)}-{m.group(1)}"] = {"rate": tam(h[5]), "vol": tam(h[7]), "n": tam(h[8]), "uye": tam(h[9])}
+        except ValueError:
+            continue
+    log(f"   {tip.upper()} tarihsel: {len(out)} gün, son {max(out) if out else '-'}")
+    return out
 
 
 # ------------------------------------------------------------------ ana akış
@@ -393,6 +426,10 @@ def main():
         except Exception:
             pass
     D.pop("tpp", None)
+    try:                                                   # Web TÜFE: webtufe.com verisi (makro/webtufe.json)
+        D["webtufe"] = json.load(open(os.path.join(KOK, "webtufe.json"), encoding="utf-8"))
+    except Exception as e:
+        log(f"Web TÜFE dosyası okunamadı: {e}")
     D["updated"] = simdi()
     D["failed"] = sorun
     json.dump(D, open(yol, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
