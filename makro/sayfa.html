@@ -356,8 +356,8 @@ function renderBk() {
     const tt = rp?.tahmin?.[y] != null ? (rp.ad || "") : gt?.rapor || "";
     const tufe = y === y0 && D.tufe?.months?.length ? D.tufe.yoy[D.tufe.yoy.length - 1] : null;
     return `<tr class="${y === y0 ? "cur" : ""}"><td>${y}</td><td>${ok(r.hedef) ? nf(r.hedef, 1) : "—"}</td><td class="${ok(a) ? "" : "na"}">${ok(a) ? nf(a, 1) : "—"}</td><td class="${ok(t) ? "" : "na"}" title="${esc(tt)}">${ok(t) ? nf(t, 1) : "—"}</td>
-      <td>${ok(g) ? nf(g, 2) : ok(tufe) ? `<span title="Son açıklanan yıllık TÜFE">(${nf(tufe, 2)})</span>` : "—"}</td><td class="${cls(-dv, .005)}">${ok(dv) ? (dv > 0 ? "+" : "") + nf(dv, 2) : "—"}</td><td class="${cls(-dt, .005)}">${ok(dt) ? (dt > 0 ? "+" : "") + nf(dt, 2) : "—"}</td></tr>`; }).join("");
-  $("#hdTbl").innerHTML = rows ? `<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Yıl</th><th>Hedef</th><th>Ara hedef</th><th>TCMB tahmini</th><th>Gerçekleşme</th><th>Hedeften sapma</th><th>Tahminden sapma</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <td>${ok(g) ? nf(g, 2) : ok(tufe) ? `<span title="Son açıklanan yıllık TÜFE">(${nf(tufe, 2)})</span>` : "—"}</td><td class="${cls(-dt, .005)}">${ok(dt) ? (dt > 0 ? "+" : "") + nf(dt, 2) : "—"}</td></tr>`; }).join("");
+  $("#hdTbl").innerHTML = rows ? `<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Yıl</th><th>Hedef</th><th>Ara hedef</th><th>TCMB tahmini</th><th>Gerçekleşme</th><th>Tahminden sapma</th></tr></thead><tbody>${rows}</tbody></table></div>
     <div class="note" style="margin-top:8px">Yıl sonu TÜFE, %. Cari ve gelecek yıllar: ${rp?.url ? `<a href="${esc(rp.url)}" target="_blank" rel="noopener">${esc(rp.ad || "Enflasyon Raporu")}</a>` : "en güncel Enflasyon Raporu"}; geçmiş yıllar: o yılın son (IV) Enflasyon Raporu'ndaki yıl sonu tahmini. Ara hedefler 2025'ten itibaren tanımlandı. Cari yıl için parantez içinde son açıklanan yıllık TÜFE.</div>` : '<div class="empty">Hedef verisi yok.</div>';
   $("#hdSub").textContent = "Hedef: TCMB · tahmin ve ara hedef: en güncel Enflasyon Raporu";
 }
