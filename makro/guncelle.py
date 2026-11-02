@@ -7,8 +7,6 @@ Kaynaklar
   - TCMB: enflasyon hedefleri tablosu ve en güncel Enflasyon Raporu'ndaki yıl sonu tahminleri / ara hedefler
   - Borsa İstanbul: TLREF ve TLREFK
   - Borsa İstanbul Repo Pazarı O/N (EVDS): ağırlıklı ortalama oran ve hacim
-  - Takasbank: TPP işlem ortalamaları (yalnızca O/N): oran ve hacim. Takasbank bulut sunucularını engellediği için
-    doğrudan alınamazsa makro/tpp/*.xlsx (rapordan kopyalanan tablo) kullanılır
 
 Kullanım: python makro/guncelle.py --site site   (EVDS anahtarı EVDS_API_KEY ortam değişkeninden)
 Önceki çıktı (site/makro/data/makro.json) varsa üzerine eklenir; bir kaynak çekilemezse eski verisi korunur.
@@ -350,107 +348,11 @@ def bist_oran(s, tip):
             "source": f"Borsa İstanbul, {tip.upper()}"}
 
 
-# ------------------------------------------------------------------ Takasbank TPP (O/N)
-TPP_URL = "https://www.takasbank.com.tr/tr/istatistikler/takasbank-para-piyasasi-tpp/tpp-islem-ortalamalari-raporu"
-
-
-class TppIstek:
-    def __enter__(self):
-        self.s = oturum()
-        r = self.s.get(TPP_URL, timeout=60)
-        form = re.search(r'<form[^>]*>(?:(?!</form>)[\s\S])*?name="posturl"[\s\S]*?</form>', r.text)
-        if r.status_code != 200 or not form:
-            raise RuntimeError(f"TPP: form yok (HTTP {r.status_code}, {len(r.text)} bayt): {re.sub(r'<[^>]+>|\\s+', ' ', r.text)[:300]}")
-        self.alanlar = dict(re.findall(r'name="([^"]+)"[^>]*?value="([^"]*)"', form.group(0)))
-        return self
-
-    def rapor(self, bas, son):
-        p = self.s.post(TPP_URL, data={**self.alanlar, "startDate": bas, "endDate": son}, headers={"Referer": TPP_URL}, timeout=90)
-        p.raise_for_status()
-        return p.text
-
-    def __exit__(self, *a):
-        pass
-
-
-def tpp_excel(onceki):
-    """makro/tpp/*.xlsx: Takasbank TPP İşlem Ortalamaları raporundan kopyalanan tablo (İşlem Tarihi, Gün, Min, Max, Ort, Hacim TL, Hacim USD, Sayı)."""
-    import glob
-    veri = {}
-    for i, t in enumerate(onceki.get("dates", [])):
-        veri[t] = {k: onceki[k][i] for k in ("rate", "min", "max", "vol_tl", "vol_usd", "count") if k in onceki}
-    dosyalar = sorted(glob.glob(os.path.join(KOK, "tpp", "*.xls*")))
-    if not dosyalar:
-        return None
-    import openpyxl
-    for yol in dosyalar:
-        wb = openpyxl.load_workbook(yol, data_only=True)
-        for ws in wb.worksheets:
-            for r in ws.iter_rows(values_only=True):
-                r = list(r)
-                if len(r) < 8 or r[0] is None:
-                    continue
-                t = r[0]
-                if isinstance(t, (dt.datetime, dt.date)):
-                    g = (t.date() if isinstance(t, dt.datetime) else t).isoformat()
-                else:
-                    m = re.match(r"(\d{2})\.(\d{2})\.(\d{4})", str(t).strip())
-                    if not m:
-                        continue
-                    g = f"{m.group(3)}-{m.group(2)}-{m.group(1)}"
-                if str(r[1]).upper().replace(" ", "") not in ("O/N", "ON"):
-                    continue
-                f = lambda x: x if isinstance(x, (int, float)) else sayi(x)
-                veri[g] = {"min": f(r[2]), "max": f(r[3]), "rate": f(r[4]), "vol_tl": f(r[5]), "vol_usd": f(r[6]), "count": f(r[7])}
-    tarih = sorted(t for t in veri if veri[t].get("rate") is not None)
-    log(f"   TPP Excel: {len(dosyalar)} dosya, {len(tarih)} gün")
-    return {"dates": tarih, **{k: [veri[t].get(k) for t in tarih] for k in ("rate", "min", "max", "vol_tl", "vol_usd", "count")},
-            "updated": simdi(), "source": "Takasbank, TPP İşlem Ortalamaları (O/N) · elle yüklenen Excel", "url": TPP_URL}
-
-
-def tpp_cek(onceki):
-    try:
-        with TppIstek() as k:
-            return _tpp(k, onceki)
-    except Exception as e:
-        log(f"   TPP doğrudan alınamadı: {str(e)[:160]}")
-    x = tpp_excel(onceki)
-    if x:
-        return x
-    raise RuntimeError("Takasbank bulut sunucularından gelen isteği reddediyor; makro/tpp/ klasörüne Excel yüklenebilir")
-
-
-def _tpp(k, onceki):
-    veri = {}
-    for i, t in enumerate(onceki.get("dates", [])):
-        veri[t] = {k: onceki[k][i] for k in ("rate", "min", "max", "vol_tl", "vol_usd", "count") if k in onceki}
-    bugun = dt.date.today()
-    bas = (dt.date.fromisoformat(max(veri)) - dt.timedelta(days=10)) if veri else dt.date(2023, 1, 1)
-    while bas <= bugun:
-        son = min(bugun, (bas.replace(day=1) + dt.timedelta(days=32)).replace(day=1) - dt.timedelta(days=1))
-        metin = k.rapor(f"{bas:%d.%m.%Y}", f"{son:%d.%m.%Y}")
-        n = 0
-        for h in tablo_satirlari(metin):
-            if len(h) >= 8 and re.fullmatch(r"\d{2}\.\d{2}\.\d{4}", h[0]) and h[1].upper().replace(" ", "") in ("O/N", "ON"):
-                g = dt.datetime.strptime(h[0], "%d.%m.%Y").date().isoformat()
-                veri[g] = {"min": sayi(h[2]), "max": sayi(h[3]), "rate": sayi(h[4]),
-                           "vol_tl": sayi(h[5]), "vol_usd": sayi(h[6]), "count": sayi(h[7])}
-                n += 1
-        log(f"   TPP {bas:%Y-%m}: {n} gün")
-        bas = son + dt.timedelta(days=1)
-        time.sleep(0.5)
-    tarih = sorted(t for t in veri if veri[t].get("rate") is not None)
-    if not tarih:
-        raise RuntimeError("TPP: veri okunamadı")
-    return {"dates": tarih, **{k: [veri[t].get(k) for t in tarih] for k in ("rate", "min", "max", "vol_tl", "vol_usd", "count")},
-            "updated": simdi(), "source": "Takasbank, TPP İşlem Ortalamaları (O/N)", "url": TPP_URL}
-
-
 # ------------------------------------------------------------------ ana akış
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--site", default="site")
-    ap.add_argument("--sadece", default="", help="virgülle: tufe,ufe,beklenti,hedef,rapor,tlref,tlrefk,tpp")
+    ap.add_argument("--sadece", default="", help="virgülle: tufe,ufe,beklenti,hedef,rapor,tlref,tlrefk,bistrepo")
     a = ap.parse_args()
     cikti = os.path.join(a.site, "makro")
     yol = os.path.join(cikti, "data", "makro.json")
@@ -471,7 +373,6 @@ def main():
         ("tlref", lambda: bist_oran(s, "tlref")),
         ("tlrefk", lambda: bist_oran(s, "tlrefk")),
         ("bistrepo", lambda: bist_repo(anahtar) if anahtar else (_ for _ in ()).throw(RuntimeError("EVDS_API_KEY yok"))),
-        ("tpp", lambda: tpp_cek(D.get("tpp", {}))),
     ]
     secim = set(x for x in a.sadece.split(",") if x)
     sorun = []
@@ -491,6 +392,7 @@ def main():
             log("Enflasyon Raporu tahmini: elle girilen değer (makro/tcmb_tahmin.json)")
         except Exception:
             pass
+    D.pop("tpp", None)
     D["updated"] = simdi()
     D["failed"] = sorun
     json.dump(D, open(yol, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
@@ -500,7 +402,7 @@ def main():
         from durum import yaz
         if D.get("tufe", {}).get("months"):
             yaz(a.site, "tufe", D["tufe"]["months"][-1])
-        son_p = [D[k]["dates"][-1] for k in ("tlref", "bistrepo", "tpp") if D.get(k, {}).get("dates")]
+        son_p = [D[k]["dates"][-1] for k in ("tlref", "bistrepo") if D.get(k, {}).get("dates")]
         if son_p:
             yaz(a.site, "piyasa", max(son_p))
     except Exception as e:
