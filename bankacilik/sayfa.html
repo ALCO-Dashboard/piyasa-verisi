@@ -130,6 +130,8 @@ input[type=search]{border:1px solid var(--line);background:var(--surface);border
 .tdw th{text-transform:none;letter-spacing:0;position:sticky;top:0;background:var(--surface);font-weight:600;white-space:normal;min-width:90px;vertical-align:bottom;font-size:11px;line-height:1.25}
 .tdw th:first-child,.tdw td:first-child{text-align:left;color:var(--muted);min-width:70px}
 .tdw th i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
+.btag{display:inline-flex;align-items:center;gap:5px;margin-left:10px;font-size:11.5px;font-weight:600;letter-spacing:.02em;text-transform:none;color:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:2px 8px;vertical-align:2px}
+.btag .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
 .tflt{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:2px 0 10px}
 .tflt .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
 .tflt .seg button{border:0;background:none;padding:7px 18px;font:inherit;font-weight:600;font-size:13.5px;color:var(--ink-2);cursor:pointer}
@@ -409,7 +411,7 @@ const S = {
   tab: "bddk",
   bFreq: store.get("bv.freq") || "w", bA: null, bB: null, bGroups: (store.get("bv.groups") || "katilim").split(","), bCur: store.get("bv.cur") || "Toplam", bTables: {},
   bColOverride: {}, bChk: {}, bIdx: {}, bOpenN: new Set(),
-  tSub: "pp", tTopics: {}, tAB: {}, tClosed: new Set(), tBank: store.get("bv.tbank") || "katilim", tA: null, tB: null, tSel: {}, tRange: "1Y", tCur: {}, tTyp: {}, tOpen: new Set(), tData: new Set(),
+  tSub: "pp", tTopics: {}, tAB: {}, tClosed: new Set(), tBank: store.get("bv.tbank") || "katilim", tBankSet: (store.get("bv.tbanks") || store.get("bv.tbank") || "katilim").split(",").filter(Boolean), tA: null, tB: null, tSel: {}, tRange: "1Y", tCur: {}, tTyp: {}, tOpen: new Set(), tData: new Set(),
   aSel: [], aIndex: false, aRange: "2Y", aSrc: "all",
 };
 let D = null;
@@ -918,16 +920,28 @@ function defaultSel(g) {
 function tSelTopics() {
   const items = tSections().flatMap(s => s.items); if (!items.length) return [];
   const banks = tBanks().map(b => b.key);
-  if (!banks.includes(S.tBank)) S.tBank = banks.includes("katilim") ? "katilim" : banks[0] || "sektor";
+  S.tBankSet = S.tBankSet.filter(b => banks.includes(b));
+  if (!S.tBankSet.length) S.tBankSet = [banks.includes("katilim") ? "katilim" : banks[0] || "sektor"];
+  S.tBankSet.sort((a, b) => banks.indexOf(a) - banks.indexOf(b)); S.tBank = S.tBankSet[0];
   if (!S.tTopics[S.tSub]) { const f = items.find(x => x.g[S.tBank]) || items[0]; S.tTopics[S.tSub] = [f.id]; }
   const sel = S.tTopics[S.tSub] = S.tTopics[S.tSub].filter(id => items.some(x => x.id === id));
   return items.filter(x => sel.includes(x.id));
 }
-function tResolve(it) {
-  if (it.g[S.tBank]) return [D.e.groups[it.g[S.tBank]], null];
+function tResolve(it, bank = S.tBank) {
+  if (it.g[bank]) return [D.e.groups[it.g[bank]], null];
   if (it.g.genel) return [D.e.groups[it.g.genel], null];
   const nb = GROUPS.map(g => g.key).find(k => it.g[k]);
-  return [D.e.groups[it.g[nb]], `${gName(S.tBank)} için yayımlanmıyor, ${gName(nb)} gösteriliyor`];
+  return [D.e.groups[it.g[nb]], `${gName(bank)} için yayımlanmıyor, ${gName(nb)} gösteriliyor`];
+}
+// seçili konu × seçili banka grupları; aynı EVDS grubuna düşenler tek panel
+function tPairs(sel) {
+  const out = [], seen = new Set();
+  for (const it of sel) for (const bank of S.tBankSet) {
+    const [g] = tResolve(it, bank); if (!g) continue;
+    if (seen.has(g.code)) { const p = out.find(x => x.g.code === g.code); if (p && !p.banks.includes(bank)) p.banks.push(bank); continue; }
+    seen.add(g.code); out.push({ it, bank, g, banks: [bank] });
+  }
+  return out;
 }
 // Seri adından para birimi (TL/ABD doları/Euro) ve mevduat türü (Mevduat/Tasarruf/Ticari)
 const CUR_ORD = ["TRY", "USD", "EUR"], CUR_LAB = { TRY: "TRY", USD: "USD", EUR: "EUR" }, TYP_ORD = ["Mevduat", "Tasarruf", "Ticari", "Özel", "Kamu"];
@@ -964,8 +978,10 @@ function tAB(g) {
   if (A >= B) A = Math.max(0, B - 1);
   return S.tAB[g.code] = { A, B };
 }
-function tPanel(it) {
-  const [g, fb] = tResolve(it);
+function tPanel(pr) {
+  const it = pr.it, own = pr.banks.filter(b => it.g[b]), miss = pr.banks.filter(b => !it.g[b] && !it.g.genel);
+  const [g, fb0] = tResolve(it, own[0] || pr.bank), fb = own.length || it.g.genel ? (miss.length ? `${miss.map(gName).join(", ")} için yayımlanmıyor` : null) : fb0;
+  const bTag = S.tBankSet.length > 1 && !it.g.genel ? (own.length ? own : [GROUPS.map(x => x.key).find(k => it.g[k])]).map(b => `<span class="btag"><span class="dot" style="background:${gColor(b)}"></span>${esc(gName(b))}</span>`).join("") : "";
   if (!g || !g.dates.length) return `<article class="card"><div class="empty">${esc(it.name)}: veri yok.</div></article>`;
   const key = g.code, n = g.dates.length, { A, B } = tAB(g), kind = g.kind, sc = g.scale;
   if (!S.tSel[key]) S.tSel[key] = defaultSel(g);
@@ -984,7 +1000,7 @@ function tPanel(it) {
     rows += `<tr class="row l${evdsLvl(s.name)}${on ? " sel" : ""}" data-s="${esc(s.code)}"><td class="chk"><input type="checkbox" ${on ? "checked" : ""} aria-label="Grafiğe ekle"></td><td class="nm">${esc(s.name)}</td><td>${fmtFull(a, kind)}</td><td>${fmtFull(b, kind)}</td>${dc}${pc}</tr>`;
   }
   return `<article class="card" data-g="${key}">
-    <div class="cardhead"><div><h3>${esc(g.name)}</h3><div class="kv"><span>Son veri <b>${dShort(g.dates[n - 1])}</b></span>${g.flow ? "<span>Haftalık değişim · milyon ABD doları</span>" : ""}${fb ? `<span>${esc(fb)}</span>` : ""}</div></div>
+    <div class="cardhead"><div><h3>${esc(g.name)}${bTag}</h3><div class="kv"><span>Son veri <b>${dShort(g.dates[n - 1])}</b></span>${g.flow ? "<span>Haftalık değişim · milyon ABD doları</span>" : ""}${fb ? `<span>${esc(fb)}</span>` : ""}</div></div>
       <div class="chips">${T_RANGES.map(([k]) => `<button class="chip" data-rk="${k}" aria-pressed="${S.tRange === k}">${k}</button>`).join("")}</div></div>
     ${g.curs.length > 1 || g.typs.length > 1 ? `<div class="tflt">${g.curs.length > 1 ? `<div class="seg tcur" role="group" aria-label="Para birimi">${g.curs.map(c => `<button data-cur="${c}" aria-pressed="${S.tCur[key] === c}">${CUR_LAB[c]}</button>`).join("")}</div>` : ""}${g.typs.length > 1 ? `<div class="ttyp" role="group" aria-label="Mevduat türü">${g.typs.map(t => `<button class="chip sm" data-typ="${t}" aria-pressed="${(S.tTyp[key] || []).includes(t)}">${t}</button>`).join("")}</div>` : ""}</div>` : ""}
     <div data-tsub="${key}" class="sub" style="margin-bottom:2px"></div><div data-tchart="${key}"></div>
@@ -1020,24 +1036,27 @@ function renderTcmb() {
   if (S.tSub === "pp") { ppRender(); return; } ppHide();
   if (!D.e) { $("#tPanels").innerHTML = '<div class="card empty">EVDS verisi henüz yok.</div>'; $("#tNav").innerHTML = ""; return; }
   const secs = tSections(), sel = tSelTopics();
-  $("#tBanks").innerHTML = tBanks().map(b => `<button class="chip" aria-pressed="${b.key === S.tBank}" data-b="${b.key}"><span class="dot" style="background:${gColor(b.key)}"></span>${esc(b.name)}</button>`).join("");
+  $("#tBanks").innerHTML = tBanks().map(b => `<button class="chip" aria-pressed="${S.tBankSet.includes(b.key)}" data-b="${b.key}"><span class="dot" style="background:${gColor(b.key)}"></span>${esc(b.name)}</button>`).join("");
   $("#tBankNote").textContent = TBANK_NOTE[S.tSub] || "";
   const navLabel = it => `${esc(it.name)}${it.g.genel ? '<span class="gen">GENEL</span>' : ""}`;
   $("#tNav").innerHTML = secs.map(s => `<details class="tsec" data-sec="${esc(s.section)}"${S.tClosed.has(S.tSub + "|" + s.section) ? "" : " open"}><summary>${esc(s.section)}</summary>`
-    + s.items.map(it => `<label class="${tHas(it, S.tBank) ? "" : "off"}" title="${tHas(it, S.tBank) ? "" : esc(gName(S.tBank)) + " için yayımlanmıyor"}"><input type="checkbox" data-t="${it.id}" ${sel.some(x => x.id === it.id) ? "checked" : ""}><span>${navLabel(it)}</span></label>`).join("") + `</details>`).join("");
-  $("#tPanels").innerHTML = sel.length ? sel.map(tPanel).join("") : '<div class="card empty">Soldaki menüden konu işaretleyin.</div>';
-  sel.forEach(it => { const [g] = tResolve(it); if (g) drawTChart(g.code); });
+    + s.items.map(it => { const hv = S.tBankSet.some(b => tHas(it, b)); return `<label class="${hv ? "" : "off"}" title="${hv ? "" : esc(S.tBankSet.map(gName).join(", ")) + " için yayımlanmıyor"}"><input type="checkbox" data-t="${it.id}" ${sel.some(x => x.id === it.id) ? "checked" : ""}><span>${navLabel(it)}</span></label>`; }).join("") + `</details>`).join("");
+  const prs = tPairs(sel);
+  $("#tPanels").innerHTML = prs.length ? prs.map(tPanel).join("") : '<div class="card empty">Soldaki menüden konu işaretleyin.</div>';
+  prs.forEach(p => drawTChart(p.g.code));
 }
 /*PARA_POLITIKASI*/
 function bindTcmb() {
   bindPp();
-  $("#tSub").onclick = e => { const b = e.target.closest("button"); if (!b) return; S.tSub = b.dataset.p; const ks = tBanks().map(x => x.key); if (!ks.includes(S.tBank)) S.tBank = ks.includes(store.get("bv.tbank")) ? store.get("bv.tbank") : (ks.includes("katilim") ? "katilim" : ks[0]); renderTcmb(); };
+  $("#tSub").onclick = e => { const b = e.target.closest("button"); if (!b) return; S.tSub = b.dataset.p; renderTcmb(); };
   $("#tNav").addEventListener("change", e => {
     const b = e.target.closest("input[data-t]"); if (!b) return; const id = b.dataset.t, cur = S.tTopics[S.tSub] || [];
     S.tTopics[S.tSub] = cur.includes(id) ? cur.filter(x => x !== id) : cur.concat(id); renderTcmb();
   });
   $("#tNav").addEventListener("toggle", e => { const d = e.target.closest && e.target.closest("details[data-sec]"); if (!d) return; const k = S.tSub + "|" + d.dataset.sec; d.open ? S.tClosed.delete(k) : S.tClosed.add(k); }, true);
-  $("#tBanks").onclick = e => { const b = e.target.closest("button[data-b]"); if (!b) return; S.tBank = b.dataset.b; store.set("bv.tbank", S.tBank); renderTcmb(); };
+  $("#tBanks").onclick = e => { const b = e.target.closest("button[data-b]"); if (!b) return; const k = b.dataset.b, cur = S.tBankSet;
+    S.tBankSet = cur.includes(k) ? (cur.length > 1 ? cur.filter(x => x !== k) : cur) : cur.concat(k);
+    store.set("bv.tbanks", S.tBankSet.join(",")); store.set("bv.tbank", S.tBankSet[0]); renderTcmb(); };
   $("#tPanels").addEventListener("toggle", e => { const d = e.target.closest && e.target.closest("details[data-open]"); if (!d) return; d.open ? S.tOpen.add(d.dataset.open) : S.tOpen.delete(d.dataset.open); }, true);
   $("#tPanels").addEventListener("change", e => {
     const t = e.target, code = t.dataset.ta || t.dataset.tb; if (!code) return; const ab = S.tAB[code];
