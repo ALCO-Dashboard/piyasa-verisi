@@ -426,6 +426,10 @@ def main():
         except Exception:
             pass
     D.pop("tpp", None)
+    try:                                                   # geçmiş yılların TCMB yıl sonu tahminleri ve ara hedefleri
+        D["rapor_gecmis"] = json.load(open(os.path.join(KOK, "tcmb_tahmin_gecmis.json"), encoding="utf-8"))
+    except Exception as e:
+        log(f"Geçmiş TCMB tahmin dosyası okunamadı: {e}")
     try:                                                   # Web TÜFE: webtufe.com verisi (makro/webtufe.json)
         D["webtufe"] = json.load(open(os.path.join(KOK, "webtufe.json"), encoding="utf-8"))
     except Exception as e:

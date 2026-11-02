@@ -1,0 +1,18 @@
+{
+  "aciklama": "Her yıl için o yılın son Enflasyon Raporu'ndaki (IV) yıl sonu TÜFE tahmini (orta nokta) ve en son açıklanan ara hedef. Kaynak: TCMB Enflasyon Raporu 'Orta Vadeli Öngörüler' bölümleri.",
+  "tahmin": {
+    "2019": {"deger": 12.0, "rapor": "Enflasyon Raporu 2019 - IV"},
+    "2020": {"deger": 12.1, "rapor": "Enflasyon Raporu 2020 - IV"},
+    "2021": {"deger": 18.4, "rapor": "Enflasyon Raporu 2021 - IV"},
+    "2022": {"deger": 65.2, "rapor": "Enflasyon Raporu 2022 - IV"},
+    "2023": {"deger": 65.0, "rapor": "Enflasyon Raporu 2023 - IV"},
+    "2024": {"deger": 44.0, "rapor": "Enflasyon Raporu 2024 - IV"},
+    "2025": {"deger": 32.0, "rapor": "Enflasyon Raporu 2025 - IV (aralık %31-33, orta nokta)"}
+  },
+  "ara_hedef": {
+    "2025": {"deger": 24.0, "rapor": "Enflasyon Raporu 2025 - III"},
+    "2026": {"deger": 24.0, "rapor": "Enflasyon Raporu 2026 - III"},
+    "2027": {"deger": 15.0, "rapor": "Enflasyon Raporu 2026 - III (2026 - II'de 16'dan güncellendi)"},
+    "2028": {"deger": 9.0, "rapor": "Enflasyon Raporu 2026 - III"}
+  }
+}

@@ -51,6 +51,8 @@ button.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(-
 .kpi .v{font-family:var(--mono);font-size:26px;font-weight:500;line-height:1.2;margin-top:4px;color:var(--ink)}
 .kpi .s{font-size:12.5px;color:var(--ink-2);margin-top:3px}
 .kpi .s b{font-family:var(--mono);font-weight:500}
+.kpi2 .kr{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:4px}
+.kpi2 .kl{font-size:12.5px;font-weight:600;color:var(--ink-2)}.kpi2 .kv{font-family:var(--mono);font-size:22px;color:var(--ink)}
 .kpi .d{font-size:11.5px;color:var(--muted);margin-top:2px}
 .up{color:var(--up)}.down{color:var(--down)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px;min-width:0}
@@ -214,6 +216,7 @@ function chart(el, o) {
   const nx = Math.max(2, Math.min(o.maxX || 8, Math.floor(iw / 80))), step = Math.max(1, Math.ceil(n / nx));
   for (let i = n - 1; i >= 0; i -= step) s += `<text x="${X(i)}" y="${H - 6}" text-anchor="${i === n - 1 ? "end" : "middle"}">${o.xFmt ? o.xFmt(xs[i]) : xs[i]}</text>`;
   s += `<line x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}" stroke="var(--axis)"/></g>`;
+  if (o.hi != null && o.hi >= 0) s += `<rect x="${(X(o.hi) - bw / 2).toFixed(2)}" y="${m.t}" width="${bw.toFixed(2)}" height="${ih}" fill="var(--accent-wash)"/><line x1="${X(o.hi)}" x2="${X(o.hi)}" y1="${m.t}" y2="${m.t + ih}" stroke="var(--accent)" stroke-dasharray="3 3" stroke-width="1"/>`;
   const bars = ser.filter(x => x.type === "bar"), nb = bars.length;
   bars.forEach((b, k) => { const Y = b.axis === "r" ? YR : YL, base = Y(b.axis === "r" ? yr0 : Math.max(yl0, Math.min(0, yl1))), w = Math.max(1, bw * (nb > 1 ? .8 / nb : .72));
     b.vals.forEach((v, i) => { if (!ok(v)) return; const y = Y(v), x = X(i) - (nb > 1 ? bw * .4 - w * k : w / 2);
@@ -222,7 +225,8 @@ function chart(el, o) {
     const Y = l.axis === "r" ? YR : YL; let d = "", pen = false;
     l.vals.forEach((v, i) => { if (!ok(v)) { if (!l.span) pen = false; return; } d += `${pen ? "L" : "M"}${X(i).toFixed(2)},${Y(v).toFixed(2)}`; pen = true; });
     s += `<path d="${d}" fill="none" stroke="${l.color}" stroke-width="${l.width || 2}" stroke-linejoin="round" ${l.dash ? `stroke-dasharray="${l.dash}"` : ""}/>`;
-    const li = l.vals.map(ok).lastIndexOf(true); if (li >= 0 && !l.noDot) s += `<circle cx="${X(li)}" cy="${Y(l.vals[li])}" r="3" fill="${l.color}"/>`;
+    if (l.dots && n <= 40) l.vals.forEach((v, i) => { if (ok(v)) s += `<circle cx="${X(i).toFixed(2)}" cy="${Y(v).toFixed(2)}" r="${i === o.hi ? 4.5 : 2.6}" fill="${i === o.hi ? "var(--surface)" : l.color}" stroke="${l.color}" stroke-width="${i === o.hi ? 2 : 0}"/>`; });
+    const li = l.vals.map(ok).lastIndexOf(true); if (li >= 0 && !l.noDot && !l.dots) s += `<circle cx="${X(li)}" cy="${Y(l.vals[li])}" r="3" fill="${l.color}"/>`;
   }
   s += `<line class="cur" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" stroke="var(--axis)" stroke-dasharray="3 3" visibility="hidden"/></svg>`;
   el.insertAdjacentHTML("beforeend", s);
@@ -273,14 +277,13 @@ function renderInf() {
   if (!S.sel || !tm.includes(S.sel)) S.sel = tm[tm.length - 1];
   const alpha = (hex, on) => on || !/^#[0-9a-f]{6}$/i.test(hex) ? hex : hex + "b3";
   const series = sel.map(([k, m, c]) => { const d = infSrc(k), o = {}; d.months.forEach((x, i) => o[x] = d[m][i]); const col = css(c);
-    return { name: `${INF[k].ad} ${m === "yoy" ? "yıllık" : "aylık"}`, type: "bar", vals: xs.map(x => o[x] ?? null), color: col, barColors: xs.map(x => alpha(col, x === S.sel)), fmt: v => pct(v) }; });
-  if (sel.length === 1) series[0].barColors = xs.map(x => x === S.sel ? css("--bar-hi") : series[0].color);
+    return { name: `${INF[k].ad} ${m === "yoy" ? "yıllık" : "aylık"}`, vals: xs.map(x => o[x] ?? null), color: col, width: 2.4, dots: true, fmt: v => pct(v) }; });
   const ad = sel.map(([k, m]) => `${INF[k].ad} ${m === "yoy" ? "yıllık" : "aylık"}`);
   $("#infTitle").textContent = ad.length ? ad.join(" · ") + " (%)" : "Kutulardan seri seçin";
-  $("#infSub").textContent = "Kutulara tıklayarak birden fazla seriyi aynı grafikte karşılaştırın · sütuna tıklayınca alttaki ana harcama grupları o aya geçer";
+  $("#infSub").textContent = "Kutulara tıklayarak birden fazla seriyi aynı grafikte karşılaştırın · grafikte bir aya tıklayınca alttaki ana harcama grupları o aya geçer";
   if (!series.length) { $("#infChart").innerHTML = '<div class="empty">Grafik için yukarıdaki kutulardan en az birini seçin.</div>'; }
   else chart($("#infChart"), { xs, label: $("#infTitle").textContent, height: 300, xFmt: ayKisa, tipX: ayAd, maxX: 12, yFmt: v => nf(v, Math.max(...series.flatMap(s => s.vals.filter(ok))) < 10 ? 1 : 0),
-    series, onClick: i => { if (tm.includes(xs[i])) { S.sel = xs[i]; renderInf(); } } });
+    series, hi: xs.indexOf(S.sel), onClick: i => { if (tm.includes(xs[i])) { S.sel = xs[i]; renderInf(); } } });
   renderGroups();
 }
 const gkey = l => String(l).toLocaleLowerCase("tr").replace(/[^a-zçğıöşü]/g, "").slice(0, 5);
@@ -316,11 +319,15 @@ const BK_R = [["1Y", 12], ["2Y", 24], ["3Y", 36], ["5Y", 60], ["Tümü", 999]];
 function renderBk() {
   const b = D.beklenti, rp = D.rapor, kp = [];
   if (b?.months?.length) {
-    for (const [k, ad, c] of BK.slice(0, 4)) {
-      const arr = b[k] || [], i = arr.map(ok).lastIndexOf(true); if (i < 0) continue;
-      const j = arr.slice(0, i).map(ok).lastIndexOf(true), dv = j >= 0 ? arr[i] - arr[j] : null;
-      kp.push(`<div class="kpi" style="--kc:var(${c})"><div class="t">${ad}</div><div class="v">${pct(arr[i])}</div>
-        <div class="s">Önceki ankete göre <span class="${cls(-dv, .005)}">${pp(dv)}</span></div><div class="d">${ayAd(b.months[i])} · TCMB EVDS</div></div>`);
+    const son = k => { const arr = b[k] || [], i = arr.map(ok).lastIndexOf(true); if (i < 0) return null; const j = arr.slice(0, i).map(ok).lastIndexOf(true); return { v: arr[i], dv: j >= 0 ? arr[i] - arr[j] : null, ay: b.months[i] }; };
+    const a1 = son("pk_yilsonu"), a2 = son("pk_12ay");
+    if (a1 || a2) kp.push(`<div class="kpi kpi2" style="--kc:var(--c1)"><div class="t">PK anketi</div>
+      ${[[a1, "Cari yıl sonu"], [a2, "12 ay sonrası"]].filter(x => x[0]).map(([x, l]) => `<div class="kr"><span class="kl">${l}</span><span class="kv">${pct(x.v)}</span></div><div class="s">Önceki ankete göre <span class="${cls(-x.dv, .005)}">${pp(x.dv)}</span></div>`).join("")}
+      <div class="d">${ayAd((a1 || a2).ay)} · TCMB EVDS</div></div>`);
+    for (const [k, ad, c] of BK.slice(2, 4)) {
+      const x = son(k); if (!x) continue;
+      kp.push(`<div class="kpi" style="--kc:var(${c})"><div class="t">${ad}</div><div class="v">${pct(x.v)}</div>
+        <div class="s">Önceki ankete göre <span class="${cls(-x.dv, .005)}">${pp(x.dv)}</span></div><div class="d">${ayAd(x.ay)} · TCMB EVDS</div></div>`);
     }
   }
   if (rp?.tahmin) {
@@ -342,13 +349,16 @@ function renderBk() {
   } else $("#bkChart").innerHTML = '<div class="empty">EVDS beklenti verisi henüz yok.</div>';
   // hedef tablosu
   const h = D.hedef?.rows || [], y0 = new Date().getFullYear();
+  const gg = D.rapor_gecmis || {};
   const yrs = [...new Set([...h.map(r => r.yil), ...Object.keys(rp?.tahmin || {}).map(Number)])].sort((a, b) => b - a).slice(0, 12);
-  const rows = yrs.map(y => { const r = h.find(x => x.yil === y) || {}, t = rp?.tahmin?.[y], a = rp?.ara_hedef?.[y], g = r.gercek, dv = ok(g) && ok(r.hedef) ? g - r.hedef : null;
+  const rows = yrs.map(y => { const r = h.find(x => x.yil === y) || {}, gt = gg.tahmin?.[y], ga = gg.ara_hedef?.[y];
+    const t = rp?.tahmin?.[y] ?? gt?.deger, a = rp?.ara_hedef?.[y] ?? ga?.deger, g = r.gercek, dv = ok(g) && ok(r.hedef) ? g - r.hedef : null, dt = ok(g) && ok(t) ? g - t : null;
+    const tt = rp?.tahmin?.[y] != null ? (rp.ad || "") : gt?.rapor || "";
     const tufe = y === y0 && D.tufe?.months?.length ? D.tufe.yoy[D.tufe.yoy.length - 1] : null;
-    return `<tr class="${y === y0 ? "cur" : ""}"><td>${y}</td><td>${ok(r.hedef) ? nf(r.hedef, 1) : "—"}</td><td class="${ok(a) ? "" : "na"}">${ok(a) ? nf(a, 1) : "—"}</td><td class="${ok(t) ? "" : "na"}">${ok(t) ? nf(t, 1) : "—"}</td>
-      <td>${ok(g) ? nf(g, 2) : ok(tufe) ? `<span title="Son açıklanan yıllık TÜFE">(${nf(tufe, 2)})</span>` : "—"}</td><td class="${cls(-dv, .005)}">${ok(dv) ? (dv > 0 ? "+" : "") + nf(dv, 2) : "—"}</td></tr>`; }).join("");
-  $("#hdTbl").innerHTML = rows ? `<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Yıl</th><th>Hedef</th><th>Ara hedef</th><th>TCMB tahmini</th><th>Gerçekleşme</th><th>Sapma</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <div class="note" style="margin-top:8px">Yıl sonu TÜFE, %. Ara hedef ve tahmin: ${rp?.url ? `<a href="${esc(rp.url)}" target="_blank" rel="noopener">${esc(rp.ad || "Enflasyon Raporu")}</a>` : "—"}. Cari yıl için parantez içinde son açıklanan yıllık TÜFE.</div>` : '<div class="empty">Hedef verisi yok.</div>';
+    return `<tr class="${y === y0 ? "cur" : ""}"><td>${y}</td><td>${ok(r.hedef) ? nf(r.hedef, 1) : "—"}</td><td class="${ok(a) ? "" : "na"}">${ok(a) ? nf(a, 1) : "—"}</td><td class="${ok(t) ? "" : "na"}" title="${esc(tt)}">${ok(t) ? nf(t, 1) : "—"}</td>
+      <td>${ok(g) ? nf(g, 2) : ok(tufe) ? `<span title="Son açıklanan yıllık TÜFE">(${nf(tufe, 2)})</span>` : "—"}</td><td class="${cls(-dv, .005)}">${ok(dv) ? (dv > 0 ? "+" : "") + nf(dv, 2) : "—"}</td><td class="${cls(-dt, .005)}">${ok(dt) ? (dt > 0 ? "+" : "") + nf(dt, 2) : "—"}</td></tr>`; }).join("");
+  $("#hdTbl").innerHTML = rows ? `<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Yıl</th><th>Hedef</th><th>Ara hedef</th><th>TCMB tahmini</th><th>Gerçekleşme</th><th>Hedeften sapma</th><th>Tahminden sapma</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="note" style="margin-top:8px">Yıl sonu TÜFE, %. Cari ve gelecek yıllar: ${rp?.url ? `<a href="${esc(rp.url)}" target="_blank" rel="noopener">${esc(rp.ad || "Enflasyon Raporu")}</a>` : "en güncel Enflasyon Raporu"}; geçmiş yıllar: o yılın son (IV) Enflasyon Raporu'ndaki yıl sonu tahmini. Ara hedefler 2025'ten itibaren tanımlandı. Cari yıl için parantez içinde son açıklanan yıllık TÜFE.</div>` : '<div class="empty">Hedef verisi yok.</div>';
   $("#hdSub").textContent = "Hedef: TCMB · tahmin ve ara hedef: en güncel Enflasyon Raporu";
 }
 
