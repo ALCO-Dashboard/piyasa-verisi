@@ -336,36 +336,33 @@ const PSEL = {
   tlref: { ad: "TLREF", lines: ["tlref"], bars: ["bistrepo"], not: "Hacim: TLREF'in hesaplandığı Borsa İstanbul Repo Pazarı O/N işlem hacmi" },
   tlrefk: { ad: "TLREFK", lines: ["tlrefk"], bars: [], not: "Borsa İstanbul TLREFK için işlem hacmi yayımlamıyor" },
   bistrepo: { ad: "BIST Repo O/N", lines: ["bistrepo"], bars: ["bistrepo"], not: "Borsa İstanbul Repo Pazarı gecelik ağırlıklı ortalama faiz ve işlem hacmi" },
-  tpp: { ad: "TPP O/N", lines: ["tpp"], bars: ["tpp"], not: "Takasbank Para Piyasası gecelik ağırlıklı ortalama oran ve işlem hacmi" },
-  all: { ad: "Tümü", lines: ["tlref", "tlrefk", "bistrepo", "tpp"], bars: [], not: "Oranların karşılaştırması" } };
-const PCOL = { tlref: "--c1", tlrefk: "--c3", bistrepo: "--c6", tpp: "--c2" }, PAD = { tlref: "TLREF", tlrefk: "TLREFK", bistrepo: "BIST Repo O/N", tpp: "TPP O/N" };
-const PKAY = { tlref: "Borsa İstanbul", tlrefk: "Borsa İstanbul", bistrepo: "Borsa İstanbul (EVDS)", tpp: "Takasbank" };
+  all: { ad: "Tümü", lines: ["tlref", "tlrefk", "bistrepo"], bars: [], not: "Oranların karşılaştırması" } };
+const PCOL = { tlref: "--c1", tlrefk: "--c3", bistrepo: "--c6" }, PAD = { tlref: "TLREF", tlrefk: "TLREFK", bistrepo: "BIST Repo O/N" };
+const PKAY = { tlref: "Borsa İstanbul", tlrefk: "Borsa İstanbul", bistrepo: "Borsa İstanbul (EVDS)" };
 function renderPiyasa() {
   const kp = [], son = (d, k = "rate") => { if (!d?.dates?.length) return null; const i = d.dates.length - 1; return { v: d[k][i], p: d[k][i - 1], t: d.dates[i], i }; };
   const has = k => !!D[k]?.dates?.length;
   if (!PSEL[S.pSel] || (S.pSel !== "all" && !has(S.pSel))) S.pSel = "tlref";
-  for (const k of ["tlref", "tlrefk", "bistrepo", "tpp"]) {
+  for (const k of ["tlref", "tlrefk", "bistrepo"]) {
     const x = son(D[k]); if (!x) continue; const dg = k === "tlref" || k === "tlrefk" ? 4 : 2;
     const hv = D[k].vol_tl ? D[k].vol_tl[x.i] : (k === "tlref" && has("bistrepo") ? D.bistrepo.vol_tl[D.bistrepo.dates.indexOf(x.t)] : null);
     kp.push(`<button class="kpi" data-p="${k}" aria-pressed="${S.pSel === k}" style="--kc:var(${PCOL[k]})"><div class="t">${PAD[k]} · gecelik</div><div class="v">${pct(x.v, dg)}</div>
       <div class="s">Önceki güne göre <span class="${cls(x.v - x.p, 1e-6)}">${bp(ok(x.p) ? x.v - x.p : null)}</span>${ok(hv) ? ` · hacim <b>₺${nf(hv / 1e9, 0)} mr</b>` : ""}</div>
       <div class="d">${gunAd(x.t)} · ${PKAY[k]}</div></button>`);
   }
-  if (has("tpp")) { const t = son(D.tpp); kp.push(`<button class="kpi" data-p="tpp" aria-pressed="${S.pSel === "tpp"}" style="--kc:var(--c4)"><div class="t">TPP O/N · işlem hacmi</div><div class="v">₺${nf(D.tpp.vol_tl[t.i] / 1e9, 1)} mr</div><div class="s">$${nf((D.tpp.vol_usd[t.i] || 0) / 1e9, 2)} mr · ${nf(D.tpp.count[t.i] || 0, 0)} işlem</div><div class="d">${gunAd(t.t)} · Takasbank</div></button>`); }
-  else kp.push(`<div class="kpi" style="--kc:var(--line)"><div class="t">TPP O/N (Takasbank)</div><div class="v" style="font-size:18px;color:var(--muted)">veri yok</div><div class="s">Takasbank otomatik erişimi engelliyor</div><div class="d">Rapor Excel'i makro/tpp/ klasörüne yüklenirse gösterilir</div></div>`);
   $("#pKpi").innerHTML = kp.join("");
   rangeChips($("#pRange"), P_R, S.pR, k => { S.pR = k; renderPiyasa(); });
   const sel = PSEL[S.pSel], lines = sel.lines.filter(has), bars = sel.bars.filter(has);
   $("#pTitle").textContent = S.pSel === "all" ? "Gecelik oranlar · karşılaştırma" : sel.ad + (bars.length ? " · oran ve işlem hacmi" : " · oran");
   $("#pSub").textContent = sel.not + (bars.length ? " · oran sol eksen (%), hacim sağ eksen (milyar TL)" : "");
-  $("#pLeg").innerHTML = ["tlref", "tlrefk", "bistrepo", "tpp"].filter(has).map(k => `<button class="chip" data-p="${k}" aria-pressed="${S.pSel === k}"><i style="background:var(${PCOL[k]})"></i>${PAD[k]}</button>`).join("")
+  $("#pLeg").innerHTML = ["tlref", "tlrefk", "bistrepo"].filter(has).map(k => `<button class="chip" data-p="${k}" aria-pressed="${S.pSel === k}"><i style="background:var(${PCOL[k]})"></i>${PAD[k]}</button>`).join("")
     + `<button class="chip" data-p="all" aria-pressed="${S.pSel === "all"}">Tümünü karşılaştır</button>`;
   const all = [...new Set([...lines, ...bars].flatMap(k => D[k].dates))].sort();
   if (!all.length) { $("#pChart").innerHTML = '<div class="empty">Veri yok.</div>'; return; }
   const gun = P_R.find(r => r[0] === S.pR)[1], bas = new Date(Date.parse(all[all.length - 1]) - gun * 864e5).toISOString().slice(0, 10), xs = all.filter(d => d >= bas);
   const map = (d, k) => { const o = {}; d.dates.forEach((t, i) => o[t] = d[k][i]); return xs.map(t => o[t] ?? null); };
   const series = [];
-  for (const k of bars) series.push({ name: PAD[k] + " hacim", type: "bar", axis: "r", color: css(k === "tpp" ? "--c4" : "--vol"), vals: map(D[k], "vol_tl").map(v => ok(v) ? v / 1e9 : null), fmt: v => "₺" + nf(v, 1) + " mr" });
+  for (const k of bars) series.push({ name: PAD[k] + " hacim", type: "bar", axis: "r", color: css("--vol"), vals: map(D[k], "vol_tl").map(v => ok(v) ? v / 1e9 : null), fmt: v => "₺" + nf(v, 1) + " mr" });
   for (const k of lines) series.push({ name: PAD[k], color: css(PCOL[k]), span: true, vals: map(D[k], "rate"), fmt: v => pct(v, k === "tlref" || k === "tlrefk" ? 4 : 2) });
   chart($("#pChart"), { xs, series, height: 340, xFmt: gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd, yFmt: v => nf(v, v % 1 ? 1 : 0), y2Fmt: v => nf(v, 0), rScale: 2.2, label: $("#pTitle").textContent });
 }
@@ -373,9 +370,9 @@ $("#pKpi").onclick = $("#pLeg").onclick = e => { const b = e.target.closest("but
 
 // ---------------------------------------------------------------- akış
 function renderSrc() {
-  const fl = (D.failed || []).filter(x => x !== "tpp"), f = (fl.length ? ` · son çekimde alınamayan: ${fl.join(", ")} (önceki veri gösteriliyor)` : "")
+  const fl = (D.failed || []), f = (fl.length ? ` · son çekimde alınamayan: ${fl.join(", ")} (önceki veri gösteriliyor)` : "")
     ;
-  $("#src").innerHTML = `Kaynaklar: <a href="https://veriportali.tuik.gov.tr" target="_blank" rel="noopener">TÜİK Veri Portalı</a> (TÜFE, Yİ-ÜFE) · <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> (Piyasa Katılımcıları Anketi, sektörel enflasyon beklentileri) · TCMB (enflasyon hedefleri, Enflasyon Raporu) · <a href="https://www.borsaistanbul.com/endeksler/tlref" target="_blank" rel="noopener">Borsa İstanbul</a> (TLREF, TLREFK) · Borsa İstanbul Repo Pazarı O/N (TCMB EVDS) · <a href="https://www.takasbank.com.tr/tr/istatistikler/takasbank-para-piyasasi-tpp/tpp-islem-ortalamalari-raporu" target="_blank" rel="noopener">Takasbank</a> (TPP O/N). Son güncelleme ${D.updated ? new Date(D.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${f}.`;
+  $("#src").innerHTML = `Kaynaklar: <a href="https://veriportali.tuik.gov.tr" target="_blank" rel="noopener">TÜİK Veri Portalı</a> (TÜFE, Yİ-ÜFE) · <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> (Piyasa Katılımcıları Anketi, sektörel enflasyon beklentileri) · TCMB (enflasyon hedefleri, Enflasyon Raporu) · <a href="https://www.borsaistanbul.com/endeksler/tlref" target="_blank" rel="noopener">Borsa İstanbul</a> (TLREF, TLREFK) · Borsa İstanbul Repo Pazarı O/N (TCMB EVDS). Son güncelleme ${D.updated ? new Date(D.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${f}.`;
 }
 function render() {
   $$("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === S.tab));
