@@ -22,7 +22,7 @@
   window.alcoTema = t => { temaUygula(t); set("alco-theme", t); set("fd-theme", t); set("bv.theme", t); };
 
   // PDF: sayfayı açık temada, başlıklı ve A4 yatay olarak yazdır ("PDF olarak kaydet")
-  const AD = { banka: "Bankacılık Verileri", katilim: "Katılım Bülteni", tefas: "TEFAS Verileri" };
+  const AD = { banka: "Bankacılık Verileri", katilim: "Katılım Bülteni", tefas: "TEFAS Verileri", makro: "Makro ve Piyasa Verileri" };
   const AYU = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
   document.head.appendChild(Object.assign(document.createElement("style"), { textContent: `
 #alcoPrintHead{display:none}
@@ -98,11 +98,12 @@
 ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
   document.head.appendChild(Object.assign(document.createElement("style"), { textContent: css }));
 
-  const TABS = [["banka", "Bankacılık Verileri", "bankacilik/", "bankacilik/"], ["katilim", "Katılım Bülteni", "katilim/", "katilim/"], ["tefas", "TEFAS Verileri", "", "tefas.html"]];
+  const TABS = [["banka", "Bankacılık Verileri", "bankacilik/", "bankacilik/"], ["katilim", "Katılım Bülteni", "katilim/", "katilim/"], ["tefas", "TEFAS Verileri", "", "tefas.html"], ["makro", "Makro ve Piyasa", "makro/", "makro/"]];
   const SRC = [ // anahtar, ad, sekme, kaç gün içinde "güncel"
     ["bddk_haftalik", "BDDK Haftalık Bülten", "banka", 14], ["bddk_aylik", "BDDK Aylık Bülten", "banka", 75],
     ["evds", "TCMB EVDS", "banka", 7], ["politika", "Para Politikası (TCMB)", "banka", 5],
-    ["katilim", "Katılım Bülteni", "katilim", 10], ["tefas", "TEFAS", "tefas", 4]];
+    ["katilim", "Katılım Bülteni", "katilim", 10], ["tefas", "TEFAS", "tefas", 4],
+    ["tufe", "Enflasyon (TÜİK)", "makro", 40], ["piyasa", "Piyasa (TLREF, repo)", "makro", 5]];
   const now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const fmt = d => `${d.getDate()} ${AY[d.getMonth()]} ${d.getFullYear()}`;
   const parse = s => { if (!s) return null; if (/^\d{4}-\d{2}$/.test(s)) { const [y, m] = s.split("-").map(Number); return new Date(y, m, 0); } const [y, m, d] = s.slice(0, 10).split("-").map(Number); return new Date(y, m - 1, d); };

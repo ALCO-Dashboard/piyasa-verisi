@@ -1,0 +1,8 @@
+{
+  "ad": "Enflasyon Raporu 2026 - III (13 Ağustos 2026)",
+  "url": "https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Yayinlar/Raporlar/Enflasyon+Raporu/2026/Enflasyon+Raporu+2026+-+III",
+  "tahmin": {"2026": 28, "2027": 15, "2028": 9},
+  "ara_hedef": {"2026": 24, "2027": 15, "2028": 9},
+  "otomatik": false,
+  "not": "Otomatik okuma başarısız olursa kullanılır; yeni raporda güncellenmeli."
+}
