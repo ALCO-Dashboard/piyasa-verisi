@@ -1,0 +1,34 @@
+name: TCMB veri takvimine göre güncelle
+
+# TCMB Veri Yayımlama Takvimi'ndeki ilgili yayınlardan (EVDS) hemen sonra sayfaları günceller.
+# Her yarım saatte bir yalnızca takvimi kontrol eder (birkaç saniye); yeni yayın varsa tam güncellemeyi çalıştırır.
+on:
+  schedule:
+    - cron: "5,35 7-15 * * 1-5"   # hafta içi 10:05-18:35 (Türkiye saati)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  kontrol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: Takvimi kontrol et
+        id: k
+        run: |
+          git fetch --depth=1 origin gh-pages && git show FETCH_HEAD:durum.json > /tmp/durum.json || echo '{}' > /tmp/durum.json
+          python ortak/takvim.py /tmp/durum.json
+
+      - name: Güncellemeyi başlat
+        if: steps.k.outputs.run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run sayfalar.yml --ref main

@@ -72,6 +72,9 @@ jobs:
           cp sayfa.html site/tefas.html
           cp ortak/kabuk.html site/index.html
 
+      - name: Takvim kontrol zamanını yaz
+        run: python -c "import sys; sys.path.insert(0,'ortak'); import datetime as d; from durum import yaz; yaz('site','',None,takvim_son=d.datetime.now(d.timezone(d.timedelta(hours=3))).isoformat(timespec='minutes'))"
+
       - name: Sayfayı yayınla
         if: always()
         run: |
