@@ -6,8 +6,6 @@ on:
   schedule:
     - cron: "5,35 7-15 * * 1-5"   # hafta içi 10:05-18:35 (Türkiye saati)
   workflow_dispatch:
-  push:
-    branches: [veri-takvimi]
 
 permissions:
   contents: read
@@ -17,8 +15,6 @@ jobs:
   kontrol:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    outputs:
-      run: ${{ steps.k.outputs.run }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
