@@ -132,6 +132,9 @@ input[type=search]{border:1px solid var(--line);background:var(--surface);border
 .tdw th i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
 .btag{display:inline-flex;align-items:center;gap:5px;margin-left:10px;font-size:11.5px;font-weight:600;letter-spacing:.02em;text-transform:none;color:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:2px 8px;vertical-align:2px}
 .btag .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.seg.trate{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-right:4px}
+.seg.trate button{border:0;background:var(--surface);padding:6px 12px;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg.trate button+button{border-left:1px solid var(--line)}.seg.trate button[aria-pressed="true"]{background:var(--accent);color:#fff}
 .tflt{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:2px 0 10px}
 .tflt .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
 .tflt .seg button{border:0;background:none;padding:7px 18px;font:inherit;font-weight:600;font-size:13.5px;color:var(--ink-2);cursor:pointer}
@@ -411,7 +414,7 @@ const S = {
   tab: "bddk",
   bFreq: store.get("bv.freq") || "w", bA: null, bB: null, bGroups: (store.get("bv.groups") || "katilim").split(","), bCur: store.get("bv.cur") || "Toplam", bTables: {},
   bColOverride: {}, bChk: {}, bIdx: {}, bOpenN: new Set(),
-  tSub: "pp", tTopics: {}, tAB: {}, tClosed: new Set(), tBank: store.get("bv.tbank") || "katilim", tBankSet: (store.get("bv.tbanks") || store.get("bv.tbank") || "katilim").split(",").filter(Boolean), tA: null, tB: null, tSel: {}, tRange: "1Y", tCur: {}, tTyp: {}, tOpen: new Set(), tData: new Set(),
+  tSub: "pp", tTopics: {}, tAB: {}, tClosed: new Set(), tBank: store.get("bv.tbank") || "katilim", tBankSet: (store.get("bv.tbanks") || store.get("bv.tbank") || "katilim").split(",").filter(Boolean), tA: null, tB: null, tSel: {}, tRange: "1Y", tCur: {}, tTyp: {}, tOpen: new Set(), tData: new Set(), tRate: store.get("bv.trate") || "efektif",
   aSel: [], aIndex: false, aRange: "2Y", aSrc: "all",
 };
 let D = null;
@@ -972,6 +975,26 @@ function tFixSel(g) { // seçimi görünür serilere indir; boşsa toplamları s
   S.tSel[code] = sel;
 }
 function tTwin(g, c, cur, typ) { const m = tMeta(g)[c]; if (!m) return null; const t = g.series.find(s => { const x = g.meta[s.code]; return x.base === m.base && x.cur === (cur || m.cur) && x.typ === (typ || m.typ); }); return t ? t.code : null; }
+// Efektif yıllık (bileşik) → yıllık basit dönüşümü. TCMB metaverisi:
+//  mevduat / katılma hesabı: bileşik = (1 + a·b/365)^(365/b) − 1  ⇒  a = ((1+c)^(b/365) − 1)·365/b  (b: vade, gün)
+//  kredi / kredi kâr payı: efektif yıllık faiz (EYFO, aylık ödemeli nakit akışlarının iç verim oranı) ⇒ a = 12·((1+c)^(1/12) − 1)
+// Azami faiz oranları zaten basit olduğundan dönüştürülmez.
+const RATE_DEP = new Set(["bie_mt100h", "bie_mt200h", "bie_mt210ags"]), RATE_LOAN = new Set(["bie_kt100h", "bie_kt200h", "bie_kt210a", "bie_kt210aks", "bie_fs101a"]);
+const rateConv = g => RATE_DEP.has(g.code) ? "dep" : RATE_LOAN.has(g.code) ? "loan" : null;
+function vadeGun(name) {
+  const n = trLower(name || "");
+  if (/1 aya kadar/.test(n)) return 32;
+  if (/3 aya kadar/.test(n)) return 91;
+  if (/6 aya kadar/.test(n)) return 181;
+  return /toplam/.test(n) ? 32 : 365;   // 1 yıla kadar / 1 yıl ve üzeri: 365 gün (basit ≈ bileşik); toplam: kısa vade ağırlıklı, 32 gün
+}
+function tConv(g, code, v) {
+  if (!ok(v) || S.tRate !== "basit") return v;
+  const t = rateConv(g); if (!t) return v;
+  const c = v / 100;
+  if (t === "loan") return 1200 * (Math.pow(1 + c, 1 / 12) - 1);
+  const b = vadeGun(g.idx?.[code]?.name); return (Math.pow(1 + c, b / 365) - 1) * 365 / b * 100;
+}
 function tAB(g) {
   const n = g.dates.length, cur = S.tAB[g.code] || {};
   let B = cur.B != null && cur.B < n ? cur.B : n - 1, A = cur.A != null ? cur.A : idxBack(g.dates, B, g.weekly ? "w" : "m", 1);
@@ -992,7 +1015,7 @@ function tPanel(pr) {
   let nVis = 0;
   for (const s of g.series) {
     const arr = g.vals[s.code]; if (!arr || !vis(s.code)) continue; nVis++;
-    const a = ok(arr[A]) ? arr[A] * sc : null, b = ok(arr[B]) ? arr[B] * sc : null;
+    const a = ok(arr[A]) ? tConv(g, s.code, arr[A] * sc) : null, b = ok(arr[B]) ? tConv(g, s.code, arr[B] * sc) : null;
     let dc, pc;
     if (g.flow) { let t = 0, any = false; for (let k = A + 1; k <= B; k++) if (ok(arr[k])) { t += arr[k] * sc; any = true; } const v = any ? t : null; dc = `<td class="${cls(v, 1e-9)}">${fmtVal(v, kind, true)}</td>`; pc = ""; }
     else [dc, pc] = deltaCells(a, b, kind);
@@ -1001,7 +1024,7 @@ function tPanel(pr) {
   }
   return `<article class="card" data-g="${key}">
     <div class="cardhead"><div><h3>${esc(g.name)}${bTag}</h3><div class="kv"><span>Son veri <b>${dShort(g.dates[n - 1])}</b></span>${g.flow ? "<span>Haftalık değişim · milyon ABD doları</span>" : ""}${fb ? `<span>${esc(fb)}</span>` : ""}</div></div>
-      <div class="chips">${T_RANGES.map(([k]) => `<button class="chip" data-rk="${k}" aria-pressed="${S.tRange === k}">${k}</button>`).join("")}</div></div>
+      <div class="chips">${rateConv(g) ? `<div class="seg trate" role="group" aria-label="Oran gösterimi"><button data-rate="efektif" aria-pressed="${S.tRate === "efektif"}">Efektif yıllık</button><button data-rate="basit" aria-pressed="${S.tRate === "basit"}">Yıllık basit</button></div>` : ""}${T_RANGES.map(([k]) => `<button class="chip" data-rk="${k}" aria-pressed="${S.tRange === k}">${k}</button>`).join("")}</div></div>
     ${g.curs.length > 1 || g.typs.length > 1 ? `<div class="tflt">${g.curs.length > 1 ? `<div class="seg tcur" role="group" aria-label="Para birimi">${g.curs.map(c => `<button data-cur="${c}" aria-pressed="${S.tCur[key] === c}">${CUR_LAB[c]}</button>`).join("")}</div>` : ""}${g.typs.length > 1 ? `<div class="ttyp" role="group" aria-label="Mevduat türü">${g.typs.map(t => `<button class="chip sm" data-typ="${t}" aria-pressed="${(S.tTyp[key] || []).includes(t)}">${t}</button>`).join("")}</div>` : ""}</div>` : ""}
     <div data-tsub="${key}" class="sub" style="margin-bottom:2px"></div><div data-tchart="${key}"></div>
     <details class="tser" data-open="${key}"${S.tOpen.has(key) ? " open" : ""}><summary>Seri tablosu <span>${nVis} seri · grafiğe seri eklemek ve dönem karşılaştırmak için aç</span></summary>
@@ -1015,11 +1038,14 @@ function drawTChart(code) {
   const sel = (S.tSel[code] || []).filter(c => g.vals[c]).slice(0, 8), pal = PAL(), sc = g.scale;
   const sub = $(`#tPanels [data-tsub="${code}"]`);
   if (!sel.length) { sub.textContent = ""; el.innerHTML = '<div class="empty">Grafikte göstermek için tablodan seri işaretleyin.</div>'; return; }
-  let series = sel.map((c, i) => ({ name: g.idx[c]?.name || c, color: pal[i], data: clipT(g.dates.map((d, k) => [d, ok(g.vals[c][k]) ? g.vals[c][k] * sc : null, toTime(d)]), S.tRange) }));
+  let series = sel.map((c, i) => ({ name: g.idx[c]?.name || c, color: pal[i], data: clipT(g.dates.map((d, k) => [d, ok(g.vals[c][k]) ? tConv(g, c, g.vals[c][k] * sc) : null, toTime(d)]), S.tRange) }));
   const mx = Math.max(0, ...series.flatMap(s => s.data.map(p => Math.abs(p[1] || 0)))), as = axisScale(g.kind, mx);
   const raw = series.map(s => ({ name: s.name, color: s.color, data: s.data }));
   series.forEach(s => s.data = s.data.map(p => [p[0], ok(p[1]) ? p[1] / as.k : null, p[2]]));
-  sub.textContent = as.lab + ((S.tSel[code] || []).length > 8 ? " · grafikte ilk 8 seri" : "");
+  const rc = rateConv(g), rn = !rc ? "" : S.tRate === "basit"
+    ? (rc === "dep" ? " · yıllık basit oran (vade: 1 ay 32, 3 ay 91, 6 ay 181 gün; toplam 32 gün; 1 yıl ve üzeri değişmez)" : " · yıllık basit oran (efektif yıllıktan aylık bileşik ×12)")
+    : " · efektif yıllık (bileşik) oran, EVDS'deki haliyle";
+  sub.textContent = as.lab + rn + ((S.tSel[code] || []).length > 8 ? " · grafikte ilk 8 seri" : "");
   lineChart(el, { series, yFmt: v => nf(as.d).format(v) });
   // "Veri" düğmesi: grafikteki serilerin değerleri, çizgi renkleriyle
   const open = S.tData.has(code), foot = el.appendChild(Object.assign(document.createElement("div"), { className: "tdata" }));
@@ -1065,6 +1091,7 @@ function bindTcmb() {
   });
   $("#tPanels").addEventListener("click", e => {
     const q = e.target.closest("button[data-q]"); if (q) { S.tAB[q.dataset.q].A = +q.dataset.i; renderTcmb(); return; }
+    const rt = e.target.closest("button[data-rate]"); if (rt) { S.tRate = rt.dataset.rate; store.set("bv.trate", S.tRate); renderTcmb(); return; }
     const td = e.target.closest("button[data-tdata]"); if (td) { const c = td.dataset.tdata; S.tData.has(c) ? S.tData.delete(c) : S.tData.add(c); drawTChart(c); return; }
     const cu = e.target.closest("button[data-cur]"); if (cu) {
       const code = cu.closest("article").dataset.g, g = D.e.groups[code], nc = cu.dataset.cur;
