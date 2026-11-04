@@ -914,7 +914,15 @@ function tSections() {
 const tHas = (it, bank) => !!(it.g[bank] || it.g.genel);
 function tBanks() { const ks = new Set(tSections().flatMap(s => s.items.flatMap(it => Object.keys(it.g)))); return GROUPS.filter(g => ks.has(g.key)); }
 function defaultSel(g) {
-  const pref = { bie_kt100h: ["TP.KTF17", "TP.KTFTUK", "TP.KTF12"], bie_kt200h: ["TP.KBK.TRY.1", "TP.KBK.TRY.KBTFTUK", "TP.KBK.TRY.18"], bie_mt100h: ["TP.TRY.MT06", "TP.TRY.MT02", "TP.TRY.MT05"], bie_mt200h: ["TP.KBH.TRY.30", "TP.KBH.TRY.6", "TP.KBH.TRY.2128"], yv_piyasa: ["YV.TRY.ON.OZEL", "YV.TRY.ON.KAMU", "YV.TRY.1A.OZEL", "YV.TRY.1A.KAMU"], bie_hpbitablo5: ["TP.HPBITABLO5.1", "TP.HPBITABLO5.12"] }[g.code];
+  const pref = { // kredi: ihtiyaç, taşıt, konut, ticari, tüketici · mevduat / katılma: vade dilimleri (toplam hariç)
+    bie_kt100h: ["TP.KTF10", "TP.KTF11", "TP.KTF12", "TP.KTF17", "TP.KTFTUK"],
+    bie_kt200h: ["TP.KBK.TRY.KBTF10", "TP.KBK.TRY.17", "TP.KBK.TRY.18", "TP.KBK.TRY.1", "TP.KBK.TRY.KBTFTUK"],
+    bie_kt210a: ["TP.BKR.TRY.KTF10", "TP.BKR.TRY.17", "TP.BKR.TRY.18", "TP.BKR.TRY.1", "TP.BKR.TRY.KTFTUK"],
+    bie_kt210aks: ["TP.KKP.TRY.KTF10", "TP.KKP.TRY.17", "TP.KKP.TRY.18", "TP.KKP.TRY.1", "TP.KKP.TRY.KTFTUK"],
+    bie_mt100h: ["TP.TRY.MT01", "TP.TRY.MT02", "TP.TRY.MT03", "TP.TRY.MT04", "TP.TRY.MT05"],
+    bie_mt200h: ["TP.KBH.TRY.1", "TP.KBH.TRY.6", "TP.KBH.TRY.12", "TP.KBH.TRY.17", "TP.KBH.TRY.2128"],
+    bie_mt210ags: ["TP.MT210AGS.TRY.MT01", "TP.MT210AGS.TRY.MT02", "TP.MT210AGS.TRY.MT03", "TP.MT210AGS.TRY.MT04", "TP.MT210AGS.TRY.MT05"],
+     yv_piyasa: ["YV.TRY.ON.OZEL", "YV.TRY.ON.KAMU", "YV.TRY.1A.OZEL", "YV.TRY.1A.KAMU"], bie_hpbitablo5: ["TP.HPBITABLO5.1", "TP.HPBITABLO5.12"] }[g.code];
   const have = (pref || []).filter(c => g.vals[c]);
   if (have.length) return have;
   const tot = g.series.filter(s => /TOPLAM/i.test(s.name) && g.vals[s.code]).slice(0, 3).map(s => s.code);
