@@ -1,0 +1,12 @@
+name: LBMA deneme
+on:
+  push:
+    branches: [lbma-deneme]
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          for u in https://prices.lbma.org.uk/json/gold_pm.json https://prices.lbma.org.uk/json/gold_am.json; do
+            echo "== $u"; curl -sS -m 60 -A "Mozilla/5.0" -w "\nHTTP %{http_code} %{size_download}\n" "$u" -o g.json; head -c 300 g.json; echo; tail -c 600 g.json; echo; done
+          curl -sS -m 60 -A "Mozilla/5.0" https://www.lbma.org.uk/prices-and-data/lbma-precious-metal-prices | grep -oE '[a-z/:._-]*json[a-z/._-]*' | sort -u | head -30
