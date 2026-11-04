@@ -24,7 +24,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 BASLANGIC = "2025-12-01"          # verinin tutulduğu ilk gün (31.12.2025'ten bir ay öncesi, 1 aylık getiri için)
 TIPLER = ("YAT", "EMK", "BYF")
-PARCA = {"YAT": 8, "EMK": 25, "BYF": 40}   # tek sorguda kaç iş günü
+PARCA = {"YAT": 8, "EMK": 20, "BYF": 20}   # tek sorguda kaç iş günü (TEFAS ~1 aydan uzun aralıkta boş döner)
 API = "https://www.tefas.gov.tr/api/funds/"
 BASLIK = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36",
