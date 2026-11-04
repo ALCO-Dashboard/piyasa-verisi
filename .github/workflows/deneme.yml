@@ -7,5 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          u=https://prices.lbma.org.uk/json/gold_pm.json
-          curl -sS -m 60 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36" -H "Accept: application/json, text/plain, */*" -H "Referer: https://www.lbma.org.uk/" -H "Origin: https://www.lbma.org.uk" -w "\nHTTP %{http_code} %{size_download}\n" "$u" -o g.json; grep -oE "<title>[^<]*|cf-error-type[^<]*<[^>]*>[^<]*|Error [0-9]+|ray-id[^<]*<[^>]*>[^<]*" g.json | head; head -c 200 g.json; echo; tail -c 300 g.json
+          A="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+          for u in https://prices.lbma.org.uk/json/limited/gold_am.json https://prices.lbma.org.uk/json/today.json https://www.lbma.org.uk/prices-and-data/lbma-precious-metal-prices; do
+            echo "== $u"; curl -sS -m 60 -A "$A" -H "Referer: https://www.lbma.org.uk/prices-and-data/lbma-precious-metal-prices" -w "\nHTTP %{http_code} %{size_download}\n" "$u" -o g.out | tail -1; head -c 160 g.out; echo; done
