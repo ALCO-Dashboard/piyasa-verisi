@@ -1,0 +1,23 @@
+name: TCMB deneme
+on:
+  push:
+    branches: [tcmb-deneme]
+permissions:
+  contents: write
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: {python-version: "3.12"}
+      - run: pip install requests
+      - env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: python tcmb/guncelle.py --site out
+      - run: |
+          git config user.name bot; git config user.email bot@users.noreply.github.com
+          git checkout --orphan tcmb-deneme-veri
+          git rm -rq --cached .
+          git add -f out/tcmb/data/tcmb.json
+          git commit -qm veri && git push -f origin tcmb-deneme-veri
