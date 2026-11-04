@@ -35,6 +35,7 @@ jobs:
             git show FETCH_HEAD:store.enc > site/store.enc || rm -f site/store.enc
             git --work-tree=site checkout FETCH_HEAD -- bankacilik 2>/dev/null || true
             git --work-tree=site checkout FETCH_HEAD -- makro 2>/dev/null || true
+            git --work-tree=site checkout FETCH_HEAD -- tcmb 2>/dev/null || true
             git show FETCH_HEAD:durum.json > site/durum.json 2>/dev/null || rm -f site/durum.json
             git reset -q
           fi

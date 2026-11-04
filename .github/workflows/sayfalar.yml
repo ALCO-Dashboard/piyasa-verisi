@@ -1,6 +1,6 @@
 name: Katılım ve bankacılık sayfalarını güncelle
 
-# Her sabah BDDK haftalık/aylık bülten ve TCMB EVDS verisini çeker; katilim/ ya da bankacilik/
+# Her sabah BDDK haftalık/aylık bülten, TCMB EVDS (rezervler dahil) verisini çeker; katilim/ ya da bankacilik/
 # klasöründe değişiklik olunca da çalışır. Yalnızca bu iki sayfayı yeniler (TEFAS verisini beklemez).
 on:
   schedule:
@@ -15,6 +15,7 @@ on:
       - "bankacilik/**"
       - "ortak/**"
       - "makro/**"
+      - "tcmb/**"
       - "sayfa.html"
   workflow_dispatch:
 
@@ -65,6 +66,12 @@ jobs:
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: python makro/guncelle.py --site site
+
+      - name: TCMB rezerv verisini çek
+        continue-on-error: true
+        env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: python tcmb/guncelle.py --site site
 
       - name: Ortak dosyaları ve TEFAS sayfasını kopyala
         run: |
