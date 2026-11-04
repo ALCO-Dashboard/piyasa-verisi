@@ -468,6 +468,20 @@ def guncelle(depo, bugun: dt.date):
             gunleri_yaz(depo, tip, parca, satirlar)
             log(f"   {tip} {parca[0]} – {parca[-1]}: {len(satirlar)} satır")
 
+    # depoda olup bir fon türü için boş kalan günler (tür sonradan eklendiyse geçmişi): bir kez geriye doğru doldur
+    for tip in TIPLER:
+        if tip == "YAT":
+            continue
+        bos = [d for d in depo["dates"] if d >= BASLANGIC and d < gunler[0] and gun_sayisi(depo, "YAT", d) and not gun_sayisi(depo, tip, d)]
+        if not bos:
+            continue
+        log(f"   {tip}: {len(bos)} geçmiş gün boş ({bos[0]} – {bos[-1]}), dolduruluyor")
+        for i in range(0, len(bos), PARCA[tip]):
+            parca = bos[i:i + PARCA[tip]]
+            satirlar = sayfali("fonGnlBlgSiraliGetir", tip, kisa(parca[0]), kisa(parca[-1]), f"{tip} {parca[0]}")
+            gunleri_yaz(depo, tip, parca, satirlar)
+            log(f"   {tip} {parca[0]} – {parca[-1]}: {len(satirlar)} satır")
+
     # veri olmayan günleri (tatil) ve henüz tamamlanmamış son günü çıkar
     sayim = {d: gun_sayisi(depo, "YAT", d) for d in depo["dates"]}
     dolu = [c for c in sayim.values() if c]
