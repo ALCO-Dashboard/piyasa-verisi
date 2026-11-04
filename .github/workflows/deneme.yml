@@ -7,6 +7,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          A="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
-          for u in "https://data.nasdaq.com/api/v3/datasets/LBMA/GOLD.json?rows=5" "https://data.nasdaq.com/api/v3/datasets/LBMA/GOLD.csv?rows=5" "https://stooq.com/q/d/l/?s=xauusd&i=d" "https://www.lbma.org.uk/prices-and-data/precious-metal-prices" "https://www.kitco.com/charts/gold"; do
-            echo "== $u"; curl -sSL -m 60 -A "$A" -w "\nHTTP %{http_code} %{size_download}\n" "$u" -o g.out | tail -1; head -c 300 g.out | tr '\n' ' '; echo; done
+          curl -sS -m 90 -w "\nHTTP %{http_code} %{size_download}\n" https://alco-dashboard.vercel.app/dashboard_data.json -o d.json | tail -1
+          python3 -c "import json;d=json.load(open('d.json'));g=d['lbma_gold'];print(len(g),g[0],g[-3:])"
