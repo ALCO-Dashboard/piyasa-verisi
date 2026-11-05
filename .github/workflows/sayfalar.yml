@@ -16,6 +16,7 @@ on:
       - "ortak/**"
       - "makro/**"
       - "tcmb/**"
+      - "bloomberg/**"
       - "sayfa.html"
   workflow_dispatch:
 
@@ -43,7 +44,7 @@ jobs:
 
       - name: Gerekli paketleri kur
         run: |
-          pip install requests cryptography certifi openpyxl pypdf
+          pip install requests cryptography certifi openpyxl pypdf msoffcrypto-tool
           npm install --no-save --no-audit --no-fund xlsx@0.18.5
 
       - name: Yayındaki siteyi al
@@ -67,21 +68,22 @@ jobs:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: python makro/guncelle.py --site site
 
-      - name: Bloomberg köprüsünün verisini al
+      - name: Bloomberg Excel dosyasını oku
         continue-on-error: true
+        env:
+          BBG_ANAHTAR: ${{ secrets.BBG_ANAHTAR }}
         run: |
-          if git fetch --depth=1 origin bloomberg-veri 2>/dev/null && git show FETCH_HEAD:bbg.enc.json > bbg.enc.json 2>/dev/null; then
-            echo "Bloomberg verisi alındı"
+          if [ -f bloomberg/bloomberg.xlsx ]; then
+            python bloomberg/oku.py bloomberg/bloomberg.xlsx --out "$RUNNER_TEMP/bbg.json" || rm -f "$RUNNER_TEMP/bbg.json"
           else
-            rm -f bbg.enc.json; echo "Bloomberg verisi henüz yok"
+            echo "bloomberg/bloomberg.xlsx henüz yüklenmemiş"
           fi
 
       - name: TCMB rezerv verisini çek
         continue-on-error: true
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
-          BBG_ANAHTAR: ${{ secrets.BBG_ANAHTAR }}
-        run: python tcmb/guncelle.py --site site --bbg bbg.enc.json
+        run: python tcmb/guncelle.py --site site --bbg "$RUNNER_TEMP/bbg.json"
 
       - name: Ortak dosyaları ve TEFAS sayfasını kopyala
         run: |
