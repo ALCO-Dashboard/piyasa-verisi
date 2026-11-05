@@ -1,2 +1,5 @@
 __pycache__/
 node_modules/
+bloomberg/kopru_ayar.json
+bloomberg/bbg_onbellek.json
+bloomberg/kopru.log
