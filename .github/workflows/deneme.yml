@@ -1,0 +1,20 @@
+name: BBG deneme
+on:
+  push:
+    branches: [bbg-deneme]
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: {python-version: "3.12"}
+      - run: pip install openpyxl msoffcrypto-tool
+      - run: |
+          python -c "
+          from msoffcrypto.format.ooxml import OOXMLFile
+          OOXMLFile(open('deneme/dolu.xlsx','rb')).encrypt('deneme-parola', open('deneme/sifreli.xlsx','wb'))
+          print('şifrelendi')"
+          BBG_ANAHTAR=deneme-parola python bloomberg/oku.py deneme/sifreli.xlsx --out /tmp/b.json; head -c 300 /tmp/b.json; echo
+          BBG_ANAHTAR=yanlis python bloomberg/oku.py deneme/sifreli.xlsx --out /tmp/c.json || true
+          python bloomberg/oku.py deneme/dolu.xlsx --out /tmp/d.json || true
