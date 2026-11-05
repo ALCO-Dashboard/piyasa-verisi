@@ -17,7 +17,7 @@ TR = dt.timezone(dt.timedelta(hours=3))
 GECIKME = dt.timedelta(minutes=10)          # yayından sonra EVDS'ye düşmesi için pay
 # Sitede kullandığımız EVDS verilerini ilgilendiren yayınlar (ad içinde geçen ifade)
 ILGILI = ("Para ve Banka", "Faiz Oran", "Kâr Oran", "Kart", "Piyasa Katılımcıları", "Beklenti",
-          "Rezerv", "Zorunlu Karşılık", "Menkul Kıymet", "Parasal", "Tüketici Fiyat", "Enflasyon")
+          "Rezerv", "Analitik Bilanço", "Vaziyet", "Swap", "Zorunlu Karşılık", "Menkul Kıymet", "Parasal", "Tüketici Fiyat", "Enflasyon")
 
 
 def yayinlar(bas):
