@@ -61,9 +61,11 @@ div.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--ac
 .kpi .tn button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600;color:var(--ink-2);cursor:pointer;font-family:inherit}
 .kpi .tn button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:6px 0 2px}
-.ctl input[type="date"]{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 10px;font:inherit;font-size:13px}
-.ctl input[type="date"].on{border-color:var(--accent);background:var(--accent-wash)}
+.ctl input[type="date"],.ctl input.edt{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 10px;font:inherit;font-size:13px}
+.ctl input.edt.on{border-color:var(--accent);background:var(--accent-wash)}
 .hdr2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.g2e{grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr))}
+.card.egri .ctl{align-items:flex-start}
 .up{color:var(--up)}.down{color:var(--down)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px;min-width:0}
 .cardhead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
@@ -159,7 +161,8 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
     </div>
   </section>
   <section id="pPiyasa" class="hidden">
-    <div class="subtabs" role="group" aria-label="Piyasa konu"><button aria-pressed="true">Faiz &amp; Swap</button></div>
+    <div class="subtabs" role="group" aria-label="Piyasa konu" id="psTabs"><button data-ps="faiz" aria-pressed="true">Kâr/Faiz/Swap Oranları</button><button data-ps="gosterge" aria-pressed="false">Gösterge Oranlar</button></div>
+    <div id="psFaiz">
     <h2 class="sec">Gecelik oranlar ve hacim</h2>
     <div class="kpis" id="pKpi"></div>
     <div class="card">
@@ -169,10 +172,10 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
     </div>
     <div id="bbgBox" class="hidden">
       <h2 class="sec">OIS oranları</h2>
-      <div class="card">
-        <div class="cardhead"><div><h3 id="oisTitle"></h3><div class="sub" id="oisSub"></div></div><div class="seg" id="oisCcy" role="group" aria-label="Para birimi"></div></div>
-        <div class="ctl"><div class="legend" id="oisLeg"></div><span class="chips" id="oisRange"></span></div>
-        <div class="chart" id="oisChart"></div>
+      <div class="card egri" id="E_ois">
+        <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
+        <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
+        <div class="chart ech"></div>
       </div>
       <h2 class="sec">BIST VİOP</h2>
       <div class="card">
@@ -180,6 +183,40 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
           <div class="hdr2"><div class="seg" id="vpMod" role="group" aria-label="Gösterim"><button data-m="oran">Oran</button><button data-m="kur">Vadeli İşlem Kuru</button></div><div class="seg" id="vpSeg" role="group" aria-label="Kontrat"></div></div></div>
         <div class="chart" id="vpChart"></div>
       </div>
+    </div>
+    </div>
+    <div id="psGosterge" class="hidden">
+      <div class="seg" id="gUlke" role="group" aria-label="Ülke" style="margin-top:14px"><button data-u="tr" aria-pressed="true">Türkiye</button><button data-u="abd" aria-pressed="false">ABD</button><button data-u="de" aria-pressed="false">Almanya</button></div>
+      <div id="gTr">
+        <h2 class="sec">Türkiye gösterge faizleri</h2>
+        <div class="grid2 g2e">
+      <div class="card egri" id="E_tahvil">
+        <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
+        <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
+        <div class="chart ech"></div>
+      </div>
+      <div class="card egri" id="E_basabas">
+        <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
+        <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
+        <div class="chart ech"></div>
+      </div>
+        </div>
+      </div>
+      <div id="gAbd" class="hidden"><h2 class="sec">ABD gösterge faizleri</h2>
+      <div class="card egri" id="E_abd">
+        <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
+        <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
+        <div class="chart ech"></div>
+      </div>
+      </div>
+      <div id="gDe" class="hidden"><h2 class="sec">Almanya gösterge faizleri</h2>
+      <div class="card egri" id="E_de">
+        <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
+        <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
+        <div class="chart ech"></div>
+      </div>
+      </div>
+      <div class="note" id="gNote"></div>
     </div>
   </section>
   <div class="src" id="src"></div>
@@ -207,7 +244,7 @@ const pp = v => ok(v) ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v), 2)
 let D = null;
 const S = { tab: "makro", infOn: new Set(["tufe:yoy"]), gMode: "yoy", gOpen: false, infR: "2Y", sel: null, bkR: "3Y", pR: "6A",
   bkOn: { pk_yilsonu: 1, pk_12ay: 1, reel_12ay: 1, hh_12ay: 1, tufe: 1 }, pOn: new Set((store.get("mk.pon") || "tlref").split(",").filter(Boolean)),
-  impT: "O/N", oisC: "TRY", oisV: "egri", oisR: "6A", oisCmp: null, vpK: "USDTRY", vpM: "oran" };
+  impT: "O/N", ps: "faiz", gU: "tr", EG: {}, vpK: "USDTRY", vpM: "oran" };
 let B = null;     // Bloomberg (bbg.json)
 
 // ---------------------------------------------------------------- grafik
@@ -459,12 +496,11 @@ const OIS = { TRY: "TLOIS", USD: "USD OIS", EUR: "EUR OIS" };
 const OIS_ON = { TRY: "TLREF", USD: "SOFR", EUR: "€STR" };
 const VADE = { ON: "O/N", "O/N": "O/N", "T/N": "T/N", "1W": "1H", "2W": "2H", "1M": "1A", "2M": "2A", "3M": "3A", "6M": "6A", "9M": "9A", "1Y": "1Y", "18M": "18A", "2Y": "2Y", "3Y": "3Y", "4Y": "4Y", "5Y": "5Y", "8Y": "8Y", "10Y": "10Y", "15Y": "15Y", "30Y": "30Y" };
 const VGUN = { ON: 1, "1W": 7, "2W": 14, "1M": 30, "2M": 61, "3M": 91, "6M": 182, "9M": 273, "1Y": 365, "18M": 548, "2Y": 730, "3Y": 1095, "5Y": 1825, "10Y": 3650 };
-const OBTN = ["ON", "1W", "2W", "1M", "3M", "6M", "1Y", "3Y", "5Y"];
 const sonSatir = t => { for (let i = t.dates.length - 1; i >= 0; i--) { const n = t.v.filter(c => ok(c[i])).length; if (n >= Math.max(1, t.v.length / 2)) return i; } return -1; };
 const OCMP = [["YB", "Yılbaşı"], ["1A", "1 Ay"], ["3A", "3 Ay"], ["6A", "6 Ay"], ["1Y", "1 Yıl"]];
 // karşılaştırma tarihi: hedef tarihe eşit ya da ondan önceki son dolu gün
-function oisKars(t, i) {
-  const c = S.oisCmp; if (!c) return null;
+function karsGun(t, i, c) {
+  if (!c) return null;
   const son = t.dates[i]; let hedef;
   if (c.k === "d") hedef = c.d;
   else if (c.k === "YB") hedef = `${+son.slice(0, 4) - 1}-12-31`;
@@ -474,48 +510,90 @@ function oisKars(t, i) {
   for (let k = 0; k < i; k++) if (dolu(k)) return k;
   return null;
 }
-function renderOis() {
-  const ccy = Object.keys(OIS).filter(c => B?.tablolar?.[OIS[c]]);
-  if (!ccy.length) return false;
-  if (!ccy.includes(S.oisC)) S.oisC = ccy[0];
-  const t = B.tablolar[OIS[S.oisC]], et = t.kolonlar.map(k => k.etiket);
-  if (S.oisV !== "egri" && !et.includes(S.oisV)) S.oisV = "egri";
-  $("#oisCcy").innerHTML = ccy.map(c => `<button data-c="${c}" aria-pressed="${S.oisC === c}">${c}</button>`).join("");
-  $("#oisLeg").innerHTML = `<button class="chip" data-v="egri" aria-pressed="${S.oisV === "egri"}">Getiri eğrisi</button>` +
-    OBTN.filter(v => et.includes(v)).map(v => `<button class="chip" data-v="${v}" aria-pressed="${S.oisV === v}">${VADE[v]}</button>`).join("");
-  const col = css({ TRY: "--c1", USD: "--c6", EUR: "--c3" }[S.oisC]);
-  if (S.oisV === "egri") {
-    const i = sonSatir(t); if (i < 0) { $("#oisRange").innerHTML = ""; $("#oisChart").innerHTML = '<div class="empty">Veri yok.</div>'; return true; }
-    const son = t.dates[i], j = oisKars(t, i);
-    $("#oisRange").innerHTML = `<input type="date" id="oisDt" aria-label="Karşılaştırma tarihi" min="${t.dates[0]}" max="${son}" value="${j != null ? t.dates[j] : ""}" class="${S.oisCmp?.k === "d" ? "on" : ""}">`
-      + OCMP.map(([k, l]) => `<button class="chip" data-cmp="${k}" aria-pressed="${S.oisCmp?.k === k}">${l}</button>`).join("")
-      + (S.oisCmp ? `<button class="chip" data-cmp="x" title="Karşılaştırmayı kaldır">✕</button>` : "");
+// Getiri eğrisi kartı: eğri (son gün + seçilen günle karşılaştırma) ya da tek vadenin tarihsel seyri.
+// cfg: { id, sekmeler: [[kod, tablo, renkDeğişkeni]], baslik(kod, mod), alt(kod), butonlar: [vade etiketleri] }
+const EGRI = {};
+function egriKart(cfg) {
+  EGRI[cfg.id] = cfg;
+  const box = $("#" + cfg.id), st = (S.EG[cfg.id] ||= { c: null, v: "egri", r: "6A", cmp: null });
+  const sk = cfg.sekmeler.filter(([, tb]) => B?.tablolar?.[tb]?.dates?.length);
+  if (!sk.length) { box.classList.add("hidden"); return false; }
+  box.classList.remove("hidden");
+  if (!sk.some(x => x[0] === st.c)) st.c = sk[0][0];
+  const [kod, tb, rk] = sk.find(x => x[0] === st.c), t = B.tablolar[tb], et = t.kolonlar.map(k => k.etiket);
+  if (st.v !== "egri" && !et.includes(st.v)) st.v = "egri";
+  const q = c => box.querySelector(c), col = css(rk);
+  q(".ec").innerHTML = sk.length > 1 ? sk.map(([c]) => `<button data-c="${c}" aria-pressed="${st.c === c}">${c}</button>`).join("") : "";
+  const btn = (cfg.butonlar || et).filter(v => et.includes(v));
+  q(".ev").innerHTML = `<button class="chip" data-v="egri" aria-pressed="${st.v === "egri"}">Getiri eğrisi</button>` +
+    btn.map(v => `<button class="chip" data-v="${v}" aria-pressed="${st.v === v}">${VADE[v] || v}</button>`).join("");
+  const ch = q(".ech");
+  if (st.v === "egri") {
+    const i = sonSatir(t); if (i < 0) { q(".er").innerHTML = ""; ch.innerHTML = '<div class="empty">Veri yok.</div>'; return true; }
+    const son = t.dates[i], j = karsGun(t, i, st.cmp);
+    q(".er").innerHTML = `<input type="date" class="edt${st.cmp?.k === "d" ? " on" : ""}" aria-label="Karşılaştırma tarihi" min="${t.dates[0]}" max="${son}" value="${j != null ? t.dates[j] : ""}">`
+      + OCMP.map(([k, l]) => `<button class="chip" data-cmp="${k}" aria-pressed="${st.cmp?.k === k}">${l}</button>`).join("")
+      + (st.cmp ? `<button class="chip" data-cmp="x" title="Karşılaştırmayı kaldır">✕</button>` : "");
     const xs = et.map(e => VADE[e] || e), vals = t.v.map(c => c[i]), cv = j != null ? t.v.map(c => c[j]) : null;
     const series = [{ name: gunAd(son), vals, color: col, width: 2.6, dots: true, fmt: v => pct(v, 3) }];
     if (cv) series.push({ name: gunAd(t.dates[j]), vals: cv, color: css("--muted"), width: 2, dash: "5 4", dots: true, fmt: v => pct(v, 3) });
-    $("#oisTitle").textContent = `${S.oisC} OIS getiri eğrisi (%)`;
-    $("#oisSub").textContent = (cv ? `${gunAd(son)} ile ${gunAd(t.dates[j])} karşılaştırması` : gunAd(son)) + ` · O/N: ${OIS_ON[S.oisC]} · Bloomberg · vadeye tıklayınca tarihsel seyir`;
+    q(".et").textContent = cfg.baslik(kod, "egri");
+    q(".es").textContent = (cv ? `${gunAd(son)} ile ${gunAd(t.dates[j])} karşılaştırması` : gunAd(son)) + (cfg.alt ? " · " + cfg.alt(kod) : "") + " · Bloomberg · vadeye tıklayınca tarihsel seyir";
     const all = [...vals, ...(cv || [])].filter(ok);
-    chart($("#oisChart"), { xs, height: 300, label: $("#oisTitle").textContent, yFmt: v => nf(v, Math.max(...all) < 10 ? 2 : 1), maxX: 14,
+    chart(ch, { xs, height: cfg.height || 300, label: q(".et").textContent, yFmt: v => nf(v, Math.max(...all) - Math.min(...all) < 3 ? 2 : 1), maxX: 14,
       tipX: x => { const k = xs.indexOf(x), d = cv && ok(vals[k]) && ok(cv[k]) ? vals[k] - cv[k] : null; return x + (ok(d) ? ` · değişim ${bp(d)}` : ""); },
-      series, onClick: k => { const v = et[k]; if (v) { S.oisV = v; renderOis(); } } });
+      series, onClick: k => { if (et[k]) { st.v = et[k]; egriKart(cfg); } } });
   } else {
-    rangeChips($("#oisRange"), P_R, S.oisR, k => { S.oisR = k; renderOis(); });
-    const j = et.indexOf(S.oisV), gun = P_R.find(r => r[0] === S.oisR)[1], last = t.dates[t.dates.length - 1];
+    rangeChips(q(".er"), P_R, st.r, k => { st.r = k; egriKart(cfg); });
+    const j = et.indexOf(st.v), gun = P_R.find(r => r[0] === st.r)[1], last = t.dates[t.dates.length - 1];
     const bas = new Date(Date.parse(last) - gun * 864e5).toISOString().slice(0, 10), ix = t.dates.map((d, i) => d >= bas ? i : -1).filter(i => i >= 0);
     const xs = ix.map(i => t.dates[i]), vals = ix.map(i => t.v[j][i]), li = lastIdx(vals);
-    $("#oisTitle").textContent = `${S.oisC} OIS · ${VADE[S.oisV]} (%)`;
-    $("#oisSub").textContent = `${t.kolonlar[j].ticker} · son ${li >= 0 ? pct(vals[li], 3) + " (" + gunAd(xs[li]) + ")" : "—"} · Bloomberg`;
-    chart($("#oisChart"), { xs, height: 300, label: $("#oisTitle").textContent, xFmt: gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd,
-      yFmt: v => nf(v, v % 1 ? 1 : 0), series: [{ name: `${S.oisC} OIS ${VADE[S.oisV]}`, vals, color: col, width: 2.2, span: true, fmt: v => pct(v, 3) }] });
+    q(".et").textContent = cfg.baslik(kod, VADE[st.v] || st.v);
+    q(".es").textContent = `${t.kolonlar[j].ticker} · son ${li >= 0 ? pct(vals[li], 3) + " (" + gunAd(xs[li]) + ")" : "—"} · Bloomberg`;
+    chart(ch, { xs, height: cfg.height || 300, label: q(".et").textContent, xFmt: gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd,
+      yFmt: v => nf(v, v % 1 ? 1 : 0), series: [{ name: `${kod} ${VADE[st.v] || st.v}`, vals, color: col, width: 2.2, span: true, fmt: v => pct(v, 3) }] });
   }
   return true;
 }
-$("#oisCcy").onclick = e => { const b = e.target.closest("button[data-c]"); if (b) { S.oisC = b.dataset.c; renderOis(); } };
-$("#oisLeg").onclick = e => { const b = e.target.closest("button[data-v]"); if (b) { S.oisV = b.dataset.v; renderOis(); } };
-$("#oisRange").addEventListener("click", e => { const b = e.target.closest("button[data-cmp]"); if (!b) return; const k = b.dataset.cmp;
-  S.oisCmp = k === "x" || S.oisCmp?.k === k ? null : { k }; renderOis(); });
-$("#oisRange").addEventListener("change", e => { if (e.target.id === "oisDt") { S.oisCmp = e.target.value ? { k: "d", d: e.target.value } : null; renderOis(); } });
+document.addEventListener("click", e => {
+  const box = e.target.closest(".card.egri"); if (!box || !EGRI[box.id]) return;
+  const st = S.EG[box.id], b = e.target.closest("button");
+  if (!b || b.closest(".chips.er") && b.dataset.k) return;      // dönem düğmeleri kendi işleyicisiyle
+  if (b.dataset.c) st.c = b.dataset.c;
+  else if (b.dataset.v) st.v = b.dataset.v;
+  else if (b.dataset.cmp) st.cmp = b.dataset.cmp === "x" || st.cmp?.k === b.dataset.cmp ? null : { k: b.dataset.cmp };
+  else return;
+  egriKart(EGRI[box.id]);
+});
+document.addEventListener("change", e => {
+  if (!e.target.classList.contains("edt")) return; const box = e.target.closest(".card.egri"); if (!box || !EGRI[box.id]) return;
+  S.EG[box.id].cmp = e.target.value ? { k: "d", d: e.target.value } : null; egriKart(EGRI[box.id]);
+});
+const OBTN = ["ON", "1W", "2W", "1M", "3M", "6M", "1Y", "3Y", "5Y"];
+const renderOis = () => egriKart({ id: "E_ois", sekmeler: [["TRY", "TLOIS", "--c1"], ["USD", "USD OIS", "--c6"], ["EUR", "EUR OIS", "--c3"]], butonlar: OBTN,
+  baslik: (c, m) => m === "egri" ? `${c} OIS getiri eğrisi (%)` : `${c} OIS · ${m} (%)`, alt: c => `O/N: ${OIS_ON[c]}` });
+
+// ---------------------------------------------------------------- Gösterge oranlar (Bloomberg)
+const TAHVIL_AD = { TRY: "TL tahvil/bono", USD: "USD Eurobond", EUR: "EUR Eurobond" };
+function renderGosterge() {
+  $$("#gUlke button").forEach(b => b.setAttribute("aria-pressed", b.dataset.u === S.gU));
+  $("#gTr").classList.toggle("hidden", S.gU !== "tr"); $("#gAbd").classList.toggle("hidden", S.gU !== "abd"); $("#gDe").classList.toggle("hidden", S.gU !== "de");
+  if (S.gU === "tr") {
+    egriKart({ id: "E_tahvil", sekmeler: [["TRY", "TRY TAHVİL GÖSTERGE", "--c1"], ["USD", "USD EUROBOND GÖSTERGE", "--c6"], ["EUR", "EUR EUROBOND GÖSTERGE", "--c3"]],
+      baslik: (c, m) => `Hazine Tahvil/Bono/Eurobond · ${TAHVIL_AD[c]}${m === "egri" ? "" : " · " + m} (%)` });
+    egriKart({ id: "E_basabas", sekmeler: [["TÜFE", "TÜFE BAŞABAŞ ORANLAR", "--c4"]],
+      baslik: (c, m) => `TÜFE başabaş oranları${m === "egri" ? "" : " · " + m} (%)`, alt: () => "nominal DİBS ile TÜFE'ye endeksli DİBS getiri farkı" });
+  } else if (S.gU === "abd") egriKart({ id: "E_abd", sekmeler: [["USD", "ABD GÖSTERGE", "--c6"]], baslik: (c, m) => `ABD Hazine getirileri${m === "egri" ? "" : " · " + m} (%)` });
+  else egriKart({ id: "E_de", sekmeler: [["EUR", "ALMANYA GÖSTERGE", "--c3"]], baslik: (c, m) => `Almanya devlet tahvili (Bund) getirileri${m === "egri" ? "" : " · " + m} (%)` });
+  $("#gNote").textContent = B ? "" : "Gösterge oranlar Bloomberg Excel dosyasından gelir; dosya henüz okunamadı.";
+}
+$("#gUlke").onclick = e => { const b = e.target.closest("button[data-u]"); if (b) { S.gU = b.dataset.u; renderGosterge(); } };
+$("#psTabs").onclick = e => { const b = e.target.closest("button[data-ps]"); if (b) { S.ps = b.dataset.ps; renderPs(); } };
+function renderPs() {
+  $$("#psTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.ps === S.ps));
+  $("#psFaiz").classList.toggle("hidden", S.ps !== "faiz"); $("#psGosterge").classList.toggle("hidden", S.ps !== "gosterge");
+  if (S.ps === "faiz") { renderPiyasa(); renderBbg(); } else renderGosterge();
+}
 
 // ---------------------------------------------------------------- BIST VİOP (Bloomberg)
 const VP = ["USDTRY", "EURTRY", "XAUTRY", "XAUUSD"], VP_OIS = { USDTRY: "USD", EURTRY: "EUR" };
@@ -563,7 +641,7 @@ function renderSrc() {
 function render() {
   $$("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === S.tab));
   $("#pMakro").classList.toggle("hidden", S.tab !== "makro"); $("#pPiyasa").classList.toggle("hidden", S.tab !== "piyasa");
-  if (S.tab === "makro") { renderInf(); renderBk(); } else { renderPiyasa(); renderBbg(); }
+  if (S.tab === "makro") { renderInf(); renderBk(); } else renderPs();
   renderSrc();
 }
 $("#tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (!b) return; S.tab = b.dataset.tab; try { history.replaceState(null, "", "#" + S.tab); } catch {} render(); };
