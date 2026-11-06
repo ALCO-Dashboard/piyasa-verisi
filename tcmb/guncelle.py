@@ -10,7 +10,7 @@ Kaynaklar (hepsi TCMB EVDS)
   - TCMB taraflı swap stokları (iş günü, mn $): alım yönlü / satım yönlü toplam stok
   - Uluslararası rezervler ve döviz likiditesi tablosu (aylık): K14 yurt içi para karşılığı forward/swap net pozisyonu
   - Altın fiyatı: LBMA AM (TCMB rezerv altınını bu fiyatla değerler). Öncelik sırası:
-      1) Bloomberg Excel şablonu (GOLDLNAM Index; bloomberg/bloomberg.xlsx → bloomberg/oku.py) ve
+      1) Bloomberg Excel dosyası (GOLDLNAM Index; bloomberg/BBG_Data_Excel.xlsm → bloomberg/oku.py) ve
          tcmb/lbma_am.json (LBMA sitesinden elle alınan değerler)
       2) Cuma günleri haftalık rezervden çıkan kesin fiyat: C1 / (BL0021 / 31,1034768)
       3) Borsa İstanbul altın USD/ons ağırlıklı ortalama (TP.ALTINPIYASA.AGORT03) — tahmini
@@ -102,9 +102,12 @@ def evds(anahtar, kodlar, bas, bit, parca_gun=366):
 
 
 def bbg_oku(yol):
-    """bloomberg/oku.py çıktısı (Excel şablonundan): {seri: {tarih: değer}}, dosya tarihi."""
+    """bloomberg/oku.py çıktısı: ({"lbma_am": {tarih: değer}}, en yeni veri günü). GOLDLNAM Index herhangi bir
+    sayfada (ör. ALTIN) BDH düzeninde olabilir."""
     j = json.load(open(yol, encoding="utf-8"))
-    return j.get("seriler", {}), j.get("dosya_tarihi")
+    tk = j.get("ticker", {})
+    am = tk.get("GOLDLNAM Index") or j.get("seriler", {}).get("lbma_am") or {}
+    return {"lbma_am": am}, j.get("guncel") or j.get("dosya_tarihi")
 
 
 def asof(tarihler, deger, t):

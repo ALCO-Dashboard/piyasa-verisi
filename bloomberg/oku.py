@@ -1,10 +1,20 @@
-"""bloomberg/bloomberg.xlsx (BDH şablonu) → düz JSON.
+"""Bloomberg Excel dosyası (BBG_Data_Excel.xlsm) → JSON.
 
-Excel dosyası repo herkese açık olduğu için Excel'in kendi parolasıyla şifreli yüklenir; parola BBG_ANAHTAR
-ortam değişkenindedir. Çıktı yalnızca iş akışının içinde kullanılır, yayımlanmaz.
+Dosya repo herkese açık olduğu için Excel'in kendi parolasıyla şifreli yüklenir; parola BBG_ANAHTAR ortam
+değişkenindedir. Parolasız dosya okunmaz.
 
-Çıktı: {"dosya_tarihi": en yeni veri günü, "seriler": {anahtar: {"YYYY-MM-DD": değer}}, "meta": {anahtar: {...}}}
-Kullanım: python bloomberg/oku.py bloomberg/bloomberg.xlsx --out bbg.json
+Tanınan sayfa düzenleri
+  A) BDH tablosu: A1 "Start Date"; 4. satır ticker'lar, 5. satır vade/etiket, 6. satır alan, 7. satırdan itibaren
+     A sütunu tarih, diğer sütunlar değer (sıralama artan ya da azalan olabilir).
+  B) Tarih–değer çiftleri: 1. satır başlıklar "Tarih, Ad, Tarih, Ad, ..." (ör. BIST-REF, CDS).
+  C) "BIST VIOP": 3. satır kontrat vadeleri, 4. satır ("Kontrat") vadeye kalan gün, altındaki satırlar
+     kontrat başına ima edilen oran (ondalık); aşağıdaki bloklar ("<ad> | Ticker | ... | Volume") kontrat bazında
+     son fiyat, açık pozisyon ve hacim.
+
+Çıktılar
+  --out       iş akışı içi tam çıktı (tcmb/guncelle.py altın fiyatını buradan alır)
+  --site-out  sitede yayımlanan veri (makro/data/bbg.json)
+Kullanım: python bloomberg/oku.py bloomberg/BBG_Data_Excel.xlsm --out bbg.json --site-out site/makro/data/bbg.json
 """
 import argparse
 import datetime as dt
@@ -16,7 +26,7 @@ import sys
 
 import openpyxl
 
-ILK_SATIR = 3          # Tickerlar ve Veri sayfalarında ilk veri satırı
+ATLA = {"Ekran Yenileme"}
 
 
 def ac(yol, parola):
@@ -46,58 +56,172 @@ def tarih(v):
     if isinstance(v, (int, float)) and 20000 < v < 80000:          # Excel seri numarası
         return dt.date(1899, 12, 30) + dt.timedelta(days=int(v))
     if isinstance(v, str):
-        m = re.match(r"^(\d{1,2})[./](\d{1,2})[./](\d{4})$", v.strip())
+        m = re.match(r"^\s*(\d{1,2})[./](\d{1,2})[./](\d{4})\s*$", v)
         if m:
             return dt.date(int(m.group(3)), int(m.group(2)), int(m.group(1)))
+        m = re.match(r"^\s*(\d{4})-(\d{2})-(\d{2})", v)
+        if m:
+            return dt.date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
     return None
 
 
-def oku(wb):
-    t = wb["Tickerlar"]
-    meta, sira = {}, []
-    for r in t.iter_rows(min_row=ILK_SATIR, values_only=True):
-        no, ticker, anahtar, ad, grup, alan, birim = (list(r) + [None] * 8)[:7]
-        if not isinstance(no, (int, float)):
+def sayi(v):
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, (int, float)):
+        return float(v)
+    if isinstance(v, str):
+        try:
+            return float(v.replace(",", "."))
+        except ValueError:
+            return None
+    return None
+
+
+def metin(v):
+    return v.strip() if isinstance(v, str) else ("" if v is None else str(v))
+
+
+def tablo(kolonlar, satirlar):
+    """kolonlar: [{etiket, ticker}], satirlar: {tarih: [değerler]} → artan tarihli tablo."""
+    dates = sorted(satirlar)
+    v = [[(round(satirlar[d][j], 6) if satirlar[d][j] is not None else None) for d in dates] for j in range(len(kolonlar))]
+    keep = [j for j in range(len(kolonlar)) if any(x is not None for x in v[j])]
+    return {"kolonlar": [kolonlar[j] for j in keep], "dates": [d.isoformat() for d in dates], "v": [v[j] for j in keep]}
+
+
+def duzen_a(rows):
+    tick, etk = rows[3], rows[4]
+    kol = [(j, {"etiket": metin(etk[j]) or metin(tick[j]), "ticker": metin(tick[j])}) for j in range(1, len(tick)) if metin(tick[j])]
+    sat = {}
+    for r in rows[6:]:
+        d = tarih(r[0]) if r else None
+        if not d:
             continue
-        ticker = (ticker or "").strip() if isinstance(ticker, str) else ""
-        anahtar = (anahtar or "").strip() if isinstance(anahtar, str) else ""
-        if ticker and not anahtar:
-            anahtar = re.sub(r"[^a-z0-9]+", "_", ticker.lower()).strip("_")
-        sira.append((int(no), ticker, anahtar))
-        if ticker:
-            meta[anahtar] = {"ticker": ticker, "ad": ad or ticker, "grup": grup or "Diğer", "alan": alan or "PX_LAST", "birim": birim or ""}
-    v = wb["Veri"]
-    kolonlar = {}
-    for r in v.iter_rows(min_row=ILK_SATIR, values_only=True):
-        for no, ticker, anahtar in sira:
-            if not ticker:
+        vals = [sayi(r[j]) if j < len(r) else None for j, _ in kol]
+        if any(x is not None for x in vals):
+            sat[d] = vals
+    return tablo([k for _, k in kol], sat)
+
+
+def duzen_b(rows):
+    bas = rows[0]
+    ciftler = [(j, metin(bas[j + 1])) for j in range(len(bas) - 1) if metin(bas[j]).lower() == "tarih" and metin(bas[j + 1])]
+    kol = [{"etiket": ad, "ticker": ""} for _, ad in ciftler]
+    sat = {}
+    for r in rows[1:]:
+        for k, (j, _) in enumerate(ciftler):
+            if j + 1 >= len(r):
                 continue
-            i = 2 * (no - 1)
-            if i + 1 >= len(r):
-                continue
-            d, x = tarih(r[i]), r[i + 1]
-            if d and isinstance(x, (int, float)):
-                kolonlar.setdefault(anahtar, {})[d.isoformat()] = round(float(x), 6)
-    return {"seriler": kolonlar, "meta": meta}
+            d, x = tarih(r[j]), sayi(r[j + 1])
+            if d and x is not None:
+                sat.setdefault(d, [None] * len(ciftler))[k] = x
+    return tablo(kol, sat)
+
+
+def viop(rows):
+    out = {"tarih": None, "kontratlar": {}}
+    if rows and rows[0] and len(rows[0]) > 1 and tarih(rows[0][1]):
+        out["tarih"] = tarih(rows[0][1]).isoformat()
+    ki = next((i for i, r in enumerate(rows) if r and metin(r[0]).lower() == "kontrat"), None)
+    if ki is not None and ki >= 1:
+        vade, gun = rows[ki - 1], rows[ki]
+        for r in rows[ki + 1:]:
+            ad = metin(r[0]) if r else ""
+            if not ad:
+                break
+            kisa = ad.split()[0].upper()
+            pts = []
+            for j in range(2, len(r)):
+                d, x = tarih(vade[j]) if j < len(vade) else None, sayi(r[j])
+                if d and x is not None:
+                    pts.append({"vade": d.isoformat(), "gun": int(sayi(gun[j]) or 0), "oran": round(x * 100, 4)})
+            out["kontratlar"][kisa] = {"ticker": ad, "spot": sayi(r[1]) if len(r) > 1 else None, "egri": pts, "islem": []}
+    i = 0
+    while i < len(rows):
+        r = rows[i]
+        if r and len(r) > 1 and metin(r[1]).lower() == "ticker":
+            kisa = metin(r[0]).split()[0].upper() if metin(r[0]) else ""
+            bas = [metin(x).lower() for x in r]
+            col = {k: bas.index(k) for k in ("lasttrade", "volume", "openint", "close", "time") if k in bas}
+            i += 1
+            while i < len(rows) and rows[i] and metin(rows[i][1] if len(rows[i]) > 1 else None):
+                q = rows[i]
+                d = tarih(q[0])
+                g = lambda k: sayi(q[col[k]]) if k in col and col[k] < len(q) else None
+                if d:
+                    out["kontratlar"].setdefault(kisa, {"ticker": kisa, "spot": None, "egri": [], "islem": []})["islem"].append(
+                        {"vade": d.isoformat(), "ticker": metin(q[1]), "son": g("lasttrade"), "kapanis": g("close"),
+                         "hacim": g("volume"), "acik": g("openint"), "zaman": metin(q[col["time"]]) if "time" in col and col["time"] < len(q) else ""})
+                i += 1
+            continue
+        i += 1
+    return out
+
+
+def oku(wb):
+    T, V = {}, None
+    for ws in wb.worksheets:
+        if ws.title in ATLA:
+            continue
+        rows = [list(r) for r in ws.iter_rows(values_only=True)]
+        if not rows:
+            continue
+        a1 = metin(rows[0][0]).lower() if rows[0] else ""
+        try:
+            if ws.title.upper().replace(" ", "") == "BISTVIOP":
+                V = viop(rows)
+            elif a1 == "start date" and len(rows) > 6:
+                T[ws.title] = duzen_a(rows)
+            elif a1 == "tarih":
+                T[ws.title] = duzen_b(rows)
+            else:
+                print(f"   atlandı (düzen tanınmadı): {ws.title}")
+        except Exception as e:
+            print(f"UYARI {ws.title} okunamadı: {type(e).__name__}: {e}")
+    tick = {}
+    for t in T.values():
+        for k, kol in enumerate(t["kolonlar"]):
+            if kol["ticker"]:
+                tick[kol["ticker"]] = {d: x for d, x in zip(t["dates"], t["v"][k]) if x is not None}
+    return {"tablolar": T, "viop": V, "ticker": tick}
+
+
+def dosya_bul(yol):
+    if os.path.isfile(yol):
+        return yol
+    for ad in ("BBG_Data_Excel.xlsm", "BBG_Data_Excel.xlsx", "bloomberg.xlsm", "bloomberg.xlsx"):
+        p = os.path.join(yol, ad)
+        if os.path.isfile(p):
+            return p
+    return None
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("xlsx")
+    ap.add_argument("xlsx", help="Excel dosyası ya da bloomberg klasörü")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--site-out", default="")
     a = ap.parse_args()
+    yol = dosya_bul(a.xlsx)
+    if not yol:
+        print("Bloomberg Excel dosyası henüz yüklenmemiş")
+        return 0
     try:
-        wb = ac(a.xlsx, os.environ.get("BBG_ANAHTAR", ""))
-        D = oku(wb)
-        D["dosya_tarihi"] = max((max(s) for s in D["seriler"].values() if s), default=None)     # en yeni veri günü
-        bos = [k for k in D["meta"] if k not in D["seriler"]]
-        for k, s in sorted(D["seriler"].items()):
-            print(f"   {k:<14} {D['meta'][k]['ticker']:<18} {len(s):>5} gün  son {max(s)}  {s[max(s)]}")
-        if bos:
-            print("UYARI: verisi gelmeyen ticker'lar (formül dolmamış ya da ticker hatalı):",
-                  ", ".join(D["meta"][k]["ticker"] for k in bos))
+        D = oku(ac(yol, os.environ.get("BBG_ANAHTAR", "")))
+        son = max((t["dates"][-1] for t in D["tablolar"].values() if t["dates"]), default=None)
+        D["guncel"] = son
+        for ad, t in D["tablolar"].items():
+            print(f"   {ad:<24} {len(t['kolonlar']):>2} seri  {len(t['dates']):>4} gün  {t['dates'][0] if t['dates'] else '—'} – {t['dates'][-1] if t['dates'] else '—'}")
+        if D["viop"]:
+            print(f"   BIST VIOP {D['viop']['tarih']}: " + ", ".join(f"{k} ({len(v['egri'])} vade, {len(v['islem'])} kontrat)" for k, v in D["viop"]["kontratlar"].items()))
         json.dump(D, open(a.out, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-        print(f"Bloomberg: {len(D['seriler'])} seri okundu")
+        if a.site_out:
+            os.makedirs(os.path.dirname(a.site_out), exist_ok=True)
+            json.dump({"guncel": son, "tablolar": D["tablolar"], "viop": D["viop"],
+                       "updated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")},
+                      open(a.site_out, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+        print(f"Bloomberg: {len(D['tablolar'])} tablo okundu, en yeni veri {son}")
         return 0
     except Exception as e:
         print(f"HATA Bloomberg dosyası: {e}")

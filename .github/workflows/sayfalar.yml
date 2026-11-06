@@ -73,11 +73,7 @@ jobs:
         env:
           BBG_ANAHTAR: ${{ secrets.BBG_ANAHTAR }}
         run: |
-          if [ -f bloomberg/bloomberg.xlsx ]; then
-            python bloomberg/oku.py bloomberg/bloomberg.xlsx --out "$RUNNER_TEMP/bbg.json" || rm -f "$RUNNER_TEMP/bbg.json"
-          else
-            echo "bloomberg/bloomberg.xlsx henüz yüklenmemiş"
-          fi
+          python bloomberg/oku.py bloomberg --out "$RUNNER_TEMP/bbg.json" --site-out site/makro/data/bbg.json || rm -f "$RUNNER_TEMP/bbg.json"
 
       - name: TCMB rezerv verisini çek
         continue-on-error: true
