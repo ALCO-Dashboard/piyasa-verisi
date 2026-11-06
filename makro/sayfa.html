@@ -605,7 +605,6 @@ function renderPs() {
 }
 
 // ---------------------------------------------------------------- Endeks ve emtia (Bloomberg + LBMA)
-let LB = null;      // LBMA AM (../tcmb/data/lbma.json)
 const BORSA = "Borsa Ve Diğer";
 const ENDEKS = [["XU100 Index", "BIST 100"], ["XBANK Index", "Bankacılık"], ["XUSIN Index", "Sanayi"], ["XUTEK Index", "Teknoloji"], ["XUHIZ Index", "Hizmet"], ["XULAS Index", "Ulaştırma"], ["XGIDA Index", "Gıda"]];
 const ECOL = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6", "--ink-2"];
@@ -620,11 +619,13 @@ const EE = [
   { k: "cds", ad: "Türkiye CDS 5Y", birim: " bp", dg: 0, bp: true, seri: () => bEtiket("CDS", "5Y CDS"), kay: "Bloomberg" },
   { k: "dxy", ad: "Dolar endeksi (DXY)", birim: "", dg: 2, usd: true, seri: () => bSeri(BORSA, "DXY Curncy"), kay: "Bloomberg" },
   { k: "brent", ad: "Brent petrol", birim: " $/varil", dg: 2, usd: true, seri: () => bSeri(BORSA, "CO1 Comdty"), kay: "Bloomberg (CO1)" },
-  { k: "altin", ad: "Altın (LBMA AM)", birim: " $/ons", dg: 2, seri: () => LB?.am ? { dates: Object.keys(LB.am), vals: Object.values(LB.am), kol: { ticker: "LBMA Gold AM" } } : null, kay: "LBMA (goldsilver.com)" },
+  { k: "altin", ad: "Altın", birim: " $/ons", dg: 2, seri: () => bSeri("Kıymetli Maden", "XAUUSD Curncy"), kay: "Bloomberg (XAUUSD)", min: 500 },
   { k: "gumus", ad: "Gümüş", birim: " $/ons", dg: 2, seri: () => bSeri("Kıymetli Maden", "XAGUSD Curncy"), kay: "Bloomberg (XAGUSD)" },
   { k: "ttf", ad: "Doğalgaz (TTF)", birim: " €/MWh", dg: 2, seri: () => (B?.tablolar?.[BORSA]?.kolonlar || []).filter(k => /^TTF/.test(k.ticker)).map(k => bSeri(BORSA, k.ticker))[0] || null, kay: "Bloomberg (TTF)" },
 ];
-const eeOk = e => { const s = e.seri(); return s && s.vals.some(ok) && !(e.usd && s.kol.para === "TRY"); };
+const eeHata = e => { const s = e.seri(); if (!s) return null; if (e.usd && s.kol.para === "TRY") return "para";
+  if (e.min) { const i = lastIdx(s.vals); if (i >= 0 && s.vals[i] < e.min) return "deger"; } return null; };
+const eeOk = e => { const s = e.seri(); return s && s.vals.some(ok) && !eeHata(e); };
 const sonIki = s => { const i = lastIdx(s.vals); if (i < 0) return null; let j = i - 1; while (j >= 0 && !ok(s.vals[j])) j--; let w = i; const hd = new Date(Date.parse(s.dates[i]) - 7 * 864e5).toISOString().slice(0, 10); while (w > 0 && s.dates[w] > hd) w--; return { v: s.vals[i], p: j >= 0 ? s.vals[j] : null, h: ok(s.vals[w]) ? s.vals[w] : null, t: s.dates[i] }; };
 const degis = (e, a, b) => !ok(a) || !ok(b) ? "—" : e.bp ? bp((a - b) / 100) : (a >= b ? "+" : "−") + nf(Math.abs(a / b - 1) * 100, 2) + "%";
 const degCls = (e, a, b) => !ok(a) || !ok(b) || a === b ? "" : (e.bp ? a < b : a > b) ? "up" : "down";
@@ -633,7 +634,7 @@ function renderEndeks() {
   if (!EE.some(e => e.k === S.ee && eeOk(e))) S.ee = (EE.find(eeOk) || EE[0]).k;
   for (const e of EE) {
     const s = e.seri();
-    if (s && e.usd && s.kol.para === "TRY") { uyari.push(e.ad); continue; }
+    const h = eeHata(e); if (h) { uyari.push([e, h]); continue; }
     const x = s && sonIki(s); if (!x) continue;
     kp.push(`<button class="kpi" data-e="${e.k}" aria-pressed="${S.ee === e.k}"><div class="t">${e.ad}</div>${e.kim ? `<div class="k2">${e.kim}</div>` : ""}<div class="v">${nf(x.v, e.dg)}<span style="font-size:13px;color:var(--muted)">${e.birim}</span></div>
       <div class="s">Günlük <b class="${degCls(e, x.v, x.p)}">${degis(e, x.v, x.p)}</b> · 1 hafta <b class="${degCls(e, x.v, x.h)}">${degis(e, x.v, x.h)}</b></div><div class="d">${gunAd(x.t)} · ${e.kay}</div></button>`);
@@ -664,7 +665,9 @@ function renderEndeks() {
     chart($("#eeChart"), { xs, height: 340, xFmt, tipX: gunAd, yFmt: v => nf(v, Math.abs(v) < 10 ? 2 : 0), label: $("#eeTitle").textContent,
       series: [{ name: e.ad, vals: ix.map(i => s.vals[i]), color: css("--c1"), width: 2.2, span: true, fmt: v => nf(v, e.dg) + e.birim }] });
   }
-  $("#eeNote").innerHTML = uyari.length ? `${uyari.join(" ve ")} gösterilmiyor: Excel'de bu ticker'ların "Currency" satırı TRY seçili, değerler TL'ye çevrilmiş geliyor. USD yapıp (ya da boş bırakıp) dosyayı yeniden yükleyin.` : "";
+  const pu = uyari.filter(u => u[1] === "para").map(u => u[0].ad), du = uyari.filter(u => u[1] === "deger").map(u => u[0].ad);
+  $("#eeNote").innerHTML = [pu.length ? `${pu.join(" ve ")} gösterilmiyor: Excel'de "Currency" satırı TRY seçili, değerler TL'ye çevrilmiş geliyor.` : "",
+    du.length ? `${du.join(" ve ")} gösterilmiyor: Excel'deki değer beklenen aralıkta değil (Kıymetli Maden sayfasında XAUUSD sütunu gümüş fiyatını gösteriyor).` : ""].filter(Boolean).join(" ");
 }
 $("#eeKpi").onclick = e => { const b = e.target.closest("button[data-e]"); if (b) { S.ee = b.dataset.e; renderEndeks(); } };
 $("#eeLeg").onclick = e => { const b = e.target.closest("button[data-x]"); if (!b) return; const t = b.dataset.x;
@@ -727,9 +730,8 @@ $("#grpBox").addEventListener("toggle", e => { if (e.target.classList?.contains(
 let rz, lw = innerWidth; addEventListener("resize", () => { if (!D || Math.abs(innerWidth - lw) < 30 && !rz) { } lw = innerWidth; clearTimeout(rz); rz = setTimeout(() => { rz = null; render(); }, 150); });
 const h = location.hash.slice(1); if (h === "piyasa" || h === "makro") S.tab = h;
 const bbgYukle = fetch("data/bbg.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
-const lbYukle = fetch("../tcmb/data/lbma.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
 fetch("data/makro.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-  .then(async j => { D = j; B = await bbgYukle; LB = await lbYukle; $("#gate").remove(); render(); })
+  .then(async j => { D = j; B = await bbgYukle; $("#gate").remove(); render(); })
   .catch(e => { $("#gate").textContent = "Veriler yüklenemedi (" + e.message + "). Sayfa henüz güncellenmemiş olabilir."; });
 })();
 </script>
