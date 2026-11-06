@@ -1,0 +1,15 @@
+name: GS deneme
+on:
+  push:
+    branches: [gs-deneme]
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: {python-version: "3.12"}
+      - run: pip install requests
+      - env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: python tcmb/guncelle.py --site out && python -c "import json;g=json.load(open('out/tcmb/data/tcmb.json'))['rezerv'];print([ (d,m,f,k) for d,m,f,k in zip(g['dates'][-6:],g['mudahale'][-6:],g['fiyat'][-6:],g['fk'][-6:])])"
