@@ -1,0 +1,964 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Makro ve Piyasa Verileri · ALCO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --page:#f4f5f7; --surface:#ffffff; --surface-2:#f8f8f6; --ink:#1a1d26; --ink-2:#4f4e4a; --muted:#85837d;
+  --grid:#e7e6e0; --axis:#c3c2b7; --line:rgba(11,11,11,.10); --accent:#c8102e; --accent-wash:#fdecee;
+  --up:#0b7a0b; --down:#c62828; --bar:#9aa3b5; --bar-hi:#c8102e; --vol:rgba(110,120,140,.28);
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#eda100; --c5:#e87ba4; --c6:#6250d6; --c7:#008300;
+  --mono:"DM Mono","SF Mono",ui-monospace,Menlo,monospace; --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark; --page:#0f1012; --surface:#1a1a19; --surface-2:#222220; --ink:#f0efec; --ink-2:#c3c2b7; --muted:#8f8d86;
+  --grid:#2c2c2a; --axis:#3d3d3a; --line:rgba(255,255,255,.10); --accent:#f0525f; --accent-wash:#3a171b;
+  --up:#3fbf3f; --down:#ef6b6b; --bar:#5d6577; --bar-hi:#f0525f; --vol:rgba(160,170,190,.25);
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#9085e9; --c7:#1f9a1f;}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --page:#0f1012; --surface:#1a1a19; --surface-2:#222220; --ink:#f0efec; --ink-2:#c3c2b7; --muted:#8f8d86;
+  --grid:#2c2c2a; --axis:#3d3d3a; --line:rgba(255,255,255,.10); --accent:#f0525f; --accent-wash:#3a171b;
+  --up:#3fbf3f; --down:#ef6b6b; --bar:#5d6577; --bar-hi:#f0525f; --vol:rgba(160,170,190,.25);
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#9085e9; --c7:#1f9a1f;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+button,select{font:inherit;color:inherit}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.wrap{max-width:1500px;margin:0 auto;padding-inline:16px}
+.top .wrap{padding-block:20px 0}
+.brandtitle{margin:0;font-family:Archivo,var(--sans);font-size:26px;font-weight:800;letter-spacing:.03em;line-height:1.15;text-transform:uppercase;border-bottom:2px solid var(--ink);padding-bottom:10px}
+nav.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+nav.tabs button{font-family:Archivo,var(--sans);font-weight:700;font-size:15px;letter-spacing:.02em;text-transform:uppercase;padding:13px 10px;border:1px solid var(--line);border-bottom:3px solid var(--line);border-radius:10px;background:var(--surface);color:var(--muted);cursor:pointer}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-color:var(--accent);background:var(--accent-wash)}
+main.wrap{padding-block:16px 48px}
+.subtabs{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);margin-bottom:14px}
+.subtabs button{border:0;background:none;padding:9px 18px;font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer}
+.subtabs button+button{border-left:1px solid var(--line)}
+.subtabs button[aria-pressed="true"]{background:var(--accent);color:#fff}
+h2.sec{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px;display:flex;align-items:center;gap:10px}
+h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--kc,var(--line));border-radius:12px;padding:12px 14px;text-align:left;min-width:0}
+button.kpi{cursor:pointer;width:100%}
+button.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent);border-top-color:var(--accent)}
+.kpi .t{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-family:var(--mono);font-size:26px;font-weight:500;line-height:1.2;margin-top:4px;color:var(--ink)}
+.kpi .s{font-size:12.5px;color:var(--ink-2);margin-top:3px}
+.kpi .s b{font-family:var(--mono);font-weight:500}
+.kpi2 .kr{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:4px}
+.kpi2 .kl{font-size:12.5px;font-weight:600;color:var(--ink-2)}.kpi2 .kv{font-family:var(--mono);font-size:22px;color:var(--ink)}
+.kpi .d{font-size:11.5px;color:var(--muted);margin-top:2px}
+div.kpi[role="button"]{cursor:pointer}
+div.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent);border-top-color:var(--accent)}
+.kpi .k2{font-size:12.5px;font-weight:600;color:var(--ink-2);margin-top:3px}
+.kpi .tn{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.kpi .tn button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600;color:var(--ink-2);cursor:pointer;font-family:inherit}
+.kpi .tn button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:6px 0 2px}
+.ctl input[type="date"],.ctl input.edt{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 10px;font:inherit;font-size:13px}
+.ctl input.edt.on{border-color:var(--accent);background:var(--accent-wash)}
+.hdr2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.g2e{grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr))}
+.card.egri .ctl{align-items:flex-start}
+.up{color:var(--up)}.down{color:var(--down)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px;min-width:0}
+.cardhead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.cardhead h3{margin:0;font-size:15px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
+.cardhead .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13.5px;line-height:1.2;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-wash);font-weight:600}
+.chip i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.chip.off{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:6px 14px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.chart{position:relative;margin-top:6px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.axis text{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:8px 10px;font-size:12.5px;min-width:170px;z-index:5;display:none}
+.tip b{display:block;font-size:12px;margin-bottom:4px}
+.tip .r{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:12px}
+.tip .r span:first-child{font-family:var(--sans);color:var(--ink-2)}
+.tip .r i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
+.note{font-size:12.5px;color:var(--muted)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:14px;align-items:start}
+@media (max-width:1000px){.grid2{grid-template-columns:minmax(0,1fr)}}
+/* TÜFE ana harcama grupları */
+details.grpd{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+details.grpd>summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+details.grpd>summary::-webkit-details-marker{display:none}
+details.grpd>summary::before{content:"▸";color:var(--muted)}details.grpd[open]>summary::before{content:"▾"}
+details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:.02em}details.grpd>summary span{font-size:12.5px;color:var(--muted)}
+.grph{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.grph select{border:1px solid var(--line);border-radius:9px;padding:6px 10px;background:var(--surface)}
+.grp{width:100%;border-collapse:collapse;font-size:13.5px}
+.grp th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+.grp th:first-child{text-align:left}
+.grp td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono);white-space:nowrap}
+.grp td:first-child{text-align:left;font-family:var(--sans);white-space:normal}
+.grp tr.tot td{font-weight:700;background:var(--surface-2)}
+.hb{display:inline-block;width:110px;height:10px;position:relative;vertical-align:middle;margin-right:8px;background:var(--surface-2);border-radius:3px}
+.hb i{position:absolute;top:0;bottom:0;border-radius:3px}
+.hb::after{content:"";position:absolute;top:-2px;bottom:-2px;left:50%;width:1px;background:var(--axis)}
+.hb.p::after{left:0}
+/* hedef tablosu */
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono)}
+.tbl tr.cur td{background:var(--accent-wash)}
+.tbl td.na{color:var(--muted)}
+.tw{overflow-x:auto}.tw .tbl td{white-space:nowrap}.tw .tbl td.s{white-space:normal;min-width:120px}
+.tbl td.l,.tbl th.l{text-align:left}.tbl td.s{font-family:var(--sans)}
+.tbl tr.sel td{background:var(--accent-wash)}.tbl tbody tr[data-r]{cursor:pointer}
+.tbl td.ind{padding-left:22px}.tbl tr.ust td{font-weight:600}
+.tag{display:inline-block;font-family:var(--sans);font-size:10.5px;font-weight:700;letter-spacing:.04em;border-radius:5px;padding:1px 6px;margin-left:6px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line);vertical-align:1px}
+.src{font-size:12px;color:var(--muted);margin-top:18px;line-height:1.6}
+#gate{padding:60px 16px;text-align:center;color:var(--muted)}
+.hidden{display:none!important}
+@media (max-width:640px){.kpi .v{font-size:22px}.brandtitle{font-size:21px}.hb{width:60px}}
+@media print{.tip{display:none!important}}
+</style>
+</head>
+<body>
+<div id="alcoTop"></div><script src="../ortak/ust.js" data-page="makro" data-root="../"></script>
+<header class="top"><div class="wrap">
+  <h1 class="brandtitle">Makro ve Piyasa Verileri</h1>
+  <nav class="tabs" id="tabs" role="tablist">
+    <button role="tab" data-tab="makro" aria-selected="true">Makro Veriler</button>
+    <button role="tab" data-tab="piyasa" aria-selected="false">Piyasa Verileri</button>
+  </nav>
+</div></header>
+<main class="wrap">
+  <div id="gate">Veriler yükleniyor…</div>
+  <section id="pMakro" class="hidden">
+    <div class="subtabs" role="group" aria-label="Makro konu" id="mkTabs"><button data-mk="enf" aria-pressed="true">Enflasyon</button><button data-mk="hazine" aria-pressed="false">Hazine Borçlanma</button></div>
+    <div id="mkEnf">
+    <h2 class="sec">Manşet enflasyon</h2>
+    <div class="kpis" id="infKpi"></div>
+    <div class="card">
+      <div class="cardhead"><div><h3 id="infTitle"></h3><div class="sub" id="infSub"></div></div>
+        <span class="chips" id="infRange"></span></div>
+      <div class="chart" id="infChart"></div>
+      <div id="grpBox"></div>
+    </div>
+    <h2 class="sec">Hedef / tahmin</h2>
+    <div class="kpis" id="bkKpi"></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="cardhead"><div><h3>Enflasyon beklentileri</h3><div class="sub">Yıllık TÜFE beklentisi (%) · gerçekleşen yıllık TÜFE ile</div></div><span class="chips" id="bkRange"></span></div>
+        <div class="legend" id="bkLeg"></div>
+        <div class="chart" id="bkChart"></div>
+      </div>
+      <div class="card">
+        <div class="cardhead"><div><h3>TCMB hedef / gerçekleşme</h3><div class="sub" id="hdSub"></div></div></div>
+        <div id="hdTbl"></div>
+      </div>
+    </div>
+    </div>
+    <div id="mkHazine" class="hidden">
+      <div class="empty hidden" id="hzGate"></div>
+      <div id="hzBody">
+      <h2 class="sec">Merkezi yönetim borç stoku</h2>
+      <div class="kpis" id="hzKpi"></div>
+      <div class="grid2 g2e">
+        <div class="card">
+          <div class="cardhead"><div><h3 id="hpTitle"></h3><div class="sub" id="hpSub"></div></div><div class="seg yer" id="hpYer" role="group" aria-label="Piyasa"></div></div>
+          <div class="legend" id="hpLeg"></div>
+          <div class="chart" id="hpChart"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="hiTitle"></h3><div class="sub" id="hiSub"></div></div><div class="seg yer" id="hiYer" role="group" aria-label="Piyasa"></div></div>
+          <div class="ctl"><span class="chips" id="hiPara"></span><span class="chips" id="hiUf"></span></div>
+          <div class="legend" id="hiLeg"></div>
+          <div class="chart" id="hiChart"></div>
+        </div>
+      </div>
+      <h2 class="sec">İhraçlar ve itfalar</h2>
+      <div class="grid2 g2e">
+        <div class="card">
+          <div class="cardhead"><div><h3>Son ihraçlar</h3><div class="sub" id="hsSub"></div></div><div class="seg yer" id="hsYer" role="group" aria-label="Piyasa"></div></div>
+          <div class="tw" id="hsTbl"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3>Yaklaşan itfalar</h3><div class="sub" id="hySub"></div></div><div class="seg yer" id="hyYer" role="group" aria-label="Piyasa"></div></div>
+          <div class="tw" id="hyTbl"></div>
+        </div>
+      </div>
+      <h2 class="sec">Stok yapısı ve yatırımcı dağılımı</h2>
+      <div class="grid2 g2e">
+        <div class="card">
+          <div class="cardhead"><div><h3>İç borç stokunun yapısı</h3><div class="sub" id="hkSub"></div></div></div>
+          <div class="tw" id="hkTbl"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3>Elinde bulunduranlar</h3><div class="sub" id="heSub"></div></div><span class="chips" id="heRange"></span></div>
+          <div class="chart" id="heChart"></div>
+          <div class="tw" id="heTbl"></div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </section>
+  <section id="pPiyasa" class="hidden">
+    <div class="subtabs" role="group" aria-label="Piyasa konu" id="psTabs"><button data-ps="faiz" aria-pressed="true">Kâr/Faiz/Swap Oranları</button><button data-ps="gosterge" aria-pressed="false">Gösterge Oranlar</button><button data-ps="endeks" aria-pressed="false">Endeks ve Emtia</button></div>
+    <div id="psFaiz">
+    <h2 class="sec">Gecelik oranlar ve hacim</h2>
+    <div class="kpis" id="pKpi"></div>
+    <div class="card">
+      <div class="cardhead"><div><h3 id="pTitle"></h3><div class="sub" id="pSub"></div></div><span class="chips" id="pRange"></span></div>
+      <div class="legend" id="pLeg"></div>
+      <div class="chart" id="pChart"></div>
+    </div>
+    <div id="bbgBox" class="hidden">
+      <h2 class="sec">OIS oranları</h2>
+      <div class="card egri" id="E_ois">
+        <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
+        <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
+        <div class="chart ech"></div>
+      </div>
+      <h2 class="sec">BIST VİOP</h2>
+      <div class="card">
+        <div class="cardhead"><div><h3 id="vpTitle"></h3><div class="sub" id="vpSub"></div></div>
+          <div class="hdr2"><div class="seg" id="vpMod" role="group" aria-label="Gösterim"><button data-m="oran">Oran</button><button data-m="kur">Vadeli İşlem Kuru</button></div><div class="seg" id="vpSeg" role="group" aria-label="Kontrat"></div></div></div>
+        <div class="chart" id="vpChart"></div>
+      </div>
+    </div>
+    </div>
+    <div id="psEndeks" class="hidden">
+      <h2 class="sec">Endeks ve emtia</h2>
+      <div class="kpis" id="eeKpi"></div>
+      <div class="card">
+        <div class="cardhead"><div><h3 id="eeTitle"></h3><div class="sub" id="eeSub"></div></div><span class="chips" id="eeRange"></span></div>
+        <div class="legend" id="eeLeg"></div>
+        <div class="chart" id="eeChart"></div>
+        <div class="note" id="eeNote"></div>
+      </div>
+    </div>
+    <div id="psGosterge" class="hidden">
+      <div class="seg" id="gUlke" role="group" aria-label="Ülke" style="margin:14px 0 12px"><button data-u="tr" aria-pressed="true">Türkiye</button><button data-u="abd" aria-pressed="false">ABD</button><button data-u="de" aria-pressed="false">Almanya</button></div>
+      <div id="gTr">
+        <div class="grid2 g2e">
+      <div class="card egri" id="E_tahvil">
+        <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
+        <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
+        <div class="chart ech"></div>
+      </div>
+      <div class="card egri" id="E_basabas">
+        <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
+        <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
+        <div class="chart ech"></div>
+      </div>
+        </div>
+      </div>
+      <div id="gAbd" class="hidden">
+      <div class="card egri" id="E_abd">
+        <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
+        <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
+        <div class="chart ech"></div>
+      </div>
+      </div>
+      <div id="gDe" class="hidden">
+      <div class="card egri" id="E_de">
+        <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
+        <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
+        <div class="chart ech"></div>
+      </div>
+      </div>
+      <div class="note" id="gNote"></div>
+    </div>
+  </section>
+  <div class="src" id="src"></div>
+</main>
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const AY = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+const AYU = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+const NF = {}; const nf = (v, d = 2) => (NF[d] ||= new Intl.NumberFormat("tr-TR", { minimumFractionDigits: d, maximumFractionDigits: d })).format(v);
+const ok = v => v != null && isFinite(v);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const pct = (v, d = 2) => ok(v) ? (v < 0 ? "−%" : "%") + nf(Math.abs(v), d) : "—";
+const ayAd = m => m ? `${AYU[+m.slice(5, 7) - 1]} ${m.slice(0, 4)}` : "—";
+const ayKisa = m => `${AY[+m.slice(5, 7) - 1]} ${m.slice(2, 4)}`;
+const gunAd = d => d ? `${+d.slice(8, 10)} ${AY[+d.slice(5, 7) - 1]} ${d.slice(0, 4)}` : "—";
+const gunKisa = d => `${+d.slice(8, 10)} ${AY[+d.slice(5, 7) - 1]}`;
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+const cls = (v, e = 1e-9) => !ok(v) || Math.abs(v) < e ? "" : v > 0 ? "up" : "down";
+const bp = v => { if (!ok(v)) return "—"; const b = Math.round(v * 100); return `${b > 0 ? "+" : b < 0 ? "−" : ""}${nf(Math.abs(b), 0)} bp`; };
+const pp = v => ok(v) ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v), 2)} puan` : "—";
+
+let D = null;
+const S = { tab: "makro", infOn: new Set(["tufe:yoy"]), gMode: "yoy", gOpen: false, infR: "2Y", sel: null, bkR: "3Y", pR: "6A",
+  bkOn: { pk_yilsonu: 1, pk_12ay: 1, reel_12ay: 1, hh_12ay: 1, tufe: 1 }, pOn: new Set((store.get("mk.pon") || "tlref").split(",").filter(Boolean)),
+  impT: "O/N", mk: "enf", ps: "faiz", gU: "tr", EG: {}, ee: "borsa", eeIdx: new Set(["XU100 Index"]), eeR: "6A", vpK: "USDTRY", vpM: "oran" };
+let B = null;     // Bloomberg (bbg.json)
+
+// ---------------------------------------------------------------- grafik
+function niceTicks(a, b, n) {
+  if (a === b) { a -= 1; b += 1; }
+  const step0 = (b - a) / n, mag = Math.pow(10, Math.floor(Math.log10(step0))), r = step0 / mag;
+  const step = (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * mag, out = [];
+  for (let v = Math.floor(a / step) * step; v <= b + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+// xs: kategori dizisi; series: [{name,color,vals,type:'line'|'bar',axis:'l'|'r',dash,barColors}]
+function chart(el, o) {
+  el.innerHTML = "";
+  const xs = o.xs, n = xs.length, ser = o.series.filter(s => s.vals.some(ok));
+  if (!n || !ser.length) { el.innerHTML = '<div class="empty">Seçili dönemde veri yok.</div>'; return; }
+  const W = Math.max(320, el.clientWidth || 700), H = o.height || 320;
+  const hasR = ser.some(s => s.axis === "r");
+  const m = { t: 10, r: hasR ? 58 : 14, b: 26, l: 52 };
+  const ext = ax => { const ss = ser.filter(s => (s.axis || "l") === ax), v = ss.flatMap(s => s.vals.filter(ok));
+    if (o.stack) { const bb = ss.filter(s => s.type === "bar"); for (let i = 0; i < n; i++) { let p = 0, q = 0; bb.forEach(b => { const x = b.vals[i]; if (ok(x)) x > 0 ? p += x : q += x; }); v.push(p, q); } }
+    if (!v.length) return null; let lo = Math.min(...v), hi = Math.max(...v);
+    if (ser.some(s => (s.axis || "l") === ax && s.type === "bar") || o.zero) { lo = Math.min(0, lo); hi = Math.max(0, hi); }
+    const pad = (hi - lo) * .08 || 1, z = ser.some(s => (s.axis || "l") === ax && s.type === "bar") || o.zero; return [z ? (lo < 0 ? lo - pad : 0) : o.min0 && ax === "l" ? Math.max(0, lo - pad) : lo - pad, hi + pad]; };
+  const L = ext("l"), R = hasR ? ext("r") : null;
+  const tl = L ? niceTicks(L[0], L[1], 5) : [], tr = R ? niceTicks(Math.max(0, R[0]), R[1], 5) : [];
+  if (o.min0) while (tl.length > 1 && tl[0] < 0) tl.shift();
+  const yl0 = L ? Math.min(L[0], tl[0]) : 0, yl1 = L ? Math.max(L[1], tl[tl.length - 1]) : 1;
+  const yr0 = R ? Math.min(Math.max(0, R[0]), tr[0]) : 0, yr1 = R ? Math.max(R[1], tr[tr.length - 1]) * (o.rScale || 1) : 1;
+  const iw = W - m.l - m.r, ih = H - m.t - m.b, bw = iw / n;
+  const X = i => m.l + bw * (i + .5), YL = v => m.t + (1 - (v - yl0) / (yl1 - yl0)) * ih, YR = v => m.t + (1 - (v - yr0) / (yr1 - yr0)) * ih;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label || "Grafik")}"><g class="axis">`;
+  for (const t of tl) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${YL(t)}" y2="${YL(t)}" stroke="var(--grid)"/><text x="${m.l - 7}" y="${YL(t) + 4}" text-anchor="end">${o.yFmt ? o.yFmt(t) : nf(t, 0)}</text>`;
+  if (R) for (const t of tr) if (YR(t) >= m.t - 1) s += `<text x="${W - m.r + 7}" y="${YR(t) + 4}" text-anchor="start">${o.y2Fmt ? o.y2Fmt(t) : nf(t, 0)}</text>`;
+  if (L && yl0 < 0 && yl1 > 0) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${YL(0)}" y2="${YL(0)}" stroke="var(--axis)"/>`;
+  const nx = Math.max(2, Math.min(o.maxX || 8, Math.floor(iw / 80))), step = Math.max(1, Math.ceil(n / nx));
+  for (let i = n - 1; i >= 0; i -= step) s += `<text x="${X(i)}" y="${H - 6}" text-anchor="${i === n - 1 ? "end" : "middle"}">${o.xFmt ? o.xFmt(xs[i]) : xs[i]}</text>`;
+  s += `<line x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}" stroke="var(--axis)"/></g>`;
+  if (o.hi != null && o.hi >= 0) s += `<rect x="${(X(o.hi) - bw / 2).toFixed(2)}" y="${m.t}" width="${bw.toFixed(2)}" height="${ih}" fill="var(--accent-wash)"/><line x1="${X(o.hi)}" x2="${X(o.hi)}" y1="${m.t}" y2="${m.t + ih}" stroke="var(--accent)" stroke-dasharray="3 3" stroke-width="1"/>`;
+  const bars = ser.filter(x => x.type === "bar"), nb = bars.length;
+  if (o.stack) { const pos = Array(n).fill(0), neg = Array(n).fill(0), w = Math.max(1, bw * .72);
+    bars.forEach(b => b.vals.forEach((v, i) => { if (!ok(v) || !v) return; const a = v > 0 ? pos[i] : neg[i], c = a + v; if (v > 0) pos[i] = c; else neg[i] = c;
+      const y1 = YL(a), y2 = YL(c); s += `<rect x="${(X(i) - w / 2).toFixed(2)}" y="${Math.min(y1, y2).toFixed(2)}" width="${w.toFixed(2)}" height="${Math.max(.5, Math.abs(y1 - y2)).toFixed(2)}" fill="${b.color}"/>`; })); }
+  else bars.forEach((b, k) => { const Y = b.axis === "r" ? YR : YL, base = Y(b.axis === "r" ? yr0 : Math.max(yl0, Math.min(0, yl1))), w = Math.max(1, bw * (nb > 1 ? .8 / nb : .72));
+    b.vals.forEach((v, i) => { if (!ok(v)) return; const y = Y(v), x = X(i) - (nb > 1 ? bw * .4 - w * k : w / 2);
+      s += `<rect x="${x.toFixed(2)}" y="${Math.min(y, base).toFixed(2)}" width="${w.toFixed(2)}" height="${Math.max(.5, Math.abs(base - y)).toFixed(2)}" rx="${w > 6 ? 2 : 0}" fill="${b.barColors ? b.barColors[i] : b.color}" data-i="${i}"/>`; }); });
+  for (const l of ser.filter(x => x.type !== "bar")) {
+    const Y = l.axis === "r" ? YR : YL; let d = "", pen = false;
+    l.vals.forEach((v, i) => { if (!ok(v)) { if (!l.span) pen = false; return; } d += `${pen ? "L" : "M"}${X(i).toFixed(2)},${Y(v).toFixed(2)}`; pen = true; });
+    s += `<path d="${d}" fill="none" stroke="${l.color}" stroke-width="${l.width || 2}" stroke-linejoin="round" ${l.dash ? `stroke-dasharray="${l.dash}"` : ""}/>`;
+    if (l.dots && n <= 40) l.vals.forEach((v, i) => { if (ok(v)) s += `<circle cx="${X(i).toFixed(2)}" cy="${Y(v).toFixed(2)}" r="${i === o.hi ? 4.5 : 2.6}" fill="${i === o.hi ? "var(--surface)" : l.color}" stroke="${l.color}" stroke-width="${i === o.hi ? 2 : 0}"/>`; });
+    const li = l.vals.map(ok).lastIndexOf(true); if (li >= 0 && !l.noDot && !l.dots) s += `<circle cx="${X(li)}" cy="${Y(l.vals[li])}" r="3" fill="${l.color}"/>`;
+  }
+  s += `<line class="cur" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" stroke="var(--axis)" stroke-dasharray="3 3" visibility="hidden"/></svg>`;
+  el.insertAdjacentHTML("beforeend", s);
+  const svg = el.querySelector("svg"), tip = el.appendChild(Object.assign(document.createElement("div"), { className: "tip" })), cur = svg.querySelector(".cur");
+  const idx = ev => { const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width; return Math.max(0, Math.min(n - 1, Math.floor((px - m.l) / bw))); };
+  svg.addEventListener("mousemove", ev => {
+    const i = idx(ev), rows = ser.filter(x => ok(x.vals[i]));
+    if (!rows.length) { tip.style.display = "none"; cur.setAttribute("visibility", "hidden"); return; }
+    cur.setAttribute("x1", X(i)); cur.setAttribute("x2", X(i)); cur.setAttribute("visibility", "visible");
+    tip.innerHTML = `<b>${esc(o.tipX ? o.tipX(xs[i]) : xs[i])}</b>` + rows.map(x => `<div class="r"><span><i style="background:${x.barColors ? x.barColors[i] : x.color}"></i>${esc(x.name)}</span><span>${x.fmt ? x.fmt(x.vals[i]) : nf(x.vals[i])}</span></div>`).join("")
+      + (o.stack && rows.filter(x => x.type === "bar").length > 1 ? `<div class="r" style="border-top:1px solid var(--line);margin-top:3px;padding-top:3px"><span>Toplam</span><span>${(o.totFmt || nf)(rows.filter(x => x.type === "bar").reduce((a, x) => a + x.vals[i], 0))}</span></div>` : "") + (o.tipNote ? `<div class="note" style="margin-top:4px">${o.tipNote}</div>` : "");
+    tip.style.display = "block";
+    const r = el.getBoundingClientRect(), tw = tip.offsetWidth, x = ev.clientX - r.left;
+    tip.style.left = Math.min(Math.max(0, x + 14), r.width - tw) + "px"; tip.style.top = Math.max(0, ev.clientY - r.top - tip.offsetHeight - 10) + "px";
+  });
+  svg.addEventListener("mouseleave", () => { tip.style.display = "none"; cur.setAttribute("visibility", "hidden"); });
+  if (o.onClick) { svg.style.cursor = "pointer"; svg.addEventListener("click", ev => o.onClick(idx(ev))); }
+}
+const rangeChips = (el, list, cur, cb) => { el.innerHTML = list.map(([k]) => `<button class="chip" data-k="${k}" aria-pressed="${k === cur}">${k}</button>`).join(""); el.onclick = e => { const b = e.target.closest("button[data-k]"); if (b) cb(b.dataset.k); }; };
+
+// ---------------------------------------------------------------- manşet enflasyon
+const INF = { tufe: { ad: "TÜFE", uzun: "TÜİK" }, ufe: { ad: "Yİ-ÜFE", uzun: "TÜİK" }, web: { ad: "Web TÜFE", uzun: "webtufe.com" } };
+const ISER = [["tufe", "yoy", "--c1"], ["tufe", "mom", "--c3"], ["ufe", "yoy", "--c2"], ["ufe", "mom", "--c4"], ["web", "yoy", "--c6"], ["web", "mom", "--c5"]];
+const INF_R = [["1Y", 12], ["2Y", 24], ["3Y", 36], ["Tümü", 999]];
+function infSrc(k) {
+  if (k !== "web") return D[k]?.months?.length ? D[k] : null;
+  const w = D.webtufe; if (!w?.months?.length) return null;
+  return { months: w.months, yoy: w.yoy["TÜFE"], mom: w.mom["TÜFE"], gecici: w.guncel_ay_gecici };
+}
+const lastIdx = arr => arr ? arr.map(ok).lastIndexOf(true) : -1;
+function renderInf() {
+  const kp = [];
+  for (const [k, m, c] of ISER) {
+    const d = infSrc(k); if (!d) continue; const arr = d[m], i = lastIdx(arr); if (i < 0) continue;
+    const j = arr.slice(0, i).map(ok).lastIndexOf(true), dv = j >= 0 ? arr[i] - arr[j] : null, on = S.infOn.has(k + ":" + m);
+    const gec = k === "web" && d.gecici && i === d.months.length - 1 ? " · ay içi geçici" : "";
+    const alt = k === "web" ? `${INF.web.uzun}` : m === "yoy" ? `12 aylık ort. ${pct(d.avg12?.[i])}` : `yılbaşından ${pct(d.ytd?.[i])}`;
+    kp.push(`<button class="kpi" data-s="${k}:${m}" aria-pressed="${on}" style="--kc:var(${c})">
+      <div class="t">${INF[k].ad} · ${m === "yoy" ? "yıllık" : "aylık"}</div><div class="v">${pct(arr[i])}</div>
+      <div class="s">Önceki ay <b>${pct(arr[j])}</b> · <span class="${cls(-dv, .005)}">${pp(dv)}</span></div>
+      <div class="d">${ayAd(d.months[i])}${gec} · ${alt}</div></button>`);
+  }
+  $("#infKpi").innerHTML = kp.join("") || '<div class="empty">Enflasyon verisi henüz yok.</div>';
+  rangeChips($("#infRange"), INF_R, S.infR, k => { S.infR = k; renderInf(); });
+  const sel = ISER.filter(([k, m]) => S.infOn.has(k + ":" + m) && infSrc(k));
+  const all = [...new Set(sel.flatMap(([k]) => infSrc(k).months))].sort();
+  const nAy = INF_R.find(r => r[0] === S.infR)[1], xs = all.slice(Math.max(0, all.length - nAy));
+  const tm = D.tufe?.months || [];
+  if (!S.sel || !tm.includes(S.sel)) S.sel = tm[tm.length - 1];
+  const alpha = (hex, on) => on || !/^#[0-9a-f]{6}$/i.test(hex) ? hex : hex + "b3";
+  const series = sel.map(([k, m, c]) => { const d = infSrc(k), o = {}; d.months.forEach((x, i) => o[x] = d[m][i]); const col = css(c);
+    return { name: `${INF[k].ad} ${m === "yoy" ? "yıllık" : "aylık"}`, vals: xs.map(x => o[x] ?? null), color: col, width: 2.4, dots: true, fmt: v => pct(v) }; });
+  const ad = sel.map(([k, m]) => `${INF[k].ad} ${m === "yoy" ? "yıllık" : "aylık"}`);
+  $("#infTitle").textContent = ad.length ? ad.join(" · ") + " (%)" : "Kutulardan seri seçin";
+  $("#infSub").textContent = "Kutulara tıklayarak birden fazla seriyi aynı grafikte karşılaştırın · grafikte bir aya tıklayınca alttaki ana harcama grupları o aya geçer";
+  if (!series.length) { $("#infChart").innerHTML = '<div class="empty">Grafik için yukarıdaki kutulardan en az birini seçin.</div>'; }
+  else chart($("#infChart"), { xs, label: $("#infTitle").textContent, height: 300, xFmt: ayKisa, tipX: ayAd, maxX: 12, yFmt: v => nf(v, Math.max(...series.flatMap(s => s.vals.filter(ok))) < 10 ? 1 : 0),
+    series, hi: xs.indexOf(S.sel), onClick: i => { if (tm.includes(xs[i])) { S.sel = xs[i]; renderInf(); } } });
+  renderGroups();
+}
+const gkey = l => String(l).toLocaleLowerCase("tr").replace(/[^a-zçğıöşü]/g, "").slice(0, 5);
+function renderGroups() {
+  const box = $("#grpBox");
+  if (!D.tufe?.groups) { box.innerHTML = ""; return; }
+  const g = D.tufe.groups[S.sel], pid = D.tufe.press?.[S.sel], yil = S.gMode === "yoy", w = D.webtufe;
+  const link = pid ? ` · <a href="https://veriportali.tuik.gov.tr/tr/press/${pid}" target="_blank" rel="noopener">TÜİK bülteni</a>` : "";
+  let body;
+  if (!g) body = `<div class="note">${ayAd(S.sel)} için TÜİK ana harcama grubu kırılımı yok${link}.</div>`;
+  else {
+    const v = yil ? g.yoy : g.mom, k = yil ? g.yoyK : g.momK;
+    const wi = w ? w.months.indexOf(S.sel) : -1, wmap = {};
+    if (wi >= 0) for (const gr of w.groups) wmap[gkey(gr)] = (yil ? w.yoy : w.mom)[gr][wi];
+    const wv = l => wmap[gkey(l)] ?? (gkey(l) === "tüfe" ? wmap[gkey("TÜFE")] : null);
+    const mxV = Math.max(...v.map(x => Math.abs(x || 0)), ...Object.values(wmap).map(x => Math.abs(x || 0))) || 1, mxK = Math.max(...(k || []).slice(1).map(x => Math.abs(x || 0))) || 1;
+    const bar = (x, mx, col) => { if (!ok(x)) return '<span class="hb"></span>'; const ww = Math.min(50, Math.abs(x) / mx * 50); return `<span class="hb"><i style="background:${col};${x >= 0 ? `left:50%;width:${ww}%` : `right:50%;width:${ww}%`}"></i></span>`; };
+    const rows = g.labels.map((l, i) => { const x = wv(l), f = ok(x) && ok(v[i]) ? v[i] - x : null;
+      return `<tr class="${i === 0 ? "tot" : ""}"><td>${esc(l)}</td><td>${bar(v[i], mxV, css("--c1"))}${pct(v[i])}</td><td>${k ? (i === 0 ? "" : bar(k[i], mxK, css("--c4"))) + (ok(k[i]) ? nf(k[i], 2) : "—") : "—"}</td>
+        <td>${wi >= 0 ? bar(x, mxV, css("--c6")) + pct(x) : "—"}</td><td>${ok(f) ? (f > 0 ? "+" : f < 0 ? "−" : "") + nf(Math.abs(f), 2) : "—"}</td></tr>`; }).join("");
+    body = `<div style="overflow-x:auto"><table class="grp"><thead><tr><th>Ana harcama grubu</th><th>TÜİK ${yil ? "yıllık" : "aylık"} değişim</th><th>TÜİK katkı (puan)</th><th>Web TÜFE ${yil ? "yıllık" : "aylık"}</th><th>Fark (TÜİK − Web)</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="note" style="margin-top:6px">Web TÜFE: webtufe.com, aynı ay${wi < 0 ? " için veri yok" : ""}; ana grup adları COICOP 2018'e göre eşleştirildi.</div>`;
+  }
+  box.innerHTML = `<details class="grpd" ${S.gOpen ? "open" : ""}><summary><b>TÜFE ana harcama gruplarının ${yil ? "yıllık" : "aylık"} değişim oranları ve genel endeks değişimine katkıları</b><span>${ayAd(S.sel)} · TÜİK ve Web TÜFE${link}</span></summary>
+    <div class="grph"><div class="seg" id="gMode"><button data-m="yoy" aria-pressed="${yil}">Yıllık</button><button data-m="mom" aria-pressed="${!yil}">Aylık</button></div>
+    <select id="gAy" aria-label="Ay">${Object.keys(D.tufe.groups).sort().reverse().map(m => `<option value="${m}"${m === S.sel ? " selected" : ""}>${ayAd(m)}</option>`).join("")}</select></div>${body}</details>`;
+}
+// ---------------------------------------------------------------- hedef / tahmin
+const BK = [
+  ["pk_yilsonu", "PK anketi · cari yıl sonu", "--c1"], ["pk_12ay", "PK anketi · 12 ay sonrası", "--c3"],
+  ["reel_12ay", "Reel sektör · 12 ay sonrası", "--c4"], ["hh_12ay", "Hanehalkı · 12 ay sonrası", "--c5"], ["tufe", "Gerçekleşen yıllık TÜFE", "--ink"]];
+const BK_R = [["1Y", 12], ["2Y", 24], ["3Y", 36], ["5Y", 60], ["Tümü", 999]];
+function renderBk() {
+  const b = D.beklenti, rp = D.rapor, kp = [];
+  if (b?.months?.length) {
+    const son = k => { const arr = b[k] || [], i = arr.map(ok).lastIndexOf(true); if (i < 0) return null; const j = arr.slice(0, i).map(ok).lastIndexOf(true); return { v: arr[i], dv: j >= 0 ? arr[i] - arr[j] : null, ay: b.months[i] }; };
+    const a1 = son("pk_yilsonu"), a2 = son("pk_12ay");
+    if (a1 || a2) kp.push(`<div class="kpi kpi2" style="--kc:var(--c1)"><div class="t">PK anketi</div>
+      ${[[a1, "Cari yıl sonu"], [a2, "12 ay sonrası"]].filter(x => x[0]).map(([x, l]) => `<div class="kr"><span class="kl">${l}</span><span class="kv">${pct(x.v)}</span></div><div class="s">Önceki ankete göre <span class="${cls(-x.dv, .005)}">${pp(x.dv)}</span></div>`).join("")}
+      <div class="d">${ayAd((a1 || a2).ay)} · TCMB EVDS</div></div>`);
+    for (const [k, ad, c] of BK.slice(2, 4)) {
+      const x = son(k); if (!x) continue;
+      kp.push(`<div class="kpi" style="--kc:var(${c})"><div class="t">${ad}</div><div class="v">${pct(x.v)}</div>
+        <div class="s">Önceki ankete göre <span class="${cls(-x.dv, .005)}">${pp(x.dv)}</span></div><div class="d">${ayAd(x.ay)} · TCMB EVDS</div></div>`);
+    }
+  }
+  if (rp?.tahmin) {
+    const yy = Object.keys(rp.tahmin).sort(), y0 = String(new Date().getFullYear()), ys = yy.filter(y => y >= y0).slice(0, 2);
+    for (const y of ys) kp.push(`<div class="kpi" style="--kc:var(--accent)"><div class="t">TCMB tahmini · ${y} sonu</div><div class="v">${pct(rp.tahmin[y], 0)}</div>
+      <div class="s">Ara hedef <b>${ok(rp.ara_hedef?.[y]) ? pct(rp.ara_hedef[y], 0) : "—"}</b></div><div class="d">${esc(rp.ad || "Enflasyon Raporu")}</div></div>`);
+  }
+  $("#bkKpi").innerHTML = kp.join("");
+  // grafik
+  rangeChips($("#bkRange"), BK_R, S.bkR, k => { S.bkR = k; renderBk(); });
+  $("#bkLeg").innerHTML = BK.map(([k, ad, c]) => `<button class="chip ${S.bkOn[k] ? "" : "off"}" data-k="${k}" aria-pressed="${!!S.bkOn[k]}"><i style="background:var(${c})"></i>${ad}</button>`).join("");
+  $("#bkLeg").onclick = e => { const x = e.target.closest("button[data-k]"); if (!x) return; S.bkOn[x.dataset.k] = S.bkOn[x.dataset.k] ? 0 : 1; renderBk(); };
+  if (b?.months?.length) {
+    const all = [...new Set([...b.months, ...(D.tufe?.months || [])])].sort(), nAy = BK_R.find(r => r[0] === S.bkR)[1], xs = all.slice(Math.max(0, all.length - nAy));
+    const map = (ms, arr) => { const o = {}; ms.forEach((m, i) => o[m] = arr[i]); return xs.map(m => o[m] ?? null); };
+    const series = BK.filter(([k]) => S.bkOn[k]).map(([k, ad, c]) => ({ name: ad, color: css(c), span: true, fmt: v => pct(v),
+      vals: k === "tufe" ? map(D.tufe?.months || [], D.tufe?.yoy || []) : map(b.months, b[k] || []), dash: k === "tufe" ? "5 4" : null, width: k === "tufe" ? 2.4 : 2 }));
+    chart($("#bkChart"), { xs, series, height: 300, xFmt: ayKisa, tipX: ayAd, yFmt: v => nf(v, 0), label: "Enflasyon beklentileri" });
+  } else $("#bkChart").innerHTML = '<div class="empty">EVDS beklenti verisi henüz yok.</div>';
+  // hedef tablosu
+  const h = D.hedef?.rows || [], y0 = new Date().getFullYear();
+  const gg = D.rapor_gecmis || {};
+  const yrs = [...new Set([...h.map(r => r.yil), ...Object.keys(rp?.tahmin || {}).map(Number)])].sort((a, b) => b - a).slice(0, 12);
+  const rows = yrs.map(y => { const r = h.find(x => x.yil === y) || {}, gt = gg.tahmin?.[y], ga = gg.ara_hedef?.[y];
+    const t = rp?.tahmin?.[y] ?? gt?.deger, a = rp?.ara_hedef?.[y] ?? ga?.deger, g = r.gercek, dv = ok(g) && ok(r.hedef) ? g - r.hedef : null, dt = ok(g) && ok(t) ? g - t : null;
+    const tt = rp?.tahmin?.[y] != null ? (rp.ad || "") : gt?.rapor || "";
+    const tufe = y === y0 && D.tufe?.months?.length ? D.tufe.yoy[D.tufe.yoy.length - 1] : null;
+    return `<tr class="${y === y0 ? "cur" : ""}"><td>${y}</td><td>${ok(r.hedef) ? nf(r.hedef, 1) : "—"}</td><td class="${ok(a) ? "" : "na"}">${ok(a) ? nf(a, 1) : "—"}</td><td class="${ok(t) ? "" : "na"}" title="${esc(tt)}">${ok(t) ? nf(t, 1) : "—"}</td>
+      <td>${ok(g) ? nf(g, 2) : ok(tufe) ? `<span title="Son açıklanan yıllık TÜFE">(${nf(tufe, 2)})</span>` : "—"}</td><td class="${cls(-dt, .005)}">${ok(dt) ? (dt > 0 ? "+" : "") + nf(dt, 2) : "—"}</td></tr>`; }).join("");
+  $("#hdTbl").innerHTML = rows ? `<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Yıl</th><th>Hedef</th><th>Ara hedef</th><th>TCMB tahmini</th><th>Gerçekleşme</th><th>Tahminden sapma</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="note" style="margin-top:8px">Yıl sonu TÜFE, %. Cari ve gelecek yıllar: ${rp?.url ? `<a href="${esc(rp.url)}" target="_blank" rel="noopener">${esc(rp.ad || "Enflasyon Raporu")}</a>` : "en güncel Enflasyon Raporu"}; geçmiş yıllar: o yılın son (IV) Enflasyon Raporu'ndaki yıl sonu tahmini. Ara hedefler 2025'ten itibaren tanımlandı. Cari yıl için parantez içinde son açıklanan yıllık TÜFE.</div>` : '<div class="empty">Hedef verisi yok.</div>';
+  $("#hdSub").textContent = "Hedef: TCMB · tahmin ve ara hedef: en güncel Enflasyon Raporu";
+}
+
+// ---------------------------------------------------------------- piyasa
+const P_R = [["1A", 31], ["3A", 92], ["6A", 183], ["1Y", 366], ["Tümü", 1e5]];
+const IMP = [["O/N", "O/N", "Gecelik"], ["1A", "1M", "1 aylık"], ["3A", "3M", "3 aylık"], ["6A", "6M", "6 aylık"], ["1Y", "1Y", "1 yıllık"]];
+const bCol = (sh, et) => { const t = B?.tablolar?.[sh]; if (!t) return null; const j = t.kolonlar.findIndex(k => k.etiket === et); return j < 0 ? null : { dates: t.dates, rate: t.v[j], ticker: t.kolonlar[j].ticker }; };
+const impT = () => IMP.find(x => x[0] === S.impT) || IMP[0];
+const PSEL = {
+  tlref: { ad: "TLREF", lines: ["tlref"], bars: ["tlref"], not: "Borsa İstanbul TLREF oranı ve hesaplamaya konu işlem hacmi (tarihsel dosya)" },
+  tlrefk: { ad: "TLREFK", lines: ["tlrefk"], bars: ["tlrefk"], not: "Borsa İstanbul TLREFK oranı ve işlem hacmi (tarihsel dosya)" },
+  bistrepo: { ad: "BIST Repo O/N", lines: ["bistrepo"], bars: ["bistrepo"], not: "Borsa İstanbul Repo Pazarı gecelik ağırlıklı ortalama faiz ve işlem hacmi" },
+  imp: { ad: "TL Implied", lines: ["imp"], bars: [], not: "Bloomberg TRY forward implied yield (Londra swap piyasası)" },
+  all: { ad: "Tümü", lines: ["tlref", "tlrefk", "bistrepo", "imp"], bars: [], not: "Oranların karşılaştırması" } };
+const PCOL = { tlref: "--c1", tlrefk: "--c3", bistrepo: "--c6", imp: "--c4" };
+const PKAY = { tlref: "Borsa İstanbul", tlrefk: "Borsa İstanbul", bistrepo: "Borsa İstanbul (EVDS)", imp: "Bloomberg" };
+const PK = ["tlref", "tlrefk", "bistrepo", "imp"];
+const pSrc = k => k === "imp" ? bCol("TL LONDRA SWAP", impT()[1]) : D[k];
+const pAd = k => k === "imp" ? `TL Implied ${impT()[0]}` : { tlref: "TLREF", tlrefk: "TLREFK", bistrepo: "BIST Repo O/N" }[k];
+const pDg = k => k === "tlref" || k === "tlrefk" ? 4 : 2;
+function renderPiyasa() {
+  const kp = [], son = d => { if (!d?.dates?.length) return null; const i = lastIdx(d.rate); if (i < 0) return null; const j = d.rate.slice(0, i).map(ok).lastIndexOf(true); return { v: d.rate[i], p: j >= 0 ? d.rate[j] : null, t: d.dates[i], i }; };
+  const has = k => !!pSrc(k)?.dates?.length;
+  for (const k of [...S.pOn]) if (!PK.includes(k) || !has(k)) S.pOn.delete(k);
+  if (!S.pOn.size) S.pOn.add(PK.find(has) || "tlref");
+  const on = k => S.pOn.has(k);
+  for (const k of PK) {
+    const d = pSrc(k), x = son(d); if (!x) continue; const dg = pDg(k);
+    if (k === "imp") {
+      kp.push(`<div class="kpi" role="button" tabindex="0" data-p="imp" aria-pressed="${on("imp")}" style="--kc:var(${PCOL.imp})"><div class="t">TL Implied</div><div class="k2">${impT()[2]}</div><div class="v">${pct(x.v, dg)}</div>
+        <div class="s">Önceki güne göre <span class="${cls(x.v - x.p, 1e-6)}">${bp(ok(x.p) ? x.v - x.p : null)}</span></div>
+        <div class="tn" role="group" aria-label="Vade">${IMP.map(([a]) => `<button data-imp="${a}" aria-pressed="${S.impT === a}">${a}</button>`).join("")}</div>
+        <div class="d">${gunAd(x.t)} · Bloomberg ${esc(d.ticker || "")}</div></div>`);
+      continue;
+    }
+    const hv = d.vol_tl ? d.vol_tl[lastIdx(d.vol_tl)] : null;
+    kp.push(`<button class="kpi" data-p="${k}" aria-pressed="${on(k)}" style="--kc:var(${PCOL[k]})"><div class="t">${pAd(k)} · gecelik</div><div class="v">${pct(x.v, dg)}</div>
+      <div class="s">Önceki güne göre <span class="${cls(x.v - x.p, 1e-6)}">${bp(ok(x.p) ? x.v - x.p : null)}</span>${ok(hv) ? ` · hacim <b>₺${nf(hv / 1e9, 0)} mr</b>` : ""}</div>
+      <div class="d">${gunAd(x.t)} · ${PKAY[k]}</div></button>`);
+  }
+  $("#pKpi").innerHTML = kp.join("");
+  rangeChips($("#pRange"), P_R, S.pR, k => { S.pR = k; renderPiyasa(); });
+  const lines = PK.filter(k => on(k) && has(k)), tek = lines.length === 1 ? lines[0] : null;
+  const bars = tek && PSEL[tek].bars.length && pSrc(tek).vol_tl?.some(ok) ? [tek] : [];
+  const hepsi = PK.filter(has).every(on);
+  $("#pTitle").textContent = !tek ? "Gecelik oranlar · karşılaştırma" : tek === "imp" ? `TL Implied · ${impT()[2]} (%)` : PSEL[tek].ad + (bars.length ? " · oran ve işlem hacmi" : " · oran");
+  $("#pSub").textContent = tek ? PSEL[tek].not + (bars.length ? " · oran sol eksen (%), hacim sağ eksen (milyar TL)" : "")
+    : "Kutulara ya da aşağıdaki düğmelere tıklayarak serileri ekleyip çıkarın" + (on("imp") ? ` · TL Implied vadesi: ${impT()[2]}` : "");
+  $("#pLeg").innerHTML = PK.filter(has).map(k => `<button class="chip" data-p="${k}" aria-pressed="${on(k)}"><i style="background:var(${PCOL[k]})"></i>${pAd(k)}</button>`).join("")
+    + `<button class="chip" data-p="all" aria-pressed="${hepsi}">Tümünü karşılaştır</button>`;
+  const all = [...new Set([...lines, ...bars].flatMap(k => pSrc(k).dates))].sort();
+  if (!all.length) { $("#pChart").innerHTML = '<div class="empty">Veri yok.</div>'; return; }
+  const gun = P_R.find(r => r[0] === S.pR)[1], bas = new Date(Date.parse(all[all.length - 1]) - gun * 864e5).toISOString().slice(0, 10), xs = all.filter(d => d >= bas);
+  const map = (d, k) => { const o = {}; d.dates.forEach((t, i) => o[t] = d[k][i]); return xs.map(t => o[t] ?? null); };
+  const series = [];
+  for (const k of bars) series.push({ name: pAd(k) + " hacim", type: "bar", axis: "r", color: css("--vol"), vals: map(pSrc(k), "vol_tl").map(v => ok(v) ? v / 1e9 : null), fmt: v => "₺" + nf(v, 1) + " mr" });
+  for (const k of lines) series.push({ name: pAd(k), color: css(PCOL[k]), span: true, vals: map(pSrc(k), "rate"), fmt: v => pct(v, pDg(k)) });
+  chart($("#pChart"), { xs, series, height: 340, xFmt: gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd, yFmt: v => nf(v, v % 1 ? 1 : 0), y2Fmt: v => nf(v, 0), rScale: 2.2, label: $("#pTitle").textContent });
+}
+const pSec = k => {
+  if (k === "all") { const hs = PK.filter(x => pSrc(x)?.dates?.length); S.pOn = hs.every(x => S.pOn.has(x)) ? new Set([hs[0]]) : new Set(hs); }
+  else if (S.pOn.has(k)) { if (S.pOn.size > 1) S.pOn.delete(k); } else S.pOn.add(k);
+  store.set("mk.pon", [...S.pOn].join(",")); renderPiyasa();
+};
+$("#pKpi").onclick = $("#pLeg").onclick = e => {
+  const t = e.target.closest("button[data-imp]"); if (t) { S.impT = t.dataset.imp; S.pOn.add("imp"); store.set("mk.pon", [...S.pOn].join(",")); renderPiyasa(); return; }
+  const b = e.target.closest("[data-p]"); if (b) pSec(b.dataset.p); };
+$("#pKpi").onkeydown = e => { const b = e.target.closest('div[role="button"][data-p]'); if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pSec(b.dataset.p); } };
+
+// ---------------------------------------------------------------- OIS (Bloomberg)
+const OIS = { TRY: "TLOIS", USD: "USD OIS", EUR: "EUR OIS" };
+const OIS_ON = { TRY: "TLREF", USD: "SOFR", EUR: "€STR" };
+const VADE = { ON: "O/N", "O/N": "O/N", "T/N": "T/N", "1W": "1H", "2W": "2H", "1M": "1A", "2M": "2A", "3M": "3A", "6M": "6A", "9M": "9A", "1Y": "1Y", "18M": "18A", "2Y": "2Y", "3Y": "3Y", "4Y": "4Y", "5Y": "5Y", "8Y": "8Y", "10Y": "10Y", "15Y": "15Y", "30Y": "30Y" };
+const VGUN = { ON: 1, "1W": 7, "2W": 14, "1M": 30, "2M": 61, "3M": 91, "6M": 182, "9M": 273, "1Y": 365, "18M": 548, "2Y": 730, "3Y": 1095, "5Y": 1825, "10Y": 3650 };
+const sonSatir = t => { for (let i = t.dates.length - 1; i >= 0; i--) { const n = t.v.filter(c => ok(c[i])).length; if (n >= Math.max(1, t.v.length / 2)) return i; } return -1; };
+const OCMP = [["YB", "Yılbaşı"], ["1A", "1 Ay"], ["3A", "3 Ay"], ["6A", "6 Ay"], ["1Y", "1 Yıl"]];
+// karşılaştırma tarihi: hedef tarihe eşit ya da ondan önceki son dolu gün
+function karsGun(t, i, c) {
+  if (!c) return null;
+  const son = t.dates[i]; let hedef;
+  if (c.k === "d") hedef = c.d;
+  else if (c.k === "YB") hedef = `${+son.slice(0, 4) - 1}-12-31`;
+  else { const ay = { "1A": 1, "3A": 3, "6A": 6, "1Y": 12 }[c.k], d = new Date(son + "T00:00:00Z"); d.setUTCMonth(d.getUTCMonth() - ay); hedef = d.toISOString().slice(0, 10); }
+  const dolu = k => t.v.filter(col => ok(col[k])).length >= Math.max(1, t.v.length / 2);
+  for (let k = i - 1; k >= 0; k--) if (t.dates[k] <= hedef && dolu(k)) return k;
+  for (let k = 0; k < i; k++) if (dolu(k)) return k;
+  return null;
+}
+// Getiri eğrisi kartı: eğri (son gün + seçilen günle karşılaştırma) ya da tek vadenin tarihsel seyri.
+// cfg: { id, sekmeler: [[kod, tablo, renkDeğişkeni]], baslik(kod, mod), alt(kod), butonlar: [vade etiketleri] }
+const EGRI = {};
+function egriKart(cfg) {
+  EGRI[cfg.id] = cfg;
+  const box = $("#" + cfg.id), st = (S.EG[cfg.id] ||= { c: null, v: "egri", r: "6A", cmp: null });
+  const sk = cfg.sekmeler.filter(([, tb]) => B?.tablolar?.[tb]?.dates?.length);
+  if (!sk.length) { box.classList.add("hidden"); return false; }
+  box.classList.remove("hidden");
+  if (!sk.some(x => x[0] === st.c)) st.c = sk[0][0];
+  const [kod, tb, rk] = sk.find(x => x[0] === st.c), t = B.tablolar[tb], et = t.kolonlar.map(k => k.etiket);
+  if (st.v !== "egri" && !et.includes(st.v)) st.v = "egri";
+  const q = c => box.querySelector(c), col = css(rk);
+  q(".ec").innerHTML = sk.length > 1 ? sk.map(([c]) => `<button data-c="${c}" aria-pressed="${st.c === c}">${c}</button>`).join("") : "";
+  const btn = (cfg.butonlar || et).filter(v => et.includes(v));
+  q(".ev").innerHTML = `<button class="chip" data-v="egri" aria-pressed="${st.v === "egri"}">Getiri eğrisi</button>` +
+    btn.map(v => `<button class="chip" data-v="${v}" aria-pressed="${st.v === v}">${VADE[v] || v}</button>`).join("");
+  const ch = q(".ech");
+  if (st.v === "egri") {
+    const i = sonSatir(t); if (i < 0) { q(".er").innerHTML = ""; ch.innerHTML = '<div class="empty">Veri yok.</div>'; return true; }
+    const son = t.dates[i], j = karsGun(t, i, st.cmp);
+    q(".er").innerHTML = `<input type="date" class="edt${st.cmp?.k === "d" ? " on" : ""}" aria-label="Karşılaştırma tarihi" min="${t.dates[0]}" max="${son}" value="${j != null ? t.dates[j] : ""}">`
+      + OCMP.map(([k, l]) => `<button class="chip" data-cmp="${k}" aria-pressed="${st.cmp?.k === k}">${l}</button>`).join("")
+      + (st.cmp ? `<button class="chip" data-cmp="x" title="Karşılaştırmayı kaldır">✕</button>` : "");
+    const xs = et.map(e => VADE[e] || e), vals = t.v.map(c => c[i]), cv = j != null ? t.v.map(c => c[j]) : null;
+    const series = [{ name: gunAd(son), vals, color: col, width: 2.6, dots: true, fmt: v => pct(v, 3) }];
+    if (cv) series.push({ name: gunAd(t.dates[j]), vals: cv, color: css("--muted"), width: 2, dash: "5 4", dots: true, fmt: v => pct(v, 3) });
+    q(".et").textContent = cfg.baslik(kod, "egri");
+    q(".es").textContent = (cv ? `${gunAd(son)} ile ${gunAd(t.dates[j])} karşılaştırması` : gunAd(son)) + (cfg.alt ? " · " + cfg.alt(kod) : "") + " · Bloomberg · vadeye tıklayınca tarihsel seyir";
+    const all = [...vals, ...(cv || [])].filter(ok);
+    chart(ch, { xs, height: cfg.height || 300, label: q(".et").textContent, yFmt: v => nf(v, Math.max(...all) - Math.min(...all) < 3 ? 2 : 1), maxX: 14,
+      tipX: x => { const k = xs.indexOf(x), d = cv && ok(vals[k]) && ok(cv[k]) ? vals[k] - cv[k] : null; return x + (ok(d) ? ` · değişim ${bp(d)}` : ""); },
+      series, onClick: k => { if (et[k]) { st.v = et[k]; egriKart(cfg); } } });
+  } else {
+    rangeChips(q(".er"), P_R, st.r, k => { st.r = k; egriKart(cfg); });
+    const j = et.indexOf(st.v), gun = P_R.find(r => r[0] === st.r)[1], last = t.dates[t.dates.length - 1];
+    const bas = new Date(Date.parse(last) - gun * 864e5).toISOString().slice(0, 10), ix = t.dates.map((d, i) => d >= bas ? i : -1).filter(i => i >= 0);
+    const xs = ix.map(i => t.dates[i]), vals = ix.map(i => t.v[j][i]), li = lastIdx(vals);
+    q(".et").textContent = cfg.baslik(kod, VADE[st.v] || st.v);
+    q(".es").textContent = `${t.kolonlar[j].ticker} · son ${li >= 0 ? pct(vals[li], 3) + " (" + gunAd(xs[li]) + ")" : "—"} · Bloomberg`;
+    chart(ch, { xs, height: cfg.height || 300, label: q(".et").textContent, xFmt: gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd,
+      yFmt: v => nf(v, v % 1 ? 1 : 0), series: [{ name: `${kod} ${VADE[st.v] || st.v}`, vals, color: col, width: 2.2, span: true, fmt: v => pct(v, 3) }] });
+  }
+  return true;
+}
+document.addEventListener("click", e => {
+  const box = e.target.closest(".card.egri"); if (!box || !EGRI[box.id]) return;
+  const st = S.EG[box.id], b = e.target.closest("button");
+  if (!b || b.closest(".chips.er") && b.dataset.k) return;      // dönem düğmeleri kendi işleyicisiyle
+  if (b.dataset.c) st.c = b.dataset.c;
+  else if (b.dataset.v) st.v = b.dataset.v;
+  else if (b.dataset.cmp) st.cmp = b.dataset.cmp === "x" || st.cmp?.k === b.dataset.cmp ? null : { k: b.dataset.cmp };
+  else return;
+  egriKart(EGRI[box.id]);
+});
+document.addEventListener("change", e => {
+  if (!e.target.classList.contains("edt")) return; const box = e.target.closest(".card.egri"); if (!box || !EGRI[box.id]) return;
+  S.EG[box.id].cmp = e.target.value ? { k: "d", d: e.target.value } : null; egriKart(EGRI[box.id]);
+});
+const OBTN = ["ON", "1W", "2W", "1M", "3M", "6M", "1Y", "3Y", "5Y"];
+const renderOis = () => egriKart({ id: "E_ois", sekmeler: [["TRY", "TLOIS", "--c1"], ["USD", "USD OIS", "--c6"], ["EUR", "EUR OIS", "--c3"]], butonlar: OBTN,
+  baslik: (c, m) => m === "egri" ? `${c} OIS getiri eğrisi (%)` : `${c} OIS · ${m} (%)`, alt: c => `O/N: ${OIS_ON[c]}` });
+
+// ---------------------------------------------------------------- Gösterge oranlar (Bloomberg)
+const TAHVIL_AD = { TRY: "TL tahvil/bono", USD: "USD Eurobond", EUR: "EUR Eurobond" };
+function renderGosterge() {
+  $$("#gUlke button").forEach(b => b.setAttribute("aria-pressed", b.dataset.u === S.gU));
+  $("#gTr").classList.toggle("hidden", S.gU !== "tr"); $("#gAbd").classList.toggle("hidden", S.gU !== "abd"); $("#gDe").classList.toggle("hidden", S.gU !== "de");
+  if (S.gU === "tr") {
+    egriKart({ id: "E_tahvil", sekmeler: [["TRY", "TRY TAHVİL GÖSTERGE", "--c1"], ["USD", "USD EUROBOND GÖSTERGE", "--c6"], ["EUR", "EUR EUROBOND GÖSTERGE", "--c3"]],
+      baslik: (c, m) => `Hazine Tahvil/Bono/Eurobond · ${TAHVIL_AD[c]}${m === "egri" ? "" : " · " + m} (%)` });
+    egriKart({ id: "E_basabas", sekmeler: [["TÜFE", "TÜFE BAŞABAŞ ORANLAR", "--c4"]],
+      baslik: (c, m) => `TÜFE başabaş oranları${m === "egri" ? "" : " · " + m} (%)`, alt: () => "nominal DİBS ile TÜFE'ye endeksli DİBS getiri farkı" });
+  } else if (S.gU === "abd") egriKart({ id: "E_abd", sekmeler: [["USD", "ABD GÖSTERGE", "--c6"]], baslik: (c, m) => `ABD Hazine getirileri${m === "egri" ? "" : " · " + m} (%)` });
+  else egriKart({ id: "E_de", sekmeler: [["EUR", "ALMANYA GÖSTERGE", "--c3"]], baslik: (c, m) => `Almanya devlet tahvili (Bund) getirileri${m === "egri" ? "" : " · " + m} (%)` });
+  $("#gNote").textContent = B ? "" : "Gösterge oranlar Bloomberg Excel dosyasından gelir; dosya henüz okunamadı.";
+}
+$("#gUlke").onclick = e => { const b = e.target.closest("button[data-u]"); if (b) { S.gU = b.dataset.u; renderGosterge(); } };
+$("#psTabs").onclick = e => { const b = e.target.closest("button[data-ps]"); if (b) { S.ps = b.dataset.ps; renderPs(); } };
+function renderPs() {
+  $$("#psTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.ps === S.ps));
+  $("#psFaiz").classList.toggle("hidden", S.ps !== "faiz"); $("#psGosterge").classList.toggle("hidden", S.ps !== "gosterge"); $("#psEndeks").classList.toggle("hidden", S.ps !== "endeks");
+  if (S.ps === "faiz") { renderPiyasa(); renderBbg(); } else if (S.ps === "gosterge") renderGosterge(); else renderEndeks();
+}
+
+// ---------------------------------------------------------------- Endeks ve emtia (Bloomberg + LBMA)
+const BORSA = "Borsa Ve Diğer";
+const ENDEKS = [["XU100 Index", "BIST 100"], ["XBANK Index", "Bankacılık"], ["XUSIN Index", "Sanayi"], ["XUTEK Index", "Teknoloji"], ["XUHIZ Index", "Hizmet"], ["XULAS Index", "Ulaştırma"], ["XGIDA Index", "Gıda"]];
+const ECOL = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6", "--ink-2"];
+function bSeri(sh, ticker, alan = "PX_LAST") {
+  const t = B?.tablolar?.[sh]; if (!t) return null;
+  const j = t.kolonlar.findIndex(k => k.ticker === ticker && (k.alan || "PX_LAST") === alan); if (j < 0) return null;
+  return { dates: t.dates, vals: t.v[j], kol: t.kolonlar[j] };
+}
+const bEtiket = (sh, et) => { const t = B?.tablolar?.[sh]; if (!t) return null; const j = t.kolonlar.findIndex(k => k.etiket === et); return j < 0 ? null : { dates: t.dates, vals: t.v[j], kol: t.kolonlar[j] }; };
+const EE = [
+  { k: "borsa", ad: "Borsa İstanbul", kim: "BIST 100", birim: "", dg: 0, seri: () => bSeri(BORSA, "XU100 Index"), kay: "Bloomberg (XU100)" },
+  { k: "cds", ad: "Türkiye CDS 5Y", birim: " bp", dg: 0, bp: true, seri: () => bEtiket("CDS", "5Y CDS"), kay: "Bloomberg" },
+  { k: "dxy", ad: "Dolar endeksi (DXY)", birim: "", dg: 2, usd: true, seri: () => bSeri(BORSA, "DXY Curncy"), kay: "Bloomberg" },
+  { k: "brent", ad: "Brent petrol", birim: " $/varil", dg: 2, usd: true, seri: () => bSeri(BORSA, "CO1 Comdty"), kay: "Bloomberg (CO1)" },
+  { k: "altin", ad: "Altın", birim: " $/ons", dg: 2, seri: () => bSeri("Kıymetli Maden", "XAUUSD Curncy"), kay: "Bloomberg (XAUUSD)", min: 500 },
+  { k: "gumus", ad: "Gümüş", birim: " $/ons", dg: 2, seri: () => bSeri("Kıymetli Maden", "XAGUSD Curncy"), kay: "Bloomberg (XAGUSD)" },
+  { k: "ttf", ad: "Doğalgaz (TTF)", birim: " €/MWh", dg: 2, seri: () => (B?.tablolar?.[BORSA]?.kolonlar || []).filter(k => /^TTF/.test(k.ticker)).map(k => bSeri(BORSA, k.ticker))[0] || null, kay: "Bloomberg (TTF)" },
+];
+const eeHata = e => { const s = e.seri(); if (!s) return null; if (e.usd && s.kol.para === "TRY") return "para";
+  if (e.min) { const i = lastIdx(s.vals); if (i >= 0 && s.vals[i] < e.min) return "deger"; } return null; };
+const eeOk = e => { const s = e.seri(); return s && s.vals.some(ok) && !eeHata(e); };
+const sonIki = s => { const i = lastIdx(s.vals); if (i < 0) return null; let j = i - 1; while (j >= 0 && !ok(s.vals[j])) j--; let w = i; const hd = new Date(Date.parse(s.dates[i]) - 7 * 864e5).toISOString().slice(0, 10); while (w > 0 && s.dates[w] > hd) w--; return { v: s.vals[i], p: j >= 0 ? s.vals[j] : null, h: ok(s.vals[w]) ? s.vals[w] : null, t: s.dates[i] }; };
+const degis = (e, a, b) => !ok(a) || !ok(b) ? "—" : e.bp ? bp((a - b) / 100) : (a >= b ? "+" : "−") + nf(Math.abs(a / b - 1) * 100, 2) + "%";
+const degCls = (e, a, b) => !ok(a) || !ok(b) || a === b ? "" : (e.bp ? a < b : a > b) ? "up" : "down";
+function renderEndeks() {
+  const kp = [], uyari = [];
+  if (!EE.some(e => e.k === S.ee && eeOk(e))) S.ee = (EE.find(eeOk) || EE[0]).k;
+  for (const e of EE) {
+    const s = e.seri();
+    const h = eeHata(e); if (h) { uyari.push([e, h]); continue; }
+    const x = s && sonIki(s); if (!x) continue;
+    kp.push(`<button class="kpi" data-e="${e.k}" aria-pressed="${S.ee === e.k}"><div class="t">${e.ad}</div>${e.kim ? `<div class="k2">${e.kim}</div>` : ""}<div class="v">${nf(x.v, e.dg)}<span style="font-size:13px;color:var(--muted)">${e.birim}</span></div>
+      <div class="s">Günlük <b class="${degCls(e, x.v, x.p)}">${degis(e, x.v, x.p)}</b> · 1 hafta <b class="${degCls(e, x.v, x.h)}">${degis(e, x.v, x.h)}</b></div><div class="d">${gunAd(x.t)} · ${e.kay}</div></button>`);
+  }
+  $("#eeKpi").innerHTML = kp.join("");
+  const e = EE.find(x => x.k === S.ee);
+  rangeChips($("#eeRange"), P_R, S.eeR, k => { S.eeR = k; renderEndeks(); });
+  const gun = P_R.find(r => r[0] === S.eeR)[1], xFmt = gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa;
+  const kes = s => { const last = s.dates[s.dates.length - 1], bas = new Date(Date.parse(last) - gun * 864e5).toISOString().slice(0, 10); return s.dates.map((d, i) => d >= bas ? i : -1).filter(i => i >= 0); };
+  if (e.k === "borsa") {
+    const var_ = ENDEKS.filter(([t]) => bSeri(BORSA, t)?.vals.some(ok));
+    for (const t of [...S.eeIdx]) if (!var_.some(x => x[0] === t)) S.eeIdx.delete(t);
+    if (!S.eeIdx.size) S.eeIdx.add(var_[0]?.[0] || "XU100 Index");
+    $("#eeLeg").innerHTML = var_.map(([t, ad], i) => `<button class="chip" data-x="${t}" aria-pressed="${S.eeIdx.has(t)}"><i style="background:var(${ECOL[i % ECOL.length]})"></i>${ad}</button>`).join("");
+    const sec = var_.filter(([t]) => S.eeIdx.has(t)), tek = sec.length === 1, ana = bSeri(BORSA, sec[0][0]), ix = kes(ana), xs = ix.map(i => ana.dates[i]);
+    const series = [];
+    if (tek) { const h = bSeri(BORSA, sec[0][0], "PX_VOLUME"); if (h) series.push({ name: "İşlem hacmi", type: "bar", axis: "r", color: css("--vol"), vals: ix.map(i => ok(h.vals[i]) ? h.vals[i] / 1e9 : null), fmt: v => "₺" + nf(v, 1) + " mr" }); }
+    sec.forEach(([t, ad]) => { const s = bSeri(BORSA, t), v = ix.map(i => s.vals[i]), b0 = v.find(ok);
+      series.push({ name: ad, color: css(ECOL[ENDEKS.findIndex(x => x[0] === t) % ECOL.length]), width: 2.2, span: true, vals: tek ? v : v.map(x => ok(x) && b0 ? x / b0 * 100 : null), fmt: x => tek ? nf(x, 2) : nf(x, 1) }); });
+    $("#eeTitle").textContent = tek ? `${sec[0][1]} endeksi` + (series[0]?.type === "bar" ? " ve işlem hacmi" : "") : "Borsa İstanbul endeksleri · karşılaştırma";
+    $("#eeSub").textContent = tek ? "Endeks sol eksen, işlem hacmi sağ eksen (milyar TL) · Bloomberg" : `Dönem başı = 100 · ${gunAd(xs[0])} – ${gunAd(xs[xs.length - 1])} · Bloomberg`;
+    chart($("#eeChart"), { xs, series, height: 340, xFmt, tipX: gunAd, yFmt: v => nf(v, 0), y2Fmt: v => nf(v, 0), rScale: 2.2, label: $("#eeTitle").textContent });
+  } else {
+    $("#eeLeg").innerHTML = "";
+    const s = e.seri(), ix = kes(s), xs = ix.map(i => s.dates[i]);
+    $("#eeTitle").textContent = `${e.ad}${e.birim ? " (" + e.birim.trim() + ")" : ""}`;
+    $("#eeSub").textContent = `${s.kol.ticker || ""} · ${e.kay}`;
+    chart($("#eeChart"), { xs, height: 340, xFmt, tipX: gunAd, yFmt: v => nf(v, Math.abs(v) < 10 ? 2 : 0), label: $("#eeTitle").textContent,
+      series: [{ name: e.ad, vals: ix.map(i => s.vals[i]), color: css("--c1"), width: 2.2, span: true, fmt: v => nf(v, e.dg) + e.birim }] });
+  }
+  const pu = uyari.filter(u => u[1] === "para").map(u => u[0].ad), du = uyari.filter(u => u[1] === "deger").map(u => u[0].ad);
+  $("#eeNote").innerHTML = [pu.length ? `${pu.join(" ve ")} gösterilmiyor: Excel'de "Currency" satırı TRY seçili, değerler TL'ye çevrilmiş geliyor.` : "",
+    du.length ? `${du.join(" ve ")} gösterilmiyor: Excel'deki değer beklenen aralıkta değil (Kıymetli Maden sayfasında XAUUSD sütunu gümüş fiyatını gösteriyor).` : ""].filter(Boolean).join(" ");
+}
+$("#eeKpi").onclick = e => { const b = e.target.closest("button[data-e]"); if (b) { S.ee = b.dataset.e; renderEndeks(); } };
+$("#eeLeg").onclick = e => { const b = e.target.closest("button[data-x]"); if (!b) return; const t = b.dataset.x;
+  if (S.eeIdx.has(t)) { if (S.eeIdx.size > 1) S.eeIdx.delete(t); } else S.eeIdx.add(t); renderEndeks(); };
+
+// ---------------------------------------------------------------- BIST VİOP (Bloomberg)
+const VP = ["USDTRY", "EURTRY", "XAUTRY", "XAUUSD"], VP_OIS = { USDTRY: "USD", EURTRY: "EUR" };
+function enYakinOis(ccy, gun) {
+  const t = B?.tablolar?.[OIS[ccy]]; if (!t) return null; const i = sonSatir(t); if (i < 0) return null;
+  let best = null; t.kolonlar.forEach((k, j) => { const g = VGUN[k.etiket], v = t.v[j][i]; if (!g || !ok(v)) return; if (!best || Math.abs(g - gun) < Math.abs(best.g - gun)) best = { g, v, et: k.etiket }; });
+  return best && { ...best, tarih: t.dates[i] };
+}
+function renderViop() {
+  const V = B?.viop, ks = VP.filter(k => V?.kontratlar?.[k]);
+  if (!ks.length) return false;
+  if (!ks.includes(S.vpK)) S.vpK = ks[0];
+  $("#vpSeg").innerHTML = ks.map(k => `<button data-k="${k}" aria-pressed="${S.vpK === k}">${k}</button>`).join("");
+  $$("#vpMod button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === S.vpM));
+  const K = V.kontratlar[S.vpK], oc = VP_OIS[S.vpK], kur = S.vpM === "kur";
+  const eg = Object.fromEntries(K.egri.map(p => [p.vade, p])), is = Object.fromEntries(K.islem.map(p => [p.vade, p]));
+  const xs = (kur ? K.islem.map(p => p.vade) : [...new Set([...K.egri.map(p => p.vade), ...K.islem.map(p => p.vade)])]).sort();
+  const hac = xs.map(d => is[d]?.hacim ?? null), series = [];
+  if (hac.some(ok)) series.push({ name: "Hacim", type: "bar", axis: "r", color: css("--vol"), vals: hac, fmt: v => nf(v, 0) + " kontrat" });
+  const dg = ok(K.spot) && K.spot > 1000 ? 1 : 4;
+  if (kur) series.push({ name: "Vadeli işlem kuru", vals: xs.map(d => is[d]?.son ?? is[d]?.kapanis ?? null), color: css("--c1"), width: 2.4, span: true, dots: true, fmt: v => nf(v, dg) });
+  else {
+    const fark = xs.map(d => eg[d]?.oran ?? null);
+    const vals = oc ? fark.map((f, i) => { const o = ok(f) && eg[xs[i]] ? enYakinOis(oc, eg[xs[i]].gun) : null; return o ? f + o.v : null; }) : fark;
+    series.push({ name: { USDTRY: "TL oranı (SOFR dahil)", EURTRY: "TL oranı (€STR dahil)" }[S.vpK] || "Oran", vals, color: css("--c1"), width: 2.4, span: true, dots: true, fmt: v => pct(v, 2) });
+  }
+  $("#vpTitle").textContent = `${S.vpK} vadeli işlem eğrisi`;
+  $("#vpSub").textContent = `${V.tarih ? gunAd(V.tarih) : ""} · spot kur ${ok(K.spot) ? nf(K.spot, dg) : "—"}`;
+  const lv = series[series.length - 1].vals.filter(ok);
+  chart($("#vpChart"), { xs, series, height: 320, label: $("#vpTitle").textContent, xFmt: d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`, maxX: 14,
+    tipX: d => `${gunAd(d)}${eg[d] ? ` · ${eg[d].gun} gün` : ""}${is[d] ? ` · ${is[d].ticker}` : ""}`,
+    yFmt: v => kur ? nf(v, Math.max(...lv) - Math.min(...lv) < 20 ? 1 : 0) : nf(v, 0), y2Fmt: v => v >= 1000 ? nf(v / 1000, v % 1000 ? 1 : 0) + " bin" : nf(v, 0), rScale: 2.2 });
+  return true;
+}
+$("#vpMod").onclick = e => { const b = e.target.closest("button[data-m]"); if (b) { S.vpM = b.dataset.m; renderViop(); } };
+$("#vpSeg").onclick = e => { const b = e.target.closest("button[data-k]"); if (b) { S.vpK = b.dataset.k; renderViop(); } };
+function renderBbg() { const bx = $("#bbgBox"); bx.classList.remove("hidden"); const a = renderOis(), b = renderViop(); bx.classList.toggle("hidden", !a && !b); }
+
+// ---------------------------------------------------------------- Hazine borçlanma (HMB Kamu Finansmanı İstatistikleri)
+let H = null;
+const HZ = { p: "ic", i: "ic", ip: "Tümü", iu: "24A", s: "ic", y: "ic", eb: store.get("mk.eb") || "Katılım Bankaları", ebR: "3Y" };
+const YER = [["ic", "Yurtiçi"], ["dis", "Yurtdışı"]];
+const PARA_RENK = { TL: "--c1", USD: "--c6", EUR: "--c3", "Altın": "--c4", JPY: "--c5", "Diğer": "--c5" };
+const TUR_RENK = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6", "--c7", "--muted"];
+const bugun = () => new Date().toISOString().slice(0, 10);
+const yilFark = (a, b) => (Date.parse(b) - Date.parse(a)) / (365.25 * 864e5);
+const mr = v => ok(v) ? nf(v / 1e9, Math.abs(v) >= 1e11 ? 0 : 1) : "—";            // TL → milyar TL
+const toplam = (a, f = x => x.tutar) => a.reduce((t, x) => t + (f(x) || 0), 0);
+const yerSeg = (id, k) => { $(id).innerHTML = YER.map(([y, l]) => `<button data-y="${y}" aria-pressed="${HZ[k] === y}">${l}</button>`).join(""); };
+// para birimi cinsinden gösterim: iç borçta USD/EUR/Altın TL karşılığı, HMB'nin stok tarihindeki kurla çevrilir
+function birim(yer, para) {
+  const c = H.cevrim;
+  if (yer === "dis") return para === "Tümü" ? { ad: "milyon USD", f: x => x.usd } : { ad: `milyon ${para === "Diğer" ? "döviz" : para}`, f: x => x.tutar };
+  if (c && para === "USD") return { ad: "milyon USD", f: x => x.tutar / c.usd / 1e6 };
+  if (c && para === "EUR") return { ad: "milyon EUR", f: x => x.tutar / c.eur / 1e6 };
+  if (c?.altin_gr && para === "Altın") return { ad: "ton", f: x => x.tutar / c.altin_gr / 1e6, d: 2 };
+  return { ad: "milyar TL", f: x => x.tutar / 1e9 };
+}
+function renderHzKpi() {
+  const ic = H.ic_stok, dis = H.dis_stok, c = H.cevrim, sen = ic?.senetler || [];
+  const grp = p => sen.filter(x => x.para === p), sk = a => { const t = toplam(a); return t ? toplam(a.filter(x => x.sukuk)) / t * 100 : null; };
+  const pay = a => { const s = sk(a); return ok(s) ? `<b>%${nf(100 - s, 1)}</b> Tahvil · <b>%${nf(s, 1)}</b> Sukuk` : ""; };
+  const tl = grp("TL"), usd = grp("USD"), eur = grp("EUR"), au = grp("Altın"), tumu = toplam(sen);
+  const fxTL = toplam(usd) + toplam(eur), iDate = gunAd(ic?.itibar), dDate = gunAd(dis?.itibar);
+  const k = [];
+  k.push(`<div class="kpi" style="--kc:var(--c1)"><div class="t">İç borç · TL</div><div class="v">${nf(toplam(tl) / 1e12, 2)} Tr TL</div><div class="s">${pay(tl)}</div><div class="d">Toplam iç borç ${nf(tumu / 1e12, 2)} Tr TL · ${iDate}</div></div>`);
+  k.push(`<div class="kpi" style="--kc:var(--c6)"><div class="t">İç borç · Döviz</div><div class="v">${c ? nf(fxTL / c.usd / 1e9, 1) + " Mr USD" : mr(fxTL) + " Mr TL"}</div>`
+    + `<div class="s">${c ? `USD <b>${nf(toplam(usd) / c.usd / 1e9, 1)} Mr</b> · EUR <b>${nf(toplam(eur) / c.eur / 1e9, 1)} Mr</b>` : ""}</div><div class="d">≈ ${mr(fxTL)} Mr TL${c ? ` · USD/TRY ${nf(c.usd, 4)}` : ""}</div></div>`);
+  k.push(`<div class="kpi" style="--kc:var(--c4)"><div class="t">İç borç · Altın</div><div class="v">${c?.altin_gr ? nf(toplam(au) / c.altin_gr / 1e6, 1) + " Ton" : mr(toplam(au)) + " Mr TL"}</div><div class="s">${pay(au)}</div>`
+    + `<div class="d">≈ ${mr(toplam(au))} Mr TL${c?.altin_gr ? ` · ${nf(c.altin_gr, 0)} TL/gr` : ""}</div></div>`);
+  if (dis?.satir?.length) {
+    const d = dis.satir, t = toplam(d, x => x.usd), s = toplam(d.filter(x => x.tur === "Kira sertifikası"), x => x.usd) / t * 100;
+    k.push(`<div class="kpi" style="--kc:var(--c3)"><div class="t">Dış borç · Tahvil</div><div class="v">${nf(t / 1e3, 1)} Mr USD</div><div class="s"><b>%${nf(100 - s, 1)}</b> Eurobond · <b>%${nf(s, 1)}</b> Sukuk</div><div class="d">${d.length} tertip · ${dDate}</div></div>`);
+  }
+  const bg = bugun(), vade = (a, f, t0) => { const w = toplam(a, f); return w ? a.reduce((s, x) => s + f(x) * Math.max(0, yilFark(t0, x.itfa)), 0) / w : null; };
+  const y12 = (a, f, t0) => { const lim = new Date(Date.parse(t0) + 365 * 864e5).toISOString().slice(0, 10), w = toplam(a, f); return w ? toplam(a.filter(x => x.itfa <= lim), f) / w * 100 : null; };
+  const di = dis?.satir || [], fu = x => x.usd;
+  k.push(`<div class="kpi kpi2" style="--kc:var(--c2)"><div class="t">Ağırlıklı kalan vade</div>`
+    + `<div class="kr"><span class="kl">İç borç</span><span class="kv">${nf(vade(sen, x => x.tutar, ic.itibar), 1)} yıl</span></div>`
+    + (di.length ? `<div class="kr"><span class="kl">Dış borç</span><span class="kv">${nf(vade(di, fu, dis.itibar), 1)} yıl</span></div>` : "")
+    + `<div class="d">12 ay içinde itfa: iç %${nf(y12(sen, x => x.tutar, ic.itibar), 1)}${di.length ? ` · dış %${nf(y12(di, fu, dis.itibar), 1)}` : ""}</div></div>`);
+  $("#hzKpi").innerHTML = k.join("");
+}
+function renderHzProj() {
+  yerSeg("#hpYer", "p");
+  const p = H[HZ.p + "_proj"], el = $("#hpChart"), ic = HZ.p === "ic";
+  $("#hpTitle").textContent = `Ödeme projeksiyonu · ${ic ? "Yurtiçi (milyar TL)" : "Yurtdışı (milyon USD)"}`;
+  if (!p?.ay?.length) { $("#hpSub").textContent = ""; $("#hpLeg").innerHTML = ""; el.innerHTML = '<div class="empty">Veri yok.</div>'; return; }
+  const ay0 = bugun().slice(0, 7); let ix = p.ay.map((a, i) => a >= ay0 ? i : -1).filter(i => i >= 0); if (ix.length < 6) ix = p.ay.map((_, i) => i);
+  const k = ic ? 1e3 : 1, xs = ix.map(i => p.ay[i]), an = ix.map(i => p.anapara[i] / k), fz = ix.map(i => p.faiz[i] / k);
+  const ta = an.reduce((a, b) => a + b, 0), tf = fz.reduce((a, b) => a + b, 0), d = ic ? 1 : 0, u = ic ? " Mr TL" : " mn USD";
+  $("#hpSub").textContent = `HMB resmi projeksiyonu (${ayAd(p.zaman)}) · ${xs.length} ay toplamı ${nf(ta + tf, d)}${u} (anapara ${nf(ta, d)}, faiz ${nf(tf, d)})`;
+  const ser = [{ name: "Anapara", vals: an, color: css("--c1"), type: "bar", fmt: v => nf(v, d) + u }, { name: ic ? "Faiz / kupon" : "Faiz / kupon / kira", vals: fz, color: css("--c4"), type: "bar", fmt: v => nf(v, d) + u }];
+  $("#hpLeg").innerHTML = ser.map(x => `<span class="chip" style="cursor:default"><i style="background:${x.color}"></i>${x.name}</span>`).join("");
+  chart(el, { xs, series: ser, stack: true, height: 300, label: $("#hpTitle").textContent, xFmt: ayKisa, tipX: ayAd, maxX: 12, totFmt: v => nf(v, d) + u, yFmt: v => nf(v, 0) });
+}
+const UF = [["12A", 12], ["24A", 24], ["36A", 36], ["60A", 60]];
+function renderHzItfa() {
+  yerSeg("#hiYer", "i");
+  const ic = HZ.i === "ic", liste = (ic ? H.ic_stok?.senetler : H.dis_stok?.satir) || [], el = $("#hiChart");
+  const paralar = ["Tümü", ...(ic ? ["TL", "USD", "EUR", "Altın"] : ["USD", "EUR", "Diğer"])];
+  if (!paralar.includes(HZ.ip)) HZ.ip = "Tümü";
+  const pk = x => ic ? x.para : (["USD", "EUR"].includes(x.para) ? x.para : "Diğer");
+  $("#hiPara").innerHTML = paralar.map(p => `<button class="chip" data-p="${p}" aria-pressed="${HZ.ip === p}">${p}</button>`).join("");
+  rangeChips($("#hiUf"), UF, HZ.iu, k => { HZ.iu = k; renderHzItfa(); });
+  const ay = UF.find(x => x[0] === HZ.iu)[1], ceyrek = ay > 24, bg = bugun();
+  const sonT = new Date(Date.UTC(+bg.slice(0, 4), +bg.slice(5, 7) - 1 + ay, 0)).toISOString().slice(0, 10);
+  const kova = d => ceyrek ? `${d.slice(0, 4)}-Ç${Math.floor((+d.slice(5, 7) - 1) / 3) + 1}` : d.slice(0, 7);
+  const xs = []; for (let m = 0; m < ay; m++) { const d = new Date(Date.UTC(+bg.slice(0, 4), +bg.slice(5, 7) - 1 + m, 1)).toISOString().slice(0, 10), k = kova(d); if (!xs.includes(k)) xs.push(k); }
+  const a = liste.filter(x => x.itfa >= bg && x.itfa <= sonT && (HZ.ip === "Tümü" || pk(x) === HZ.ip)), b = birim(HZ.i, HZ.ip);
+  const grpAd = x => HZ.ip === "Tümü" ? pk(x) : ic ? x.tur : x.tur;
+  const gruplar = [...new Set(a.map(grpAd))].sort((p, q) => toplam(a.filter(x => grpAd(x) === q), b.f) - toplam(a.filter(x => grpAd(x) === p), b.f));
+  const ser = gruplar.map((g, k) => { const v = xs.map(() => 0); a.filter(x => grpAd(x) === g).forEach(x => { const i = xs.indexOf(kova(x.itfa)); if (i >= 0) v[i] += b.f(x); });
+    return { name: g, vals: v.map(x => x || null), color: css(HZ.ip === "Tümü" ? PARA_RENK[g] || "--muted" : TUR_RENK[k % TUR_RENK.length]), type: "bar", fmt: x => nf(x, b.d ?? 1) + " " + b.ad }; });
+  const tt = toplam(a, b.f), kaynak = ic ? `HMB DİBS listesi, ${gunAd(H.ic_stok?.itibar)}` : `HMB dış borç tahvil listesi, ${gunAd(H.dis_stok?.itibar)}`;
+  $("#hiTitle").textContent = `İtfa takvimi · ${ic ? "Yurtiçi" : "Yurtdışı"}${HZ.ip === "Tümü" ? "" : " · " + HZ.ip} (${b.ad})`;
+  $("#hiSub").textContent = `Stoktaki senetlerin anapara itfaları, kupon hariç · ${HZ.iu} toplamı ${nf(tt, b.d ?? 1)} ${b.ad}${ic && HZ.ip === "Tümü" ? " (döviz ve altın TL karşılığı)" : ""} · ${kaynak}`;
+  $("#hiLeg").innerHTML = ser.map(x => `<span class="chip" style="cursor:default"><i style="background:${x.color}"></i>${esc(x.name)}</span>`).join("");
+  const xf = k => ceyrek ? `${k.slice(5)} ${k.slice(2, 4)}` : ayKisa(k);
+  chart(el, { xs, series: ser, stack: true, height: 300, label: $("#hiTitle").textContent, xFmt: xf, tipX: k => ceyrek ? `${k.slice(0, 4)} ${k.slice(5, 6)}. çeyrek` : ayAd(k), maxX: 12,
+    totFmt: x => nf(x, b.d ?? 1) + " " + b.ad, yFmt: v => nf(v, v % 1 ? 1 : 0) });
+}
+const tblHz = (bas, satir) => `<table class="tbl"><thead><tr>${bas.map(([t, c]) => `<th${c ? ` class="${c}"` : ""}>${t}</th>`).join("")}</tr></thead><tbody>${satir.join("") || `<tr><td colspan="${bas.length}" class="na">Kayıt yok.</td></tr>`}</tbody></table>`;
+const turHucre = x => `${esc(x.tur)}${x.sukuk || x.tur === "Kira sertifikası" ? '<span class="tag">SUKUK</span>' : ""}`;
+const N = 8;
+function renderHzTablo() {
+  yerSeg("#hsYer", "s"); yerSeg("#hyYer", "y");
+  const bg = bugun();
+  if (HZ.s === "ic") {
+    const a = [...(H.ic_stok?.ihraclar || [])].filter(x => x.valor).sort((p, q) => q.valor.localeCompare(p.valor) || q.tutar - p.tutar).slice(0, N);
+    $("#hsSub").textContent = `Valör tarihine göre · tutar milyar TL (döviz ve altın TL karşılığı) · ${gunAd(H.ic_stok?.itibar)} itibarıyla`;
+    $("#hsTbl").innerHTML = tblHz([["Tür", "l"], ["ISIN", "l"], ["Valör"], ["İtfa"], ["İhraç tipi", "l"], ["Tutar"]],
+      a.map(x => `<tr><td class="l s">${turHucre(x)}</td><td class="l">${esc(x.isin)}</td><td>${gunAd(x.valor)}</td><td>${gunAd(x.itfa)}</td><td class="l s">${esc(x.tip || "—")}</td><td>${mr(x.tutar)}</td></tr>`));
+  } else {
+    const a = [...(H.dis_stok?.satir || [])].sort((p, q) => q.anlasma.localeCompare(p.anlasma)).slice(0, N);
+    $("#hsSub").textContent = `Anlaşma tarihine göre · tutar milyon (ihraç para birimi) · ${gunAd(H.dis_stok?.itibar)} itibarıyla`;
+    $("#hsTbl").innerHTML = tblHz([["Tür", "l"], ["Para", "l"], ["Anlaşma"], ["İtfa"], ["Kupon"], ["Tutar"]],
+      a.map(x => `<tr><td class="l s">${turHucre(x)}${x.tip === "Ek İhraç" || x.tip === "Değişim İhracı" ? `<span class="tag">${esc(x.tip.replace(" İhracı", "").replace(" İhraç", " ihraç"))}</span>` : ""}</td><td class="l">${esc(x.para)}</td><td>${gunAd(x.anlasma)}</td><td>${gunAd(x.itfa)}</td><td>${pct(x.kupon, 3)}</td><td>${nf(x.tutar, 0)}</td></tr>`));
+  }
+  const kalan = d => Math.round((Date.parse(d) - Date.parse(bg)) / 864e5);
+  if (HZ.y === "ic") {
+    const a = (H.ic_stok?.senetler || []).filter(x => x.itfa >= bg).sort((p, q) => p.itfa.localeCompare(q.itfa) || q.tutar - p.tutar).slice(0, N);
+    $("#hySub").textContent = `Stoktaki tutar milyar TL · ${gunAd(H.ic_stok?.itibar)} itibarıyla`;
+    $("#hyTbl").innerHTML = tblHz([["Tür", "l"], ["ISIN", "l"], ["Para", "l"], ["İtfa"], ["Kalan gün"], ["Tutar"]],
+      a.map(x => `<tr><td class="l s">${turHucre(x)}</td><td class="l">${esc(x.isin)}</td><td class="l">${esc(x.para)}</td><td>${gunAd(x.itfa)}</td><td>${kalan(x.itfa)}</td><td>${mr(x.tutar)}</td></tr>`));
+  } else {
+    const a = (H.dis_stok?.satir || []).filter(x => x.itfa >= bg).sort((p, q) => p.itfa.localeCompare(q.itfa)).slice(0, N);
+    $("#hySub").textContent = `Tutar milyon (ihraç para birimi) · ${gunAd(H.dis_stok?.itibar)} itibarıyla`;
+    $("#hyTbl").innerHTML = tblHz([["Tür", "l"], ["Para", "l"], ["İtfa"], ["Kalan gün"], ["Kupon"], ["Tutar"]],
+      a.map(x => `<tr><td class="l s">${turHucre(x)}</td><td class="l">${esc(x.para)}</td><td>${gunAd(x.itfa)}</td><td>${kalan(x.itfa)}</td><td>${pct(x.kupon, 3)}</td><td>${nf(x.tutar, 0)}</td></tr>`));
+  }
+}
+// iç borç stokunun yapısı: faiz yapısı / para birimi kırılımı, pay ve ağırlıklı kalan vade
+const YAPI = [["TL sabit kuponlu", x => x.tur === "TL sabit kuponlu"], ["TL kuponsuz", x => x.tur === "TL kuponsuz" || x.tur === "TL faiz ödemesiz"],
+  ["TÜFE'ye endeksli", x => x.tur === "TÜFE'ye endeksli"], ["TLREF'e endeksli", x => x.tur === "TLREF'e endeksli"], ["TL değişken faizli", x => x.tur === "TL değişken faizli"],
+  ["TL kira sertifikası", x => x.para === "TL" && x.sukuk], ["Döviz (USD + EUR)", x => x.para === "USD" || x.para === "EUR"], ["Altın", x => x.para === "Altın"]];
+function renderHzYapi() {
+  const sen = H.ic_stok?.senetler || [], t = toplam(sen), t0 = H.ic_stok?.itibar, kul = new Set();
+  const sat = YAPI.map(([ad, f]) => { const a = sen.filter(x => !kul.has(x) && f(x)); a.forEach(x => kul.add(x)); return [ad, a]; });
+  const kalan = sen.filter(x => !kul.has(x)); if (kalan.length) sat.push(["Diğer", kalan]);
+  const mx = Math.max(...sat.map(([, a]) => toplam(a)));
+  $("#hkSub").textContent = `Tutar milyar TL (döviz ve altın TL karşılığı) · kalan vade tutar ağırlıklı · ${gunAd(t0)} itibarıyla`;
+  $("#hkTbl").innerHTML = `<table class="grp"><thead><tr><th>Senet</th><th>Milyar TL</th><th>Pay</th><th>Kalan vade</th><th>Tertip</th></tr></thead><tbody>`
+    + sat.filter(([, a]) => a.length).map(([ad, a]) => { const v = toplam(a), w = a.reduce((s, x) => s + x.tutar * Math.max(0, yilFark(t0, x.itfa)), 0) / v;
+      return `<tr><td>${esc(ad)}</td><td>${mr(v)}</td><td><span class="hb p"><i style="left:0;width:${(v / mx * 100).toFixed(1)}%;background:var(--c1)"></i></span>%${nf(v / t * 100, 1)}</td><td>${nf(w, 1)} yıl</td><td>${a.length}</td></tr>`; }).join("")
+    + `<tr class="tot"><td>Toplam</td><td>${mr(t)}</td><td>%100</td><td>${nf(sen.reduce((s, x) => s + x.tutar * Math.max(0, yilFark(t0, x.itfa)), 0) / t, 1)} yıl</td><td>${sen.length}</td></tr></tbody></table>`;
+}
+const EB_R = [["1Y", 12], ["3Y", 36], ["Tümü", 999]];
+function renderHzSahip() {
+  const s = H.sahip, el = $("#heChart");
+  if (!s?.satir?.length) { $("#heTbl").innerHTML = ""; el.innerHTML = '<div class="empty">Veri yok.</div>'; return; }
+  const i = s.son, onc = i - 1, yb = s.ay.indexOf(`${+s.ay[i].slice(0, 4) - 1}-12`);
+  if (!s.satir.some(r => r.ad === HZ.eb)) HZ.eb = "Katılım Bankaları";
+  const dp = (r, j) => j >= 0 && ok(r.pay[i]) && ok(r.pay[j]) ? r.pay[i] - r.pay[j] : null, dpH = v => ok(v) ? `<span class="${cls(v, .005)}">${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v), 2)}</span>` : "—";
+  $("#heSub").textContent = `İç borç stoku, milyar TL ve pay (%) · ${ayAd(s.ay[i])} · kaynak TCMB, HMB · satıra tıklayınca payın seyri`;
+  $("#heTbl").innerHTML = `<table class="tbl"><thead><tr><th class="l">Yatırımcı</th><th>Milyar TL</th><th>Pay %</th><th>Aylık Δ puan</th><th>Yılbaşı Δ puan</th></tr></thead><tbody>`
+    + s.satir.map(r => `<tr data-r="${esc(r.ad)}" class="${r.ust ? "ust" : ""}${r.ad === HZ.eb ? " sel" : ""}"><td class="l s${r.ust ? "" : " ind"}">${esc(r.ad.charAt(0) + r.ad.slice(1).toLocaleLowerCase("tr-TR")).replace(/\b(Tcmb|tcmb)\b/, "TCMB")}</td><td>${nf(r.mr[i], 1)}</td><td>${nf(r.pay[i], 2)}</td><td>${dpH(dp(r, onc))}</td><td>${dpH(dp(r, yb))}</td></tr>`).join("") + "</tbody></table>";
+  rangeChips($("#heRange"), EB_R, HZ.ebR, k => { HZ.ebR = k; renderHzSahip(); });
+  const r = s.satir.find(x => x.ad === HZ.eb), n = EB_R.find(x => x[0] === HZ.ebR)[1], j0 = Math.max(0, s.ay.length - n);
+  const xs = s.ay.slice(j0), ad = r.ad.charAt(0) + r.ad.slice(1).toLocaleLowerCase("tr-TR");
+  chart(el, { xs, height: 220, min0: true, label: `${ad} payı`, xFmt: ayKisa, tipX: ayAd, y2Fmt: v => nf(v, 0), rScale: 2.4,
+    series: [{ name: `${ad} · milyar TL`, vals: r.mr.slice(j0), color: css("--vol"), type: "bar", axis: "r", fmt: v => nf(v, 1) + " Mr TL" },
+      { name: `${ad} · pay`, vals: r.pay.slice(j0), color: css("--c1"), width: 2.4, fmt: v => "%" + nf(v, 2) }], yFmt: v => "%" + nf(v, v % 1 ? 1 : 0) });
+}
+$("#heTbl").onclick = e => { const tr = e.target.closest("tr[data-r]"); if (tr) { HZ.eb = tr.dataset.r; store.set("mk.eb", HZ.eb); renderHzSahip(); } };
+$("#hiPara").onclick = e => { const b = e.target.closest("button[data-p]"); if (b) { HZ.ip = b.dataset.p; renderHzItfa(); } };
+$("#mkHazine").addEventListener("click", e => { const b = e.target.closest(".seg.yer button[data-y]"); if (!b) return;
+  const k = { hpYer: "p", hiYer: "i", hsYer: "s", hyYer: "y" }[b.parentElement.id]; HZ[k] = b.dataset.y;
+  if (k === "p") renderHzProj(); else if (k === "i") renderHzItfa(); else renderHzTablo(); });
+function renderHazine() {
+  const g = $("#hzGate"), body = $("#hzBody");
+  if (!H?.ic_stok?.senetler?.length) { g.classList.remove("hidden"); body.classList.add("hidden"); g.textContent = H === undefined ? "Hazine verisi yükleniyor…" : "Hazine borçlanma verisi henüz derlenmedi (HMB dosyaları bir sonraki güncellemede alınır)."; return; }
+  g.classList.add("hidden"); body.classList.remove("hidden");
+  renderHzKpi(); renderHzProj(); renderHzItfa(); renderHzTablo(); renderHzYapi(); renderHzSahip();
+}
+$("#mkTabs").onclick = e => { const b = e.target.closest("button[data-mk]"); if (!b) return; S.mk = b.dataset.mk; try { history.replaceState(null, "", "#" + (S.mk === "hazine" ? "hazine" : "makro")); } catch {} render(); };
+function renderMakro() {
+  $$("#mkTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mk === S.mk));
+  $("#mkEnf").classList.toggle("hidden", S.mk !== "enf"); $("#mkHazine").classList.toggle("hidden", S.mk !== "hazine");
+  if (S.mk === "hazine") renderHazine(); else { renderInf(); renderBk(); }
+}
+
+// ---------------------------------------------------------------- akış
+function renderSrc() {
+  const fl = (D.failed || []), f = (fl.length ? ` · son çekimde alınamayan: ${fl.join(", ")} (önceki veri gösteriliyor)` : "")
+    ;
+  if (S.tab === "makro" && S.mk === "hazine") { const k = H?.kaynak || {}, a = (key, t) => k[key] ? `<a href="${esc(k[key])}" target="_blank" rel="noopener">${t}</a>` : t;
+    $("#src").innerHTML = `Kaynak: <a href="https://www.hmb.gov.tr/kamu-finansmani-istatistikleri" target="_blank" rel="noopener">Hazine ve Maliye Bakanlığı · Kamu Finansmanı İstatistikleri</a> — ${a("ic_stok", "İç borç stoku DİBS listesi")}, ${a("dis_stok", "dış borç stoku tahvil listesi")}, ${a("ic_proj", "iç")} ve ${a("dis_proj", "dış")} borç ödeme projeksiyonları (aylık), ${a("sahip", "iç borç stokunun elinde bulunduranlara göre dağılımı")}. Döviz ve altın cinsi iç borç, HMB listesinde TL karşılığıyla verilir; USD/EUR ve ton karşılığı stok tarihindeki TCMB döviz alış kuru${H?.cevrim ? ` (${gunAd(H.cevrim.tarih)})` : ""} ve altın fiyatıyla${H?.cevrim?.altin_kaynak ? ` (${esc(H.cevrim.altin_kaynak)})` : ""} hesaplanır, yaklaşıktır. Sukuk: kira sertifikası (TRD ISIN). Son güncelleme ${H?.updated ? new Date(H.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${H?.failed?.length ? ` · son çekimde alınamayan: ${H.failed.join(", ")} (önceki veri gösteriliyor)` : ""}.`; return; }
+  $("#src").innerHTML = `Kaynaklar: <a href="https://veriportali.tuik.gov.tr" target="_blank" rel="noopener">TÜİK Veri Portalı</a> (TÜFE, Yİ-ÜFE) · <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> (Piyasa Katılımcıları Anketi, sektörel enflasyon beklentileri) · TCMB (enflasyon hedefleri, Enflasyon Raporu) · <a href="https://www.borsaistanbul.com/endeksler/tlref" target="_blank" rel="noopener">Borsa İstanbul</a> (TLREF, TLREFK) · Borsa İstanbul Repo Pazarı O/N (TCMB EVDS)${B ? ` · Bloomberg (TL implied, OIS, BIST VİOP; en yeni veri ${gunAd(B.guncel)})` : ""}. Son güncelleme ${D.updated ? new Date(D.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${f}.`;
+}
+function render() {
+  $$("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === S.tab));
+  $("#pMakro").classList.toggle("hidden", S.tab !== "makro"); $("#pPiyasa").classList.toggle("hidden", S.tab !== "piyasa");
+  if (S.tab === "makro") renderMakro(); else renderPs();
+  renderSrc();
+}
+$("#tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (!b) return; S.tab = b.dataset.tab; try { history.replaceState(null, "", "#" + (S.tab === "makro" && S.mk === "hazine" ? "hazine" : S.tab)); } catch {} render(); };
+$("#infKpi").onclick = e => { const b = e.target.closest("button[data-s]"); if (!b) return; const k = b.dataset.s; S.infOn.has(k) ? S.infOn.delete(k) : S.infOn.add(k); renderInf(); };
+$("#grpBox").addEventListener("click", e => { const b = e.target.closest("#gMode button[data-m]"); if (b) { e.preventDefault(); S.gMode = b.dataset.m; renderGroups(); } });
+$("#grpBox").addEventListener("change", e => { if (e.target.id === "gAy") { S.sel = e.target.value; renderInf(); } });
+$("#grpBox").addEventListener("toggle", e => { if (e.target.classList?.contains("grpd")) S.gOpen = e.target.open; }, true);
+let rz, lw = innerWidth; addEventListener("resize", () => { if (!D || Math.abs(innerWidth - lw) < 30 && !rz) { } lw = innerWidth; clearTimeout(rz); rz = setTimeout(() => { rz = null; render(); }, 150); });
+const h = location.hash.slice(1); if (h === "piyasa" || h === "makro") S.tab = h; else if (h === "hazine") { S.tab = "makro"; S.mk = "hazine"; }
+H = undefined;
+fetch("data/hazine.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { H = j; if (D && S.tab === "makro" && S.mk === "hazine") { renderHazine(); renderSrc(); } });
+const bbgYukle = fetch("data/bbg.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
+fetch("data/makro.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(async j => { D = j; B = await bbgYukle; $("#gate").remove(); render(); })
+  .catch(e => { $("#gate").textContent = "Veriler yüklenemedi (" + e.message + "). Sayfa henüz güncellenmemiş olabilir."; });
+})();
+</script>
+</body>
+</html>
