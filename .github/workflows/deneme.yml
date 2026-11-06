@@ -1,0 +1,20 @@
+name: HMB deneme
+on:
+  push:
+    branches: [hmb-deneme]
+permissions:
+  contents: write
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          A="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+          mkdir -p hmb && curl -sS -m 90 -A "$A" -w "\nHTTP %{http_code} %{size_download}\n" https://www.hmb.gov.tr/kamu-finansmani-istatistikleri -o hmb/sayfa.html | tail -1
+          for k in Ic_Borc_Stoku_DIBS_Listesi Dis_Borc_Stoku_Tahvil_Listesi Ic-Borc-Odeme-Projeksiyonlari-Aylik Dis_Borc_Odeme_Projeksiyonlari_Aylik Elinde_Bulunduranlara Doviz-Faiz_Yapisi Ic-Borclanmanin-Ortalama-Maliyeti Ic-Borclanmanin-Ortalama-Vadesi Ic-Borc-Cevirme-Oranlari Yurt_Disi_Tahvil_Ihraclari; do
+            u=$(grep -o "https://ms.hmb.gov.tr/uploads/[^\"' ]*${k}[^\"' ]*\.xlsx\?" hmb/sayfa.html | head -1); echo "$k -> $u"
+            [ -n "$u" ] && curl -sS -m 90 -A "$A" -o "hmb/$(basename $u)" -w "  HTTP %{http_code} %{size_download}\n" "$u"
+          done
+          git config user.name bot; git config user.email bot@users.noreply.github.com
+          git checkout --orphan hmb-deneme-veri; git rm -rq --cached .; git add -f hmb; git commit -qm veri; git push -f origin hmb-deneme-veri
