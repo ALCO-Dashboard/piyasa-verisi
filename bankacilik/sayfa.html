@@ -1141,7 +1141,7 @@ function gomuAc(f) {
       d.addEventListener("click", () => setTimeout(fit, 50));
     } catch (e) {}
   });
-  f.src = f.dataset.src;
+  f.src = f.dataset.src + "?v=" + Math.floor(Date.now() / 6e4);
 }
 function renderPane() { if (S.tab === "katilim") { gomuAc($('section[data-pane="katilim"] iframe')); return; } if (D) ({ bddk: renderBddk, tcmb: renderTcmb })[S.tab](); }
 // PDF: görünen gömülü sayfa varsa onun kendi PDF düzeni kullanılır
