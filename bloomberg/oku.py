@@ -1,7 +1,7 @@
 """Bloomberg Excel dosyası (BBG_Data_Excel.xlsm) → JSON.
 
-Dosya repo herkese açık olduğu için Excel'in kendi parolasıyla şifreli yüklenir; parola BBG_ANAHTAR ortam
-değişkenindedir. Parolasız dosya okunmaz.
+Dosya parolasız yüklenebilir (veriler zaten sitede yayımlanıyor). Excel parolasıyla şifrelenmişse parola
+BBG_ANAHTAR ortam değişkeninden alınır.
 
 Tanınan sayfa düzenleri
   A) BDH tablosu: A1 "Start Date"; 4. satır ticker'lar, 5. satır vade/etiket, 6. satır alan, 7. satırdan itibaren
@@ -30,12 +30,12 @@ ATLA = {"Ekran Yenileme"}
 
 
 def ac(yol, parola):
+    """Parolasız dosyayı doğrudan açar; Excel parolasıyla şifrelenmişse BBG_ANAHTAR ile çözer."""
     ham = open(yol, "rb").read()
     if ham[:4] == b"PK\x03\x04":
-        raise RuntimeError("Dosya parolasız. Repo herkese açık olduğu için Bloomberg dosyası yalnızca parolayla "
-                           "şifrelenmiş olarak okunur (Dosya → Bilgi → Çalışma Kitabını Koru → Parolayla Şifrele).")
+        return openpyxl.load_workbook(io.BytesIO(ham), data_only=True, read_only=True)
     if not parola:
-        raise RuntimeError("BBG_ANAHTAR tanımlı değil")
+        raise RuntimeError("Dosya parolalı ama BBG_ANAHTAR tanımlı değil")
     import msoffcrypto
     f = msoffcrypto.OfficeFile(io.BytesIO(ham))
     f.load_key(password=parola)
