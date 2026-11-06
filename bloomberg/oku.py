@@ -90,11 +90,22 @@ def tablo(kolonlar, satirlar):
     return {"kolonlar": [kolonlar[j] for j in keep], "dates": [d.isoformat() for d in dates], "v": [v[j] for j in keep]}
 
 
+ALAN = re.compile(r"^[A-Z][A-Z0-9_]+$")          # PX_LAST gibi alan adı
+
+
 def duzen_a(rows):
     tick, etk = rows[3], rows[4]
-    kol = [(j, {"etiket": metin(etk[j]) or metin(tick[j]), "ticker": metin(tick[j])}) for j in range(1, len(tick)) if metin(tick[j])]
+    alan_satiri = all(ALAN.match(metin(x)) for x in etk[1:] if metin(x))     # 5. satır etiket değil alan adıysa
+    kol, gor = [], set()
+    for j in range(1, len(tick)):
+        t = metin(tick[j])
+        if not t or t in gor:                       # aynı ticker ikinci kez yazılmışsa ilki kullanılır
+            continue
+        gor.add(t)
+        kol.append((j, {"etiket": (metin(etk[j]) if j < len(etk) and not alan_satiri else "") or t, "ticker": t}))
+    bas = next((i for i in range(3, len(rows)) if rows[i] and tarih(rows[i][0])), len(rows))
     sat = {}
-    for r in rows[6:]:
+    for r in rows[bas:]:
         d = tarih(r[0]) if r else None
         if not d:
             continue
@@ -102,6 +113,41 @@ def duzen_a(rows):
         if any(x is not None for x in vals):
             sat[d] = vals
     return tablo([k for _, k in kol], sat)
+
+
+def duzen_blok(rows):
+    """4 sütunluk bloklar: 1. satır 'Security | ticker | ad', 'Currency' satırı, 'Date | PX_LAST | PX_VOLUME' başlığı,
+    altında veriler. Her blok için PX_LAST (ve varsa PX_VOLUME) sütunu."""
+    ust = rows[0]
+    para_i = next((i for i, r in enumerate(rows[:12]) if r and metin(r[0]).lower() == "currency"), None)
+    bas_i = next((i for i, r in enumerate(rows[:15]) if r and metin(r[0]).lower() in ("date", "dates")), None)
+    if bas_i is None:
+        raise RuntimeError("Date başlık satırı bulunamadı")
+    kol, kaynak, gor = [], [], set()
+    for j in range(len(ust)):
+        if metin(ust[j]).lower() != "security" or j + 1 >= len(ust):
+            continue
+        t = metin(ust[j + 1])
+        if not t or t in gor:
+            continue
+        gor.add(t)
+        ad = metin(ust[j + 2]) if j + 2 < len(ust) else ""
+        para = metin(rows[para_i][j + 1]) if para_i is not None and j + 1 < len(rows[para_i]) else ""
+        bas = rows[bas_i]
+        for k in range(j + 1, min(j + 4, len(bas))):
+            alan = metin(bas[k]).upper()
+            if alan in ("PX_LAST", "PX_VOLUME"):
+                kol.append({"etiket": ad or t, "ticker": t, "alan": alan, "para": para})
+                kaynak.append((j, k))
+    sat = {}
+    for r in rows[bas_i + 1:]:
+        for n, (j, k) in enumerate(kaynak):
+            if k >= len(r):
+                continue
+            d, x = tarih(r[j]), sayi(r[k])
+            if d and x is not None:
+                sat.setdefault(d, [None] * len(kaynak))[n] = x
+    return tablo(kol, sat)
 
 
 def duzen_b(rows):
@@ -173,6 +219,8 @@ def oku(wb):
                 V = viop(rows)
             elif a1 == "start date" and len(rows) > 6:
                 T[ws.title] = duzen_a(rows)
+            elif a1 == "security":
+                T[ws.title] = duzen_blok(rows)
             elif a1 == "tarih":
                 T[ws.title] = duzen_b(rows)
             else:
