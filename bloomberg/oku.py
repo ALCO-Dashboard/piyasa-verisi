@@ -123,16 +123,23 @@ def duzen_blok(rows):
     bas_i = next((i for i, r in enumerate(rows[:15]) if r and metin(r[0]).lower() in ("date", "dates")), None)
     if bas_i is None:
         raise RuntimeError("Date başlık satırı bulunamadı")
-    kol, kaynak, gor = [], [], set()
+    kol, kaynak, gor = [], [], {}
     for j in range(len(ust)):
         if metin(ust[j]).lower() != "security" or j + 1 >= len(ust):
             continue
         t = metin(ust[j + 1])
-        if not t or t in gor:
+        if not t:
             continue
-        gor.add(t)
         ad = metin(ust[j + 2]) if j + 2 < len(ust) else ""
         para = metin(rows[para_i][j + 1]) if para_i is not None and j + 1 < len(rows[para_i]) else ""
+        if t in gor:
+            # aynı ticker ikinci kez: ilki TL'ye çevrilmiş (Currency TRY) ve bu değilse bunu kullan, yoksa ilki kalır
+            if gor[t] == "TRY" and para.upper() != "TRY":
+                keep = [n for n, k in enumerate(kol) if k["ticker"] != t]
+                kol, kaynak = [kol[n] for n in keep], [kaynak[n] for n in keep]
+            else:
+                continue
+        gor[t] = para.upper()
         bas = rows[bas_i]
         for k in range(j + 1, min(j + 4, len(bas))):
             alan = metin(bas[k]).upper()

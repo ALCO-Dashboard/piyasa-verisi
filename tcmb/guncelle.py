@@ -312,9 +312,6 @@ def main():
     D["updated"] = simdi()
     D["failed"] = sorun
     json.dump(D, open(yol, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-    if D.get("lbma"):        # Makro ve Piyasa → Endeks ve Emtia sekmesi altın fiyatını buradan okur
-        json.dump({"kaynak": "LBMA Gold AM (goldsilver.com London Fix tablosu)", "am": D["lbma"], "updated": D["updated"]},
-                  open(os.path.join(cikti, "data", "lbma.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     open(os.path.join(cikti, "index.html"), "w", encoding="utf-8").write(open(os.path.join(KOK, "sayfa.html"), encoding="utf-8").read())
     try:
         sys.path.insert(0, os.path.join(os.path.dirname(KOK), "ortak"))
