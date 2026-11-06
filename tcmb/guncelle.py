@@ -10,7 +10,7 @@ Kaynaklar (hepsi TCMB EVDS)
   - TCMB taraflı swap stokları (iş günü, mn $): alım yönlü / satım yönlü toplam stok
   - Uluslararası rezervler ve döviz likiditesi tablosu (aylık): K14 yurt içi para karşılığı forward/swap net pozisyonu
   - Altın fiyatı: LBMA AM (TCMB rezerv altınını bu fiyatla değerler). Öncelik sırası:
-      1) Bloomberg köprüsü (GOLDLNAM Index; bloomberg/kopru.py, şifreli bbg.enc.json) ve
+      1) Bloomberg Excel dosyası (GOLDLNAM Index; bloomberg/BBG_Data_Excel.xlsm → bloomberg/oku.py) ve
          tcmb/lbma_am.json (LBMA sitesinden elle alınan değerler)
       2) Cuma günleri haftalık rezervden çıkan kesin fiyat: C1 / (BL0021 / 31,1034768)
       3) Borsa İstanbul altın USD/ons ağırlıklı ortalama (TP.ALTINPIYASA.AGORT03) — tahmini
@@ -24,9 +24,7 @@ Hesap
 Kullanım: python tcmb/guncelle.py --site site   (EVDS anahtarı EVDS_API_KEY ortam değişkeninden)
 """
 import argparse
-import base64
 import bisect
-import gzip
 import datetime as dt
 import json
 import os
@@ -103,15 +101,13 @@ def evds(anahtar, kodlar, bas, bit, parca_gun=366):
     return out
 
 
-def bbg_oku(yol, anahtar):
-    """bloomberg/kopru.py'nin yüklediği şifreli dosyayı çözer: {seri: {tarih: değer}}."""
-    from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-    env = json.load(open(yol, encoding="utf-8"))
-    d = lambda x: base64.b64decode(x)
-    k = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=d(env["salt"]), iterations=env.get("iter", 250000)).derive(anahtar.encode("utf-8"))
-    return json.loads(gzip.decompress(AESGCM(k).decrypt(d(env["iv"]), d(env["ct"]), None))), env.get("zaman")
+def bbg_oku(yol):
+    """bloomberg/oku.py çıktısı: ({"lbma_am": {tarih: değer}}, en yeni veri günü). GOLDLNAM Index herhangi bir
+    sayfada (ör. ALTIN) BDH düzeninde olabilir."""
+    j = json.load(open(yol, encoding="utf-8"))
+    tk = j.get("ticker", {})
+    am = tk.get("GOLDLNAM Index") or j.get("seriler", {}).get("lbma_am") or {}
+    return {"lbma_am": am}, j.get("guncel") or j.get("dosya_tarihi")
 
 
 def asof(tarihler, deger, t):
@@ -212,7 +208,7 @@ def hesapla(G, H, A, lbma):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--site", default="site")
-    ap.add_argument("--bbg", default="", help="Bloomberg köprüsünün şifreli dosyası (bbg.enc.json)")
+    ap.add_argument("--bbg", default="", help="bloomberg/oku.py çıktısı (bbg.json)")
     a = ap.parse_args()
     anahtar = os.environ.get("EVDS_API_KEY", "")
     cikti = os.path.join(a.site, "tcmb")
@@ -239,17 +235,17 @@ def main():
             log(f"LBMA dosyası okunamadı: {e}")
             lbma = {}
         D.pop("bbg", None)
-        if a.bbg and os.path.exists(a.bbg) and os.environ.get("BBG_ANAHTAR"):
+        if a.bbg and os.path.exists(a.bbg):
             try:
-                bbg, zaman = bbg_oku(a.bbg, os.environ["BBG_ANAHTAR"])
+                bbg, zaman = bbg_oku(a.bbg)
                 am = {t: v for t, v in (bbg.get("lbma_am") or {}).items() if v}
                 lbma.update(am)
                 D["bbg"] = {"zaman": zaman, "lbma_son": max(am) if am else None}
-                log(f"   Bloomberg: {len(am)} günlük LBMA AM, son {max(am) if am else '—'} (yükleme {zaman})")
+                log(f"   Bloomberg: {len(am)} günlük LBMA AM, son {max(am) if am else '—'} (dosya {zaman})")
             except Exception as e:
-                log(f"UYARI Bloomberg dosyası çözülemedi: {type(e).__name__}: {e}")
+                log(f"UYARI Bloomberg verisi okunamadı: {type(e).__name__}: {e}")
         elif a.bbg:
-            log("   Bloomberg verisi yok ya da BBG_ANAHTAR tanımlı değil — LBMA dosyası ve EVDS fiyatıyla devam")
+            log("   Bloomberg verisi yok — LBMA dosyası ve EVDS fiyatıyla devam")
         g, h, m = hesapla(G, H, A, lbma)
         if len(g["dates"]) < 100:
             raise RuntimeError(f"beklenenden az gün ({len(g['dates'])})")
