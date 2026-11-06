@@ -61,6 +61,9 @@ div.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--ac
 .kpi .tn button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600;color:var(--ink-2);cursor:pointer;font-family:inherit}
 .kpi .tn button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:6px 0 2px}
+.ctl input[type="date"]{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 10px;font:inherit;font-size:13px}
+.ctl input[type="date"].on{border-color:var(--accent);background:var(--accent-wash)}
+.hdr2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .up{color:var(--up)}.down{color:var(--down)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px;min-width:0}
 .cardhead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
@@ -173,10 +176,9 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
       </div>
       <h2 class="sec">BIST VİOP</h2>
       <div class="card">
-        <div class="cardhead"><div><h3 id="vpTitle"></h3><div class="sub" id="vpSub"></div></div><div class="seg" id="vpSeg" role="group" aria-label="Kontrat"></div></div>
-        <div class="legend" id="vpLeg"></div>
+        <div class="cardhead"><div><h3 id="vpTitle"></h3><div class="sub" id="vpSub"></div></div>
+          <div class="hdr2"><div class="seg" id="vpMod" role="group" aria-label="Gösterim"><button data-m="oran">Oran</button><button data-m="kur">Vadeli İşlem Kuru</button></div><div class="seg" id="vpSeg" role="group" aria-label="Kontrat"></div></div></div>
         <div class="chart" id="vpChart"></div>
-        <div class="note" id="vpNote"></div>
       </div>
     </div>
   </section>
@@ -205,7 +207,7 @@ const pp = v => ok(v) ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v), 2)
 let D = null;
 const S = { tab: "makro", infOn: new Set(["tufe:yoy"]), gMode: "yoy", gOpen: false, infR: "2Y", sel: null, bkR: "3Y", pR: "6A",
   bkOn: { pk_yilsonu: 1, pk_12ay: 1, reel_12ay: 1, hh_12ay: 1, tufe: 1 }, pSel: "tlref",
-  impT: "O/N", oisC: "TRY", oisV: "egri", oisR: "6A", vpK: "USDTRY" };
+  impT: "O/N", oisC: "TRY", oisV: "egri", oisR: "6A", oisCmp: null, vpK: "USDTRY", vpM: "oran" };
 let B = null;     // Bloomberg (bbg.json)
 
 // ---------------------------------------------------------------- grafik
@@ -449,6 +451,19 @@ const VADE = { ON: "O/N", "O/N": "O/N", "T/N": "T/N", "1W": "1H", "2W": "2H", "1
 const VGUN = { ON: 1, "1W": 7, "2W": 14, "1M": 30, "2M": 61, "3M": 91, "6M": 182, "9M": 273, "1Y": 365, "18M": 548, "2Y": 730, "3Y": 1095, "5Y": 1825, "10Y": 3650 };
 const OBTN = ["ON", "1W", "2W", "1M", "3M", "6M", "1Y", "3Y", "5Y"];
 const sonSatir = t => { for (let i = t.dates.length - 1; i >= 0; i--) { const n = t.v.filter(c => ok(c[i])).length; if (n >= Math.max(1, t.v.length / 2)) return i; } return -1; };
+const OCMP = [["YB", "Yılbaşı"], ["1A", "1 Ay"], ["3A", "3 Ay"], ["6A", "6 Ay"], ["1Y", "1 Yıl"]];
+// karşılaştırma tarihi: hedef tarihe eşit ya da ondan önceki son dolu gün
+function oisKars(t, i) {
+  const c = S.oisCmp; if (!c) return null;
+  const son = t.dates[i]; let hedef;
+  if (c.k === "d") hedef = c.d;
+  else if (c.k === "YB") hedef = `${+son.slice(0, 4) - 1}-12-31`;
+  else { const ay = { "1A": 1, "3A": 3, "6A": 6, "1Y": 12 }[c.k], d = new Date(son + "T00:00:00Z"); d.setUTCMonth(d.getUTCMonth() - ay); hedef = d.toISOString().slice(0, 10); }
+  const dolu = k => t.v.filter(col => ok(col[k])).length >= Math.max(1, t.v.length / 2);
+  for (let k = i - 1; k >= 0; k--) if (t.dates[k] <= hedef && dolu(k)) return k;
+  for (let k = 0; k < i; k++) if (dolu(k)) return k;
+  return null;
+}
 function renderOis() {
   const ccy = Object.keys(OIS).filter(c => B?.tablolar?.[OIS[c]]);
   if (!ccy.length) return false;
@@ -460,14 +475,20 @@ function renderOis() {
     OBTN.filter(v => et.includes(v)).map(v => `<button class="chip" data-v="${v}" aria-pressed="${S.oisV === v}">${VADE[v]}</button>`).join("");
   const col = css({ TRY: "--c1", USD: "--c6", EUR: "--c3" }[S.oisC]);
   if (S.oisV === "egri") {
-    $("#oisRange").innerHTML = "";
-    const i = sonSatir(t); if (i < 0) { $("#oisChart").innerHTML = '<div class="empty">Veri yok.</div>'; return true; }
-    const xs = et.map(e => VADE[e] || e), vals = t.v.map(c => c[i]);
+    const i = sonSatir(t); if (i < 0) { $("#oisRange").innerHTML = ""; $("#oisChart").innerHTML = '<div class="empty">Veri yok.</div>'; return true; }
+    const son = t.dates[i], j = oisKars(t, i);
+    $("#oisRange").innerHTML = `<input type="date" id="oisDt" aria-label="Karşılaştırma tarihi" min="${t.dates[0]}" max="${son}" value="${j != null ? t.dates[j] : ""}" class="${S.oisCmp?.k === "d" ? "on" : ""}">`
+      + OCMP.map(([k, l]) => `<button class="chip" data-cmp="${k}" aria-pressed="${S.oisCmp?.k === k}">${l}</button>`).join("")
+      + (S.oisCmp ? `<button class="chip" data-cmp="x" title="Karşılaştırmayı kaldır">✕</button>` : "");
+    const xs = et.map(e => VADE[e] || e), vals = t.v.map(c => c[i]), cv = j != null ? t.v.map(c => c[j]) : null;
+    const series = [{ name: gunAd(son), vals, color: col, width: 2.6, dots: true, fmt: v => pct(v, 3) }];
+    if (cv) series.push({ name: gunAd(t.dates[j]), vals: cv, color: css("--muted"), width: 2, dash: "5 4", dots: true, fmt: v => pct(v, 3) });
     $("#oisTitle").textContent = `${S.oisC} OIS getiri eğrisi (%)`;
-    $("#oisSub").textContent = `${gunAd(t.dates[i])} · O/N: ${OIS_ON[S.oisC]} · Bloomberg · vadeye tıklayınca tarihsel seyir`;
-    chart($("#oisChart"), { xs, height: 300, label: $("#oisTitle").textContent, yFmt: v => nf(v, Math.max(...vals.filter(ok)) < 10 ? 2 : 1), maxX: 14, tipX: x => `${x} · ${gunAd(t.dates[i])}`,
-      series: [{ name: `${S.oisC} OIS`, vals, color: col, width: 2.4, dots: true, fmt: v => pct(v, 3) }],
-      onClick: k => { const v = et[k]; if (v) { S.oisV = v; renderOis(); } } });
+    $("#oisSub").textContent = (cv ? `${gunAd(son)} ile ${gunAd(t.dates[j])} karşılaştırması` : gunAd(son)) + ` · O/N: ${OIS_ON[S.oisC]} · Bloomberg · vadeye tıklayınca tarihsel seyir`;
+    const all = [...vals, ...(cv || [])].filter(ok);
+    chart($("#oisChart"), { xs, height: 300, label: $("#oisTitle").textContent, yFmt: v => nf(v, Math.max(...all) < 10 ? 2 : 1), maxX: 14,
+      tipX: x => { const k = xs.indexOf(x), d = cv && ok(vals[k]) && ok(cv[k]) ? vals[k] - cv[k] : null; return x + (ok(d) ? ` · değişim ${bp(d)}` : ""); },
+      series, onClick: k => { const v = et[k]; if (v) { S.oisV = v; renderOis(); } } });
   } else {
     rangeChips($("#oisRange"), P_R, S.oisR, k => { S.oisR = k; renderOis(); });
     const j = et.indexOf(S.oisV), gun = P_R.find(r => r[0] === S.oisR)[1], last = t.dates[t.dates.length - 1];
@@ -482,6 +503,9 @@ function renderOis() {
 }
 $("#oisCcy").onclick = e => { const b = e.target.closest("button[data-c]"); if (b) { S.oisC = b.dataset.c; renderOis(); } };
 $("#oisLeg").onclick = e => { const b = e.target.closest("button[data-v]"); if (b) { S.oisV = b.dataset.v; renderOis(); } };
+$("#oisRange").addEventListener("click", e => { const b = e.target.closest("button[data-cmp]"); if (!b) return; const k = b.dataset.cmp;
+  S.oisCmp = k === "x" || S.oisCmp?.k === k ? null : { k }; renderOis(); });
+$("#oisRange").addEventListener("change", e => { if (e.target.id === "oisDt") { S.oisCmp = e.target.value ? { k: "d", d: e.target.value } : null; renderOis(); } });
 
 // ---------------------------------------------------------------- BIST VİOP (Bloomberg)
 const VP = ["USDTRY", "EURTRY", "XAUTRY", "XAUUSD"], VP_OIS = { USDTRY: "USD", EURTRY: "EUR" };
@@ -495,28 +519,28 @@ function renderViop() {
   if (!ks.length) return false;
   if (!ks.includes(S.vpK)) S.vpK = ks[0];
   $("#vpSeg").innerHTML = ks.map(k => `<button data-k="${k}" aria-pressed="${S.vpK === k}">${k}</button>`).join("");
-  const K = V.kontratlar[S.vpK], oc = VP_OIS[S.vpK];
-  const xs = [...new Set([...K.egri.map(p => p.vade), ...K.islem.map(p => p.vade)])].sort();
+  $$("#vpMod button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === S.vpM));
+  const K = V.kontratlar[S.vpK], oc = VP_OIS[S.vpK], kur = S.vpM === "kur";
   const eg = Object.fromEntries(K.egri.map(p => [p.vade, p])), is = Object.fromEntries(K.islem.map(p => [p.vade, p]));
-  const fark = xs.map(d => eg[d]?.oran ?? null), oisM = xs.map(d => eg[d] && oc ? enYakinOis(oc, eg[d].gun) : null);
-  const top = fark.map((f, i) => ok(f) && oisM[i] ? f + oisM[i].v : null), hac = xs.map(d => is[d]?.hacim ?? null);
-  const C = { r: css("--c1"), f: css("--muted") }, series = [];
+  const xs = (kur ? K.islem.map(p => p.vade) : [...new Set([...K.egri.map(p => p.vade), ...K.islem.map(p => p.vade)])]).sort();
+  const hac = xs.map(d => is[d]?.hacim ?? null), series = [];
   if (hac.some(ok)) series.push({ name: "Hacim", type: "bar", axis: "r", color: css("--vol"), vals: hac, fmt: v => nf(v, 0) + " kontrat" });
-  if (oc && top.some(ok)) {
-    series.push({ name: `İma edilen TL oranı (fark + ${oc} OIS)`, vals: top, color: C.r, width: 2.4, span: true, dots: true, fmt: v => pct(v, 2) });
-    series.push({ name: "Kur farkından ima edilen fark", vals: fark, color: C.f, width: 1.4, dash: "4 3", span: true, noDot: true, fmt: v => pct(v, 2) });
-  } else series.push({ name: "İma edilen oran", vals: fark, color: C.r, width: 2.4, span: true, dots: true, fmt: v => pct(v, 2) });
+  const dg = ok(K.spot) && K.spot > 1000 ? 1 : 4;
+  if (kur) series.push({ name: "Vadeli işlem kuru", vals: xs.map(d => is[d]?.son ?? is[d]?.kapanis ?? null), color: css("--c1"), width: 2.4, span: true, dots: true, fmt: v => nf(v, dg) });
+  else {
+    const fark = xs.map(d => eg[d]?.oran ?? null);
+    const vals = oc ? fark.map((f, i) => { const o = ok(f) && eg[xs[i]] ? enYakinOis(oc, eg[xs[i]].gun) : null; return o ? f + o.v : null; }) : fark;
+    series.push({ name: { USDTRY: "TL oranı (SOFR dahil)", EURTRY: "TL oranı (€STR dahil)" }[S.vpK] || "Oran", vals, color: css("--c1"), width: 2.4, span: true, dots: true, fmt: v => pct(v, 2) });
+  }
   $("#vpTitle").textContent = `${S.vpK} vadeli işlem eğrisi`;
-  $("#vpSub").textContent = `${V.tarih ? gunAd(V.tarih) : ""} · spot ${ok(K.spot) ? nf(K.spot, K.spot > 1000 ? 2 : 4) : "—"} · oran sol eksen (%), hacim sağ eksen (kontrat) · Bloomberg`;
-  $("#vpLeg").innerHTML = series.map(x => `<span class="chip" style="cursor:default"><i style="background:${x.color}"></i>${esc(x.name)}</span>`).join("");
+  $("#vpSub").textContent = `${V.tarih ? gunAd(V.tarih) : ""} · spot kur ${ok(K.spot) ? nf(K.spot, dg) : "—"}`;
+  const lv = series[series.length - 1].vals.filter(ok);
   chart($("#vpChart"), { xs, series, height: 320, label: $("#vpTitle").textContent, xFmt: d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`, maxX: 14,
-    tipX: d => `${gunAd(d)}${eg[d] ? ` · ${eg[d].gun} gün` : ""}${is[d] ? ` · ${is[d].ticker}` : ""}`, yFmt: v => nf(v, 0), y2Fmt: v => v >= 1000 ? nf(v / 1000, v % 1000 ? 1 : 0) + " bin" : nf(v, 0), rScale: 2.2 });
-  const grp = {}; oisM.forEach((o, i) => { const e = eg[xs[i]]; if (!o || !e) return; (grp[o.et] ||= { v: o.v, g: [] }).g.push(e.gun); });
-  const es = Object.entries(grp).map(([et, x]) => `${VADE[et]} %${nf(x.v, 2)} (${x.g.length > 1 ? x.g[0] + "–" + x.g[x.g.length - 1] : x.g[0]} gün)`);
-  $("#vpNote").innerHTML = oc ? `İma edilen TL oranı = kontrat fiyatı ile spot arasındaki farktan çıkan yıllık oran + vadeye en yakın ${oc} OIS (${oisM.find(Boolean)?.tarih ? gunAd(oisM.find(Boolean).tarih) : "son gün"}). Kullanılan OIS vadeleri: ${es.join(" · ")}.`
-    : "Altının depo oranı olmadığı için kontrattan çıkan oran doğrudan gösterilir.";
+    tipX: d => `${gunAd(d)}${eg[d] ? ` · ${eg[d].gun} gün` : ""}${is[d] ? ` · ${is[d].ticker}` : ""}`,
+    yFmt: v => kur ? nf(v, Math.max(...lv) - Math.min(...lv) < 20 ? 1 : 0) : nf(v, 0), y2Fmt: v => v >= 1000 ? nf(v / 1000, v % 1000 ? 1 : 0) + " bin" : nf(v, 0), rScale: 2.2 });
   return true;
 }
+$("#vpMod").onclick = e => { const b = e.target.closest("button[data-m]"); if (b) { S.vpM = b.dataset.m; renderViop(); } };
 $("#vpSeg").onclick = e => { const b = e.target.closest("button[data-k]"); if (b) { S.vpK = b.dataset.k; renderViop(); } };
 function renderBbg() { const bx = $("#bbgBox"); bx.classList.remove("hidden"); const a = renderOis(), b = renderViop(); bx.classList.toggle("hidden", !a && !b); }
 
