@@ -10,8 +10,9 @@ Kaynaklar (hepsi TCMB EVDS)
   - TCMB taraflı swap stokları (iş günü, mn $): alım yönlü / satım yönlü toplam stok
   - Uluslararası rezervler ve döviz likiditesi tablosu (aylık): K14 yurt içi para karşılığı forward/swap net pozisyonu
   - Altın fiyatı: LBMA AM (TCMB rezerv altınını bu fiyatla değerler). Öncelik sırası:
-      1) Bloomberg Excel dosyası (GOLDLNAM Index; bloomberg/BBG_Data_Excel.xlsm → bloomberg/oku.py) ve
-         tcmb/lbma_am.json (LBMA sitesinden elle alınan değerler)
+      1) LBMA AM: goldsilver.com London Fix tablosu (LBMA fiyatları; GitHub'dan erişilebiliyor, LBMA'nın kendi
+         sitesi erişimi engelliyor), tcmb/lbma_am.json (LBMA sitesinden elle alınanlar) ve varsa Bloomberg
+         Excel'indeki GOLDLNAM Index
       2) Cuma günleri haftalık rezervden çıkan kesin fiyat: C1 / (BL0021 / 31,1034768)
       3) Borsa İstanbul altın USD/ons ağırlıklı ortalama (TP.ALTINPIYASA.AGORT03) — tahmini
 Hesap
@@ -110,6 +111,37 @@ def bbg_oku(yol):
     return {"lbma_am": am}, j.get("guncel") or j.get("dosya_tarihi")
 
 
+AYLAR = {"Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6, "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12}
+GOLDSILVER = "https://goldsilver.com/price-charts/historical-london-fix/?selected_year={}"
+
+
+def goldsilver(yillar):
+    """goldsilver.com London Fix tablosu (LBMA'nın yayımladığı fiyatlar): {tarih: Gold AM}. Yıl başına bir istek."""
+    out = {}
+    s = requests.Session()
+    s.headers.update({"User-Agent": UA, "Accept": "text/html"})
+    for y in yillar:
+        r = s.get(GOLDSILVER.format(y), timeout=60)
+        r.raise_for_status()
+        n = 0
+        for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", r.text, re.S):
+            td = [re.sub(r"<[^>]+>", "", x).strip() for x in re.findall(r"<td[^>]*>(.*?)</td>", tr, re.S)]
+            if len(td) < 2:
+                continue
+            m = re.match(r"^(\d{1,2}) ([A-Z][a-z]{2}) (\d{4})$", td[0])
+            if not m or m.group(2) not in AYLAR:
+                continue
+            try:
+                v = float(td[1].replace(",", ""))
+            except ValueError:
+                continue
+            out[f"{m.group(3)}-{AYLAR[m.group(2)]:02d}-{int(m.group(1)):02d}"] = v
+            n += 1
+        log(f"   goldsilver.com {y}: {n} gün")
+        time.sleep(1.5)
+    return out
+
+
 def asof(tarihler, deger, t):
     """tarihler (sıralı) içinde t'den küçük/eşit son tarihin değeri."""
     i = bisect.bisect_right(tarihler, t) - 1
@@ -140,11 +172,16 @@ def hesapla(G, H, A, lbma):
 
     # --- altın fiyatı (USD/ons) ve kaynağı: L=LBMA, C=Cuma kesin (haftalık rezervden), B=BIST tahmini, =önceki gün
     fiyat, kaynak, onceki = {}, {}, None
+    lbma_t = sorted(lbma)
     for t in gunler:
+        i = bisect.bisect_right(lbma_t, t) - 1
+        yakin = lbma_t[i] if i >= 0 and (dt.date.fromisoformat(t) - dt.date.fromisoformat(lbma_t[i])).days <= 5 and lbma_t[-1] > t else None
         if t in lbma:
             p, k = lbma[t], "L"
         elif t in p_cuma:
             p, k = p_cuma[t], "C"
+        elif yakin:                                   # Londra tatili: TCMB son LBMA fiyatını kullanır
+            p, k = lbma[yakin], "="
         elif G[t].get("TP.ALTINPIYASA.AGORT03"):
             p, k = G[t]["TP.ALTINPIYASA.AGORT03"], "B"
         else:
@@ -234,6 +271,16 @@ def main():
         except Exception as e:
             log(f"LBMA dosyası okunamadı: {e}")
             lbma = {}
+        # goldsilver.com: ilk çalıştırmada 2023'ten itibaren tüm yıllar, sonra yalnızca bu yıl (Ocak'ta geçen yıl da)
+        eski = D.get("lbma", {}) if isinstance(D.get("lbma"), dict) else {}
+        yillar = list(range(BAS.year, bugun.year + 1)) if not any(k < f"{BAS.year}-02" for k in eski) else sorted({bugun.year, (bugun - dt.timedelta(days=20)).year})
+        try:
+            yeni = goldsilver(yillar)
+            eski.update(yeni)
+        except Exception as e:
+            log(f"UYARI goldsilver.com okunamadı: {type(e).__name__}: {e} — kayıtlı LBMA fiyatlarıyla devam")
+        D["lbma"] = dict(sorted(eski.items()))
+        lbma = {**D["lbma"], **lbma}
         D.pop("bbg", None)
         if a.bbg and os.path.exists(a.bbg):
             try:
@@ -247,6 +294,11 @@ def main():
         elif a.bbg:
             log("   Bloomberg verisi yok — LBMA dosyası ve EVDS fiyatıyla devam")
         g, h, m = hesapla(G, H, A, lbma)
+        # kontrol: Cuma günleri haftalık rezervden çıkan TCMB değerleme fiyatı ile LBMA AM karşılaştırması
+        fark = [abs(p - lbma[t]) for t, p in zip(h["dates"], h["fiyat"]) if p and t in lbma]
+        if fark:
+            log(f"   LBMA kontrol: {len(fark)} Cuma, ortalama fark {sum(fark) / len(fark):.2f} $, en büyük {max(fark):.2f} $")
+            log("   en büyük farklar: " + ", ".join(f"{t} TCMB {p:.2f} / LBMA {lbma[t]:.2f}" for t, p in sorted(((t, p) for t, p in zip(h["dates"], h["fiyat"]) if p and t in lbma), key=lambda x: -abs(x[1] - lbma[x[0]]))[:6]))
         if len(g["dates"]) < 100:
             raise RuntimeError(f"beklenenden az gün ({len(g['dates'])})")
         D["rezerv"], D["haftalik"], D["aylik"] = g, h, m
