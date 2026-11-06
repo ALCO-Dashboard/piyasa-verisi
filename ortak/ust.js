@@ -7,7 +7,9 @@
   const me = document.currentScript, PAGE = me.dataset.page || "", ROOT = me.dataset.root || "./";
   const host = document.getElementById("alcoTop"); if (!host) return;
   const SHELL = me.dataset.shell === "1";
-  let EMBED = false; try { EMBED = !SHELL && window.parent !== window && !!window.parent.document.getElementById("alcoFrames"); } catch (e) {}
+  let EMBED = false, IC = false;     // IC: kabuktaki bir sayfanın içine gömülü (ör. Bankacılık → TCMB Rezervler)
+  try { EMBED = !SHELL && window.parent !== window && !!window.parent.document; IC = EMBED && !window.parent.document.getElementById("alcoFrames"); } catch (e) {}
+  if (IC) document.documentElement.classList.add("alco-ic");
   const AY = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
   const get = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const set = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
@@ -19,7 +21,8 @@
     if ((t === "dark") !== isDark()) { const thm = document.getElementById("thm"); if (PAGE === "tefas" && thm) thm.click(); }
     root.dataset.theme = t; window.dispatchEvent(new Event("resize"));
   };
-  window.alcoTema = t => { temaUygula(t); set("alco-theme", t); set("fd-theme", t); set("bv.theme", t); };
+  window.alcoTema = t => { temaUygula(t); set("alco-theme", t); set("fd-theme", t); set("bv.theme", t);
+    if (!SHELL) document.querySelectorAll("iframe").forEach(f => { try { f.contentWindow.alcoTema && f.contentWindow.alcoTema(t); } catch (e) {} }); };
 
   // PDF: sayfayı açık temada, başlıklı ve A4 yatay olarak yazdır ("PDF olarak kaydet")
   const AD = { banka: "Bankacılık Verileri", katilim: "Katılım Bülteni", tefas: "TEFAS Verileri", makro: "Makro ve Piyasa Verileri", tcmb: "TCMB" };
@@ -98,13 +101,14 @@
 ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
   document.head.appendChild(Object.assign(document.createElement("style"), { textContent: css }));
 
-  const TABS = [["banka", "Bankacılık Verileri", "bankacilik/", "bankacilik/"], ["katilim", "Katılım Bülteni", "katilim/", "katilim/"], ["tefas", "TEFAS Verileri", "", "tefas.html"], ["makro", "Makro ve Piyasa", "makro/", "makro/"], ["tcmb", "TCMB", "tcmb/", "tcmb/"]];
+  const TABS = [["banka", "Bankacılık Verileri", "bankacilik/", "bankacilik/"], ["tefas", "TEFAS Verileri", "", "tefas.html"], ["makro", "Makro ve Piyasa", "makro/", "makro/"]];
+  const ALIAS = { katilim: ["banka", "katilim"], tcmb: ["banka", "rezerv"] };   // eski bağlantılar: Bankacılık Verileri altındaki sekmeler
   const SRC = [ // anahtar, ad, sekme, kaç gün içinde "güncel"
     ["bddk_haftalik", "BDDK Haftalık Bülten", "banka", 14], ["bddk_aylik", "BDDK Aylık Bülten", "banka", 75],
     ["evds", "TCMB EVDS", "banka", 7], ["politika", "Para Politikası (TCMB)", "banka", 5],
-    ["katilim", "Katılım Bülteni", "katilim", 10], ["tefas", "TEFAS", "tefas", 4],
+    ["katilim", "Katılım Bülteni", "banka", 10], ["tefas", "TEFAS", "tefas", 4],
     ["tufe", "Enflasyon (TÜİK)", "makro", 40], ["piyasa", "Piyasa (TLREF, repo)", "makro", 5],
-    ["rezerv", "TCMB Rezervler (EVDS)", "tcmb", 5]];
+    ["rezerv", "TCMB Rezervler (EVDS)", "banka", 5]];
   const now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const fmt = d => `${d.getDate()} ${AY[d.getMonth()]} ${d.getFullYear()}`;
   const parse = s => { if (!s) return null; if (/^\d{4}-\d{2}$/.test(s)) { const [y, m] = s.split("-").map(Number); return new Date(y, m, 0); } const [y, m, d] = s.slice(0, 10).split("-").map(Number); return new Date(y, m - 1, d); };
@@ -115,7 +119,7 @@ ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
     <button type="button" class="at-btn" id="atPdf" title="Bu sayfayı PDF olarak kaydet (yazdır → PDF olarak kaydet)">⤓ PDF</button>
     <button type="button" class="at-btn" id="atTheme"></button>
     <div class="at-fr" id="atFr"><button type="button" class="at-btn" id="atFrBtn" aria-expanded="false"><span class="dot"></span>Veri durumu</button></div>
-  </div><nav class="at-tabs" aria-label="Bölümler">${TABS.map(([k, n, p]) => `<a href="${SHELL ? "#" + k : ROOT + "#" + k}" data-k="${k}"${k === PAGE ? ' aria-current="page"' : ""}>${n}<span class="b" hidden></span></a>`).join("")}</nav></div></header>`;
+  </div><nav class="at-tabs" aria-label="Bölümler">${TABS.map(([k, n, p]) => `<a href="${SHELL ? "#" + k : ROOT + "#" + k}" data-k="${k}"${k === (ALIAS[PAGE] ? ALIAS[PAGE][0] : PAGE) ? ' aria-current="page"' : ""}>${n}<span class="b" hidden></span></a>`).join("")}</nav></div></header>`;
 
   const tb = document.getElementById("atTheme");
   const lab = () => { tb.textContent = isDark() ? "☀ Açık" : "☾ Koyu"; };
@@ -134,12 +138,14 @@ ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
   if (SHELL) { // tek sayfa: sekmeler iframe; bir kez açılan sekme bellekte kalır, geçiş anında olur
     const box = document.getElementById("alcoFrames"), frames = {};
     const show = k => {
+      let ic = null; if (ALIAS[k]) [k, ic] = ALIAS[k];
       if (!TABS.some(t => t[0] === k)) k = TABS[0][0];
+      if (ic && frames[k]) { try { frames[k].contentWindow.location.hash = ic; } catch (e) {} }
       host.querySelectorAll("nav.at-tabs a").forEach(a => { if (a.dataset.k === k) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
       for (const [kk, f] of Object.entries(frames)) f.hidden = kk !== k;
       if (!frames[k]) {
         const t = TABS.find(x => x[0] === k), f = document.createElement("iframe");
-        f.title = t[1]; f.src = t[3]; box.appendChild(f); frames[k] = f;
+        f.title = t[1]; f.src = t[3] + (ic ? "#" + ic : ""); box.appendChild(f); frames[k] = f;
       } else { try { frames[k].contentWindow.dispatchEvent(new Event("resize")); } catch (e) {} }
       document.title = TABS.find(x => x[0] === k)[1] + " · ALCO";
     };
