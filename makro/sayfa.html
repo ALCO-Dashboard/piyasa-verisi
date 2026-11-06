@@ -206,7 +206,7 @@ const pp = v => ok(v) ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v), 2)
 
 let D = null;
 const S = { tab: "makro", infOn: new Set(["tufe:yoy"]), gMode: "yoy", gOpen: false, infR: "2Y", sel: null, bkR: "3Y", pR: "6A",
-  bkOn: { pk_yilsonu: 1, pk_12ay: 1, reel_12ay: 1, hh_12ay: 1, tufe: 1 }, pSel: "tlref",
+  bkOn: { pk_yilsonu: 1, pk_12ay: 1, reel_12ay: 1, hh_12ay: 1, tufe: 1 }, pOn: new Set((store.get("mk.pon") || "tlref").split(",").filter(Boolean)),
   impT: "O/N", oisC: "TRY", oisV: "egri", oisR: "6A", oisCmp: null, vpK: "USDTRY", vpM: "oran" };
 let B = null;     // Bloomberg (bbg.json)
 
@@ -408,28 +408,33 @@ const pDg = k => k === "tlref" || k === "tlrefk" ? 4 : 2;
 function renderPiyasa() {
   const kp = [], son = d => { if (!d?.dates?.length) return null; const i = lastIdx(d.rate); if (i < 0) return null; const j = d.rate.slice(0, i).map(ok).lastIndexOf(true); return { v: d.rate[i], p: j >= 0 ? d.rate[j] : null, t: d.dates[i], i }; };
   const has = k => !!pSrc(k)?.dates?.length;
-  if (!PSEL[S.pSel] || (S.pSel !== "all" && !has(S.pSel))) S.pSel = "tlref";
+  for (const k of [...S.pOn]) if (!PK.includes(k) || !has(k)) S.pOn.delete(k);
+  if (!S.pOn.size) S.pOn.add(PK.find(has) || "tlref");
+  const on = k => S.pOn.has(k);
   for (const k of PK) {
     const d = pSrc(k), x = son(d); if (!x) continue; const dg = pDg(k);
     if (k === "imp") {
-      kp.push(`<div class="kpi" role="button" tabindex="0" data-p="imp" aria-pressed="${S.pSel === "imp"}" style="--kc:var(${PCOL.imp})"><div class="t">TL Implied</div><div class="k2">${impT()[2]}</div><div class="v">${pct(x.v, dg)}</div>
+      kp.push(`<div class="kpi" role="button" tabindex="0" data-p="imp" aria-pressed="${on("imp")}" style="--kc:var(${PCOL.imp})"><div class="t">TL Implied</div><div class="k2">${impT()[2]}</div><div class="v">${pct(x.v, dg)}</div>
         <div class="s">Önceki güne göre <span class="${cls(x.v - x.p, 1e-6)}">${bp(ok(x.p) ? x.v - x.p : null)}</span></div>
         <div class="tn" role="group" aria-label="Vade">${IMP.map(([a]) => `<button data-imp="${a}" aria-pressed="${S.impT === a}">${a}</button>`).join("")}</div>
         <div class="d">${gunAd(x.t)} · Bloomberg ${esc(d.ticker || "")}</div></div>`);
       continue;
     }
     const hv = d.vol_tl ? d.vol_tl[lastIdx(d.vol_tl)] : null;
-    kp.push(`<button class="kpi" data-p="${k}" aria-pressed="${S.pSel === k}" style="--kc:var(${PCOL[k]})"><div class="t">${pAd(k)} · gecelik</div><div class="v">${pct(x.v, dg)}</div>
+    kp.push(`<button class="kpi" data-p="${k}" aria-pressed="${on(k)}" style="--kc:var(${PCOL[k]})"><div class="t">${pAd(k)} · gecelik</div><div class="v">${pct(x.v, dg)}</div>
       <div class="s">Önceki güne göre <span class="${cls(x.v - x.p, 1e-6)}">${bp(ok(x.p) ? x.v - x.p : null)}</span>${ok(hv) ? ` · hacim <b>₺${nf(hv / 1e9, 0)} mr</b>` : ""}</div>
       <div class="d">${gunAd(x.t)} · ${PKAY[k]}</div></button>`);
   }
   $("#pKpi").innerHTML = kp.join("");
   rangeChips($("#pRange"), P_R, S.pR, k => { S.pR = k; renderPiyasa(); });
-  const sel = PSEL[S.pSel], lines = sel.lines.filter(has), bars = sel.bars.filter(k => has(k) && pSrc(k).vol_tl?.some(ok));
-  $("#pTitle").textContent = S.pSel === "all" ? "Gecelik oranlar · karşılaştırma" : S.pSel === "imp" ? `TL Implied · ${impT()[2]} (%)` : sel.ad + (bars.length ? " · oran ve işlem hacmi" : " · oran");
-  $("#pSub").textContent = sel.not + (bars.length ? " · oran sol eksen (%), hacim sağ eksen (milyar TL)" : "") + (S.pSel === "all" && has("imp") ? ` · TL Implied vadesi: ${impT()[2]}` : "");
-  $("#pLeg").innerHTML = PK.filter(has).map(k => `<button class="chip" data-p="${k}" aria-pressed="${S.pSel === k}"><i style="background:var(${PCOL[k]})"></i>${pAd(k)}</button>`).join("")
-    + `<button class="chip" data-p="all" aria-pressed="${S.pSel === "all"}">Tümünü karşılaştır</button>`;
+  const lines = PK.filter(k => on(k) && has(k)), tek = lines.length === 1 ? lines[0] : null;
+  const bars = tek && PSEL[tek].bars.length && pSrc(tek).vol_tl?.some(ok) ? [tek] : [];
+  const hepsi = PK.filter(has).every(on);
+  $("#pTitle").textContent = !tek ? "Gecelik oranlar · karşılaştırma" : tek === "imp" ? `TL Implied · ${impT()[2]} (%)` : PSEL[tek].ad + (bars.length ? " · oran ve işlem hacmi" : " · oran");
+  $("#pSub").textContent = tek ? PSEL[tek].not + (bars.length ? " · oran sol eksen (%), hacim sağ eksen (milyar TL)" : "")
+    : "Kutulara ya da aşağıdaki düğmelere tıklayarak serileri ekleyip çıkarın" + (on("imp") ? ` · TL Implied vadesi: ${impT()[2]}` : "");
+  $("#pLeg").innerHTML = PK.filter(has).map(k => `<button class="chip" data-p="${k}" aria-pressed="${on(k)}"><i style="background:var(${PCOL[k]})"></i>${pAd(k)}</button>`).join("")
+    + `<button class="chip" data-p="all" aria-pressed="${hepsi}">Tümünü karşılaştır</button>`;
   const all = [...new Set([...lines, ...bars].flatMap(k => pSrc(k).dates))].sort();
   if (!all.length) { $("#pChart").innerHTML = '<div class="empty">Veri yok.</div>'; return; }
   const gun = P_R.find(r => r[0] === S.pR)[1], bas = new Date(Date.parse(all[all.length - 1]) - gun * 864e5).toISOString().slice(0, 10), xs = all.filter(d => d >= bas);
@@ -439,10 +444,15 @@ function renderPiyasa() {
   for (const k of lines) series.push({ name: pAd(k), color: css(PCOL[k]), span: true, vals: map(pSrc(k), "rate"), fmt: v => pct(v, pDg(k)) });
   chart($("#pChart"), { xs, series, height: 340, xFmt: gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd, yFmt: v => nf(v, v % 1 ? 1 : 0), y2Fmt: v => nf(v, 0), rScale: 2.2, label: $("#pTitle").textContent });
 }
+const pSec = k => {
+  if (k === "all") { const hs = PK.filter(x => pSrc(x)?.dates?.length); S.pOn = hs.every(x => S.pOn.has(x)) ? new Set([hs[0]]) : new Set(hs); }
+  else if (S.pOn.has(k)) { if (S.pOn.size > 1) S.pOn.delete(k); } else S.pOn.add(k);
+  store.set("mk.pon", [...S.pOn].join(",")); renderPiyasa();
+};
 $("#pKpi").onclick = $("#pLeg").onclick = e => {
-  const t = e.target.closest("button[data-imp]"); if (t) { S.impT = t.dataset.imp; S.pSel = "imp"; renderPiyasa(); return; }
-  const b = e.target.closest("[data-p]"); if (!b) return; S.pSel = b.dataset.p; renderPiyasa(); };
-$("#pKpi").onkeydown = e => { const b = e.target.closest('div[role="button"][data-p]'); if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); S.pSel = b.dataset.p; renderPiyasa(); } };
+  const t = e.target.closest("button[data-imp]"); if (t) { S.impT = t.dataset.imp; S.pOn.add("imp"); store.set("mk.pon", [...S.pOn].join(",")); renderPiyasa(); return; }
+  const b = e.target.closest("[data-p]"); if (b) pSec(b.dataset.p); };
+$("#pKpi").onkeydown = e => { const b = e.target.closest('div[role="button"][data-p]'); if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pSec(b.dataset.p); } };
 
 // ---------------------------------------------------------------- OIS (Bloomberg)
 const OIS = { TRY: "TLOIS", USD: "USD OIS", EUR: "EUR OIS" };
