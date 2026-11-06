@@ -17,6 +17,7 @@ on:
       - "makro/**"
       - "tcmb/**"
       - "bloomberg/**"
+      - "hazine/**"
       - "sayfa.html"
   workflow_dispatch:
 
@@ -80,6 +81,12 @@ jobs:
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: python tcmb/guncelle.py --site site --bbg "$RUNNER_TEMP/bbg.json"
+
+      - name: Hazine borçlanma verisini çek (HMB)
+        continue-on-error: true
+        env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: python hazine/guncelle.py --site site
 
       - name: Ortak dosyaları ve TEFAS sayfasını kopyala
         run: |

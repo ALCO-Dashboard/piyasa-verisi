@@ -118,6 +118,11 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
 .tbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono)}
 .tbl tr.cur td{background:var(--accent-wash)}
 .tbl td.na{color:var(--muted)}
+.tw{overflow-x:auto}.tw .tbl td{white-space:nowrap}.tw .tbl td.s{white-space:normal;min-width:120px}
+.tbl td.l,.tbl th.l{text-align:left}.tbl td.s{font-family:var(--sans)}
+.tbl tr.sel td{background:var(--accent-wash)}.tbl tbody tr[data-r]{cursor:pointer}
+.tbl td.ind{padding-left:22px}.tbl tr.ust td{font-weight:600}
+.tag{display:inline-block;font-family:var(--sans);font-size:10.5px;font-weight:700;letter-spacing:.04em;border-radius:5px;padding:1px 6px;margin-left:6px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line);vertical-align:1px}
 .src{font-size:12px;color:var(--muted);margin-top:18px;line-height:1.6}
 #gate{padding:60px 16px;text-align:center;color:var(--muted)}
 .hidden{display:none!important}
@@ -137,7 +142,8 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
 <main class="wrap">
   <div id="gate">Veriler yükleniyor…</div>
   <section id="pMakro" class="hidden">
-    <div class="subtabs" role="group" aria-label="Makro konu"><button aria-pressed="true">Enflasyon</button></div>
+    <div class="subtabs" role="group" aria-label="Makro konu" id="mkTabs"><button data-mk="enf" aria-pressed="true">Enflasyon</button><button data-mk="hazine" aria-pressed="false">Hazine Borçlanma</button></div>
+    <div id="mkEnf">
     <h2 class="sec">Manşet enflasyon</h2>
     <div class="kpis" id="infKpi"></div>
     <div class="card">
@@ -157,6 +163,50 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
       <div class="card">
         <div class="cardhead"><div><h3>TCMB hedef / gerçekleşme</h3><div class="sub" id="hdSub"></div></div></div>
         <div id="hdTbl"></div>
+      </div>
+    </div>
+    </div>
+    <div id="mkHazine" class="hidden">
+      <div class="empty hidden" id="hzGate"></div>
+      <div id="hzBody">
+      <h2 class="sec">Merkezi yönetim borç stoku</h2>
+      <div class="kpis" id="hzKpi"></div>
+      <div class="grid2 g2e">
+        <div class="card">
+          <div class="cardhead"><div><h3 id="hpTitle"></h3><div class="sub" id="hpSub"></div></div><div class="seg yer" id="hpYer" role="group" aria-label="Piyasa"></div></div>
+          <div class="legend" id="hpLeg"></div>
+          <div class="chart" id="hpChart"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="hiTitle"></h3><div class="sub" id="hiSub"></div></div><div class="seg yer" id="hiYer" role="group" aria-label="Piyasa"></div></div>
+          <div class="ctl"><span class="chips" id="hiPara"></span><span class="chips" id="hiUf"></span></div>
+          <div class="legend" id="hiLeg"></div>
+          <div class="chart" id="hiChart"></div>
+        </div>
+      </div>
+      <h2 class="sec">İhraçlar ve itfalar</h2>
+      <div class="grid2 g2e">
+        <div class="card">
+          <div class="cardhead"><div><h3>Son ihraçlar</h3><div class="sub" id="hsSub"></div></div><div class="seg yer" id="hsYer" role="group" aria-label="Piyasa"></div></div>
+          <div class="tw" id="hsTbl"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3>Yaklaşan itfalar</h3><div class="sub" id="hySub"></div></div><div class="seg yer" id="hyYer" role="group" aria-label="Piyasa"></div></div>
+          <div class="tw" id="hyTbl"></div>
+        </div>
+      </div>
+      <h2 class="sec">Stok yapısı ve yatırımcı dağılımı</h2>
+      <div class="grid2 g2e">
+        <div class="card">
+          <div class="cardhead"><div><h3>İç borç stokunun yapısı</h3><div class="sub" id="hkSub"></div></div></div>
+          <div class="tw" id="hkTbl"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3>Elinde bulunduranlar</h3><div class="sub" id="heSub"></div></div><span class="chips" id="heRange"></span></div>
+          <div class="chart" id="heChart"></div>
+          <div class="tw" id="heTbl"></div>
+        </div>
+      </div>
       </div>
     </div>
   </section>
@@ -253,7 +303,7 @@ const pp = v => ok(v) ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v), 2)
 let D = null;
 const S = { tab: "makro", infOn: new Set(["tufe:yoy"]), gMode: "yoy", gOpen: false, infR: "2Y", sel: null, bkR: "3Y", pR: "6A",
   bkOn: { pk_yilsonu: 1, pk_12ay: 1, reel_12ay: 1, hh_12ay: 1, tufe: 1 }, pOn: new Set((store.get("mk.pon") || "tlref").split(",").filter(Boolean)),
-  impT: "O/N", ps: "faiz", gU: "tr", EG: {}, ee: "borsa", eeIdx: new Set(["XU100 Index"]), eeR: "6A", vpK: "USDTRY", vpM: "oran" };
+  impT: "O/N", mk: "enf", ps: "faiz", gU: "tr", EG: {}, ee: "borsa", eeIdx: new Set(["XU100 Index"]), eeR: "6A", vpK: "USDTRY", vpM: "oran" };
 let B = null;     // Bloomberg (bbg.json)
 
 // ---------------------------------------------------------------- grafik
@@ -272,11 +322,14 @@ function chart(el, o) {
   const W = Math.max(320, el.clientWidth || 700), H = o.height || 320;
   const hasR = ser.some(s => s.axis === "r");
   const m = { t: 10, r: hasR ? 58 : 14, b: 26, l: 52 };
-  const ext = ax => { const v = ser.filter(s => (s.axis || "l") === ax).flatMap(s => s.vals.filter(ok)); if (!v.length) return null; let lo = Math.min(...v), hi = Math.max(...v);
+  const ext = ax => { const ss = ser.filter(s => (s.axis || "l") === ax), v = ss.flatMap(s => s.vals.filter(ok));
+    if (o.stack) { const bb = ss.filter(s => s.type === "bar"); for (let i = 0; i < n; i++) { let p = 0, q = 0; bb.forEach(b => { const x = b.vals[i]; if (ok(x)) x > 0 ? p += x : q += x; }); v.push(p, q); } }
+    if (!v.length) return null; let lo = Math.min(...v), hi = Math.max(...v);
     if (ser.some(s => (s.axis || "l") === ax && s.type === "bar") || o.zero) { lo = Math.min(0, lo); hi = Math.max(0, hi); }
-    const pad = (hi - lo) * .08 || 1, z = ser.some(s => (s.axis || "l") === ax && s.type === "bar") || o.zero; return [z ? (lo < 0 ? lo - pad : 0) : lo - pad, hi + pad]; };
+    const pad = (hi - lo) * .08 || 1, z = ser.some(s => (s.axis || "l") === ax && s.type === "bar") || o.zero; return [z ? (lo < 0 ? lo - pad : 0) : o.min0 && ax === "l" ? Math.max(0, lo - pad) : lo - pad, hi + pad]; };
   const L = ext("l"), R = hasR ? ext("r") : null;
   const tl = L ? niceTicks(L[0], L[1], 5) : [], tr = R ? niceTicks(Math.max(0, R[0]), R[1], 5) : [];
+  if (o.min0) while (tl.length > 1 && tl[0] < 0) tl.shift();
   const yl0 = L ? Math.min(L[0], tl[0]) : 0, yl1 = L ? Math.max(L[1], tl[tl.length - 1]) : 1;
   const yr0 = R ? Math.min(Math.max(0, R[0]), tr[0]) : 0, yr1 = R ? Math.max(R[1], tr[tr.length - 1]) * (o.rScale || 1) : 1;
   const iw = W - m.l - m.r, ih = H - m.t - m.b, bw = iw / n;
@@ -290,7 +343,10 @@ function chart(el, o) {
   s += `<line x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}" stroke="var(--axis)"/></g>`;
   if (o.hi != null && o.hi >= 0) s += `<rect x="${(X(o.hi) - bw / 2).toFixed(2)}" y="${m.t}" width="${bw.toFixed(2)}" height="${ih}" fill="var(--accent-wash)"/><line x1="${X(o.hi)}" x2="${X(o.hi)}" y1="${m.t}" y2="${m.t + ih}" stroke="var(--accent)" stroke-dasharray="3 3" stroke-width="1"/>`;
   const bars = ser.filter(x => x.type === "bar"), nb = bars.length;
-  bars.forEach((b, k) => { const Y = b.axis === "r" ? YR : YL, base = Y(b.axis === "r" ? yr0 : Math.max(yl0, Math.min(0, yl1))), w = Math.max(1, bw * (nb > 1 ? .8 / nb : .72));
+  if (o.stack) { const pos = Array(n).fill(0), neg = Array(n).fill(0), w = Math.max(1, bw * .72);
+    bars.forEach(b => b.vals.forEach((v, i) => { if (!ok(v) || !v) return; const a = v > 0 ? pos[i] : neg[i], c = a + v; if (v > 0) pos[i] = c; else neg[i] = c;
+      const y1 = YL(a), y2 = YL(c); s += `<rect x="${(X(i) - w / 2).toFixed(2)}" y="${Math.min(y1, y2).toFixed(2)}" width="${w.toFixed(2)}" height="${Math.max(.5, Math.abs(y1 - y2)).toFixed(2)}" fill="${b.color}"/>`; })); }
+  else bars.forEach((b, k) => { const Y = b.axis === "r" ? YR : YL, base = Y(b.axis === "r" ? yr0 : Math.max(yl0, Math.min(0, yl1))), w = Math.max(1, bw * (nb > 1 ? .8 / nb : .72));
     b.vals.forEach((v, i) => { if (!ok(v)) return; const y = Y(v), x = X(i) - (nb > 1 ? bw * .4 - w * k : w / 2);
       s += `<rect x="${x.toFixed(2)}" y="${Math.min(y, base).toFixed(2)}" width="${w.toFixed(2)}" height="${Math.max(.5, Math.abs(base - y)).toFixed(2)}" rx="${w > 6 ? 2 : 0}" fill="${b.barColors ? b.barColors[i] : b.color}" data-i="${i}"/>`; }); });
   for (const l of ser.filter(x => x.type !== "bar")) {
@@ -308,7 +364,8 @@ function chart(el, o) {
     const i = idx(ev), rows = ser.filter(x => ok(x.vals[i]));
     if (!rows.length) { tip.style.display = "none"; cur.setAttribute("visibility", "hidden"); return; }
     cur.setAttribute("x1", X(i)); cur.setAttribute("x2", X(i)); cur.setAttribute("visibility", "visible");
-    tip.innerHTML = `<b>${esc(o.tipX ? o.tipX(xs[i]) : xs[i])}</b>` + rows.map(x => `<div class="r"><span><i style="background:${x.barColors ? x.barColors[i] : x.color}"></i>${esc(x.name)}</span><span>${x.fmt ? x.fmt(x.vals[i]) : nf(x.vals[i])}</span></div>`).join("") + (o.tipNote ? `<div class="note" style="margin-top:4px">${o.tipNote}</div>` : "");
+    tip.innerHTML = `<b>${esc(o.tipX ? o.tipX(xs[i]) : xs[i])}</b>` + rows.map(x => `<div class="r"><span><i style="background:${x.barColors ? x.barColors[i] : x.color}"></i>${esc(x.name)}</span><span>${x.fmt ? x.fmt(x.vals[i]) : nf(x.vals[i])}</span></div>`).join("")
+      + (o.stack && rows.filter(x => x.type === "bar").length > 1 ? `<div class="r" style="border-top:1px solid var(--line);margin-top:3px;padding-top:3px"><span>Toplam</span><span>${(o.totFmt || nf)(rows.filter(x => x.type === "bar").reduce((a, x) => a + x.vals[i], 0))}</span></div>` : "") + (o.tipNote ? `<div class="note" style="margin-top:4px">${o.tipNote}</div>` : "");
     tip.style.display = "block";
     const r = el.getBoundingClientRect(), tw = tip.offsetWidth, x = ev.clientX - r.left;
     tip.style.left = Math.min(Math.max(0, x + 14), r.width - tw) + "px"; tip.style.top = Math.max(0, ev.clientY - r.top - tip.offsetHeight - 10) + "px";
@@ -710,25 +767,193 @@ $("#vpMod").onclick = e => { const b = e.target.closest("button[data-m]"); if (b
 $("#vpSeg").onclick = e => { const b = e.target.closest("button[data-k]"); if (b) { S.vpK = b.dataset.k; renderViop(); } };
 function renderBbg() { const bx = $("#bbgBox"); bx.classList.remove("hidden"); const a = renderOis(), b = renderViop(); bx.classList.toggle("hidden", !a && !b); }
 
+// ---------------------------------------------------------------- Hazine borçlanma (HMB Kamu Finansmanı İstatistikleri)
+let H = null;
+const HZ = { p: "ic", i: "ic", ip: "Tümü", iu: "24A", s: "ic", y: "ic", eb: store.get("mk.eb") || "Katılım Bankaları", ebR: "3Y" };
+const YER = [["ic", "Yurtiçi"], ["dis", "Yurtdışı"]];
+const PARA_RENK = { TL: "--c1", USD: "--c6", EUR: "--c3", "Altın": "--c4", JPY: "--c5", "Diğer": "--c5" };
+const TUR_RENK = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6", "--c7", "--muted"];
+const bugun = () => new Date().toISOString().slice(0, 10);
+const yilFark = (a, b) => (Date.parse(b) - Date.parse(a)) / (365.25 * 864e5);
+const mr = v => ok(v) ? nf(v / 1e9, Math.abs(v) >= 1e11 ? 0 : 1) : "—";            // TL → milyar TL
+const toplam = (a, f = x => x.tutar) => a.reduce((t, x) => t + (f(x) || 0), 0);
+const yerSeg = (id, k) => { $(id).innerHTML = YER.map(([y, l]) => `<button data-y="${y}" aria-pressed="${HZ[k] === y}">${l}</button>`).join(""); };
+// para birimi cinsinden gösterim: iç borçta USD/EUR/Altın TL karşılığı, HMB'nin stok tarihindeki kurla çevrilir
+function birim(yer, para) {
+  const c = H.cevrim;
+  if (yer === "dis") return para === "Tümü" ? { ad: "milyon USD", f: x => x.usd } : { ad: `milyon ${para === "Diğer" ? "döviz" : para}`, f: x => x.tutar };
+  if (c && para === "USD") return { ad: "milyon USD", f: x => x.tutar / c.usd / 1e6 };
+  if (c && para === "EUR") return { ad: "milyon EUR", f: x => x.tutar / c.eur / 1e6 };
+  if (c?.altin_gr && para === "Altın") return { ad: "ton", f: x => x.tutar / c.altin_gr / 1e6, d: 2 };
+  return { ad: "milyar TL", f: x => x.tutar / 1e9 };
+}
+function renderHzKpi() {
+  const ic = H.ic_stok, dis = H.dis_stok, c = H.cevrim, sen = ic?.senetler || [];
+  const grp = p => sen.filter(x => x.para === p), sk = a => { const t = toplam(a); return t ? toplam(a.filter(x => x.sukuk)) / t * 100 : null; };
+  const pay = a => { const s = sk(a); return ok(s) ? `<b>%${nf(100 - s, 1)}</b> Tahvil · <b>%${nf(s, 1)}</b> Sukuk` : ""; };
+  const tl = grp("TL"), usd = grp("USD"), eur = grp("EUR"), au = grp("Altın"), tumu = toplam(sen);
+  const fxTL = toplam(usd) + toplam(eur), iDate = gunAd(ic?.itibar), dDate = gunAd(dis?.itibar);
+  const k = [];
+  k.push(`<div class="kpi" style="--kc:var(--c1)"><div class="t">İç borç · TL</div><div class="v">${nf(toplam(tl) / 1e12, 2)} Tr TL</div><div class="s">${pay(tl)}</div><div class="d">Toplam iç borç ${nf(tumu / 1e12, 2)} Tr TL · ${iDate}</div></div>`);
+  k.push(`<div class="kpi" style="--kc:var(--c6)"><div class="t">İç borç · Döviz</div><div class="v">${c ? nf(fxTL / c.usd / 1e9, 1) + " Mr USD" : mr(fxTL) + " Mr TL"}</div>`
+    + `<div class="s">${c ? `USD <b>${nf(toplam(usd) / c.usd / 1e9, 1)} Mr</b> · EUR <b>${nf(toplam(eur) / c.eur / 1e9, 1)} Mr</b>` : ""}</div><div class="d">≈ ${mr(fxTL)} Mr TL${c ? ` · USD/TRY ${nf(c.usd, 4)}` : ""}</div></div>`);
+  k.push(`<div class="kpi" style="--kc:var(--c4)"><div class="t">İç borç · Altın</div><div class="v">${c?.altin_gr ? nf(toplam(au) / c.altin_gr / 1e6, 1) + " Ton" : mr(toplam(au)) + " Mr TL"}</div><div class="s">${pay(au)}</div>`
+    + `<div class="d">≈ ${mr(toplam(au))} Mr TL${c?.altin_gr ? ` · ${nf(c.altin_gr, 0)} TL/gr` : ""}</div></div>`);
+  if (dis?.satir?.length) {
+    const d = dis.satir, t = toplam(d, x => x.usd), s = toplam(d.filter(x => x.tur === "Kira sertifikası"), x => x.usd) / t * 100;
+    k.push(`<div class="kpi" style="--kc:var(--c3)"><div class="t">Dış borç · Tahvil</div><div class="v">${nf(t / 1e3, 1)} Mr USD</div><div class="s"><b>%${nf(100 - s, 1)}</b> Eurobond · <b>%${nf(s, 1)}</b> Sukuk</div><div class="d">${d.length} tertip · ${dDate}</div></div>`);
+  }
+  const bg = bugun(), vade = (a, f, t0) => { const w = toplam(a, f); return w ? a.reduce((s, x) => s + f(x) * Math.max(0, yilFark(t0, x.itfa)), 0) / w : null; };
+  const y12 = (a, f, t0) => { const lim = new Date(Date.parse(t0) + 365 * 864e5).toISOString().slice(0, 10), w = toplam(a, f); return w ? toplam(a.filter(x => x.itfa <= lim), f) / w * 100 : null; };
+  const di = dis?.satir || [], fu = x => x.usd;
+  k.push(`<div class="kpi kpi2" style="--kc:var(--c2)"><div class="t">Ağırlıklı kalan vade</div>`
+    + `<div class="kr"><span class="kl">İç borç</span><span class="kv">${nf(vade(sen, x => x.tutar, ic.itibar), 1)} yıl</span></div>`
+    + (di.length ? `<div class="kr"><span class="kl">Dış borç</span><span class="kv">${nf(vade(di, fu, dis.itibar), 1)} yıl</span></div>` : "")
+    + `<div class="d">12 ay içinde itfa: iç %${nf(y12(sen, x => x.tutar, ic.itibar), 1)}${di.length ? ` · dış %${nf(y12(di, fu, dis.itibar), 1)}` : ""}</div></div>`);
+  $("#hzKpi").innerHTML = k.join("");
+}
+function renderHzProj() {
+  yerSeg("#hpYer", "p");
+  const p = H[HZ.p + "_proj"], el = $("#hpChart"), ic = HZ.p === "ic";
+  $("#hpTitle").textContent = `Ödeme projeksiyonu · ${ic ? "Yurtiçi (milyar TL)" : "Yurtdışı (milyon USD)"}`;
+  if (!p?.ay?.length) { $("#hpSub").textContent = ""; $("#hpLeg").innerHTML = ""; el.innerHTML = '<div class="empty">Veri yok.</div>'; return; }
+  const ay0 = bugun().slice(0, 7); let ix = p.ay.map((a, i) => a >= ay0 ? i : -1).filter(i => i >= 0); if (ix.length < 6) ix = p.ay.map((_, i) => i);
+  const k = ic ? 1e3 : 1, xs = ix.map(i => p.ay[i]), an = ix.map(i => p.anapara[i] / k), fz = ix.map(i => p.faiz[i] / k);
+  const ta = an.reduce((a, b) => a + b, 0), tf = fz.reduce((a, b) => a + b, 0), d = ic ? 1 : 0, u = ic ? " Mr TL" : " mn USD";
+  $("#hpSub").textContent = `HMB resmi projeksiyonu (${ayAd(p.zaman)}) · ${xs.length} ay toplamı ${nf(ta + tf, d)}${u} (anapara ${nf(ta, d)}, faiz ${nf(tf, d)})`;
+  const ser = [{ name: "Anapara", vals: an, color: css("--c1"), type: "bar", fmt: v => nf(v, d) + u }, { name: ic ? "Faiz / kupon" : "Faiz / kupon / kira", vals: fz, color: css("--c4"), type: "bar", fmt: v => nf(v, d) + u }];
+  $("#hpLeg").innerHTML = ser.map(x => `<span class="chip" style="cursor:default"><i style="background:${x.color}"></i>${x.name}</span>`).join("");
+  chart(el, { xs, series: ser, stack: true, height: 300, label: $("#hpTitle").textContent, xFmt: ayKisa, tipX: ayAd, maxX: 12, totFmt: v => nf(v, d) + u, yFmt: v => nf(v, 0) });
+}
+const UF = [["12A", 12], ["24A", 24], ["36A", 36], ["60A", 60]];
+function renderHzItfa() {
+  yerSeg("#hiYer", "i");
+  const ic = HZ.i === "ic", liste = (ic ? H.ic_stok?.senetler : H.dis_stok?.satir) || [], el = $("#hiChart");
+  const paralar = ["Tümü", ...(ic ? ["TL", "USD", "EUR", "Altın"] : ["USD", "EUR", "Diğer"])];
+  if (!paralar.includes(HZ.ip)) HZ.ip = "Tümü";
+  const pk = x => ic ? x.para : (["USD", "EUR"].includes(x.para) ? x.para : "Diğer");
+  $("#hiPara").innerHTML = paralar.map(p => `<button class="chip" data-p="${p}" aria-pressed="${HZ.ip === p}">${p}</button>`).join("");
+  rangeChips($("#hiUf"), UF, HZ.iu, k => { HZ.iu = k; renderHzItfa(); });
+  const ay = UF.find(x => x[0] === HZ.iu)[1], ceyrek = ay > 24, bg = bugun();
+  const sonT = new Date(Date.UTC(+bg.slice(0, 4), +bg.slice(5, 7) - 1 + ay, 0)).toISOString().slice(0, 10);
+  const kova = d => ceyrek ? `${d.slice(0, 4)}-Ç${Math.floor((+d.slice(5, 7) - 1) / 3) + 1}` : d.slice(0, 7);
+  const xs = []; for (let m = 0; m < ay; m++) { const d = new Date(Date.UTC(+bg.slice(0, 4), +bg.slice(5, 7) - 1 + m, 1)).toISOString().slice(0, 10), k = kova(d); if (!xs.includes(k)) xs.push(k); }
+  const a = liste.filter(x => x.itfa >= bg && x.itfa <= sonT && (HZ.ip === "Tümü" || pk(x) === HZ.ip)), b = birim(HZ.i, HZ.ip);
+  const grpAd = x => HZ.ip === "Tümü" ? pk(x) : ic ? x.tur : x.tur;
+  const gruplar = [...new Set(a.map(grpAd))].sort((p, q) => toplam(a.filter(x => grpAd(x) === q), b.f) - toplam(a.filter(x => grpAd(x) === p), b.f));
+  const ser = gruplar.map((g, k) => { const v = xs.map(() => 0); a.filter(x => grpAd(x) === g).forEach(x => { const i = xs.indexOf(kova(x.itfa)); if (i >= 0) v[i] += b.f(x); });
+    return { name: g, vals: v.map(x => x || null), color: css(HZ.ip === "Tümü" ? PARA_RENK[g] || "--muted" : TUR_RENK[k % TUR_RENK.length]), type: "bar", fmt: x => nf(x, b.d ?? 1) + " " + b.ad }; });
+  const tt = toplam(a, b.f), kaynak = ic ? `HMB DİBS listesi, ${gunAd(H.ic_stok?.itibar)}` : `HMB dış borç tahvil listesi, ${gunAd(H.dis_stok?.itibar)}`;
+  $("#hiTitle").textContent = `İtfa takvimi · ${ic ? "Yurtiçi" : "Yurtdışı"}${HZ.ip === "Tümü" ? "" : " · " + HZ.ip} (${b.ad})`;
+  $("#hiSub").textContent = `Stoktaki senetlerin anapara itfaları, kupon hariç · ${HZ.iu} toplamı ${nf(tt, b.d ?? 1)} ${b.ad}${ic && HZ.ip === "Tümü" ? " (döviz ve altın TL karşılığı)" : ""} · ${kaynak}`;
+  $("#hiLeg").innerHTML = ser.map(x => `<span class="chip" style="cursor:default"><i style="background:${x.color}"></i>${esc(x.name)}</span>`).join("");
+  const xf = k => ceyrek ? `${k.slice(5)} ${k.slice(2, 4)}` : ayKisa(k);
+  chart(el, { xs, series: ser, stack: true, height: 300, label: $("#hiTitle").textContent, xFmt: xf, tipX: k => ceyrek ? `${k.slice(0, 4)} ${k.slice(5, 6)}. çeyrek` : ayAd(k), maxX: 12,
+    totFmt: x => nf(x, b.d ?? 1) + " " + b.ad, yFmt: v => nf(v, v % 1 ? 1 : 0) });
+}
+const tblHz = (bas, satir) => `<table class="tbl"><thead><tr>${bas.map(([t, c]) => `<th${c ? ` class="${c}"` : ""}>${t}</th>`).join("")}</tr></thead><tbody>${satir.join("") || `<tr><td colspan="${bas.length}" class="na">Kayıt yok.</td></tr>`}</tbody></table>`;
+const turHucre = x => `${esc(x.tur)}${x.sukuk || x.tur === "Kira sertifikası" ? '<span class="tag">SUKUK</span>' : ""}`;
+const N = 8;
+function renderHzTablo() {
+  yerSeg("#hsYer", "s"); yerSeg("#hyYer", "y");
+  const bg = bugun();
+  if (HZ.s === "ic") {
+    const a = [...(H.ic_stok?.ihraclar || [])].filter(x => x.valor).sort((p, q) => q.valor.localeCompare(p.valor) || q.tutar - p.tutar).slice(0, N);
+    $("#hsSub").textContent = `Valör tarihine göre · tutar milyar TL (döviz ve altın TL karşılığı) · ${gunAd(H.ic_stok?.itibar)} itibarıyla`;
+    $("#hsTbl").innerHTML = tblHz([["Tür", "l"], ["ISIN", "l"], ["Valör"], ["İtfa"], ["İhraç tipi", "l"], ["Tutar"]],
+      a.map(x => `<tr><td class="l s">${turHucre(x)}</td><td class="l">${esc(x.isin)}</td><td>${gunAd(x.valor)}</td><td>${gunAd(x.itfa)}</td><td class="l s">${esc(x.tip || "—")}</td><td>${mr(x.tutar)}</td></tr>`));
+  } else {
+    const a = [...(H.dis_stok?.satir || [])].sort((p, q) => q.anlasma.localeCompare(p.anlasma)).slice(0, N);
+    $("#hsSub").textContent = `Anlaşma tarihine göre · tutar milyon (ihraç para birimi) · ${gunAd(H.dis_stok?.itibar)} itibarıyla`;
+    $("#hsTbl").innerHTML = tblHz([["Tür", "l"], ["Para", "l"], ["Anlaşma"], ["İtfa"], ["Kupon"], ["Tutar"]],
+      a.map(x => `<tr><td class="l s">${turHucre(x)}${x.tip === "Ek İhraç" || x.tip === "Değişim İhracı" ? `<span class="tag">${esc(x.tip.replace(" İhracı", "").replace(" İhraç", " ihraç"))}</span>` : ""}</td><td class="l">${esc(x.para)}</td><td>${gunAd(x.anlasma)}</td><td>${gunAd(x.itfa)}</td><td>${pct(x.kupon, 3)}</td><td>${nf(x.tutar, 0)}</td></tr>`));
+  }
+  const kalan = d => Math.round((Date.parse(d) - Date.parse(bg)) / 864e5);
+  if (HZ.y === "ic") {
+    const a = (H.ic_stok?.senetler || []).filter(x => x.itfa >= bg).sort((p, q) => p.itfa.localeCompare(q.itfa) || q.tutar - p.tutar).slice(0, N);
+    $("#hySub").textContent = `Stoktaki tutar milyar TL · ${gunAd(H.ic_stok?.itibar)} itibarıyla`;
+    $("#hyTbl").innerHTML = tblHz([["Tür", "l"], ["ISIN", "l"], ["Para", "l"], ["İtfa"], ["Kalan gün"], ["Tutar"]],
+      a.map(x => `<tr><td class="l s">${turHucre(x)}</td><td class="l">${esc(x.isin)}</td><td class="l">${esc(x.para)}</td><td>${gunAd(x.itfa)}</td><td>${kalan(x.itfa)}</td><td>${mr(x.tutar)}</td></tr>`));
+  } else {
+    const a = (H.dis_stok?.satir || []).filter(x => x.itfa >= bg).sort((p, q) => p.itfa.localeCompare(q.itfa)).slice(0, N);
+    $("#hySub").textContent = `Tutar milyon (ihraç para birimi) · ${gunAd(H.dis_stok?.itibar)} itibarıyla`;
+    $("#hyTbl").innerHTML = tblHz([["Tür", "l"], ["Para", "l"], ["İtfa"], ["Kalan gün"], ["Kupon"], ["Tutar"]],
+      a.map(x => `<tr><td class="l s">${turHucre(x)}</td><td class="l">${esc(x.para)}</td><td>${gunAd(x.itfa)}</td><td>${kalan(x.itfa)}</td><td>${pct(x.kupon, 3)}</td><td>${nf(x.tutar, 0)}</td></tr>`));
+  }
+}
+// iç borç stokunun yapısı: faiz yapısı / para birimi kırılımı, pay ve ağırlıklı kalan vade
+const YAPI = [["TL sabit kuponlu", x => x.tur === "TL sabit kuponlu"], ["TL kuponsuz", x => x.tur === "TL kuponsuz" || x.tur === "TL faiz ödemesiz"],
+  ["TÜFE'ye endeksli", x => x.tur === "TÜFE'ye endeksli"], ["TLREF'e endeksli", x => x.tur === "TLREF'e endeksli"], ["TL değişken faizli", x => x.tur === "TL değişken faizli"],
+  ["TL kira sertifikası", x => x.para === "TL" && x.sukuk], ["Döviz (USD + EUR)", x => x.para === "USD" || x.para === "EUR"], ["Altın", x => x.para === "Altın"]];
+function renderHzYapi() {
+  const sen = H.ic_stok?.senetler || [], t = toplam(sen), t0 = H.ic_stok?.itibar, kul = new Set();
+  const sat = YAPI.map(([ad, f]) => { const a = sen.filter(x => !kul.has(x) && f(x)); a.forEach(x => kul.add(x)); return [ad, a]; });
+  const kalan = sen.filter(x => !kul.has(x)); if (kalan.length) sat.push(["Diğer", kalan]);
+  const mx = Math.max(...sat.map(([, a]) => toplam(a)));
+  $("#hkSub").textContent = `Tutar milyar TL (döviz ve altın TL karşılığı) · kalan vade tutar ağırlıklı · ${gunAd(t0)} itibarıyla`;
+  $("#hkTbl").innerHTML = `<table class="grp"><thead><tr><th>Senet</th><th>Milyar TL</th><th>Pay</th><th>Kalan vade</th><th>Tertip</th></tr></thead><tbody>`
+    + sat.filter(([, a]) => a.length).map(([ad, a]) => { const v = toplam(a), w = a.reduce((s, x) => s + x.tutar * Math.max(0, yilFark(t0, x.itfa)), 0) / v;
+      return `<tr><td>${esc(ad)}</td><td>${mr(v)}</td><td><span class="hb p"><i style="left:0;width:${(v / mx * 100).toFixed(1)}%;background:var(--c1)"></i></span>%${nf(v / t * 100, 1)}</td><td>${nf(w, 1)} yıl</td><td>${a.length}</td></tr>`; }).join("")
+    + `<tr class="tot"><td>Toplam</td><td>${mr(t)}</td><td>%100</td><td>${nf(sen.reduce((s, x) => s + x.tutar * Math.max(0, yilFark(t0, x.itfa)), 0) / t, 1)} yıl</td><td>${sen.length}</td></tr></tbody></table>`;
+}
+const EB_R = [["1Y", 12], ["3Y", 36], ["Tümü", 999]];
+function renderHzSahip() {
+  const s = H.sahip, el = $("#heChart");
+  if (!s?.satir?.length) { $("#heTbl").innerHTML = ""; el.innerHTML = '<div class="empty">Veri yok.</div>'; return; }
+  const i = s.son, onc = i - 1, yb = s.ay.indexOf(`${+s.ay[i].slice(0, 4) - 1}-12`);
+  if (!s.satir.some(r => r.ad === HZ.eb)) HZ.eb = "Katılım Bankaları";
+  const dp = (r, j) => j >= 0 && ok(r.pay[i]) && ok(r.pay[j]) ? r.pay[i] - r.pay[j] : null, dpH = v => ok(v) ? `<span class="${cls(v, .005)}">${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v), 2)}</span>` : "—";
+  $("#heSub").textContent = `İç borç stoku, milyar TL ve pay (%) · ${ayAd(s.ay[i])} · kaynak TCMB, HMB · satıra tıklayınca payın seyri`;
+  $("#heTbl").innerHTML = `<table class="tbl"><thead><tr><th class="l">Yatırımcı</th><th>Milyar TL</th><th>Pay %</th><th>Aylık Δ puan</th><th>Yılbaşı Δ puan</th></tr></thead><tbody>`
+    + s.satir.map(r => `<tr data-r="${esc(r.ad)}" class="${r.ust ? "ust" : ""}${r.ad === HZ.eb ? " sel" : ""}"><td class="l s${r.ust ? "" : " ind"}">${esc(r.ad.charAt(0) + r.ad.slice(1).toLocaleLowerCase("tr-TR")).replace(/\b(Tcmb|tcmb)\b/, "TCMB")}</td><td>${nf(r.mr[i], 1)}</td><td>${nf(r.pay[i], 2)}</td><td>${dpH(dp(r, onc))}</td><td>${dpH(dp(r, yb))}</td></tr>`).join("") + "</tbody></table>";
+  rangeChips($("#heRange"), EB_R, HZ.ebR, k => { HZ.ebR = k; renderHzSahip(); });
+  const r = s.satir.find(x => x.ad === HZ.eb), n = EB_R.find(x => x[0] === HZ.ebR)[1], j0 = Math.max(0, s.ay.length - n);
+  const xs = s.ay.slice(j0), ad = r.ad.charAt(0) + r.ad.slice(1).toLocaleLowerCase("tr-TR");
+  chart(el, { xs, height: 220, min0: true, label: `${ad} payı`, xFmt: ayKisa, tipX: ayAd, y2Fmt: v => nf(v, 0), rScale: 2.4,
+    series: [{ name: `${ad} · milyar TL`, vals: r.mr.slice(j0), color: css("--vol"), type: "bar", axis: "r", fmt: v => nf(v, 1) + " Mr TL" },
+      { name: `${ad} · pay`, vals: r.pay.slice(j0), color: css("--c1"), width: 2.4, fmt: v => "%" + nf(v, 2) }], yFmt: v => "%" + nf(v, v % 1 ? 1 : 0) });
+}
+$("#heTbl").onclick = e => { const tr = e.target.closest("tr[data-r]"); if (tr) { HZ.eb = tr.dataset.r; store.set("mk.eb", HZ.eb); renderHzSahip(); } };
+$("#hiPara").onclick = e => { const b = e.target.closest("button[data-p]"); if (b) { HZ.ip = b.dataset.p; renderHzItfa(); } };
+$("#mkHazine").addEventListener("click", e => { const b = e.target.closest(".seg.yer button[data-y]"); if (!b) return;
+  const k = { hpYer: "p", hiYer: "i", hsYer: "s", hyYer: "y" }[b.parentElement.id]; HZ[k] = b.dataset.y;
+  if (k === "p") renderHzProj(); else if (k === "i") renderHzItfa(); else renderHzTablo(); });
+function renderHazine() {
+  const g = $("#hzGate"), body = $("#hzBody");
+  if (!H?.ic_stok?.senetler?.length) { g.classList.remove("hidden"); body.classList.add("hidden"); g.textContent = H === undefined ? "Hazine verisi yükleniyor…" : "Hazine borçlanma verisi henüz derlenmedi (HMB dosyaları bir sonraki güncellemede alınır)."; return; }
+  g.classList.add("hidden"); body.classList.remove("hidden");
+  renderHzKpi(); renderHzProj(); renderHzItfa(); renderHzTablo(); renderHzYapi(); renderHzSahip();
+}
+$("#mkTabs").onclick = e => { const b = e.target.closest("button[data-mk]"); if (!b) return; S.mk = b.dataset.mk; try { history.replaceState(null, "", "#" + (S.mk === "hazine" ? "hazine" : "makro")); } catch {} render(); };
+function renderMakro() {
+  $$("#mkTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mk === S.mk));
+  $("#mkEnf").classList.toggle("hidden", S.mk !== "enf"); $("#mkHazine").classList.toggle("hidden", S.mk !== "hazine");
+  if (S.mk === "hazine") renderHazine(); else { renderInf(); renderBk(); }
+}
+
 // ---------------------------------------------------------------- akış
 function renderSrc() {
   const fl = (D.failed || []), f = (fl.length ? ` · son çekimde alınamayan: ${fl.join(", ")} (önceki veri gösteriliyor)` : "")
     ;
+  if (S.tab === "makro" && S.mk === "hazine") { const k = H?.kaynak || {}, a = (key, t) => k[key] ? `<a href="${esc(k[key])}" target="_blank" rel="noopener">${t}</a>` : t;
+    $("#src").innerHTML = `Kaynak: <a href="https://www.hmb.gov.tr/kamu-finansmani-istatistikleri" target="_blank" rel="noopener">Hazine ve Maliye Bakanlığı · Kamu Finansmanı İstatistikleri</a> — ${a("ic_stok", "İç borç stoku DİBS listesi")}, ${a("dis_stok", "dış borç stoku tahvil listesi")}, ${a("ic_proj", "iç")} ve ${a("dis_proj", "dış")} borç ödeme projeksiyonları (aylık), ${a("sahip", "iç borç stokunun elinde bulunduranlara göre dağılımı")}. Döviz ve altın cinsi iç borç, HMB listesinde TL karşılığıyla verilir; USD/EUR ve ton karşılığı stok tarihindeki TCMB döviz alış kuru${H?.cevrim ? ` (${gunAd(H.cevrim.tarih)})` : ""} ve altın fiyatıyla${H?.cevrim?.altin_kaynak ? ` (${esc(H.cevrim.altin_kaynak)})` : ""} hesaplanır, yaklaşıktır. Sukuk: kira sertifikası (TRD ISIN). Son güncelleme ${H?.updated ? new Date(H.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${H?.failed?.length ? ` · son çekimde alınamayan: ${H.failed.join(", ")} (önceki veri gösteriliyor)` : ""}.`; return; }
   $("#src").innerHTML = `Kaynaklar: <a href="https://veriportali.tuik.gov.tr" target="_blank" rel="noopener">TÜİK Veri Portalı</a> (TÜFE, Yİ-ÜFE) · <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> (Piyasa Katılımcıları Anketi, sektörel enflasyon beklentileri) · TCMB (enflasyon hedefleri, Enflasyon Raporu) · <a href="https://www.borsaistanbul.com/endeksler/tlref" target="_blank" rel="noopener">Borsa İstanbul</a> (TLREF, TLREFK) · Borsa İstanbul Repo Pazarı O/N (TCMB EVDS)${B ? ` · Bloomberg (TL implied, OIS, BIST VİOP; en yeni veri ${gunAd(B.guncel)})` : ""}. Son güncelleme ${D.updated ? new Date(D.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${f}.`;
 }
 function render() {
   $$("#tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === S.tab));
   $("#pMakro").classList.toggle("hidden", S.tab !== "makro"); $("#pPiyasa").classList.toggle("hidden", S.tab !== "piyasa");
-  if (S.tab === "makro") { renderInf(); renderBk(); } else renderPs();
+  if (S.tab === "makro") renderMakro(); else renderPs();
   renderSrc();
 }
-$("#tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (!b) return; S.tab = b.dataset.tab; try { history.replaceState(null, "", "#" + S.tab); } catch {} render(); };
+$("#tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (!b) return; S.tab = b.dataset.tab; try { history.replaceState(null, "", "#" + (S.tab === "makro" && S.mk === "hazine" ? "hazine" : S.tab)); } catch {} render(); };
 $("#infKpi").onclick = e => { const b = e.target.closest("button[data-s]"); if (!b) return; const k = b.dataset.s; S.infOn.has(k) ? S.infOn.delete(k) : S.infOn.add(k); renderInf(); };
 $("#grpBox").addEventListener("click", e => { const b = e.target.closest("#gMode button[data-m]"); if (b) { e.preventDefault(); S.gMode = b.dataset.m; renderGroups(); } });
 $("#grpBox").addEventListener("change", e => { if (e.target.id === "gAy") { S.sel = e.target.value; renderInf(); } });
 $("#grpBox").addEventListener("toggle", e => { if (e.target.classList?.contains("grpd")) S.gOpen = e.target.open; }, true);
 let rz, lw = innerWidth; addEventListener("resize", () => { if (!D || Math.abs(innerWidth - lw) < 30 && !rz) { } lw = innerWidth; clearTimeout(rz); rz = setTimeout(() => { rz = null; render(); }, 150); });
-const h = location.hash.slice(1); if (h === "piyasa" || h === "makro") S.tab = h;
+const h = location.hash.slice(1); if (h === "piyasa" || h === "makro") S.tab = h; else if (h === "hazine") { S.tab = "makro"; S.mk = "hazine"; }
+H = undefined;
+fetch("data/hazine.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { H = j; if (D && S.tab === "makro" && S.mk === "hazine") { renderHazine(); renderSrc(); } });
 const bbgYukle = fetch("data/bbg.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
 fetch("data/makro.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
   .then(async j => { D = j; B = await bbgYukle; $("#gate").remove(); render(); })
