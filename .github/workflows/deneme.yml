@@ -9,33 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - run: |
-          cat > /tmp/al.py <<'PY'
-          import requests, json, re, os, time
-          T = "https://veriportali.tuik.gov.tr"
-          UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-          S = requests.Session(); S.headers.update({"User-Agent": UA, "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.8"})
-          H = {"X-Requested-With": "XMLHttpRequest", "Accept": "application/json"}
-          P = lambda v: json.loads(v or "[]") if isinstance(v, str) else (v or [])
-          L = S.get(T + "/api/tr/press", headers=H, timeout=60).json()["data"]
-          os.makedirs("tuik", exist_ok=True)
-          for t in ["Sanayi Üretim Endeksi", "Hizmet Üretim Endeksi", "İnşaat Üretim Endeksi", "Ticaret Satış Hacim Endeksi",
-                    "Dönemsel Gayrisafi Yurt İçi Hasıla", "İşgücü İstatistikleri", "Dış Ticaret İstatistikleri"]:
-              s = next(x for x in L if x["title"] == t)
-              d = S.get(T + f"/api/tr/press/{s['id']}", headers=H, timeout=60).json()["data"]
-              print(t, s["id"], d["period"])
-              for i, x in enumerate(P(d.get("tables"))):
-                  if x.get("type") != "xls":
-                      continue
-                  for k in range(4):
-                      time.sleep(7)
-                      r = S.get(T + x["url"], timeout=120)
-                      if not r.content[:20].lstrip().startswith(b"<"):
-                          break
-                  ad = re.sub(r"[^A-Za-z0-9]+", "_", t)[:20] + f"_{i}.xls"
-                  open("tuik/" + ad, "wb").write(r.content)
-                  print("  ", ad, r.status_code, len(r.content), x["title"])
-          PY
-          python /tmp/al.py
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install requests openpyxl xlrd
+      - env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: |
+          python ekonomi/guncelle.py --site out
           git config user.name bot; git config user.email bot@users.noreply.github.com
-          git checkout --orphan tuik-deneme-veri; git rm -rq --cached .; git add -f tuik; git commit -qm veri; git push -f origin tuik-deneme-veri
+          git checkout --orphan tuik-deneme-veri; git rm -rq --cached .; git add -f out; git commit -qm veri; git push -f origin tuik-deneme-veri
