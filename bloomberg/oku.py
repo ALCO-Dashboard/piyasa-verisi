@@ -188,13 +188,17 @@ def oku(wb):
 
 
 def dosya_bul(yol):
+    """Dosya verilirse onu, klasör verilirse içindeki Excel'i (adı ne olursa olsun) döndürür."""
     if os.path.isfile(yol):
         return yol
-    for ad in ("BBG_Data_Excel.xlsm", "BBG_Data_Excel.xlsx", "bloomberg.xlsm", "bloomberg.xlsx"):
-        p = os.path.join(yol, ad)
-        if os.path.isfile(p):
-            return p
-    return None
+    if not os.path.isdir(yol):
+        return None
+    adaylar = sorted(f for f in os.listdir(yol) if f.lower().endswith((".xlsm", ".xlsx")) and not f.startswith("~$"))
+    oncelik = [f for f in adaylar if re.sub(r"[\s_]+", "", f.lower()).startswith("bbgdataexcel")]
+    sec = (oncelik or adaylar)
+    if len(sec) > 1:
+        print("UYARI birden fazla Excel var, kullanılan:", sec[0], "— diğerleri:", ", ".join(sec[1:]))
+    return os.path.join(yol, sec[0]) if sec else None
 
 
 def main():
