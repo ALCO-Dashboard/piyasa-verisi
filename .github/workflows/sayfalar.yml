@@ -18,6 +18,7 @@ on:
       - "tcmb/**"
       - "bloomberg/**"
       - "hazine/**"
+      - "ekonomi/**"
       - "sayfa.html"
   workflow_dispatch:
 
@@ -45,7 +46,7 @@ jobs:
 
       - name: Gerekli paketleri kur
         run: |
-          pip install requests cryptography certifi openpyxl pypdf msoffcrypto-tool
+          pip install requests cryptography certifi openpyxl pypdf msoffcrypto-tool xlrd
           npm install --no-save --no-audit --no-fund xlsx@0.18.5
 
       - name: Yayındaki siteyi al
@@ -87,6 +88,12 @@ jobs:
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: python hazine/guncelle.py --site site
+
+      - name: Ekonomik göstergeleri çek (büyüme, istihdam, üretim, dış denge, bütçe)
+        continue-on-error: true
+        env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: python ekonomi/guncelle.py --site site
 
       - name: Ortak dosyaları ve TEFAS sayfasını kopyala
         run: |
