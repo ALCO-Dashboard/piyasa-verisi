@@ -108,7 +108,7 @@ ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
     ["evds", "TCMB EVDS", "banka", 7], ["politika", "Para Politikası (TCMB)", "banka", 5],
     ["katilim", "Katılım Bülteni", "banka", 10], ["tefas", "TEFAS", "tefas", 4],
     ["tufe", "Enflasyon (TÜİK)", "makro", 40], ["piyasa", "Piyasa (TLREF, repo)", "makro", 5],
-    ["rezerv", "TCMB Rezervler (EVDS)", "banka", 5]];
+    ["rezerv", "TCMB Rezervler (EVDS)", "banka", 5], ["hazine", "Hazine Borçlanma (HMB)", "makro", 45]];
   const now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const fmt = d => `${d.getDate()} ${AY[d.getMonth()]} ${d.getFullYear()}`;
   const parse = s => { if (!s) return null; if (/^\d{4}-\d{2}$/.test(s)) { const [y, m] = s.split("-").map(Number); return new Date(y, m, 0); } const [y, m, d] = s.slice(0, 10).split("-").map(Number); return new Date(y, m - 1, d); };
