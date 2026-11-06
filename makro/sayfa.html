@@ -38,7 +38,8 @@ nav.tabs button{font-family:Archivo,var(--sans);font-weight:700;font-size:15px;l
 nav.tabs button[aria-selected="true"]{color:var(--accent);border-color:var(--accent);background:var(--accent-wash)}
 main.wrap{padding-block:16px 48px}
 .subtabs{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);margin-bottom:14px}
-.subtabs button{border:0;background:none;padding:9px 18px;font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer}
+.subtabs button{border:0;background:none;padding:9px 18px;font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer;white-space:nowrap;flex:none}
+.subtabs{max-width:100%;overflow-x:auto;scrollbar-width:thin}
 .subtabs button+button{border-left:1px solid var(--line)}
 .subtabs button[aria-pressed="true"]{background:var(--accent);color:#fff}
 h2.sec{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px;display:flex;align-items:center;gap:10px}
@@ -142,7 +143,7 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
 <main class="wrap">
   <div id="gate">Veriler yükleniyor…</div>
   <section id="pMakro" class="hidden">
-    <div class="subtabs" role="group" aria-label="Makro konu" id="mkTabs"><button data-mk="enf" aria-pressed="true">Enflasyon</button><button data-mk="hazine" aria-pressed="false">Hazine Borçlanma</button></div>
+    <div class="subtabs" role="group" aria-label="Makro konu" id="mkTabs"><button data-mk="enf" aria-pressed="true">Enflasyon</button><button data-mk="buyume" aria-pressed="false">Büyüme</button><button data-mk="istihdam" aria-pressed="false">İstihdam</button><button data-mk="uretim" aria-pressed="false">Üretim Endeksleri</button><button data-mk="dis" aria-pressed="false">Dış Ticaret ve Dış Denge</button><button data-mk="butce" aria-pressed="false">Bütçe</button><button data-mk="hazine" aria-pressed="false">Hazine Borçlanma</button></div>
     <div id="mkEnf">
     <h2 class="sec">Manşet enflasyon</h2>
     <div class="kpis" id="infKpi"></div>
@@ -165,6 +166,136 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
         <div id="hdTbl"></div>
       </div>
     </div>
+    </div>
+    <div id="mkEko" class="hidden">
+      <div class="empty hidden" id="ekGate"></div>
+      <div id="mkBuyume" class="ekt hidden">
+        <h2 class="sec">Gayrisafi yurt içi hasıla</h2>
+        <div class="kpis" id="byKpi"></div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="by1T"></h3><div class="sub" id="by1S"></div></div><div class="hdr2"><span class="chips" id="by1R"></span></div></div>
+          <div class="legend" id="by1L"></div>
+          <div class="chart" id="by1G"></div>
+          <div class="tw" id="by1X"></div>
+        </div>
+        <h2 class="sec">Büyümenin kaynakları</h2>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="by2T"></h3><div class="sub" id="by2S"></div></div><div class="hdr2"><div class="seg" id="by2Y" role="group"></div><span class="chips" id="by2R"></span></div></div>
+          <div class="legend" id="by2L"></div>
+          <div class="chart" id="by2G"></div>
+          <div class="tw" id="by2X"></div>
+        </div>
+      </div>
+      <div id="mkIstihdam" class="ekt hidden">
+        <h2 class="sec">İşgücü piyasası</h2>
+        <div class="kpis" id="isKpi"></div>
+        <div class="grid2 g2e">
+        <div class="card">
+          <div class="cardhead"><div><h3 id="is1T"></h3><div class="sub" id="is1S"></div></div><div class="hdr2"><span class="chips" id="is1R"></span></div></div>
+          <div class="legend" id="is1L"></div>
+          <div class="chart" id="is1G"></div>
+          <div class="tw" id="is1X"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="is2T"></h3><div class="sub" id="is2S"></div></div><div class="hdr2"><span class="chips" id="is2R"></span></div></div>
+          <div class="legend" id="is2L"></div>
+          <div class="chart" id="is2G"></div>
+          <div class="tw" id="is2X"></div>
+        </div>
+        </div>
+      </div>
+      <div id="mkUretim" class="ekt hidden">
+        <h2 class="sec">Üretim ve hacim endeksleri</h2>
+        <div class="kpis" id="urKpi"></div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="ur1T"></h3><div class="sub" id="ur1S"></div></div><div class="hdr2"><div class="seg" id="ur1M" role="group"></div><span class="chips" id="ur1R"></span></div></div>
+          <div class="legend" id="ur1L"></div>
+          <div class="chart" id="ur1G"></div>
+          <div class="tw" id="ur1X"></div>
+        </div>
+        <div class="grid2 g2e">
+        <div class="card">
+          <div class="cardhead"><div><h3 id="ur2T"></h3><div class="sub" id="ur2S"></div></div><div class="hdr2"><div class="seg" id="ur2Y" role="group"></div><span class="chips" id="ur2R"></span></div></div>
+          <div class="legend" id="ur2L"></div>
+          <div class="chart" id="ur2G"></div>
+          <div class="tw" id="ur2X"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="ur3T"></h3><div class="sub" id="ur3S"></div></div><div class="hdr2"><span class="chips" id="ur3R"></span></div></div>
+          <div class="legend" id="ur3L"></div>
+          <div class="chart" id="ur3G"></div>
+          <div class="tw" id="ur3X"></div>
+        </div>
+        </div>
+      </div>
+      <div id="mkDis" class="ekt hidden">
+        <h2 class="sec">Dış ticaret</h2>
+        <div class="kpis" id="dtKpi"></div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="dt1T"></h3><div class="sub" id="dt1S"></div></div><div class="hdr2"><div class="seg" id="dt1M" role="group"></div><span class="chips" id="dt1R"></span></div></div>
+          <div class="legend" id="dt1L"></div>
+          <div class="chart" id="dt1G"></div>
+          <div class="tw" id="dt1X"></div>
+        </div>
+        <div class="grid2 g2e">
+        <div class="card">
+          <div class="cardhead"><div><h3 id="dt2T"></h3><div class="sub" id="dt2S"></div></div><div class="hdr2"><div class="seg" id="dt2Y" role="group"></div><span class="chips" id="dt2R"></span></div></div>
+          <div class="legend" id="dt2L"></div>
+          <div class="chart" id="dt2G"></div>
+          <div class="tw" id="dt2X"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="dt3T"></h3><div class="sub" id="dt3S"></div></div><div class="hdr2"><div class="seg" id="dt3Y" role="group"></div><span class="chips" id="dt3R"></span></div></div>
+          <div class="legend" id="dt3L"></div>
+          <div class="chart" id="dt3G"></div>
+          <div class="tw" id="dt3X"></div>
+        </div>
+        </div>
+        <h2 class="sec">Ödemeler dengesi</h2>
+        <div class="kpis" id="odKpi"></div>
+        <div class="grid2 g2e">
+        <div class="card">
+          <div class="cardhead"><div><h3 id="od1T"></h3><div class="sub" id="od1S"></div></div><div class="hdr2"><div class="seg" id="od1M" role="group"></div><span class="chips" id="od1R"></span></div></div>
+          <div class="legend" id="od1L"></div>
+          <div class="chart" id="od1G"></div>
+          <div class="tw" id="od1X"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="od2T"></h3><div class="sub" id="od2S"></div></div><div class="hdr2"><span class="chips" id="od2R"></span></div></div>
+          <div class="legend" id="od2L"></div>
+          <div class="chart" id="od2G"></div>
+          <div class="tw" id="od2X"></div>
+        </div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="od3T"></h3><div class="sub" id="od3S"></div></div><div class="hdr2"><span class="chips" id="od3R"></span></div></div>
+          <div class="legend" id="od3L"></div>
+          <div class="chart" id="od3G"></div>
+          <div class="tw" id="od3X"></div>
+        </div>
+      </div>
+      <div id="mkButce" class="ekt hidden">
+        <h2 class="sec">Merkezi yönetim bütçesi</h2>
+        <div class="kpis" id="bcKpi"></div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="bc1T"></h3><div class="sub" id="bc1S"></div></div><div class="hdr2"><div class="seg" id="bc1M" role="group"></div><span class="chips" id="bc1R"></span></div></div>
+          <div class="legend" id="bc1L"></div>
+          <div class="chart" id="bc1G"></div>
+          <div class="tw" id="bc1X"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="bc2T"></h3><div class="sub" id="bc2S"></div></div><div class="hdr2"><span class="chips" id="bc2R"></span></div></div>
+          <div class="legend" id="bc2L"></div>
+          <div class="chart" id="bc2G"></div>
+          <div class="tw" id="bc2X"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="bc3T"></h3><div class="sub" id="bc3S"></div></div><div class="hdr2"><span class="chips" id="bc3R"></span></div></div>
+          <div class="legend" id="bc3L"></div>
+          <div class="chart" id="bc3G"></div>
+          <div class="tw" id="bc3X"></div>
+        </div>
+      </div>
     </div>
     <div id="mkHazine" class="hidden">
       <div class="empty hidden" id="hzGate"></div>
@@ -328,10 +459,10 @@ function chart(el, o) {
     if (ser.some(s => (s.axis || "l") === ax && s.type === "bar") || o.zero) { lo = Math.min(0, lo); hi = Math.max(0, hi); }
     const pad = (hi - lo) * .08 || 1, z = ser.some(s => (s.axis || "l") === ax && s.type === "bar") || o.zero; return [z ? (lo < 0 ? lo - pad : 0) : o.min0 && ax === "l" ? Math.max(0, lo - pad) : lo - pad, hi + pad]; };
   const L = ext("l"), R = hasR ? ext("r") : null;
-  const tl = L ? niceTicks(L[0], L[1], 5) : [], tr = R ? niceTicks(Math.max(0, R[0]), R[1], 5) : [];
+  const tl = L ? niceTicks(L[0], L[1], 5) : [], tr = R ? niceTicks(o.rNeg ? R[0] : Math.max(0, R[0]), R[1], 5) : [];
   if (o.min0) while (tl.length > 1 && tl[0] < 0) tl.shift();
   const yl0 = L ? Math.min(L[0], tl[0]) : 0, yl1 = L ? Math.max(L[1], tl[tl.length - 1]) : 1;
-  const yr0 = R ? Math.min(Math.max(0, R[0]), tr[0]) : 0, yr1 = R ? Math.max(R[1], tr[tr.length - 1]) * (o.rScale || 1) : 1;
+  const yr0 = R ? Math.min(o.rNeg ? R[0] : Math.max(0, R[0]), tr[0]) : 0, yr1 = R ? Math.max(R[1], tr[tr.length - 1]) * (o.rScale || 1) : 1;
   const iw = W - m.l - m.r, ih = H - m.t - m.b, bw = iw / n;
   const X = i => m.l + bw * (i + .5), YL = v => m.t + (1 - (v - yl0) / (yl1 - yl0)) * ih, YR = v => m.t + (1 - (v - yr0) / (yr1 - yr0)) * ih;
   let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label || "Grafik")}"><g class="axis">`;
@@ -346,7 +477,7 @@ function chart(el, o) {
   if (o.stack) { const pos = Array(n).fill(0), neg = Array(n).fill(0), w = Math.max(1, bw * .72);
     bars.forEach(b => b.vals.forEach((v, i) => { if (!ok(v) || !v) return; const a = v > 0 ? pos[i] : neg[i], c = a + v; if (v > 0) pos[i] = c; else neg[i] = c;
       const y1 = YL(a), y2 = YL(c); s += `<rect x="${(X(i) - w / 2).toFixed(2)}" y="${Math.min(y1, y2).toFixed(2)}" width="${w.toFixed(2)}" height="${Math.max(.5, Math.abs(y1 - y2)).toFixed(2)}" fill="${b.color}"/>`; })); }
-  else bars.forEach((b, k) => { const Y = b.axis === "r" ? YR : YL, base = Y(b.axis === "r" ? yr0 : Math.max(yl0, Math.min(0, yl1))), w = Math.max(1, bw * (nb > 1 ? .8 / nb : .72));
+  else bars.forEach((b, k) => { const Y = b.axis === "r" ? YR : YL, base = Y(b.axis === "r" ? (o.rNeg ? Math.max(yr0, Math.min(0, yr1)) : yr0) : Math.max(yl0, Math.min(0, yl1))), w = Math.max(1, bw * (nb > 1 ? .8 / nb : .72));
     b.vals.forEach((v, i) => { if (!ok(v)) return; const y = Y(v), x = X(i) - (nb > 1 ? bw * .4 - w * k : w / 2);
       s += `<rect x="${x.toFixed(2)}" y="${Math.min(y, base).toFixed(2)}" width="${w.toFixed(2)}" height="${Math.max(.5, Math.abs(base - y)).toFixed(2)}" rx="${w > 6 ? 2 : 0}" fill="${b.barColors ? b.barColors[i] : b.color}" data-i="${i}"/>`; }); });
   for (const l of ser.filter(x => x.type !== "bar")) {
@@ -924,17 +1055,302 @@ function renderHazine() {
   g.classList.add("hidden"); body.classList.remove("hidden");
   renderHzKpi(); renderHzProj(); renderHzItfa(); renderHzTablo(); renderHzYapi(); renderHzSahip();
 }
-$("#mkTabs").onclick = e => { const b = e.target.closest("button[data-mk]"); if (!b) return; S.mk = b.dataset.mk; try { history.replaceState(null, "", "#" + (S.mk === "hazine" ? "hazine" : "makro")); } catch {} render(); };
+$("#mkTabs").onclick = e => { const b = e.target.closest("button[data-mk]"); if (!b) return; S.mk = b.dataset.mk; try { history.replaceState(null, "", "#" + (S.mk === "enf" ? "makro" : S.mk)); } catch {} render(); };
 function renderMakro() {
   $$("#mkTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mk === S.mk));
   $("#mkEnf").classList.toggle("hidden", S.mk !== "enf"); $("#mkHazine").classList.toggle("hidden", S.mk !== "hazine");
-  if (S.mk === "hazine") renderHazine(); else { renderInf(); renderBk(); }
+  $("#mkEko").classList.toggle("hidden", !(S.mk in EKT));
+  if (S.mk === "hazine") renderHazine(); else if (S.mk in EKT) renderEko(); else { renderInf(); renderBk(); }
 }
+
+// ---------------------------------------------------------------- Ekonomik göstergeler (EVDS + TÜİK): büyüme, istihdam, üretim, dış denge, bütçe
+let E;   // ekonomi.json (undefined: yükleniyor, null: yok)
+const EK = { by1R: "5Y", by2Y: "harcama", by2R: "3Y", is1On: new Set(["issizlik", "atil", "genc"]), is1R: "5Y", is2R: "5Y",
+  ur1M: "mea", ur1On: new Set(["sanayi", "hizmet", "ticaret", "insaat"]), ur1R: "3Y", ur2Y: "sanayi", ur2B: 0, ur2R: "3Y", ur3R: "5Y",
+  dt1M: "ay", dt1R: "3Y", dt2Y: "ihr", dt3Y: "ihr", od1M: "ay", od1R: "3Y", od2R: "5Y", bc1M: "tl", bc1R: "3Y" };
+const R_M = [["2Y", 24], ["3Y", 36], ["5Y", 60], ["Tümü", 999]], R_Q = [["3Y", 12], ["5Y", 20], ["10Y", 40], ["Tümü", 999]];
+const qAd = q => q ? `${q.slice(0, 4)} ${q.slice(6)}. çeyrek` : "—", qKisa = q => `Ç${q.slice(6)} ${q.slice(2, 4)}`;
+const sg = v => ok(v) ? (v > 0 ? "+" : v < 0 ? "−" : "") : "";
+const pc = (v, d = 1) => ok(v) ? `${sg(v)}%${nf(Math.abs(v), d)}` : "—";                 // işaretli yüzde
+const ch = (a, b) => ok(a) && ok(b) && b ? (a / b - 1) * 100 : null;
+const roll = (a, n) => a.map((_, i) => { if (i < n - 1) return null; let s = 0; for (let k = i - n + 1; k <= i; k++) { if (!ok(a[k])) return null; s += a[k]; } return s; });
+const lagCh = (a, n) => a.map((v, i) => i >= n ? ch(v, a[i - n]) : null);
+const sonI = (dates, ...arr) => { for (let i = dates.length - 1; i >= 0; i--) if (arr.some(a => ok(a?.[i]))) return i; return -1; };
+const sum = a => a.reduce((s, x) => s + (ok(x) ? x : 0), 0);
+const ng = v => v < 0 ? "−" : "";
+const mrTL = v => ok(v) ? `${ng(v)}${nf(Math.abs(v) / 1e6, Math.abs(v) >= 1e8 ? 0 : 1)}` : "—";        // bin TL → milyar TL
+const trTL = v => ok(v) ? `${ng(v)}${nf(Math.abs(v) / 1e9, 2)}` : "—";                                  // bin TL → trilyon TL
+const mrUSD = (v, k = 1e3) => ok(v) ? `${ng(v)}${nf(Math.abs(v) / k, 1)}` : "—";                        // milyon USD → milyar USD
+const kp = (t, v, s, d, kc = "--c1", ek = "") => `<div class="kpi" style="--kc:var(${kc})"${ek}><div class="t">${t}</div><div class="v">${v}</div><div class="s">${s || ""}</div>${d ? `<div class="d">${d}</div>` : ""}</div>`;
+const segH = (id, list, cur) => { $(id).innerHTML = list.map(([k, l]) => `<button data-k="${k}" aria-pressed="${k === cur}">${l}</button>`).join(""); };
+const legH = (id, ser) => { $(id).innerHTML = ser.map(x => `<span class="chip" style="cursor:default"><i style="background:${x.color}"></i>${esc(x.name)}</span>`).join(""); };
+const togH = (id, list, on) => { $(id).innerHTML = list.map(([k, l, c]) => `<button class="chip${on.has(k) ? "" : " off"}" data-t="${k}" aria-pressed="${on.has(k)}"><i style="background:var(${c})"></i>${l}</button>`).join(""); };
+// zaman serisi grafiği: seçilen dönem kadar son gözlem, sondaki boş dönemler atılır
+function zc(id, dates, ser, o = {}) {
+  const el = $("#" + id + "G"), q = /Q/.test(dates[dates.length - 1] || ""), son = sonI(dates, ...ser.map(s => s.vals));
+  const n = (o.R || (q ? R_Q : R_M)).find(r => r[0] === EK[id + "R"])?.[1] ?? 999, j0 = Math.max(0, son + 1 - n);
+  if (o.chips !== false) rangeChips($("#" + id + "R"), o.R || (q ? R_Q : R_M), EK[id + "R"], k => { EK[id + "R"] = k; o.yeniden(); });
+  chart(el, { height: 300, maxX: 10, ...o, xs: dates.slice(j0, son + 1), series: ser.map(s => ({ ...s, vals: s.vals.slice(j0, son + 1) })),
+    xFmt: q ? qKisa : (d => n > 60 ? d.slice(0, 4) : ayKisa(d)), tipX: q ? qAd : ayAd });
+}
+const tbl = (bas, sat) => `<table class="tbl"><thead><tr>${bas.map((b, i) => `<th${i ? "" : ' class="l"'}>${b}</th>`).join("")}</tr></thead><tbody>${sat.join("")}</tbody></table>`;
+const td = (v, c = "") => `<td${c ? ` class="${c}"` : ""}>${v}</td>`;
+const tdc = (v, f, e = .05) => `<td class="${cls(v, e)}">${f(v)}</td>`;
+
+// ---------------------------------------------------------------- Büyüme
+const BY_YON = {
+  harcama: { ad: "Harcama yöntemi", hacim: true, top: "h_gsyh", kalem: [["Hanehalkı tüketimi", ["h_hh", "h_kamuoz"], ["c_hh"], "--c1"], ["Devlet tüketimi", ["h_devlet"], ["c_devlet"], "--c6"],
+    ["Yatırım (GSSO)", ["h_yatirim"], ["c_yatirim"], "--c3"], ["Mal ve hizmet ihracatı", ["h_ihr"], ["c_ihr"], "--c4"], ["(Eksi) mal ve hizmet ithalatı", ["h_ith"], ["c_ith"], "--c2", -1]] },
+  uretim: { ad: "Üretim yöntemi (faaliyet kolları)", hacim: true, top: "u_gsyh", kalem: [["Tarım", ["u_tarim"], ["uc_tarim"], "--c3"], ["Sanayi", ["u_sanayi"], ["uc_sanayi"], "--c1"],
+    ["İnşaat", ["u_insaat"], ["uc_insaat"], "--c4"], ["Ticaret, ulaştırma, konaklama", ["u_ticaret"], ["uc_ticaret"], "--c6"],
+    ["Diğer hizmetler", ["u_bilgi", "u_finans", "u_gayrimenkul", "u_mesleki", "u_kamu", "u_diger"], ["uc_bilgi", "uc_finans", "uc_gayrimenkul", "uc_mesleki", "uc_kamu", "uc_diger"], "--c5"],
+    ["Ürün vergileri − sübvansiyon", ["u_vergi"], ["uc_vergi"], "--c2"]] },
+  gelir: { ad: "Gelir yöntemi (cari fiyatlarla, nominal)", hacim: false, top: "g_gsyh", kalem: [["İşgücü ödemeleri", ["g_isgucu"], ["g_isgucu"], "--c1"], ["Net işletme artığı / karma gelir", ["g_net_artik"], ["g_net_artik"], "--c3"],
+    ["Sabit sermaye tüketimi", ["g_sabit_sermaye"], ["g_sabit_sermaye"], "--c6"], ["Vergiler − sübvansiyonlar", ["g_uretim_vergi", "g_urun_vergi"], ["g_uretim_vergi", "g_urun_vergi"], "--c4"]] },
+};
+const topla = (Q, keys) => Q.dates.map((_, i) => { let s = 0; for (const k of keys) { const v = Q[k]?.[i]; if (!ok(v)) return null; s += v; } return s; });
+function gsyhUsd(Q, i) {          // son 4 çeyrek, cari fiyat GSYH (bin TL) / çeyrek ortalama kur → milyar USD
+  let s = 0; for (let k = i - 3; k <= i; k++) { const v = Q.c_gsyh[k], kr = E.kur?.q?.[Q.dates[k]]; if (!ok(v) || !kr) return null; s += v / kr; } return s / 1e6;
+}
+function renderBuyume() {
+  const Q = E.ceyrek; if (!Q?.dates?.length) return;
+  const i = sonI(Q.dates, Q.h_gsyh), yy = lagCh(Q.h_gsyh, 4), qq = lagCh(Q.mea, 1), myy = lagCh(Q.mea, 4), r4 = roll(Q.h_gsyh, 4), y4 = lagCh(r4, 4);
+  const usd = gsyhUsd(Q, i), Y = E.yillik, yi = sonI(Y?.dates || [], Y?.kb_usd);
+  const yil = yi >= 0 ? Y.dates[yi] : null, gs = yil ? sum(Q.dates.map((d, k) => d.startsWith(yil) ? Q.c_gsyh[k] : 0)) : null;
+  const nufus = yil && Y.kb_tl[yi] ? gs * 1e3 / Y.kb_tl[yi] : null, kb4 = usd && nufus ? usd * 1e9 / nufus : null;
+  $("#byKpi").innerHTML = [
+    kp("GSYH büyümesi (yıllık)", pc(yy[i]), `önceki çeyrek <b>${pc(yy[i - 1])}</b>`, `${qAd(Q.dates[i])} · zincirlenmiş hacim`, "--c1"),
+    kp("Çeyreklik büyüme", pc(qq[i]), `önceki çeyrek <b>${pc(qq[i - 1])}</b>`, "Mevsim ve takvim etkisinden arındırılmış", "--c3"),
+    kp("Son 4 çeyrek büyüme", pc(y4[i]), `MEA yıllık <b>${pc(myy[i])}</b>`, "Son 4 çeyrek / önceki 4 çeyrek", "--c6"),
+    kp("GSYH (son 4 çeyrek)", usd ? `${nf(usd / 1e3, 2)} Tr $` : "—", `<b>${trTL(sum(Q.c_gsyh.slice(i - 3, i + 1)))} Tr TL</b> cari fiyatlarla`, "Çeyrek ortalaması USD/TRY ile", "--c4"),
+    kp("Kişi başı GSYH", kb4 ? `${nf(kb4, 0)} $` : "—", yi >= 0 ? `${yil}: <b>${nf(Y.kb_usd[yi], 0)} $</b> (TÜİK)` : "", nufus ? `Son 4 çeyrek · ${nf(nufus / 1e6, 1)} milyon nüfus` : "", "--c2"),
+  ].join("");
+  // büyüme grafiği
+  $("#by1T").textContent = "GSYH büyümesi (%)";
+  $("#by1S").textContent = `Yıllık: zincirlenmiş hacim, ham · çeyreklik: mevsim ve takvim etkisinden arındırılmış · son ${qAd(Q.dates[i])}`;
+  const s1 = [{ name: "Yıllık büyüme", vals: yy, color: css("--c1"), type: "bar", fmt: v => pc(v) }, { name: "Çeyreklik büyüme (MEA)", vals: qq, color: css("--c2"), width: 2.4, fmt: v => pc(v) }];
+  legH("#by1L", s1); zc("by1", Q.dates, s1, { yeniden: renderBuyume, yFmt: v => nf(v, 0) });
+  // büyümenin kaynakları
+  segH("#by2Y", Object.entries(BY_YON).map(([k, v]) => [k, v.ad.split(" (")[0]]), EK.by2Y);
+  const Y2 = BY_YON[EK.by2Y], ana = Y2.hacim ? Q[Y2.top] : Q.c_gsyh, anaYY = lagCh(ana, 4);
+  const kal = Y2.kalem.map(([ad, hk, ck, c, isr]) => { const h = topla(Q, Y2.hacim ? hk : ck), cc = topla(Q, ck);
+    const kat = h.map((v, k) => k >= 4 && ok(v) && ok(h[k - 4]) && ok(ana[k - 4]) ? (isr || 1) * (v - h[k - 4]) / ana[k - 4] * 100 : null);
+    return { ad, c, yy: lagCh(h, 4), kat, pay: cc.map((v, k) => ok(v) && Q.c_gsyh[k] ? (isr || 1) * v / Q.c_gsyh[k] * 100 : null) }; });
+  const diger = Q.dates.map((_, k) => ok(anaYY[k]) && kal.every(x => ok(x.kat[k])) ? anaYY[k] - sum(kal.map(x => x.kat[k])) : null);
+  $("#by2T").textContent = `Büyümeye katkılar · ${Y2.ad} (yüzde puan)`;
+  $("#by2S").textContent = Y2.hacim ? "Yıllık değişime katkı: kalemin zincirlenmiş hacim değişimi / önceki yılın aynı çeyreği GSYH · zincirleme nedeniyle katkılar toplamı büyümeye tam eşit değildir, fark “Diğer / stok”"
+    : "Cari fiyatlarla nominal yıllık değişime katkı (enflasyon dahil)";
+  const s2 = [...kal.map(x => ({ name: x.ad, vals: x.kat, color: css(x.c), type: "bar", fmt: v => pp(v) })),
+    ...(Y2.hacim ? [{ name: Y2.top === "h_gsyh" ? "Diğer / stok değişimi" : "Diğer", vals: diger, color: css("--bar"), type: "bar", fmt: v => pp(v) }] : []),
+    { name: Y2.hacim ? "GSYH yıllık büyüme" : "Nominal GSYH yıllık", vals: anaYY, color: css("--ink"), width: 2.2, fmt: v => pc(v) }];
+  legH("#by2L", s2); zc("by2", Q.dates, s2, { stack: true, yeniden: renderBuyume, yFmt: v => nf(v, 0), totFmt: v => pp(v) });
+  $("#by2X").innerHTML = tbl(["Kalem", "Yıllık %", "Önceki çeyrek", "Katkı (puan)", "GSYH payı (cari)"],
+    kal.map(x => `<tr><td class="l s">${esc(x.ad)}</td>${tdc(x.yy[i], pc)}${tdc(x.yy[i - 1], pc)}${tdc(x.kat[i], pp)}${td(pct(x.pay[i], 1))}</tr>`)
+      .concat(`<tr class="ust"><td class="l s">GSYH</td>${tdc(anaYY[i], pc)}${tdc(anaYY[i - 1], pc)}${td("")}${td("%100")}</tr>`));
+}
+
+// ---------------------------------------------------------------- İstihdam
+const IS_SER = [["issizlik", "İşsizlik oranı", "--c2"], ["genc", "Genç işsizlik (15-24)", "--c4"], ["atil", "Atıl işgücü oranı", "--c6"],
+  ["zaman_eksik", "Zamana bağlı eksik istihdam + işsiz", "--c1"], ["potansiyel", "Potansiyel işgücü + işsiz", "--c3"]];
+function renderIstihdam() {
+  const T = E.tuik || {}, I = T.isgucu, G = T.genc, A = T.atil; if (!I?.dates?.length) return;
+  const i = I.dates.length - 1, d = I.dates, gi = G?.dates.indexOf(d[i]) ?? -1, ai = A?.dates.indexOf(d[i]) ?? -1;
+  const dlt = (a, k) => ok(a?.[k]) && ok(a?.[k - 1]) ? a[k] - a[k - 1] : null, ppH = (v, y = -1) => ok(v) ? `aylık <b class="${cls(y * v, .05)}">${sg(v)}${nf(Math.abs(v), 1)} puan</b>` : "";
+  $("#isKpi").innerHTML = [
+    kp("İşsizlik oranı", "%" + nf(I.issizlik[i], 1), ppH(dlt(I.issizlik, i)), `${ayAd(d[i])} · 15+ yaş, MEA`, "--c2"),
+    kp("Atıl işgücü oranı", ai >= 0 ? "%" + nf(A.atil[ai], 1) : "—", ai > 0 ? ppH(dlt(A.atil, ai)) : "", "Eksik istihdam + potansiyel işgücü + işsiz", "--c6"),
+    kp("Genç işsizlik (15-24)", gi >= 0 ? "%" + nf(G.issizlik[gi], 1) : "—", gi > 0 ? ppH(dlt(G.issizlik, gi)) : "", "MEA", "--c4"),
+    kp("İstihdam", nf(I.istihdam[i] / 1e3, 2) + " milyon", `aylık <b class="${cls(dlt(I.istihdam, i), .5)}">${sg(dlt(I.istihdam, i))}${nf(Math.abs(dlt(I.istihdam, i) || 0), 0)} bin</b>`, `İstihdam oranı %${nf(I.istihdam_orani[i], 1)}`, "--c3"),
+    kp("İşsiz sayısı", nf(I.issiz[i] / 1e3, 2) + " milyon", `aylık <b class="${cls(-dlt(I.issiz, i), .5)}">${sg(dlt(I.issiz, i))}${nf(Math.abs(dlt(I.issiz, i) || 0), 0)} bin</b>`, `İşgücü ${nf(I.isgucu[i] / 1e3, 1)} milyon`, "--c5"),
+    kp("İşgücüne katılım", "%" + nf(I.katilim[i], 1), ppH(dlt(I.katilim, i), 1), "15+ yaş nüfus " + nf(I.nufus[i] / 1e3, 1) + " milyon", "--c1"),
+  ].join("");
+  const al = (S, k) => d.map(t => { const j = S?.dates.indexOf(t) ?? -1; return j >= 0 ? S[k][j] : null; });
+  const V = { issizlik: I.issizlik, genc: al(G, "issizlik"), atil: al(A, "atil"), zaman_eksik: al(A, "zaman_eksik"), potansiyel: al(A, "potansiyel") };
+  $("#is1T").textContent = "İşsizlik ve atıl işgücü (%)"; $("#is1S").textContent = "Mevsim (ve takvim) etkisinden arındırılmış · seriye tıklayarak aç/kapat";
+  togH("#is1L", IS_SER, EK.is1On);
+  zc("is1", d, IS_SER.filter(([k]) => EK.is1On.has(k)).map(([k, l, c]) => ({ name: l, vals: V[k], color: css(c), width: 2.2, fmt: v => "%" + nf(v, 1) })), { yeniden: renderIstihdam, yFmt: v => nf(v, 0), height: 280 });
+  $("#is2T").textContent = "İstihdam ve işgücüne katılım"; $("#is2S").textContent = "Oranlar (%, sol) · istihdamdaki aylık değişim (bin kişi, sağ)";
+  const s2 = [{ name: "Aylık istihdam değişimi (bin)", vals: d.map((_, k) => dlt(I.istihdam, k)), color: css("--vol"), type: "bar", axis: "r", fmt: v => `${sg(v)}${nf(Math.abs(v), 0)} bin` },
+    { name: "İşgücüne katılım oranı", vals: I.katilim, color: css("--c1"), width: 2.2, fmt: v => "%" + nf(v, 1) }, { name: "İstihdam oranı", vals: I.istihdam_orani, color: css("--c3"), width: 2.2, fmt: v => "%" + nf(v, 1) }];
+  legH("#is2L", s2); zc("is2", d, s2, { yeniden: renderIstihdam, yFmt: v => nf(v, 0), y2Fmt: v => nf(v, 0), height: 280, rScale: 1, rNeg: true });
+}
+
+// ---------------------------------------------------------------- Üretim endeksleri
+const UR = [["sanayi", "Sanayi", "--c1", "Sanayi üretim endeksi"], ["hizmet", "Hizmet", "--c3", "Hizmet üretim endeksi"], ["ticaret", "Ticaret", "--c6", "Ticaret satış hacim endeksi"], ["insaat", "İnşaat", "--c4", "İnşaat üretim endeksi"]];
+const blokAd = a => a.replace(/^[A-Z0-9_\-]+\s*-\s*|^\d+\s*-\s*/, "").replace(/\s*\([^)]*\)\s*$/, "").replace(/^(Toplam sanayi|Toplam inşaat)$/, "Toplam").replace(/^H-N \(K hariç\) - Hizmet$/, "Toplam");
+function renderUretim() {
+  const T = E.tuik || {}, M = E.aylik;
+  const k0 = UR.map(([k, l, c]) => { const S = T[k], b = S?.bloklar?.[0], i = (S?.dates.length || 0) - 1;
+    return S ? kp(l, pc(b.yoy[i]), `aylık (MEA) <b class="${cls(b.mom[i])}">${pc(b.mom[i])}</b>`, `${ayAd(S.dates[i])} · yıllık takvim etkisinden arındırılmış`, c) : ""; });
+  const ki = sonI(M?.dates || [], M?.kko);
+  k0.push(ki >= 0 ? kp("Kapasite kullanım", "%" + nf(M.kko[ki], 1), `aylık <b class="${cls(M.kko[ki] - M.kko[ki - 1])}">${pp(M.kko[ki] - M.kko[ki - 1])}</b>`, `${ayAd(M.dates[ki])} · imalat sanayi, MEA (TCMB)`, "--c2") : "");
+  $("#urKpi").innerHTML = k0.join("");
+  // ana grafik
+  segH("#ur1M", [["mea", "Endeks (MEA)"], ["yoy", "Yıllık %"], ["mom", "Aylık %"]], EK.ur1M);
+  const tum = [...new Set(UR.flatMap(([k]) => T[k]?.dates || []))].sort(), al = (k, f) => tum.map(t => { const S = T[k], j = S?.dates.indexOf(t) ?? -1; return j >= 0 ? S.bloklar[0][f][j] : null; });
+  $("#ur1T").textContent = { mea: "Üretim endeksleri (2021=100, mevsim ve takvim etkisinden arındırılmış)", yoy: "Üretim endeksleri · yıllık değişim (%, takvim etkisinden arındırılmış)", mom: "Üretim endeksleri · aylık değişim (%, MEA)" }[EK.ur1M];
+  $("#ur1S").textContent = "Sanayi, hizmet, ticaret satış hacmi, inşaat · seriye tıklayarak aç/kapat";
+  togH("#ur1L", UR, EK.ur1On);
+  zc("ur1", tum, UR.filter(([k]) => EK.ur1On.has(k) && T[k]).map(([k, l, c]) => ({ name: l, vals: al(k, EK.ur1M), color: css(c), width: 2.2, type: EK.ur1M === "mom" && EK.ur1On.size === 1 ? "bar" : undefined,
+    fmt: v => EK.ur1M === "mea" ? nf(v, 1) : pc(v) })), { yeniden: renderUretim, yFmt: v => nf(v, 0), zero: EK.ur1M !== "mea" });
+  // alt kırılım
+  segH("#ur2Y", UR.filter(([k]) => T[k]).map(([k, l]) => [k, l]), EK.ur2Y);
+  const S = T[EK.ur2Y]; if (S) {
+    if (!S.bloklar[EK.ur2B]) EK.ur2B = 0;
+    const i = S.dates.length - 1, b = S.bloklar[EK.ur2B], ad = UR.find(x => x[0] === EK.ur2Y)[3];
+    $("#ur2T").textContent = `${ad} · ${blokAd(b.ad)}`; $("#ur2S").textContent = `Yıllık % (takvim etkisinden arındırılmış, çubuk) ve MEA endeks (çizgi, sağ) · satıra tıklayınca seçilir · TÜİK, ${ayAd(S.dates[i])}`;
+    const s = [{ name: "Yıllık %", vals: b.yoy, color: css("--c1"), type: "bar", fmt: v => pc(v) }, { name: "Endeks (MEA)", vals: b.mea, color: css("--c2"), width: 2, axis: "r", fmt: v => nf(v, 1) }];
+    legH("#ur2L", s); zc("ur2", S.dates, s, { yeniden: renderUretim, yFmt: v => nf(v, 0), y2Fmt: v => nf(v, 0), height: 240, rScale: 1 });
+    const o3 = (a, k) => { const v = a.slice(k - 2, k + 1); return v.every(ok) ? sum(v) / 3 : null; };
+    $("#ur2X").innerHTML = tbl(["Bölüm", "Endeks (MEA)", "Aylık %", "Yıllık %", "3 ay ort. yıllık %"], S.bloklar.map((x, j) =>
+      `<tr data-b="${j}" class="${j === EK.ur2B ? "sel" : ""}${j ? "" : " ust"}"><td class="l s${j ? " ind" : ""}">${esc(blokAd(x.ad))}</td>${td(nf(x.mea[i], 1))}${tdc(x.mom[i], pc)}${tdc(x.yoy[i], pc)}${tdc(o3(x.yoy, i), pc)}</tr>`));
+  }
+  // kapasite kullanım
+  $("#ur3T").textContent = "İmalat sanayi kapasite kullanım oranı (%)"; $("#ur3S").textContent = "Mevsimsellikten arındırılmış · TCMB İktisadi Yönelim Anketi";
+  const s3 = [{ name: "KKO (MEA)", vals: M?.kko || [], color: css("--c2"), width: 2.4, fmt: v => "%" + nf(v, 1) }];
+  legH("#ur3L", s3); if (M) zc("ur3", M.dates, s3, { yeniden: renderUretim, yFmt: v => nf(v, 0), height: 240 });
+}
+$("#ur2X").onclick = e => { const tr = e.target.closest("tr[data-b]"); if (tr) { EK.ur2B = +tr.dataset.b; renderUretim(); } };
+
+// ---------------------------------------------------------------- Dış ticaret ve dış denge
+const BEC = [["sermaye", "Yatırım (sermaye) malları"], ["ara", "Ara mallar (hammadde)"], ["tuketim", "Tüketim malları"], ["diger", "Diğer"]];
+function gsyhUsdAy(dm) {      // ay için: o aya kadar açıklanmış son 4 çeyrek GSYH (milyar USD)
+  const Q = E.ceyrek; if (!Q) return null; const q = `${dm.slice(0, 4)}-Q${Math.floor((+dm.slice(5, 7) - 1) / 3) + 1}`;
+  let i = Q.dates.indexOf(q); if (i < 0) i = sonI(Q.dates, Q.c_gsyh); while (i >= 3 && !ok(Q.c_gsyh[i])) i--; return i >= 3 ? gsyhUsd(Q, i) : null;
+}
+function renderDis() {
+  const M = E.aylik; if (!M?.dates?.length) return;
+  const d = M.dates, i = sonI(d, M.ihr), den = d.map((_, k) => ok(M.ihr[k]) && ok(M.ith[k]) ? M.ihr[k] - M.ith[k] : null);
+  const ihr12 = roll(M.ihr, 12), ith12 = roll(M.ith, 12), den12 = roll(den, 12), mr = v => ok(v) ? `${ng(v)}${nf(Math.abs(v) / 1e6, 1)}` : "—";
+  $("#dtKpi").innerHTML = [
+    kp("İhracat", `${mr(M.ihr[i])} Mr $`, `yıllık <b class="${cls(ch(M.ihr[i], M.ihr[i - 12]))}">${pc(ch(M.ihr[i], M.ihr[i - 12]))}</b>`, `${ayAd(d[i])} · 12 ay ${mr(ihr12[i])} Mr $`, "--c3"),
+    kp("İthalat", `${mr(M.ith[i])} Mr $`, `yıllık <b class="${cls(-ch(M.ith[i], M.ith[i - 12]))}">${pc(ch(M.ith[i], M.ith[i - 12]))}</b>`, `12 ay ${mr(ith12[i])} Mr $`, "--c2"),
+    kp("Dış ticaret dengesi", `${mr(den[i])} Mr $`, `geçen yıl aynı ay <b>${mr(den[i - 12])} Mr $</b>`, `12 ay ${mr(den12[i])} Mr $`, "--c6"),
+    kp("Kapsama oranı", "%" + nf(M.ihr[i] / M.ith[i] * 100, 1), `12 ay <b>%${nf(ihr12[i] / ith12[i] * 100, 1)}</b>`, "İhracat / ithalat", "--c4"),
+  ].join("");
+  // aylık / 12 ay
+  segH("#dt1M", [["ay", "Aylık"], ["12", "12 ay toplamı"]], EK.dt1M);
+  const a12 = EK.dt1M === "12", s1 = [{ name: "Dış ticaret dengesi", vals: a12 ? den12 : den, color: css("--bar"), type: "bar", fmt: v => mr(v) + " Mr $" },
+    { name: "İhracat", vals: a12 ? ihr12 : M.ihr, color: css("--c3"), width: 2.4, fmt: v => mr(v) + " Mr $" }, { name: "İthalat", vals: a12 ? ith12 : M.ith, color: css("--c2"), width: 2.4, fmt: v => mr(v) + " Mr $" }];
+  $("#dt1T").textContent = `Dış ticaret (${a12 ? "12 ay toplamı, " : ""}milyar $)`; $("#dt1S").textContent = "Genel ticaret sistemi · TÜİK (TCMB EVDS)";
+  legH("#dt1L", s1); zc("dt1", d, s1, { yeniden: renderDis, yFmt: v => nf(v / 1e6, 0), zero: true });
+  // BEC
+  segH("#dt2Y", [["ihr", "İhracat"], ["ith", "İthalat"]], EK.dt2Y);
+  const p = EK.dt2Y, top = M[p], top12 = roll(top, 12);
+  $("#dt2T").textContent = `${p === "ihr" ? "İhracat" : "İthalat"} · geniş ekonomik gruplar (BEC)`; $("#dt2S").textContent = `${ayAd(d[i])} · milyar $ · 12 ay payı ile`;
+  $("#dt2G").innerHTML = ""; $("#dt2L").innerHTML = ""; $("#dt2R").innerHTML = "";
+  $("#dt2X").innerHTML = tbl(["Grup", "Ay", "Yıllık %", "12 ay", "12 ay yıllık %", "Pay (12 ay)"], BEC.map(([k, l]) => { const a = M[`${p}_${k}`], r = roll(a, 12);
+    return `<tr><td class="l s">${l}</td>${td(mr(a[i]))}${tdc(ch(a[i], a[i - 12]), pc, .5)}${td(mr(r[i]))}${tdc(ch(r[i], r[i - 12]), pc, .5)}${td("%" + nf(r[i] / top12[i] * 100, 1))}</tr>`; })
+    .concat(`<tr class="ust"><td class="l s">Toplam</td>${td(mr(top[i]))}${tdc(ch(top[i], top[i - 12]), pc, .5)}${td(mr(top12[i]))}${tdc(ch(top12[i], top12[i - 12]), pc, .5)}${td("%100")}</tr>`));
+  // ülkeler
+  const U = E.tuik?.ulke; segH("#dt3Y", [["ihr", "İhracat"], ["ith", "İthalat"]], EK.dt3Y);
+  $("#dt3T").textContent = `En çok ${EK.dt3Y === "ihr" ? "ihracat" : "ithalat"} yapılan ülkeler`; $("#dt3S").textContent = U ? `${U.ay || ""} ve yılbaşından bu yana · milyon $ · TÜİK` : "Veri yok";
+  $("#dt3G").innerHTML = ""; $("#dt3L").innerHTML = ""; $("#dt3R").innerHTML = "";
+  $("#dt3X").innerHTML = U ? tbl(["Ülke", "Ay", "Pay %", "Yıllık %", "Yılbaşından", "Pay %"], (U[EK.dt3Y] || []).slice(0, 12).map((x, j) =>
+    `<tr><td class="l s">${j + 1}. ${esc(x.ad)}</td>${td(nf(x.deger / 1e3, 0))}${td(nf(x.pay, 1))}${tdc(x.degisim, pc, .5)}${td(nf(x.ytd / 1e3, 0))}${td(nf(x.ytd_pay, 1))}</tr>`)) : "";
+  // ödemeler dengesi
+  const j = sonI(d, M.cari), c12 = roll(M.cari, 12), gsu = gsyhUsdAy(d[j]);
+  const en = d.map((_, k) => ok(M.cari[k]) && ok(M.cari_enerjih[k]) ? M.cari[k] - M.cari_enerjih[k] : null), al = d.map((_, k) => ok(M.altin_ihr[k]) && ok(M.altin_ith[k]) ? M.altin_ihr[k] - M.altin_ith[k] : null);
+  const ae12 = roll(M.cari_altin_enerjih, 12), m3 = v => mrUSD(v);
+  $("#odKpi").innerHTML = [
+    kp("Cari denge", `${m3(M.cari[j])} Mr $`, `geçen yıl aynı ay <b>${m3(M.cari[j - 12])} Mr $</b>`, `${ayAd(d[j])}`, "--c1"),
+    kp("Cari denge (12 ay)", `${m3(c12[j])} Mr $`, `bir ay önce <b>${m3(c12[j - 1])} Mr $</b>`, "Yıllıklandırılmış", "--c6"),
+    kp("Cari denge / GSYH", gsu ? pct(c12[j] / 1e3 / gsu * 100, 1) : "—", gsu ? `GSYH ${nf(gsu / 1e3, 2)} Tr $ (son 4 çeyrek)` : "", "12 ay cari denge / USD GSYH", "--c4"),
+    kp("Altın ve enerji hariç cari", `${m3(ae12[j])} Mr $`, `enerji dengesi 12 ay <b>${m3(roll(en, 12)[j])} Mr $</b>`, `net altın 12 ay ${m3(roll(al, 12)[j])} Mr $`, "--c3"),
+  ].join("");
+  segH("#od1M", [["ay", "Aylık"], ["12", "12 ay toplamı"]], EK.od1M);
+  const o12 = EK.od1M === "12", f = a => o12 ? roll(a, 12) : a, f3 = v => m3(v) + " Mr $";
+  const s4 = [{ name: "Mal dengesi", vals: f(M.mal), color: css("--c2"), type: "bar", fmt: f3 }, { name: "Hizmet dengesi", vals: f(M.hizmet), color: css("--c3"), type: "bar", fmt: f3 },
+    { name: "Birincil gelir", vals: f(M.birincil), color: css("--c6"), type: "bar", fmt: f3 }, { name: "İkincil gelir", vals: f(M.ikincil), color: css("--c4"), type: "bar", fmt: f3 },
+    { name: "Cari denge", vals: f(M.cari), color: css("--ink"), width: 2.2, fmt: f3 }];
+  $("#od1T").textContent = `Cari denge bileşenleri (${o12 ? "12 ay toplamı, " : ""}milyar $)`; $("#od1S").textContent = "Ödemeler dengesi · TCMB";
+  legH("#od1L", s4); zc("od1", d, s4, { stack: true, yeniden: renderDis, yFmt: v => nf(v / 1e3, 0), totFmt: f3 });
+  const s5 = [{ name: "Cari denge", vals: c12, color: css("--ink"), width: 2.4, fmt: f3 }, { name: "Altın hariç", vals: roll(M.cari_altinh, 12), color: css("--c4"), width: 2, fmt: f3 },
+    { name: "Enerji hariç", vals: roll(M.cari_enerjih, 12), color: css("--c3"), width: 2, fmt: f3 }, { name: "Altın ve enerji hariç", vals: ae12, color: css("--c1"), width: 2, fmt: f3 }];
+  $("#od2T").textContent = "12 aylık cari denge: altın ve enerji etkisi (milyar $)"; $("#od2S").textContent = "Parasal olmayan altın ve enerji dış ticareti hariç cari denge · TCMB";
+  legH("#od2L", s5); zc("od2", d, s5, { yeniden: renderDis, yFmt: v => nf(v / 1e3, 0), zero: true });
+  // finansman
+  const FIN = [["Cari denge", d.map((_, k) => M.cari[k])], ["Doğrudan yatırımlar (net giriş)", d.map((_, k) => ok(M.dyy_yuk[k]) && ok(M.dyy_var[k]) ? M.dyy_yuk[k] - M.dyy_var[k] : null)],
+    ["Portföy yatırımları (net giriş)", d.map((_, k) => ok(M.port_yuk[k]) && ok(M.port_var[k]) ? M.port_yuk[k] - M.port_var[k] : null)],
+    ["  Yurt dışı yerleşik: hisse senedi", M.port_hisse], ["  Yurt dışı yerleşik: borç senetleri", M.port_borc],
+    ["Diğer yatırımlar: yükümlülükler", M.diger_yuk], ["  Bankalar", M.bnk_yuk], ["Net hata ve noksan", M.net_hata], ["Rezerv varlıklar (+ artış)", M.rezerv]];
+  $("#od3T").textContent = "Cari açığın finansmanı (milyon $)"; $("#od3S").textContent = `${ayAd(d[j])} · finans hesabında + giriş · rezervlerde + artış · TCMB analitik sunum`;
+  $("#od3X").innerHTML = tbl(["Kalem", ayAd(d[j]), ayAd(d[j - 1]), "Yılbaşından", "12 ay", "Önceki 12 ay"], FIN.map(([l, a]) => { const r = roll(a, 12), yb = sum(a.slice(j - (+d[j].slice(5, 7)) + 1, j + 1));
+    return `<tr class="${l.startsWith("  ") ? "" : "ust"}"><td class="l s${l.startsWith("  ") ? " ind" : ""}">${esc(l.trim())}</td>${[a[j], a[j - 1], yb, r[j], r[j - 12]].map(v => tdc(v, x => ok(x) ? `${sg(x)}${nf(Math.abs(x), 0)}` : "—", .5)).join("")}</tr>`; }));
+}
+
+// ---------------------------------------------------------------- Bütçe
+const GELIR = [["b_vergi", "Vergi gelirleri", 0], ["b_gv", "Gelir vergisi", 1], ["b_kv", "Kurumlar vergisi", 1], ["b_kdv_ic", "Dahilde alınan KDV", 1], ["b_kdv_ithal", "İthalde alınan KDV", 1],
+  ["b_otv", "ÖTV", 1], ["b_bsmv", "BSMV", 1], ["b_damga", "Damga vergisi", 1], ["b_harc", "Harçlar", 1], ["b_mulkiyet", "Mülkiyet vergileri", 1],
+  ["b_tesebbus", "Teşebbüs ve mülkiyet gelirleri", 0], ["b_faiz_pay", "Faiz, paylar ve cezalar", 0], ["b_sermaye_gel", "Sermaye gelirleri", 0], ["b_gelir", "Toplam gelir", 2]];
+const GIDER = [["b_personel", "Personel giderleri", 0], ["b_sgk_prim", "SGK devlet primi", 0], ["b_mal_hizmet", "Mal ve hizmet alımları", 0], ["b_cari_transfer", "Cari transferler", 0],
+  ["b_hazine_yardim", "Hazine yardımları", 1], ["b_vergi_pay", "Vergi gelirlerinden ayrılan paylar", 1], ["b_sermaye_gid", "Sermaye giderleri", 0], ["b_sermaye_transfer", "Sermaye transferleri", 0],
+  ["b_borc_verme", "Borç verme", 0], ["b_faiz", "Faiz giderleri", 0], ["b_faiz_ic", "İç borç faizi", 1], ["b_faiz_dis", "Dış borç faizi", 1], ["b_faiz_kira", "Kira sertifikası getirisi", 1],
+  ["b_faizdisi_gider", "Faiz dışı gider", 2], ["b_gider", "Toplam gider", 2]];
+function gsyhTLAy(dm) {          // aya kadar son 4 çeyrek cari GSYH (bin TL)
+  const Q = E.ceyrek; if (!Q) return null; const q = `${dm.slice(0, 4)}-Q${Math.floor((+dm.slice(5, 7) - 1) / 3) + 1}`;
+  let i = Q.dates.indexOf(q); if (i < 0) i = sonI(Q.dates, Q.c_gsyh); while (i >= 3 && !ok(Q.c_gsyh[i])) i--; return i >= 3 ? sum(Q.c_gsyh.slice(i - 3, i + 1)) : null;
+}
+function tufeYoy(dm) { const t = D?.tufe; const k = t?.months?.indexOf(dm) ?? -1; return k >= 0 ? t.yoy[k] : null; }
+function renderButce() {
+  const M = E.aylik; if (!M?.dates?.length) return;
+  const d = M.dates, i = sonI(d, M.b_gelir), den = d.map((_, k) => ok(M.b_gelir[k]) && ok(M.b_gider[k]) ? M.b_gelir[k] - M.b_gider[k] : null);
+  const fd = d.map((_, k) => ok(M.b_gelir[k]) && ok(M.b_faizdisi_gider[k]) ? M.b_gelir[k] - M.b_faizdisi_gider[k] : null);
+  const den12 = roll(den, 12), fd12 = roll(fd, 12), gel12 = roll(M.b_gelir, 12), gid12 = roll(M.b_gider, 12), faiz12 = roll(M.b_faiz, 12), vg12 = roll(M.b_vergi, 12), gs = gsyhTLAy(d[i]);
+  const ay = +d[i].slice(5, 7), yb = a => sum(a.slice(i - ay + 1, i + 1)), ybO = a => sum(a.slice(i - 12 - ay + 1, i - 12 + 1)), tf = tufeYoy(d[i]);
+  $("#bcKpi").innerHTML = [
+    kp("Bütçe dengesi", `${mrTL(den[i])} Mr ₺`, `yılbaşından <b>${mrTL(yb(den))} Mr ₺</b>`, `${ayAd(d[i])} · 12 ay ${trTL(den12[i])} Tr ₺`, "--c2"),
+    kp("Faiz dışı denge", `${mrTL(fd[i])} Mr ₺`, `yılbaşından <b>${mrTL(yb(fd))} Mr ₺</b>`, `12 ay ${mrTL(fd12[i])} Mr ₺`, "--c3"),
+    kp("Bütçe gelirleri", `${trTL(M.b_gelir[i])} Tr ₺`, `yıllık <b class="${cls(ch(M.b_gelir[i], M.b_gelir[i - 12]))}">${pc(ch(M.b_gelir[i], M.b_gelir[i - 12]))}</b>`, `12 ay ${trTL(gel12[i])} Tr ₺`, "--c1"),
+    kp("Bütçe giderleri", `${trTL(M.b_gider[i])} Tr ₺`, `yıllık <b class="${cls(-ch(M.b_gider[i], M.b_gider[i - 12]))}">${pc(ch(M.b_gider[i], M.b_gider[i - 12]))}</b>`, `12 ay ${trTL(gid12[i])} Tr ₺`, "--c6"),
+    kp("Bütçe dengesi / GSYH", gs ? pct(den12[i] / gs * 100, 1) : "—", gs ? `faiz dışı denge <b>${pct(fd12[i] / gs * 100, 1)}</b>` : "", "12 ay toplamı / son 4 çeyrek GSYH", "--c4"),
+    kp("Faiz / vergi gelirleri", "%" + nf(faiz12[i] / vg12[i] * 100, 1), `faiz 12 ay <b>${trTL(faiz12[i])} Tr ₺</b>`, gs ? `faiz / GSYH %${nf(faiz12[i] / gs * 100, 1)}` : "", "--c5"),
+  ].join("");
+  segH("#bc1M", [["tl", "Milyar ₺"], ["gsyh", "GSYH %"]], EK.bc1M);
+  const g = EK.bc1M === "gsyh", gsA = d.map(gsyhTLAy), cv = a => g ? a.map((v, k) => ok(v) && gsA[k] ? v / gsA[k] * 100 : null) : a, fm = v => g ? pct(v, 2) : `${mrTL(v)} Mr ₺`;
+  const s1 = [{ name: "Bütçe dengesi (12 ay)", vals: cv(den12), color: css("--c2"), width: 2.4, fmt: fm }, { name: "Faiz dışı denge (12 ay)", vals: cv(fd12), color: css("--c3"), width: 2.4, fmt: fm },
+    { name: "Faiz giderleri (12 ay, eksi)", vals: cv(faiz12.map(v => ok(v) ? -v : null)), color: css("--c6"), width: 1.8, dash: "5 4", fmt: fm }];
+  $("#bc1T").textContent = `12 aylık bütçe dengesi (${g ? "GSYH'ye oran, %" : "milyar ₺"})`; $("#bc1S").textContent = "Merkezi yönetim bütçesi, 12 ay toplamı · HMB (TCMB EVDS)" + (g ? " · GSYH: son 4 çeyrek cari fiyatlarla" : "");
+  legH("#bc1L", s1); zc("bc1", d, s1, { yeniden: renderButce, yFmt: v => g ? nf(v, 1) : nf(v / 1e6, 0), zero: true });
+  const tab = (id, list, top, baslik) => {
+    $(`#${id}T`).textContent = baslik; $(`#${id}S`).textContent = `${ayAd(d[i])} · milyar ₺ · yıllık değişimler nominal; reel: TÜFE ${tf != null ? "%" + nf(tf, 1) : "—"} ile`;
+    $(`#${id}G`).innerHTML = ""; $(`#${id}L`).innerHTML = ""; $(`#${id}R`).innerHTML = "";
+    const tt = yb(M[top]);
+    $(`#${id}X`).innerHTML = tbl(["Kalem", "Ay", "Yıllık %", "Yılbaşından", "Yıllık %", "Reel %", "Pay %"], list.map(([k, l, s]) => { const a = M[k] || [], y = yb(a), yo = ybO(a), n = ch(y, yo);
+      return `<tr class="${s === 2 ? "ust" : ""}"><td class="l s${s === 1 ? " ind" : ""}">${l}</td>${td(mrTL(a[i]))}${tdc(ch(a[i], a[i - 12]), pc, .5)}${td(mrTL(y))}${tdc(n, pc, .5)}${tdc(ok(n) && ok(tf) ? ((1 + n / 100) / (1 + tf / 100) - 1) * 100 : null, pc, .5)}${td(tt ? nf(y / tt * 100, 1) : "—")}</tr>`; }));
+  };
+  tab("bc2", GELIR, "b_gelir", "Bütçe gelirleri");
+  tab("bc3", GIDER, "b_gider", "Bütçe giderleri");
+}
+
+// ---------------------------------------------------------------- dağıtım
+const EKT = { buyume: ["#mkBuyume", renderBuyume], istihdam: ["#mkIstihdam", renderIstihdam], uretim: ["#mkUretim", renderUretim], dis: ["#mkDis", renderDis], butce: ["#mkButce", renderButce] };
+function renderEko() {
+  const g = $("#ekGate");
+  $$(".ekt").forEach(x => x.classList.add("hidden"));
+  if (!E) { g.classList.remove("hidden"); g.textContent = E === undefined ? "Veriler yükleniyor…" : "Ekonomik gösterge verisi henüz derlenmedi (bir sonraki güncellemede alınır)."; return; }
+  g.classList.add("hidden");
+  const [sel, fn] = EKT[S.mk]; $(sel).classList.remove("hidden");
+  try { fn(); } catch (e) { console.error(e); }
+}
+$("#mkEko").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const p = b.parentElement, id = p.id;
+  if (b.dataset.k && p.classList.contains("seg") && id in EK) { EK[id] = b.dataset.k; if (id === "ur2Y") EK.ur2B = 0; renderEko(); return; }
+  if (b.dataset.t) { const set = { is1L: EK.is1On, ur1L: EK.ur1On }[id]; if (!set) return; if (set.has(b.dataset.t)) { if (set.size > 1) set.delete(b.dataset.t); } else set.add(b.dataset.t); renderEko(); }
+});
 
 // ---------------------------------------------------------------- akış
 function renderSrc() {
   const fl = (D.failed || []), f = (fl.length ? ` · son çekimde alınamayan: ${fl.join(", ")} (önceki veri gösteriliyor)` : "")
     ;
+  if (S.tab === "makro" && S.mk in EKT) { const tk = E?.tuik || {}, b = k => tk[k]?.kaynak ? `${esc(tk[k].kaynak.bulten)} (${esc(tk[k].kaynak.donem || "")})` : null;
+    const K = { buyume: `TÜİK Dönemsel Gayrisafi Yurt İçi Hasıla (TCMB EVDS üzerinden): harcama, üretim ve gelir yöntemi; zincirlenmiş hacim, mevsim ve takvim etkisinden arındırılmış endeks, cari fiyatlar · USD karşılığı TCMB döviz alış kurunun çeyrek ortalamasıyla · kişi başı GSYH TÜİK yıllık`,
+      istihdam: `TÜİK Veri Portalı: ${b("isgucu") || "İşgücü İstatistikleri"} — temel işgücü göstergeleri (15+ ve 15-24 yaş, mevsim etkisinden arındırılmış), işgücüne ilişkin tamamlayıcı göstergeler (atıl işgücü)`,
+      uretim: `TÜİK Veri Portalı: ${["sanayi", "hizmet", "ticaret", "insaat"].map(b).filter(Boolean).join(", ")} · kapasite kullanım oranı: TCMB İktisadi Yönelim Anketi (EVDS)`,
+      dis: `Dış ticaret: TÜİK genel ticaret sistemi (TCMB EVDS: ISIC Rev.4 ve BEC), en çok ihracat/ithalat yapılan ülkeler TÜİK Veri Portalı · ödemeler dengesi: TCMB (analitik ve ayrıntılı sunum, altın ve enerji hariç cari denge) · cari denge/GSYH için GSYH son 4 çeyrek USD`,
+      butce: `Merkezi yönetim bütçe gelir ve giderleri: Hazine ve Maliye Bakanlığı (TCMB EVDS) · GSYH oranları son 4 çeyrek cari fiyatlı GSYH ile · reel değişim TÜİK TÜFE yıllık ile` };
+    $("#src").innerHTML = `Kaynak: ${K[S.mk]}. Son güncelleme ${E?.updated ? new Date(E.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${E?.failed?.length ? ` · son çekimde alınamayan: ${esc(E.failed.join(", "))} (önceki veri gösteriliyor)` : ""}.`; return; }
   if (S.tab === "makro" && S.mk === "hazine") { const k = H?.kaynak || {}, a = (key, t) => k[key] ? `<a href="${esc(k[key])}" target="_blank" rel="noopener">${t}</a>` : t;
     $("#src").innerHTML = `Kaynak: <a href="https://www.hmb.gov.tr/kamu-finansmani-istatistikleri" target="_blank" rel="noopener">Hazine ve Maliye Bakanlığı · Kamu Finansmanı İstatistikleri</a> — ${a("ic_stok", "İç borç stoku DİBS listesi")}, ${a("dis_stok", "dış borç stoku tahvil listesi")}, ${a("ic_proj", "iç")} ve ${a("dis_proj", "dış")} borç ödeme projeksiyonları (aylık), ${a("sahip", "iç borç stokunun elinde bulunduranlara göre dağılımı")}. Döviz ve altın cinsi iç borç, HMB listesinde TL karşılığıyla verilir; USD/EUR ve ton karşılığı stok tarihindeki TCMB döviz alış kuru${H?.cevrim ? ` (${gunAd(H.cevrim.tarih)})` : ""} ve altın fiyatıyla${H?.cevrim?.altin_kaynak ? ` (${esc(H.cevrim.altin_kaynak)})` : ""} hesaplanır, yaklaşıktır. Sukuk: kira sertifikası (TRD ISIN). Son güncelleme ${H?.updated ? new Date(H.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${H?.failed?.length ? ` · son çekimde alınamayan: ${H.failed.join(", ")} (önceki veri gösteriliyor)` : ""}.`; return; }
   $("#src").innerHTML = `Kaynaklar: <a href="https://veriportali.tuik.gov.tr" target="_blank" rel="noopener">TÜİK Veri Portalı</a> (TÜFE, Yİ-ÜFE) · <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> (Piyasa Katılımcıları Anketi, sektörel enflasyon beklentileri) · TCMB (enflasyon hedefleri, Enflasyon Raporu) · <a href="https://www.borsaistanbul.com/endeksler/tlref" target="_blank" rel="noopener">Borsa İstanbul</a> (TLREF, TLREFK) · Borsa İstanbul Repo Pazarı O/N (TCMB EVDS)${B ? ` · Bloomberg (TL implied, OIS, BIST VİOP; en yeni veri ${gunAd(B.guncel)})` : ""}. Son güncelleme ${D.updated ? new Date(D.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${f}.`;
@@ -945,15 +1361,16 @@ function render() {
   if (S.tab === "makro") renderMakro(); else renderPs();
   renderSrc();
 }
-$("#tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (!b) return; S.tab = b.dataset.tab; try { history.replaceState(null, "", "#" + (S.tab === "makro" && S.mk === "hazine" ? "hazine" : S.tab)); } catch {} render(); };
+$("#tabs").onclick = e => { const b = e.target.closest("button[data-tab]"); if (!b) return; S.tab = b.dataset.tab; try { history.replaceState(null, "", "#" + (S.tab === "makro" && S.mk !== "enf" ? S.mk : S.tab)); } catch {} render(); };
 $("#infKpi").onclick = e => { const b = e.target.closest("button[data-s]"); if (!b) return; const k = b.dataset.s; S.infOn.has(k) ? S.infOn.delete(k) : S.infOn.add(k); renderInf(); };
 $("#grpBox").addEventListener("click", e => { const b = e.target.closest("#gMode button[data-m]"); if (b) { e.preventDefault(); S.gMode = b.dataset.m; renderGroups(); } });
 $("#grpBox").addEventListener("change", e => { if (e.target.id === "gAy") { S.sel = e.target.value; renderInf(); } });
 $("#grpBox").addEventListener("toggle", e => { if (e.target.classList?.contains("grpd")) S.gOpen = e.target.open; }, true);
 let rz, lw = innerWidth; addEventListener("resize", () => { if (!D || Math.abs(innerWidth - lw) < 30 && !rz) { } lw = innerWidth; clearTimeout(rz); rz = setTimeout(() => { rz = null; render(); }, 150); });
-const h = location.hash.slice(1); if (h === "piyasa" || h === "makro") S.tab = h; else if (h === "hazine") { S.tab = "makro"; S.mk = "hazine"; }
+const h = location.hash.slice(1); if (h === "piyasa" || h === "makro") S.tab = h; else if (["hazine", "buyume", "istihdam", "uretim", "dis", "butce"].includes(h)) { S.tab = "makro"; S.mk = h; }
 H = undefined;
 fetch("data/hazine.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { H = j; if (D && S.tab === "makro" && S.mk === "hazine") { renderHazine(); renderSrc(); } });
+fetch("data/ekonomi.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { E = j; if (D && S.tab === "makro" && S.mk in EKT) { renderEko(); renderSrc(); } });
 const bbgYukle = fetch("data/bbg.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
 fetch("data/makro.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
   .then(async j => { D = j; B = await bbgYukle; $("#gate").remove(); render(); })
