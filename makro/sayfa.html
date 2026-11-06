@@ -161,7 +161,7 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
     </div>
   </section>
   <section id="pPiyasa" class="hidden">
-    <div class="subtabs" role="group" aria-label="Piyasa konu" id="psTabs"><button data-ps="faiz" aria-pressed="true">Kâr/Faiz/Swap Oranları</button><button data-ps="gosterge" aria-pressed="false">Gösterge Oranlar</button></div>
+    <div class="subtabs" role="group" aria-label="Piyasa konu" id="psTabs"><button data-ps="faiz" aria-pressed="true">Kâr/Faiz/Swap Oranları</button><button data-ps="gosterge" aria-pressed="false">Gösterge Oranlar</button><button data-ps="endeks" aria-pressed="false">Endeks ve Emtia</button></div>
     <div id="psFaiz">
     <h2 class="sec">Gecelik oranlar ve hacim</h2>
     <div class="kpis" id="pKpi"></div>
@@ -184,6 +184,16 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
         <div class="chart" id="vpChart"></div>
       </div>
     </div>
+    </div>
+    <div id="psEndeks" class="hidden">
+      <h2 class="sec">Endeks ve emtia</h2>
+      <div class="kpis" id="eeKpi"></div>
+      <div class="card">
+        <div class="cardhead"><div><h3 id="eeTitle"></h3><div class="sub" id="eeSub"></div></div><span class="chips" id="eeRange"></span></div>
+        <div class="legend" id="eeLeg"></div>
+        <div class="chart" id="eeChart"></div>
+        <div class="note" id="eeNote"></div>
+      </div>
     </div>
     <div id="psGosterge" class="hidden">
       <div class="seg" id="gUlke" role="group" aria-label="Ülke" style="margin:14px 0 12px"><button data-u="tr" aria-pressed="true">Türkiye</button><button data-u="abd" aria-pressed="false">ABD</button><button data-u="de" aria-pressed="false">Almanya</button></div>
@@ -243,7 +253,7 @@ const pp = v => ok(v) ? `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v), 2)
 let D = null;
 const S = { tab: "makro", infOn: new Set(["tufe:yoy"]), gMode: "yoy", gOpen: false, infR: "2Y", sel: null, bkR: "3Y", pR: "6A",
   bkOn: { pk_yilsonu: 1, pk_12ay: 1, reel_12ay: 1, hh_12ay: 1, tufe: 1 }, pOn: new Set((store.get("mk.pon") || "tlref").split(",").filter(Boolean)),
-  impT: "O/N", ps: "faiz", gU: "tr", EG: {}, vpK: "USDTRY", vpM: "oran" };
+  impT: "O/N", ps: "faiz", gU: "tr", EG: {}, ee: "borsa", eeIdx: new Set(["XU100 Index"]), eeR: "6A", vpK: "USDTRY", vpM: "oran" };
 let B = null;     // Bloomberg (bbg.json)
 
 // ---------------------------------------------------------------- grafik
@@ -590,9 +600,75 @@ $("#gUlke").onclick = e => { const b = e.target.closest("button[data-u]"); if (b
 $("#psTabs").onclick = e => { const b = e.target.closest("button[data-ps]"); if (b) { S.ps = b.dataset.ps; renderPs(); } };
 function renderPs() {
   $$("#psTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.ps === S.ps));
-  $("#psFaiz").classList.toggle("hidden", S.ps !== "faiz"); $("#psGosterge").classList.toggle("hidden", S.ps !== "gosterge");
-  if (S.ps === "faiz") { renderPiyasa(); renderBbg(); } else renderGosterge();
+  $("#psFaiz").classList.toggle("hidden", S.ps !== "faiz"); $("#psGosterge").classList.toggle("hidden", S.ps !== "gosterge"); $("#psEndeks").classList.toggle("hidden", S.ps !== "endeks");
+  if (S.ps === "faiz") { renderPiyasa(); renderBbg(); } else if (S.ps === "gosterge") renderGosterge(); else renderEndeks();
 }
+
+// ---------------------------------------------------------------- Endeks ve emtia (Bloomberg + LBMA)
+let LB = null;      // LBMA AM (../tcmb/data/lbma.json)
+const BORSA = "Borsa Ve Diğer";
+const ENDEKS = [["XU100 Index", "BIST 100"], ["XBANK Index", "Bankacılık"], ["XUSIN Index", "Sanayi"], ["XUTEK Index", "Teknoloji"], ["XUHIZ Index", "Hizmet"], ["XULAS Index", "Ulaştırma"], ["XGIDA Index", "Gıda"]];
+const ECOL = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6", "--ink-2"];
+function bSeri(sh, ticker, alan = "PX_LAST") {
+  const t = B?.tablolar?.[sh]; if (!t) return null;
+  const j = t.kolonlar.findIndex(k => k.ticker === ticker && (k.alan || "PX_LAST") === alan); if (j < 0) return null;
+  return { dates: t.dates, vals: t.v[j], kol: t.kolonlar[j] };
+}
+const bEtiket = (sh, et) => { const t = B?.tablolar?.[sh]; if (!t) return null; const j = t.kolonlar.findIndex(k => k.etiket === et); return j < 0 ? null : { dates: t.dates, vals: t.v[j], kol: t.kolonlar[j] }; };
+const EE = [
+  { k: "borsa", ad: "Borsa İstanbul", kim: "BIST 100", birim: "", dg: 0, seri: () => bSeri(BORSA, "XU100 Index"), kay: "Bloomberg (XU100)" },
+  { k: "cds", ad: "Türkiye CDS 5Y", birim: " bp", dg: 0, bp: true, seri: () => bEtiket("CDS", "5Y CDS"), kay: "Bloomberg" },
+  { k: "dxy", ad: "Dolar endeksi (DXY)", birim: "", dg: 2, usd: true, seri: () => bSeri(BORSA, "DXY Curncy"), kay: "Bloomberg" },
+  { k: "brent", ad: "Brent petrol", birim: " $/varil", dg: 2, usd: true, seri: () => bSeri(BORSA, "CO1 Comdty"), kay: "Bloomberg (CO1)" },
+  { k: "altin", ad: "Altın (LBMA AM)", birim: " $/ons", dg: 2, seri: () => LB?.am ? { dates: Object.keys(LB.am), vals: Object.values(LB.am), kol: { ticker: "LBMA Gold AM" } } : null, kay: "LBMA (goldsilver.com)" },
+  { k: "gumus", ad: "Gümüş", birim: " $/ons", dg: 2, seri: () => bSeri("Kıymetli Maden", "XAGUSD Curncy"), kay: "Bloomberg (XAGUSD)" },
+  { k: "ttf", ad: "Doğalgaz (TTF)", birim: " €/MWh", dg: 2, seri: () => (B?.tablolar?.[BORSA]?.kolonlar || []).filter(k => /^TTF/.test(k.ticker)).map(k => bSeri(BORSA, k.ticker))[0] || null, kay: "Bloomberg (TTF)" },
+];
+const eeOk = e => { const s = e.seri(); return s && s.vals.some(ok) && !(e.usd && s.kol.para === "TRY"); };
+const sonIki = s => { const i = lastIdx(s.vals); if (i < 0) return null; let j = i - 1; while (j >= 0 && !ok(s.vals[j])) j--; let w = i; const hd = new Date(Date.parse(s.dates[i]) - 7 * 864e5).toISOString().slice(0, 10); while (w > 0 && s.dates[w] > hd) w--; return { v: s.vals[i], p: j >= 0 ? s.vals[j] : null, h: ok(s.vals[w]) ? s.vals[w] : null, t: s.dates[i] }; };
+const degis = (e, a, b) => !ok(a) || !ok(b) ? "—" : e.bp ? bp((a - b) / 100) : (a >= b ? "+" : "−") + nf(Math.abs(a / b - 1) * 100, 2) + "%";
+const degCls = (e, a, b) => !ok(a) || !ok(b) || a === b ? "" : (e.bp ? a < b : a > b) ? "up" : "down";
+function renderEndeks() {
+  const kp = [], uyari = [];
+  if (!EE.some(e => e.k === S.ee && eeOk(e))) S.ee = (EE.find(eeOk) || EE[0]).k;
+  for (const e of EE) {
+    const s = e.seri();
+    if (s && e.usd && s.kol.para === "TRY") { uyari.push(e.ad); continue; }
+    const x = s && sonIki(s); if (!x) continue;
+    kp.push(`<button class="kpi" data-e="${e.k}" aria-pressed="${S.ee === e.k}"><div class="t">${e.ad}</div>${e.kim ? `<div class="k2">${e.kim}</div>` : ""}<div class="v">${nf(x.v, e.dg)}<span style="font-size:13px;color:var(--muted)">${e.birim}</span></div>
+      <div class="s">Günlük <b class="${degCls(e, x.v, x.p)}">${degis(e, x.v, x.p)}</b> · 1 hafta <b class="${degCls(e, x.v, x.h)}">${degis(e, x.v, x.h)}</b></div><div class="d">${gunAd(x.t)} · ${e.kay}</div></button>`);
+  }
+  $("#eeKpi").innerHTML = kp.join("");
+  const e = EE.find(x => x.k === S.ee);
+  rangeChips($("#eeRange"), P_R, S.eeR, k => { S.eeR = k; renderEndeks(); });
+  const gun = P_R.find(r => r[0] === S.eeR)[1], xFmt = gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa;
+  const kes = s => { const last = s.dates[s.dates.length - 1], bas = new Date(Date.parse(last) - gun * 864e5).toISOString().slice(0, 10); return s.dates.map((d, i) => d >= bas ? i : -1).filter(i => i >= 0); };
+  if (e.k === "borsa") {
+    const var_ = ENDEKS.filter(([t]) => bSeri(BORSA, t)?.vals.some(ok));
+    for (const t of [...S.eeIdx]) if (!var_.some(x => x[0] === t)) S.eeIdx.delete(t);
+    if (!S.eeIdx.size) S.eeIdx.add(var_[0]?.[0] || "XU100 Index");
+    $("#eeLeg").innerHTML = var_.map(([t, ad], i) => `<button class="chip" data-x="${t}" aria-pressed="${S.eeIdx.has(t)}"><i style="background:var(${ECOL[i % ECOL.length]})"></i>${ad}</button>`).join("");
+    const sec = var_.filter(([t]) => S.eeIdx.has(t)), tek = sec.length === 1, ana = bSeri(BORSA, sec[0][0]), ix = kes(ana), xs = ix.map(i => ana.dates[i]);
+    const series = [];
+    if (tek) { const h = bSeri(BORSA, sec[0][0], "PX_VOLUME"); if (h) series.push({ name: "İşlem hacmi", type: "bar", axis: "r", color: css("--vol"), vals: ix.map(i => ok(h.vals[i]) ? h.vals[i] / 1e9 : null), fmt: v => "₺" + nf(v, 1) + " mr" }); }
+    sec.forEach(([t, ad]) => { const s = bSeri(BORSA, t), v = ix.map(i => s.vals[i]), b0 = v.find(ok);
+      series.push({ name: ad, color: css(ECOL[ENDEKS.findIndex(x => x[0] === t) % ECOL.length]), width: 2.2, span: true, vals: tek ? v : v.map(x => ok(x) && b0 ? x / b0 * 100 : null), fmt: x => tek ? nf(x, 2) : nf(x, 1) }); });
+    $("#eeTitle").textContent = tek ? `${sec[0][1]} endeksi` + (series[0]?.type === "bar" ? " ve işlem hacmi" : "") : "Borsa İstanbul endeksleri · karşılaştırma";
+    $("#eeSub").textContent = tek ? "Endeks sol eksen, işlem hacmi sağ eksen (milyar TL) · Bloomberg" : `Dönem başı = 100 · ${gunAd(xs[0])} – ${gunAd(xs[xs.length - 1])} · Bloomberg`;
+    chart($("#eeChart"), { xs, series, height: 340, xFmt, tipX: gunAd, yFmt: v => nf(v, 0), y2Fmt: v => nf(v, 0), rScale: 2.2, label: $("#eeTitle").textContent });
+  } else {
+    $("#eeLeg").innerHTML = "";
+    const s = e.seri(), ix = kes(s), xs = ix.map(i => s.dates[i]);
+    $("#eeTitle").textContent = `${e.ad}${e.birim ? " (" + e.birim.trim() + ")" : ""}`;
+    $("#eeSub").textContent = `${s.kol.ticker || ""} · ${e.kay}`;
+    chart($("#eeChart"), { xs, height: 340, xFmt, tipX: gunAd, yFmt: v => nf(v, Math.abs(v) < 10 ? 2 : 0), label: $("#eeTitle").textContent,
+      series: [{ name: e.ad, vals: ix.map(i => s.vals[i]), color: css("--c1"), width: 2.2, span: true, fmt: v => nf(v, e.dg) + e.birim }] });
+  }
+  $("#eeNote").innerHTML = uyari.length ? `${uyari.join(" ve ")} gösterilmiyor: Excel'de bu ticker'ların "Currency" satırı TRY seçili, değerler TL'ye çevrilmiş geliyor. USD yapıp (ya da boş bırakıp) dosyayı yeniden yükleyin.` : "";
+}
+$("#eeKpi").onclick = e => { const b = e.target.closest("button[data-e]"); if (b) { S.ee = b.dataset.e; renderEndeks(); } };
+$("#eeLeg").onclick = e => { const b = e.target.closest("button[data-x]"); if (!b) return; const t = b.dataset.x;
+  if (S.eeIdx.has(t)) { if (S.eeIdx.size > 1) S.eeIdx.delete(t); } else S.eeIdx.add(t); renderEndeks(); };
 
 // ---------------------------------------------------------------- BIST VİOP (Bloomberg)
 const VP = ["USDTRY", "EURTRY", "XAUTRY", "XAUUSD"], VP_OIS = { USDTRY: "USD", EURTRY: "EUR" };
@@ -651,8 +727,9 @@ $("#grpBox").addEventListener("toggle", e => { if (e.target.classList?.contains(
 let rz, lw = innerWidth; addEventListener("resize", () => { if (!D || Math.abs(innerWidth - lw) < 30 && !rz) { } lw = innerWidth; clearTimeout(rz); rz = setTimeout(() => { rz = null; render(); }, 150); });
 const h = location.hash.slice(1); if (h === "piyasa" || h === "makro") S.tab = h;
 const bbgYukle = fetch("data/bbg.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
+const lbYukle = fetch("../tcmb/data/lbma.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
 fetch("data/makro.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-  .then(async j => { D = j; B = await bbgYukle; $("#gate").remove(); render(); })
+  .then(async j => { D = j; B = await bbgYukle; LB = await lbYukle; $("#gate").remove(); render(); })
   .catch(e => { $("#gate").textContent = "Veriler yüklenemedi (" + e.message + "). Sayfa henüz güncellenmemiş olabilir."; });
 })();
 </script>
