@@ -27,11 +27,14 @@ jobs:
               for i, x in enumerate(P(d.get("tables"))):
                   if x.get("type") != "xls":
                       continue
-                  r = S.get(T + x["url"], timeout=120)
+                  for k in range(4):
+                      time.sleep(7)
+                      r = S.get(T + x["url"], timeout=120)
+                      if not r.content[:20].lstrip().startswith(b"<"):
+                          break
                   ad = re.sub(r"[^A-Za-z0-9]+", "_", t)[:20] + f"_{i}.xls"
                   open("tuik/" + ad, "wb").write(r.content)
                   print("  ", ad, r.status_code, len(r.content), x["title"])
-                  time.sleep(0.5)
           PY
           python /tmp/al.py
           git config user.name bot; git config user.email bot@users.noreply.github.com
