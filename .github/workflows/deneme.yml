@@ -1,0 +1,36 @@
+name: TÜİK deneme
+on:
+  push:
+    branches: [tuik-deneme]
+permissions:
+  contents: write
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          cat > /tmp/al.py <<'PY'
+          import requests, json, re, os, time
+          T = "https://veriportali.tuik.gov.tr"
+          H = {"X-Requested-With": "XMLHttpRequest", "Accept": "application/json", "User-Agent": "Mozilla/5.0"}
+          P = lambda v: json.loads(v or "[]") if isinstance(v, str) else (v or [])
+          L = requests.get(T + "/api/tr/press", headers=H, timeout=60).json()["data"]
+          os.makedirs("tuik", exist_ok=True)
+          for t in ["Sanayi Üretim Endeksi", "Hizmet Üretim Endeksi", "İnşaat Üretim Endeksi", "Ticaret Satış Hacim Endeksi",
+                    "Dönemsel Gayrisafi Yurt İçi Hasıla", "İşgücü İstatistikleri", "Dış Ticaret İstatistikleri"]:
+              s = next(x for x in L if x["title"] == t)
+              d = requests.get(T + f"/api/tr/press/{s['id']}", headers=H, timeout=60).json()["data"]
+              print(t, s["id"], d["period"])
+              for i, x in enumerate(P(d.get("tables"))):
+                  if x.get("type") != "xls":
+                      continue
+                  r = requests.get(T + x["url"], headers={"User-Agent": "Mozilla/5.0"}, timeout=120)
+                  ad = re.sub(r"[^A-Za-z0-9]+", "_", t)[:20] + f"_{i}.xls"
+                  open("tuik/" + ad, "wb").write(r.content)
+                  print("  ", ad, r.status_code, len(r.content), x["title"])
+                  time.sleep(0.5)
+          PY
+          python /tmp/al.py
+          git config user.name bot; git config user.email bot@users.noreply.github.com
+          git checkout --orphan tuik-deneme-veri; git rm -rq --cached .; git add -f tuik; git commit -qm veri; git push -f origin tuik-deneme-veri
