@@ -13,19 +13,21 @@ jobs:
           cat > /tmp/al.py <<'PY'
           import requests, json, re, os, time
           T = "https://veriportali.tuik.gov.tr"
-          H = {"X-Requested-With": "XMLHttpRequest", "Accept": "application/json", "User-Agent": "Mozilla/5.0"}
+          UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+          S = requests.Session(); S.headers.update({"User-Agent": UA, "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.8"})
+          H = {"X-Requested-With": "XMLHttpRequest", "Accept": "application/json"}
           P = lambda v: json.loads(v or "[]") if isinstance(v, str) else (v or [])
-          L = requests.get(T + "/api/tr/press", headers=H, timeout=60).json()["data"]
+          L = S.get(T + "/api/tr/press", headers=H, timeout=60).json()["data"]
           os.makedirs("tuik", exist_ok=True)
           for t in ["Sanayi Üretim Endeksi", "Hizmet Üretim Endeksi", "İnşaat Üretim Endeksi", "Ticaret Satış Hacim Endeksi",
                     "Dönemsel Gayrisafi Yurt İçi Hasıla", "İşgücü İstatistikleri", "Dış Ticaret İstatistikleri"]:
               s = next(x for x in L if x["title"] == t)
-              d = requests.get(T + f"/api/tr/press/{s['id']}", headers=H, timeout=60).json()["data"]
+              d = S.get(T + f"/api/tr/press/{s['id']}", headers=H, timeout=60).json()["data"]
               print(t, s["id"], d["period"])
               for i, x in enumerate(P(d.get("tables"))):
                   if x.get("type") != "xls":
                       continue
-                  r = requests.get(T + x["url"], headers={"User-Agent": "Mozilla/5.0"}, timeout=120)
+                  r = S.get(T + x["url"], timeout=120)
                   ad = re.sub(r"[^A-Za-z0-9]+", "_", t)[:20] + f"_{i}.xls"
                   open("tuik/" + ad, "wb").write(r.content)
                   print("  ", ad, r.status_code, len(r.content), x["title"])
