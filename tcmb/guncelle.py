@@ -298,6 +298,7 @@ def main():
         fark = [abs(p - lbma[t]) for t, p in zip(h["dates"], h["fiyat"]) if p and t in lbma]
         if fark:
             log(f"   LBMA kontrol: {len(fark)} Cuma, ortalama fark {sum(fark) / len(fark):.2f} $, en büyük {max(fark):.2f} $")
+            log("   en büyük farklar: " + ", ".join(f"{t} TCMB {p:.2f} / LBMA {lbma[t]:.2f}" for t, p in sorted(((t, p) for t, p in zip(h["dates"], h["fiyat"]) if p and t in lbma), key=lambda x: -abs(x[1] - lbma[x[0]]))[:6]))
         if len(g["dates"]) < 100:
             raise RuntimeError(f"beklenenden az gün ({len(g['dates'])})")
         D["rezerv"], D["haftalik"], D["aylik"] = g, h, m
