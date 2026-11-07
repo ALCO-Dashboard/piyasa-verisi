@@ -215,8 +215,8 @@ def tuik_indir(s, gerekli):
                 bultenler[baslik] = s.get(f"{TUIK}/api/tr/press/{x['id']}", headers=H, timeout=60).json()["data"]
             d = bultenler[baslik]
             t = next(t for t in P(d.get("tables")) if t.get("type") == "xls" and re.search(desen, t.get("title", ""), re.I))
-            for deneme in range(5):
-                time.sleep(7)                               # TÜİK: art arda indirmeye birkaç saniye izin vermiyor
+            for deneme in range(7):
+                time.sleep([8, 15, 30, 45, 60, 90, 120][deneme])   # TÜİK: art arda indirmede bekleme sayfası döndürüyor
                 r = s.get(TUIK + t["url"], timeout=180)
                 if r.ok and not r.content[:200].lstrip().startswith(b"<"):
                     break
