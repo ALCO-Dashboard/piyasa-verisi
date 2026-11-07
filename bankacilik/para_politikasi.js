@@ -2,6 +2,13 @@
 // Veri: data/politika.enc.json (bankacilik/guncelle.py › politika): EVDS bie_apifon + bie_swaptektarf + USD/TRY,
 // TÜFE endeksi (TP.FG.J0), TCMB 1 hafta repo tarihçesi ve PPK takvimi.
 const PPS = { sel: null, range: "2Y", drange: "1Y", ppkYear: null, ppkChart: false };
+// TÜFE yıllık: Makro Veriler'deki TÜİK serisi (makro.json); yoksa EVDS TÜFE endeksinden hesaplanır
+let PP_TUFE = null;
+fetch("../makro/data/makro.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => {
+  const t = j?.tufe; if (!t?.months) return;
+  PP_TUFE = {}; t.months.forEach((ay, i) => { if (ok(t.yoy[i])) PP_TUFE[ay] = t.yoy[i]; });
+  const pane = $("#ppPane"); if (pane && !pane.classList.contains("hidden")) ppRender();
+});
 const PP_SW = ["sw_usd_piy", "sw_usd_bist", "sw_usd_al", "sw_usd_sat", "sw_usd_mik", "sw_xau_piy", "sw_xau_al", "sw_xau_sat", "sw_top_al", "sw_top_sat"];
 function ppModel() {
   const P = D.p; if (!P || !P.daily || !P.daily.dates || !P.daily.dates.length) return null;
@@ -156,7 +163,7 @@ function ppkList(m) {
     x.bp = x.yayin && ok(before) && ok(x.faiz) ? Math.round((x.faiz - before) * 100) : null;
     x.karar = x.bp == null ? null : x.bp === 0 ? "Sabit" : `${x.bp > 0 ? "+" : "−"}${Math.abs(x.bp)}bp`;
     const d = new Date(x.tarih + "T00:00:00"), back = d.getDate() >= 4 ? 1 : 2, tm = new Date(d.getFullYear(), d.getMonth() - back, 1);
-    x.tufeAy = `${tm.getFullYear()}-${String(tm.getMonth() + 1).padStart(2, "0")}`; x.tufe = yoy(x.tufeAy);
+    x.tufeAy = `${tm.getFullYear()}-${String(tm.getMonth() + 1).padStart(2, "0")}`; x.tufe = PP_TUFE?.[x.tufeAy] ?? yoy(x.tufeAy);
     x.reel = ok(x.faiz) && ok(x.tufe) ? x.faiz - x.tufe : null; x.today = x.tarih === today;
   }
   return out;
@@ -170,16 +177,16 @@ function ppkSection(m) {
   const netBp = ok(before0) && ok(endR) ? Math.round((endR - before0) * 100) : null;
   const yrs = [...new Set(win.map(x => x.yil))];
   const table = `<article class="card ppk"><h3>${yrs.length > 1 ? `${yrs[0]}–${yrs[yrs.length - 1]}` : yrs[0] || ""} TCMB Politika Faizi Süreci</h3>
-    <div class="tscroll"><table class="pptab"><thead><tr><th>PPK Tarihi</th><th>Karar</th><th class="num">Pol. Faizi</th><th class="num">TÜFE Yıllık</th><th class="num">Reel Faiz</th></tr></thead><tbody>`
-    + win.map(x => `<tr class="${x.yayin ? "" : "next"}"><td>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${dShort(x.tarih)}</a>` : dShort(x.tarih)}${x.ara ? " *" : ""}${x.yayin ? "" : ' <span class="tag">Sıradaki</span>'}</td>
+    <div class="tscroll"><table class="pptab"><thead><tr><th>PPK Tarihi</th><th>Karar</th><th class="num">Pol. Faizi</th><th class="num">TÜFE Yıllık</th><th class="num">Reel Getiri</th></tr></thead><tbody>`
+    + [...win].reverse().map(x => `<tr class="${x.yayin ? "" : "next"}"><td>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${dShort(x.tarih)}</a>` : dShort(x.tarih)}${x.ara ? " *" : ""}${x.yayin ? "" : ' <span class="tag">Sıradaki</span>'}</td>
       <td class="${x.bp > 0 ? "up" : x.bp < 0 ? "down" : ""}">${x.karar || "—"}</td><td class="num">${ppPct(x.faiz, 2)}</td><td class="num">${ppPct(x.tufe, 2)}</td><td class="num ${cls(x.reel, 0.005)}">${ok(x.reel) ? `${sgnOf(x.reel, 1)}${nf(1).format(Math.abs(x.reel))} puan` : "—"}</td></tr>`).join("")
-    + `</tbody></table></div><p class="ppnote">TÜFE Yıllık: PPK öncesi son açıklanan aya ait yıllık değişim (EVDS, TÜFE endeksi). Reel faiz = Pol. Faizi − TÜFE Yıllık.${netBp != null ? ` Net ${netBp < 0 ? "indirim" : netBp > 0 ? "artış" : "değişim"}: ${Math.abs(netBp)}bp (%${nf(2).format(before0)}→%${nf(2).format(endR)}).` : ""} Kaynak: TCMB 1 Hafta Repo tarihçesi ve PPK kararları.${win.some(x => x.ara) ? " * Ara toplantı." : ""}</p></article>`;
+    + `</tbody></table></div><p class="ppnote">TÜFE Yıllık: PPK öncesi son açıklanan aya ait yıllık değişim (TÜİK). Reel getiri = Pol. Faizi − TÜFE Yıllık.${netBp != null ? ` Net ${netBp < 0 ? "indirim" : netBp > 0 ? "artış" : "değişim"}: ${Math.abs(netBp)}bp (%${nf(2).format(before0)}→%${nf(2).format(endR)}).` : ""} Kaynak: TCMB 1 Hafta Repo tarihçesi ve PPK kararları.${win.some(x => x.ara) ? " * Ara toplantı." : ""}</p></article>`;
   const Y = PPS.ppkYear && years.includes(PPS.ppkYear) ? PPS.ppkYear : (years.includes(nowY) ? nowY : years[years.length - 1]);
   const ys = L.filter(x => +x.yil === Y), yp = ys.filter(x => x.yayin && ok(x.faiz)), yb = yp.length ? (m.F.filter(f => f.tarih <= yp[0].tarih).pop() || {}).oran : null, ye = yp.length ? yp[yp.length - 1].faiz : null;
   const ybp = ok(yb) && ok(ye) ? Math.round((ye - yb) * 100) : null, today = new Date().toISOString().slice(0, 10);
   const cal = `<article class="card ppk ppcal" id="ppCal"><div class="ppcalh"><h3>PPK Takvimi</h3><select class="ppsel" id="ppYear" aria-label="Yıl">${years.map(y => `<option value="${y}"${y === Y ? " selected" : ""}>${y}</option>`).join("")}</select></div>
     <p class="ppsum">${yp.length ? `${yp.length} karar · yıl içinde ${ybp === 0 ? "değişiklik yok" : `${ybp < 0 ? "−" : "+"}${Math.abs(ybp)}bp`} (%${nf(2).format(yb)} → %${nf(2).format(ye)})` : "Bu yıl için henüz karar yok."}</p>
-    <ol class="ppcl" title="Politika faizi grafiğini aç/kapat">${ys.map(x => { const st = x.today ? "today" : x.tarih < today ? "past" : "future";
+    <ol class="ppcl" title="Politika faizi grafiğini aç/kapat">${[...ys].reverse().map(x => { const st = x.today ? "today" : x.tarih < today ? "past" : "future";
       return `<li class="${st}"><span class="dot"></span><span class="dd">${dLabel(x.tarih)}${x.ara ? " *" : ""}${x.today ? ' <span class="tag">BUGÜN</span>' : ""}</span><span class="kk">${x.karar ? `${x.karar} → %${nf(2).format(x.faiz)}` : st === "future" ? "—" : ""}</span></li>`; }).join("")}</ol>
     <button type="button" class="more" id="ppkToggle">${PPS.ppkChart ? "Grafiği gizle" : "Politika faizi trendini göster (son 2 yıl)"}</button></article>`;
   return `<div class="ppkgrid">${table}${cal}</div>${PPS.ppkChart ? `<article class="card"><h3>Politika Faizi (1 Hafta Repo) — Son 2 Yıl</h3><div id="ppkChart"></div></article>` : ""}`;
