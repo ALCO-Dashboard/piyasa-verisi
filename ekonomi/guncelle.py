@@ -200,8 +200,9 @@ def oku_xls(icerik):
     return [[sh.cell_value(i, j) if sh.cell_value(i, j) != "" else None for j in range(sh.ncols)] for i in range(sh.nrows)]
 
 
-def tuik_indir(s, gerekli):
-    """{anahtar: (bülten bilgisi, satırlar)}"""
+def tuik_indir(s, gerekli, onceki=None, guncel=None):
+    """{anahtar: (bülten bilgisi, satırlar)}. Bülten numarası kayıtlı veriyle aynıysa dosya indirilmez (guncel kümesine eklenir)."""
+    onceki = onceki or {}
     H = {"X-Requested-With": "XMLHttpRequest", "Accept": "application/json"}
     P = lambda v: json.loads(v or "[]") if isinstance(v, str) else (v or [])
     liste = s.get(f"{TUIK}/api/tr/press", headers=H, timeout=60).json()["data"]
@@ -214,9 +215,13 @@ def tuik_indir(s, gerekli):
                 x = next(b for b in liste if b.get("title") == baslik)
                 bultenler[baslik] = s.get(f"{TUIK}/api/tr/press/{x['id']}", headers=H, timeout=60).json()["data"]
             d = bultenler[baslik]
+            if str((onceki.get(anahtar) or {}).get("kaynak", {}).get("no")) == str(d.get("id")):
+                guncel.add(anahtar)
+                log(f"   TÜİK {anahtar}: {baslik} · {d.get('period')} · yeni bülten yok, kayıtlı veri kullanılıyor")
+                continue
             t = next(t for t in P(d.get("tables")) if t.get("type") == "xls" and re.search(desen, t.get("title", ""), re.I))
-            for deneme in range(7):
-                time.sleep([8, 15, 30, 45, 60, 90, 120][deneme])   # TÜİK: art arda indirmede bekleme sayfası döndürüyor
+            for deneme in range(4):
+                time.sleep([8, 20, 40, 60][deneme])         # TÜİK: art arda indirmede bekleme sayfası döndürüyor
                 r = s.get(TUIK + t["url"], timeout=180)
                 if r.ok and not r.content[:200].lstrip().startswith(b"<"):
                     break
@@ -361,6 +366,7 @@ def main():
         sorun.append("evds")
 
     gerekli = {k for _, _, k in TUIK_TABLO}
+    guncel = set()
     if a.tuik_yerel:
         T = {}
         import openpyxl
@@ -373,14 +379,15 @@ def main():
         s = requests.Session()
         s.headers.update({"User-Agent": UA, "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.8"})
         try:
-            T = tuik_indir(s, gerekli)
+            T = tuik_indir(s, gerekli, D.get("tuik"), guncel)
         except Exception as e:
             log(f"HATA TÜİK bülten listesi: {type(e).__name__}: {e}")
             T = {}
     tu = D.setdefault("tuik", {})
     for k in sorted(gerekli):
         if k not in T:
-            sorun.append("tuik_" + k)
+            if k not in guncel:
+                sorun.append("tuik_" + k)
             continue
         bilgi, R = T[k]
         try:
