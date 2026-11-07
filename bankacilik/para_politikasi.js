@@ -208,8 +208,8 @@ function ppDefaultCharts(m) {
     { name: "TCMB AOF (%)", color: col(4), data: ppStep(ids.map(i => [m.dt[i], ok(M.aof[i]) ? M.aof[i] : null, toTime(m.dt[i])])) },
     { name: "Politika faizi (%)", color: col(1), dash: true, data: ppStep(ids.map(i => [m.dt[i], M.pol[i], toTime(m.dt[i])])) }], height: 240, yFmt: v => nf(1).format(v) });
   ppStackChart(n, { dates: ids.map(i => m.dt[i]), height: 240,
-    stacks: [["fon", "Para piyasaları ile fonlama", 1], ["swap", "Swap fonlaması", 2], ["st_neg", "Sterilizasyon", 8]].map(([k, nm, c]) => ({ name: nm, color: col(c), vals: ids.map(i => ok(M[k][i]) ? M[k][i] / 1e3 : null) })),
-    line: { name: "Swap dahil net fonlama", color: "var(--ink)", vals: ids.map(i => ok(M.nets[i]) ? M.nets[i] / 1e3 : null) } });
+    stacks: [["fon", "Para piyasaları ile fonlama", 1], ["st_neg", "Sterilizasyon", 8], ["swap", "Swap fonlaması", 7]].map(([k, nm, c]) => ({ name: nm, color: col(c), vals: ids.map(i => ok(M[k][i]) ? M[k][i] / 1e3 : null) })),
+    line: { name: "Net fonlama", color: "var(--ink)", vals: ids.map(i => ok(M.net[i]) ? M.net[i] / 1e3 : null) } });
 }
 function ppRender() {
   const pane = $("#ppPane"); pane.classList.remove("hidden");
@@ -223,7 +223,7 @@ function ppRender() {
       <p class="ppnote">${dLabel(m.dt[m.last])} itibarıyla. ${sel === "swap" ? "Swap stokları (milyon USD) × TCMB USD/TRY alış kuru; alım yönlü − satım yönlü. Pozitif: TCMB swapla TL verdi, negatif: TL çekti." : sel === "aof" ? "Politika faizi: TCMB 1 hafta repo ihale faizi." : "Kaynak: TCMB EVDS, Açık Piyasa İşlemleri ile Fonlama ve Sterilizasyon."}</p></article>`
       : `<p class="ppnote">Kırılımı görmek için bir kutuya tıklayın.</p>`)
     + `<div class="ppdef"><div class="ppdefh"><span class="lbl">Dönem</span><div class="chips" id="ppDRange"></div></div><div class="ppkgrid2"><article class="card"><h3>TCMB AOF (%) — Günlük</h3><div id="ppAof"></div><p class="ppnote">Ağırlıklı ortalama fonlama maliyeti · kesikli: politika faizi</p></article>
-      <article class="card"><h3>Net Fonlama (₺ mr) — Günlük</h3><div id="ppNet"></div><p class="ppnote">Para piyasaları ile fonlama + swap fonlaması − sterilizasyon</p></article></div></div>`
+      <article class="card"><h3>Net Fonlama (₺ mr) — Günlük</h3><div id="ppNet"></div><p class="ppnote">Çizgi: net fonlama (para piyasaları ile fonlama − sterilizasyon) · çubuklar: fonlama, sterilizasyon ve ayrıca swap fonlaması</p></article></div></div>`
     + ppkSection(m);
   if (sel) { rangeChips($("#ppRange"), PPS.range, k => { PPS.range = k; ppDrawChart(m); }); ppDrawChart(m); }
   rangeChips($("#ppDRange"), PPS.drange, k => { PPS.drange = k; ppDefaultCharts(m); }); ppDefaultCharts(m);
