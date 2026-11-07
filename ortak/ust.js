@@ -145,7 +145,8 @@ ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
       for (const [kk, f] of Object.entries(frames)) f.hidden = kk !== k;
       if (!frames[k]) {
         const t = TABS.find(x => x[0] === k), f = document.createElement("iframe");
-        f.title = t[1]; f.src = t[3] + "?v=" + Math.floor(Date.now() / 6e4) + (ic ? "#" + ic : "");   // ?v: tarayıcı önbelleğindeki eski sayfa yerine güncelini aç box.appendChild(f); frames[k] = f;
+        f.title = t[1]; f.src = t[3] + "?v=" + Math.floor(Date.now() / 6e4) + (ic ? "#" + ic : "");   // ?v: tarayıcı önbelleğindeki eski sayfa yerine güncelini aç
+        box.appendChild(f); frames[k] = f;
       } else { try { frames[k].contentWindow.dispatchEvent(new Event("resize")); } catch (e) {} }
       document.title = TABS.find(x => x[0] === k)[1] + " · ALCO";
     };
