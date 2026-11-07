@@ -226,7 +226,8 @@ def tuik_indir(s, gerekli, onceki=None, guncel=None):
                 if r.ok and not r.content[:200].lstrip().startswith(b"<"):
                     break
             else:
-                raise RuntimeError("dosya indirilemedi (bekleme sayfası)")
+                ic = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", r.content[:3000].decode("utf-8", "replace")))[:200]
+                raise RuntimeError(f"dosya indirilemedi (HTTP {r.status_code}, {r.headers.get('content-type')}): {ic}")
             out[anahtar] = ({"bulten": baslik, "donem": d.get("period"), "no": d.get("id"), "tablo": t.get("title")}, oku_xls(r.content))
             log(f"   TÜİK {anahtar}: {baslik} · {d.get('period')} · {len(out[anahtar][1])} satır")
         except Exception as e:
