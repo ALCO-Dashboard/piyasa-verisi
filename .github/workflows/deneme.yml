@@ -12,9 +12,12 @@ jobs:
       - run: |
           mkdir -p oz
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-          curl -sL -A "$UA" -o oz/main.js -w "main %{http_code} %{size_download}\n" "https://www.resmiistatistik.gov.tr/static/js/main.js?ver=5"
-          grep -oE 'https?://[a-zA-Z0-9./_-]{8,120}' oz/main.js | sort -u | grep -v -E "w3.org|reactjs|fb.me|mui|github" | head -40
-          grep -oE '"/?[a-zA-Z/_-]*(api|Api|takvim|Takvim|calendar|Calendar)[a-zA-Z/_?=&{}$.-]{0,80}"' oz/main.js | sort -u | head -60
-          grep -oE '`[^`]{0,40}(api|Api|takvim|Takvim)[^`]{0,100}`' oz/main.js | sort -u | head -30
+          curl -sL -A "$UA" -H "Accept: application/json" -o oz/takvim.json -w "takvim %{http_code} %{size_download}\n" "https://www.resmiistatistik.gov.tr/Home/GetTakvimHaberBulteniListesi?dilId=1&yil=2026"
+          python3 -c "
+          import json,collections
+          d=json.load(open('oz/takvim.json')); print(type(d), len(d))
+          print(json.dumps(d[:3],ensure_ascii=False)[:1500])
+          print(collections.Counter(str(x.get('KurumAdi') or x.get('Kurum') or '') for x in d).most_common(30))
+          "
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan ozet-deneme-veri; git rm -rq --cached .; git add -f oz; git commit -qm veri; git push -f origin ozet-deneme-veri
