@@ -21,6 +21,7 @@ on:
       - "zk/**"
       - "ekonomi/**"
       - "ozet/**"
+      - "bilanco/**"
       - "sayfa.html"
   workflow_dispatch:
 
@@ -102,6 +103,10 @@ jobs:
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: python ekonomi/guncelle.py --site site
+
+      - name: Banka bilanço verilerini çek (KAP finansal raporlar)
+        continue-on-error: true
+        run: python bilanco/guncelle.py --site site
 
       - name: Özet sayfasını derle (göstergeler, haber akışı, veri takvimi)
         continue-on-error: true

@@ -38,6 +38,7 @@ jobs:
             git --work-tree=site checkout FETCH_HEAD -- tcmb 2>/dev/null || true
             git --work-tree=site checkout FETCH_HEAD -- zk 2>/dev/null || true
             git --work-tree=site checkout FETCH_HEAD -- ozet 2>/dev/null || true
+            git --work-tree=site checkout FETCH_HEAD -- bilanco 2>/dev/null || true
             git show FETCH_HEAD:durum.json > site/durum.json 2>/dev/null || rm -f site/durum.json
             git reset -q
           fi
