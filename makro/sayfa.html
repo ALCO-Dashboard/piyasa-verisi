@@ -456,8 +456,8 @@ function chart(el, o) {
   const ext = ax => { const ss = ser.filter(s => (s.axis || "l") === ax), v = ss.flatMap(s => s.vals.filter(ok));
     if (o.stack) { const bb = ss.filter(s => s.type === "bar"); for (let i = 0; i < n; i++) { let p = 0, q = 0; bb.forEach(b => { const x = b.vals[i]; if (ok(x)) x > 0 ? p += x : q += x; }); v.push(p, q); } }
     if (!v.length) return null; let lo = Math.min(...v), hi = Math.max(...v);
-    if (ser.some(s => (s.axis || "l") === ax && s.type === "bar") || o.zero) { lo = Math.min(0, lo); hi = Math.max(0, hi); }
-    const pad = (hi - lo) * .08 || 1, z = ser.some(s => (s.axis || "l") === ax && s.type === "bar") || o.zero; return [z ? (lo < 0 ? lo - pad : 0) : o.min0 && ax === "l" ? Math.max(0, lo - pad) : lo - pad, hi + pad]; };
+    if (ser.some(s => (s.axis || "l") === ax && s.type === "bar") || (o.zero && ax === "l")) { lo = Math.min(0, lo); hi = Math.max(0, hi); }
+    const pad = (hi - lo) * .08 || 1, z = ser.some(s => (s.axis || "l") === ax && s.type === "bar") || (o.zero && ax === "l"); return [z ? (lo < 0 ? lo - pad : 0) : o.min0 && ax === "l" ? Math.max(0, lo - pad) : lo - pad, hi + pad]; };
   const L = ext("l"), R = hasR ? ext("r") : null;
   const tl = L ? niceTicks(L[0], L[1], 5) : [], tr = R ? niceTicks(o.rNeg ? R[0] : Math.max(0, R[0]), R[1], 5) : [];
   if (o.min0) while (tl.length > 1 && tl[0] < 0) tl.shift();
@@ -1066,7 +1066,7 @@ function renderMakro() {
 // ---------------------------------------------------------------- Ekonomik göstergeler (EVDS + TÜİK): büyüme, istihdam, üretim, dış denge, bütçe
 let E;   // ekonomi.json (undefined: yükleniyor, null: yok)
 const EK = { by1R: "5Y", by2Y: "harcama", by2R: "3Y", is1On: new Set(["issizlik", "atil", "genc"]), is1R: "5Y", is2R: "5Y",
-  ur1M: "mea", ur1On: new Set(["sanayi", "hizmet", "ticaret", "insaat"]), ur1R: "3Y", ur2Y: "sanayi", ur2B: 0, ur2R: "3Y", ur3R: "5Y",
+  ur1M: "mea", ur1On: new Set(["sanayi", "hizmet", "ticaret", "insaat", "pmi"]), ur1R: "3Y", ur2Y: "sanayi", ur2B: 0, ur2R: "3Y", ur3R: "5Y",
   dt1M: "ay", dt1R: "3Y", dt2Y: "ihr", dt3Y: "ihr", od1M: "ay", od1R: "3Y", od2R: "5Y", bc1M: "tl", bc1R: "3Y" };
 const R_M = [["2Y", 24], ["3Y", 36], ["5Y", 60], ["Tümü", 999]], R_Q = [["3Y", 12], ["5Y", 20], ["10Y", 40], ["Tümü", 999]];
 const qAd = q => q ? `${q.slice(0, 4)} ${q.slice(6)}. çeyrek` : "—", qKisa = q => `Ç${q.slice(6)} ${q.slice(2, 4)}`;
@@ -1178,10 +1178,21 @@ function renderIstihdam() {
 // ---------------------------------------------------------------- Üretim endeksleri
 const UR = [["sanayi", "Sanayi", "--c1", "Sanayi üretim endeksi"], ["hizmet", "Hizmet", "--c3", "Hizmet üretim endeksi"], ["ticaret", "Ticaret", "--c6", "Ticaret satış hacim endeksi"], ["insaat", "İnşaat", "--c4", "İnşaat üretim endeksi"]];
 const blokAd = a => a.replace(/^[A-Z0-9_\-]+\s*-\s*|^\d+\s*-\s*/, "").replace(/\s*\([^)]*\)\s*$/, "").replace(/^(Toplam sanayi|Toplam inşaat)$/, "Toplam").replace(/^H-N \(K hariç\) - Hizmet$/, "Toplam");
+// İmalat PMI (Bloomberg Excel, PMI sayfası): ticker'ında PMI geçen ilk seri, aylık
+function pmiSeri() {
+  for (const t of Object.values(B?.tablolar || {})) {
+    const j = (t.kolonlar || []).findIndex(k => /PMI/i.test(k.ticker || k.etiket || ""));
+    if (j >= 0) { const m = {}; t.dates.forEach((d, i) => { if (ok(t.v[j][i])) m[d.slice(0, 7)] = t.v[j][i]; }); const dates = Object.keys(m).sort(); return { dates, vals: dates.map(d => m[d]), ticker: t.kolonlar[j].ticker }; }
+  }
+  return null;
+}
+const PMI_T = ["pmi", "İmalat PMI (sağ eksen)", "--c5"];
 function renderUretim() {
-  const T = E.tuik || {}, M = E.aylik;
-  const k0 = UR.map(([k, l, c]) => { const S = T[k], b = S?.bloklar?.[0], i = (S?.dates.length || 0) - 1;
-    return S ? kp(l, pc(b.yoy[i]), `aylık (MEA) <b class="${cls(b.mom[i])}">${pc(b.mom[i])}</b>`, `${ayAd(S.dates[i])} · yıllık takvim etkisinden arındırılmış`, c) : ""; });
+  const T = E.tuik || {}, M = E.aylik, P = pmiSeri();
+  const pi = P ? P.dates.length - 1 : -1, pd = pi > 0 ? P.vals[pi] - P.vals[pi - 1] : null;
+  const k0 = P ? [kp("İmalat PMI", nf(P.vals[pi], 1), `aylık <b class="${cls(pd)}">${pp(pd)}</b> · <b class="${cls(P.vals[pi] - 50)}">${P.vals[pi] >= 50 ? "büyüme" : "daralma"}</b> bölgesi`, `${ayAd(P.dates[pi])} · İSO Türkiye imalat PMI (Bloomberg) · eşik 50`, "--c5")] : [];
+  k0.push(...UR.map(([k, l, c]) => { const S = T[k], b = S?.bloklar?.[0], i = (S?.dates.length || 0) - 1;
+    return S ? kp(l, pc(b.yoy[i]), `aylık (MEA) <b class="${cls(b.mom[i])}">${pc(b.mom[i])}</b>`, `${ayAd(S.dates[i])} · yıllık takvim etkisinden arındırılmış`, c) : ""; }));
   const ki = sonI(M?.dates || [], M?.kko);
   k0.push(ki >= 0 ? kp("Kapasite kullanım", "%" + nf(M.kko[ki], 1), `aylık <b class="${cls(M.kko[ki] - M.kko[ki - 1])}">${pp(M.kko[ki] - M.kko[ki - 1])}</b>`, `${ayAd(M.dates[ki])} · imalat sanayi, MEA (TCMB)`, "--c2") : "");
   $("#urKpi").innerHTML = k0.join("");
@@ -1189,10 +1200,16 @@ function renderUretim() {
   segH("#ur1M", [["mea", "Endeks (MEA)"], ["yoy", "Yıllık %"], ["mom", "Aylık %"]], EK.ur1M);
   const tum = [...new Set(UR.flatMap(([k]) => T[k]?.dates || []))].sort(), al = (k, f) => tum.map(t => { const S = T[k], j = S?.dates.indexOf(t) ?? -1; return j >= 0 ? S.bloklar[0][f][j] : null; });
   $("#ur1T").textContent = { mea: "Üretim endeksleri (2021=100, mevsim ve takvim etkisinden arındırılmış)", yoy: "Üretim endeksleri · yıllık değişim (%, takvim etkisinden arındırılmış)", mom: "Üretim endeksleri · aylık değişim (%, MEA)" }[EK.ur1M];
-  $("#ur1S").textContent = "Sanayi, hizmet, ticaret satış hacmi, inşaat · seriye tıklayarak aç/kapat";
-  togH("#ur1L", UR, EK.ur1On);
-  zc("ur1", tum, UR.filter(([k]) => EK.ur1On.has(k) && T[k]).map(([k, l, c]) => ({ name: l, vals: al(k, EK.ur1M), color: css(c), width: 2.2, type: EK.ur1M === "mom" && EK.ur1On.size === 1 ? "bar" : undefined,
-    fmt: v => EK.ur1M === "mea" ? nf(v, 1) : pc(v) })), { yeniden: renderUretim, yFmt: v => nf(v, 0), zero: EK.ur1M !== "mea" });
+  $("#ur1S").textContent = "Sanayi, hizmet, ticaret satış hacmi, inşaat (sol eksen) · İmalat PMI sağ eksende, kesikli çizgi 50 eşiği · seriye tıklayarak aç/kapat";
+  togH("#ur1L", P ? [...UR, PMI_T] : UR, EK.ur1On);
+  const pmiOn = P && EK.ur1On.has("pmi"), sol = UR.filter(([k]) => EK.ur1On.has(k) && T[k]);
+  if (pmiOn) { P.dates.forEach(d => { if (!tum.includes(d)) tum.push(d); }); tum.sort(); }
+  const pv = pmiOn ? tum.map(d => { const j = P.dates.indexOf(d); return j >= 0 ? P.vals[j] : null; }) : [];
+  zc("ur1", tum, [...sol.map(([k, l, c]) => ({ name: l, vals: al(k, EK.ur1M), color: css(c), width: 2.2, type: EK.ur1M === "mom" && sol.length === 1 ? "bar" : undefined,
+    fmt: v => EK.ur1M === "mea" ? nf(v, 1) : pc(v) })),
+    ...(pmiOn ? [{ name: "İmalat PMI", vals: pv, color: css("--c5"), width: 2.4, axis: "r", fmt: v => nf(v, 1) },
+      { name: "PMI eşiği", vals: pv.map(v => ok(v) ? 50 : null), color: css("--muted"), width: 1, dash: "4 4", axis: "r", fmt: () => "50" }] : [])],
+    { yeniden: renderUretim, yFmt: v => nf(v, 0), y2Fmt: v => nf(v, 0), zero: EK.ur1M !== "mea", rNeg: true, rScale: 1 });
   // alt kırılım
   segH("#ur2Y", UR.filter(([k]) => T[k]).map(([k, l]) => [k, l]), EK.ur2Y);
   const S = T[EK.ur2Y]; if (S) {
