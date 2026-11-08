@@ -12,16 +12,14 @@ jobs:
       - run: |
           mkdir -p oz
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-          curl -sL -A "$UA" -o oz/tb.html -w "tb %{http_code} %{size_download}\n" https://turk-bankalari-dashboard.vercel.app/
-          cat oz/tb.html | head -c 3000; echo
-          for js in $(grep -oE '(src|href)="[^"]+\.(js|json)"' oz/tb.html | sed -E 's/^(src|href)="//;s/"$//'); do
-            case "$js" in http*) u="$js";; /*) u="https://turk-bankalari-dashboard.vercel.app$js";; *) u="https://turk-bankalari-dashboard.vercel.app/$js";; esac
-            f=oz/$(basename "$js"); curl -sL -A "$UA" -o "$f" "$u"; echo "== $u $(wc -c < $f)"
-            grep -oE '"[^"]{0,80}\.(json|csv|xlsx)[^"]{0,20}"|fetch\([^)]{0,120}\)|https?://[a-zA-Z0-9./_-]{6,120}' "$f" | sort -u | head -40
-            grep -oiE '.{60}(kaynak|source|tbb|kap\.org|bddk|github).{60}' "$f" | head -10
-          done
-          curl -sL -A "$UA" -o oz/kap.json -w "kap %{http_code} %{size_download}\n" "https://www.kap.org.tr/tr/api/disclosure/members/byCriteria" || true
-          curl -sL -A "$UA" -o oz/kap2.html -w "kap2 %{http_code} %{size_download}\n" "https://www.kap.org.tr/tr/" || true
-          curl -sL -A "$UA" -o oz/tbb.html -w "tbb %{http_code} %{size_download}\n" "https://www.tbb.org.tr/tr/bankacilik/banka-ve-sektor-bilgileri/istatistiki-raporlar/59" || true
+          curl -sL -A "$UA" -o oz/robots.txt https://www.kap.org.tr/robots.txt; cat oz/robots.txt; echo
+          curl -sL -A "$UA" -o oz/kap_home.html https://www.kap.org.tr/tr/
+          grep -oE '"/_next/static/[^"]+\.js"' oz/kap_home.html | head -40 > oz/js.txt; wc -l oz/js.txt
+          for js in $(sed 's/"//g' oz/js.txt); do f=oz/k_$(basename $js); curl -sL -A "$UA" -o $f "https://www.kap.org.tr$js"; done
+          cat oz/k_*.js 2>/dev/null | grep -oE '"/?(tr/)?api/[^"]{2,120}"|`/?(tr/)?api/[^`]{2,120}`|api/[a-zA-Z/{}$._-]{3,100}' | sort -u | head -120
+          curl -sL -A "$UA" -H "Content-Type: application/json" -X POST -o oz/bc.json -w "byCriteria %{http_code} %{size_download}\n" \
+            -d '{"fromDate":"2026-10-15","toDate":"2026-11-08","year":"","prd":"","term":"","ruleType":"","bdkReview":"","disclosureClass":"FR","index":"","market":"","isLate":"","subjectList":[],"mkkMemberOidList":[],"inactiveMkkMemberOidList":[],"bdkMemberOidList":[],"mainSector":"","sector":"","subSector":"","memberType":"","fromSrc":"N","srcCategory":"","discIndex":[]}' \
+            https://www.kap.org.tr/tr/api/disclosure/members/byCriteria || true
+          head -c 1500 oz/bc.json; echo
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan ozet-deneme-veri; git rm -rq --cached .; git add -f oz; git commit -qm veri; git push -f origin ozet-deneme-veri
