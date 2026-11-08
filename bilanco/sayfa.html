@@ -51,8 +51,8 @@ main.wrap{padding-block:14px 48px}
 .mono{font-family:var(--mono)}
 /* başlık */
 .bas{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;border-bottom:1px solid var(--line);padding-bottom:12px}
-.subtabs{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
-.subtabs button{border:0;background:none;padding:9px 20px;font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer}
+.subtabs{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow-x:auto;max-width:100%;background:var(--surface);scrollbar-width:none}
+.subtabs button{border:0;background:none;padding:9px 20px;font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer;white-space:nowrap;flex:none}
 .subtabs button+button{border-left:1px solid var(--line)}
 .subtabs button[aria-pressed="true"]{background:var(--accent);color:#fff}
 .donem{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -109,6 +109,37 @@ main.wrap{padding-block:14px 48px}
 .gt tr.l0 td.grp{background:color-mix(in srgb,var(--c1) 12%,var(--surface-2))}
 .gt td.na{color:var(--muted)}
 .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;padding:0 5px;border-radius:4px;background:color-mix(in srgb,var(--kat) 15%,transparent);color:var(--kat);margin-left:4px;font-family:var(--sans)}
+/* bileşim tabloları */
+.kpis.bar .kpi .v{font-size:23px}
+.kpi .br{height:5px;border-radius:3px;background:var(--surface-2);margin-top:8px;position:relative}
+.kpi .br i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--kc,var(--bar))}
+.kpi .br+.s{display:flex;justify-content:space-between}
+.bt2{border-collapse:separate;border-spacing:0;font-size:13px;width:100%;min-width:900px}
+.bt2 th,.bt2 td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.bt2 thead th{position:sticky;top:0;background:var(--surface);z-index:2;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;cursor:pointer;user-select:none}
+.bt2 thead th:hover{color:var(--ink)}
+.bt2 thead th.on{color:var(--accent)}
+.bt2 thead th.on::after{content:" ↓"}.bt2 thead th.on.asc::after{content:" ↑"}
+.bt2 th:first-child,.bt2 td:first-child{position:sticky;left:0;background:var(--surface);z-index:1;text-align:left;border-right:1px solid var(--line)}
+.bt2 thead th:first-child{z-index:3}
+.bt2 td{font-family:var(--mono)}
+.bt2 td:first-child{font-family:var(--sans);min-width:150px}
+.bt2 td:first-child b{font-family:var(--mono);font-size:12.5px}
+.bt2 td:first-child small{display:block;color:var(--muted);font-size:11px}
+.bt2 td small{display:block;font-size:10.5px;color:var(--muted)}
+.bt2 td.ana,.bt2 th.ana{background:color-mix(in srgb,var(--c1) 6%,var(--surface))}
+.bt2 tfoot td{font-weight:700;background:var(--surface-2);border-top:2px solid var(--ink);position:sticky;bottom:0}
+.bt2 tfoot td:first-child{background:var(--surface-2)}
+.bt2 td.pos{color:var(--up)}.bt2 td.neg{color:var(--down)}
+.kpis.koyu .kpi{background:#18202e;border-color:#18202e;color:#fff}
+.kpis.koyu .kpi .t{color:#aab3c2}.kpis.koyu .kpi .v{color:#fff}.kpis.koyu .kpi .s{color:#d4dae4}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:1000px){.fgrid{grid-template-columns:minmax(0,1fr)}}
+.fk{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--kc,var(--bar));border-radius:12px;padding:14px 16px;min-width:0}
+.fk h4{margin:0;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.fk .v{font-family:var(--mono);font-size:24px;margin:4px 0 2px;color:var(--kc,var(--ink))}
+.fk .s{font-size:12.5px;color:var(--muted);margin-bottom:10px}
+.fk .rank{max-height:300px;overflow-y:auto;grid-template-columns:minmax(60px,70px) minmax(0,1fr) 88px}
 .src{font-size:12px;color:var(--muted);margin-top:16px;line-height:1.6}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
 @media (max-width:640px){.rank{grid-template-columns:minmax(70px,90px) minmax(0,1fr) 72px 58px}.rank .bn span{display:none}.kpi .v{font-size:21px}.subtabs button{padding:8px 12px;font-size:13px}}
@@ -119,7 +150,7 @@ main.wrap{padding-block:14px 48px}
 <div id="alcoTop"></div><script src="../ortak/ust.js" data-page="bilanco" data-root="../"></script>
 <header class="top"><div class="wrap">
   <div class="bas">
-    <div class="subtabs" id="sTabs" role="group" aria-label="Bölüm"><button data-s="analiz" aria-pressed="true">Analiz</button><button data-s="gelir" aria-pressed="false">Gelir Tablosu</button></div>
+    <div class="subtabs" id="sTabs" role="group" aria-label="Bölüm"><button data-s="analiz" aria-pressed="true">Analiz</button><button data-s="pasif" aria-pressed="false">Yükümlülük Yapısı</button><button data-s="aktif" aria-pressed="false">Aktif Kalemleri</button><button data-s="fon" aria-pressed="false">Fonlama Açığı ve Likidite</button><button data-s="gelir" aria-pressed="false">Gelir Tablosu</button></div>
     <div class="donem"><select id="dSel" aria-label="Dönem"></select><div class="rt" id="dInfo"></div></div>
   </div>
 </div></header>
@@ -139,6 +170,19 @@ main.wrap{padding-block:14px 48px}
       </div>
     </section>
 
+    <section id="pPasif" class="hidden">
+      <div class="kpis bar" id="pKpi"></div>
+      <div class="card"><div class="cardhead"><div><h3>Yükümlülük yapısı</h3><div class="sub" id="pSub"></div></div></div><div class="tw" id="pTbl"></div></div>
+    </section>
+    <section id="pAktif" class="hidden">
+      <div class="kpis bar" id="kKpi"></div>
+      <div class="card"><div class="cardhead"><div><h3>Aktif kalemleri</h3><div class="sub" id="kSub"></div></div></div><div class="tw" id="kTbl"></div></div>
+    </section>
+    <section id="pFon" class="hidden">
+      <div class="kpis koyu" id="fKpi"></div>
+      <div class="fgrid" id="fKart"></div>
+      <div class="card" style="margin-top:14px"><div class="cardhead"><div><h3>Banka bazında fonlama ve likidite</h3><div class="sub">Sütun başlığına tıklayarak sıralayın · fonlama açığı = mevduat (katılım fonu) − net krediler; eksi değer açık, artı değer fazla</div></div></div><div class="tw" id="fTbl"></div></div>
+    </section>
     <section id="pGelir" class="hidden">
       <div class="kpis" id="gKpi"></div>
       <div class="grid2">
@@ -168,8 +212,8 @@ const yoy = (a, b) => !(ok(a) && ok(b)) || b === 0 ? null : a < 0 && b < 0 ? (a 
 const AY = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 const dAd = d => `${d.slice(0, 4)} ${d.slice(5)}. çeyrek`, dKisa = d => `${d.slice(0, 4)} Ç${d.slice(5)}`;
 const GRUP = [["ALL", "Tümü"], ["TOP10", "İlk 10"], ["TOP10_OZEL", "İlk 10 Özel"], ["PEER", "Peer"], ["MEV", "Mevduat"], ["KAT", "Katılım"], ["KAMU", "Kamu"], ["OZEL", "Özel"]];
-const S = { s: "analiz", d: null, g: "ALL", r: "km", cur: 2, gm: "kum" };
-try { const h = location.hash.slice(1); if (h === "gelir") S.s = "gelir"; } catch (e) {}
+const S = { s: "analiz", d: null, g: "ALL", r: "km", cur: 2, gm: "kum", sk: {}, sd: {} };
+try { const h = location.hash.slice(1); if (["gelir", "pasif", "aktif", "fon"].includes(h)) S.s = h; } catch (e) {}
 let D, BK = {};
 
 // ---- yardımcılar
@@ -274,9 +318,123 @@ function renderGelir() {
   $("#gTbl").innerHTML = `<table class="gt"><thead>${thead}</thead><tbody>${body}</tbody></table>`;
 }
 
+// ---- bileşim tabloları (Yükümlülük, Aktif) ve fonlama
+const curSeg = () => `<div class="seg" id="cSeg" role="group">${CUR.map(([i, l]) => `<button data-c="${i}" aria-pressed="${i === S.cur}">${l}</button>`).join("")}</div>`;
+const krdNet = (x, i) => (B(x, "krd", i) || 0) + (B(x, "kir", i) || 0) + (B(x, "bzk", i) || 0);
+const borc = (x, i) => (B(x, "alk", i) || 0) + (B(x, "ppb", i) || 0) + (B(x, "imk", i) || 0) + (B(x, "sbb", i) || 0);
+const likit = (x, i) => (B(x, "nakit", i) || 0) + (B(x, "bnk", i) || 0) + (B(x, "ppa", i) || 0) + (B(x, "mk_gkz", i) || 0) + (B(x, "mk_gdk", i) || 0);
+const Nz = (x, k, i) => x?.n?.[k]?.[i];
+const swapTL = x => (Nz(x, "swap_sat", 0) || 0) - (Nz(x, "swap_al", 0) || 0);   // TL teslim edilecek − TL alınacak: swap ile sağlanan net TL fonlama
+
+function tablo(el, t, cols, L, opt = {}) {      // cols: [anahtar, başlık, f(x) → sayı, biçim, pay(x) → payda | null, sınıf]
+  const sk = S.sk[t] || opt.sk, asc = !!S.sd[t], c = cols.find(c => c[0] === sk) || cols[cols.length - 1];
+  const rows = L.map(b => ({ b, v: cols.map(c => c[2](b.x)) }));
+  const ci = cols.indexOf(c); rows.sort((a, b) => ((ok(a.v[ci]) ? a.v[ci] : -1e18) - (ok(b.v[ci]) ? b.v[ci] : -1e18)) * (asc ? 1 : -1));
+  const hucre = (c, v, x, top) => { if (!ok(v)) return `<td class="na">—</td>`; const p = c[4] ? c[4](x, top) : null; const cls = (c[5] || "") + (c[3] === "isaret" ? (v > 0 ? " pos" : v < 0 ? " neg" : "") : "");
+    const f = c[3] === "pct" ? pct(v, 1) : c[3] === "isaret" ? (v > 0 ? "+" : "") + tl(v) : tl(v);
+    return `<td class="${cls}">${f}${ok(p) ? `<small>${pct(p, 1)}</small>` : ""}</td>`; };
+  const tops = cols.map(c => c[6] ? c[6](L) : sum(L, b => c[2](b.x)));
+  $(el).innerHTML = `<table class="bt2" data-t="${t}"><thead><tr><th data-sk="_ad">Banka</th>${cols.map(k => `<th data-sk="${k[0]}" class="${k === c ? "on" + (asc ? " asc" : "") : ""} ${k[5] || ""}">${esc(k[1])}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map(r => `<tr><td><b>${esc(r.b.k)}</b>${r.b.tur === "katilim" ? '<span class="tag">K</span>' : ""}<small>${esc(r.b.ad)}</small></td>${cols.map((c, i) => hucre(c, r.v[i], r.b.x)).join("")}</tr>`).join("")}</tbody>
+    <tfoot><tr><td>${esc(GRUP.find(g => g[0] === S.g)[1])} toplam</td>${cols.map((c, i) => { const v = tops[i]; if (!ok(v)) return "<td></td>"; return `<td class="${c[5] || ""}">${c[3] === "pct" ? pct(v, 1) : tl(v)}${c[7] ? `<small>${pct(c[7](L), 1)}</small>` : ""}</td>`; }).join("")}</tr></tfoot></table>`;
+}
+const kpiBar = (t, v, p, alt, renk) => `<div class="kpi" style="--kc:${renk}"><div class="t">${t}</div><div class="v">${v}</div><div class="br"><i style="width:${Math.max(0, Math.min(100, p || 0))}%"></i></div><div class="s"><span>${alt}</span><b>${pct(p, 1)}</b></div></div>`;
+
+function renderPasif() {
+  const L = bankalar(S.d), i = S.cur, cl = CUR.find(c => c[0] === i)[1], PT = sum(L, b => B(b.x, "pasif", i));
+  const dig = (x, j) => B(x, "pasif", j) - (B(x, "mev", j) || 0) - borc(x, j) - (B(x, "ozk", j) || 0);
+  const pay = k => (x) => { const t = B(x, "pasif", i); return t ? k(x) / t * 100 : null; };
+  $("#pKpi").innerHTML = [
+    kpiBar(`${cl} mevduat / katılım fonu`, tl(sum(L, b => B(b.x, "mev", i))), PT ? sum(L, b => B(b.x, "mev", i)) / PT * 100 : null, "toplam pasifin", "var(--accent)"),
+    kpiBar("Borçlanma", tl(sum(L, b => borc(b.x, i))), PT ? sum(L, b => borc(b.x, i)) / PT * 100 : null, "alınan kredi, PP, ihraç MK, sermaye benzeri", "var(--c6)"),
+    kpiBar("Özkaynak", tl(sum(L, b => B(b.x, "ozk", i))), PT ? sum(L, b => B(b.x, "ozk", i)) / PT * 100 : null, "toplam pasifin", "var(--c3)"),
+    kpiBar(`${cl} pasif`, tl(PT), i === 2 ? 100 : sum(L, b => B(b.x, "pasif", 2)) ? PT / sum(L, b => B(b.x, "pasif", 2)) * 100 : null, `${L.length} banka`, "var(--ink)"),
+  ].join("");
+  $("#pSub").textContent = `${dKisa(S.d)} · ${cl} · ${L.length} banka · hücre altındaki oran bankanın ${cl.toLowerCase()} pasifindeki payı · sütun başlığına tıklayarak sıralayın`;
+  const ypP = x => B(x, "pasif", 2) ? B(x, "pasif", 1) / B(x, "pasif", 2) * 100 : null, ypM = x => B(x, "mev", 2) ? B(x, "mev", 1) / B(x, "mev", 2) * 100 : null;
+  tablo("#pTbl", "p", [
+    ["mev", "Mevduat / Kat. fonu", x => B(x, "mev", i), "tl", pay(x => B(x, "mev", i))],
+    ["alk", "Alınan krediler", x => B(x, "alk", i), "tl", pay(x => B(x, "alk", i))],
+    ["ppb", "Para piyasaları", x => B(x, "ppb", i), "tl", pay(x => B(x, "ppb", i))],
+    ["imk", "İhraç edilen MK", x => B(x, "imk", i), "tl", pay(x => B(x, "imk", i))],
+    ["sbb", "Sermaye benzeri", x => B(x, "sbb", i), "tl", pay(x => B(x, "sbb", i))],
+    ["dig", "Diğer yükümlülükler", x => dig(x, i), "tl", pay(x => dig(x, i))],
+    ["ozk", "Özkaynak", x => B(x, "ozk", i), "tl", pay(x => B(x, "ozk", i))],
+    ["top", "Toplam pasif", x => B(x, "pasif", i), "tl", x => PT ? B(x, "pasif", i) / PT * 100 : null, "ana"],
+    ...(i === 2 ? [["ypm", "Mevduat YP %", ypM, "pct", null, "", L => { const t = sum(L, b => B(b.x, "mev", 2)); return t ? sum(L, b => B(b.x, "mev", 1)) / t * 100 : null; }],
+                   ["ypp", "Pasif YP %", ypP, "pct", null, "", L => { const t = sum(L, b => B(b.x, "pasif", 2)); return t ? sum(L, b => B(b.x, "pasif", 1)) / t * 100 : null; }]] : []),
+  ], L, { sk: "top" });
+}
+
+function renderAktif() {
+  const L = bankalar(S.d), i = S.cur, cl = CUR.find(c => c[0] === i)[1], AT = sum(L, b => B(b.x, "aktif", i));
+  const mk = x => mkT(x, i), dig = x => B(x, "aktif", i) - (B(x, "nakit", i) || 0) - (B(x, "bnk", i) || 0) - (B(x, "ppa", i) || 0) - mkT(x, i) - krdNet(x, i);
+  const pay = f => x => { const t = B(x, "aktif", i); return t ? f(x) / t * 100 : null; };
+  $("#kKpi").innerHTML = [
+    kpiBar("Nakit değerler ve TCMB", tl(sum(L, b => B(b.x, "nakit", i))), AT ? sum(L, b => B(b.x, "nakit", i)) / AT * 100 : null, "zorunlu karşılıklar dahil · aktifin", "var(--c3)"),
+    kpiBar("Menkul kıymetler", tl(sum(L, b => mk(b.x))), AT ? sum(L, b => mk(b.x)) / AT * 100 : null, "toplam aktifin", "var(--accent)"),
+    kpiBar("Krediler (net)", tl(sum(L, b => krdNet(b.x, i))), AT ? sum(L, b => krdNet(b.x, i)) / AT * 100 : null, "kiralama dahil, karşılık düşülmüş · aktifin", "var(--c1)"),
+    kpiBar(`${cl} aktif`, tl(AT), i === 2 ? 100 : sum(L, b => B(b.x, "aktif", 2)) ? AT / sum(L, b => B(b.x, "aktif", 2)) * 100 : null, `${L.length} banka`, "var(--ink)"),
+  ].join("");
+  $("#kSub").textContent = `${dKisa(S.d)} · ${cl} · ${L.length} banka · hücre altındaki oran bankanın ${cl.toLowerCase()} aktifindeki payı · menkul kıymetler = GUD K/Z + GUD DKG + itfa edilmiş maliyetle ölçülen`;
+  tablo("#kTbl", "k", [
+    ["nakit", "Nakit ve TCMB", x => B(x, "nakit", i), "tl", pay(x => B(x, "nakit", i))],
+    ["bnk", "Bankalar", x => B(x, "bnk", i), "tl", pay(x => B(x, "bnk", i))],
+    ["ppa", "Para piyasaları", x => B(x, "ppa", i), "tl", pay(x => B(x, "ppa", i))],
+    ["mk", "Menkul kıymetler", mk, "tl", pay(mk)],
+    ["krd", "Krediler (net)", x => krdNet(x, i), "tl", pay(x => krdNet(x, i))],
+    ["dig", "Diğer", dig, "tl", pay(dig)],
+    ["top", "Toplam aktif", x => B(x, "aktif", i), "tl", x => AT ? B(x, "aktif", i) / AT * 100 : null, "ana"],
+    ...(i === 2 ? [["yp", "YP %", x => B(x, "aktif", 2) ? B(x, "aktif", 1) / B(x, "aktif", 2) * 100 : null, "pct", null, "", L => { const t = sum(L, b => B(b.x, "aktif", 2)); return t ? sum(L, b => B(b.x, "aktif", 1)) / t * 100 : null; }]] : []),
+  ], L, { sk: "top" });
+}
+
+function rankKart(baslik, deger, alt, renk, rows, fmt) {
+  rows = rows.filter(r => ok(r.v)).sort((a, b) => a.v - b.v);
+  const mx = Math.max(...rows.map(r => Math.abs(r.v)), 1e-9), neg = rows.some(r => r.v < 0), pz = rows.some(r => r.v > 0);
+  const z = neg && pz ? 50 : neg ? 100 : 0, X = v => z + v / mx * (neg && pz ? 50 : 100) * (neg && !pz ? 1 : 1);
+  return `<div class="fk" style="--kc:${renk}"><h4>${baslik}</h4><div class="v">${deger}</div><div class="s">${alt}</div><div class="rank">${rows.map(r => {
+    const a = Math.min(X(0), X(r.v)), w = Math.abs(X(r.v) - X(0));
+    return `<div class="bn"><b>${esc(r.b.k)}</b></div><div class="tr" title="${esc(r.b.ad)}"><i class="${r.b.tur === "katilim" ? "kat" : ""}" style="left:${a}%;width:${w}%"></i>${neg ? `<span class="z" style="left:${z}%"></span>` : ""}</div><div class="rv">${fmt(r.v)}</div>`;
+  }).join("")}</div></div>`;
+}
+
+function renderFon() {
+  const L = bankalar(S.d), A = sum(L, b => B(b.x, "aktif")), P = sum(L, b => B(b.x, "pasif"));
+  const acik = (x, i) => ok(B(x, "mev", i)) ? B(x, "mev", i) - krdNet(x, i) : null;
+  const T = { a0: sum(L, b => acik(b.x, 0)), a1: sum(L, b => acik(b.x, 1)), a: sum(L, b => acik(b.x, 2)), lik: sum(L, b => likit(b.x, 2)), top: sum(L, b => borc(b.x, 2)), sw: sum(L, b => swapTL(b.x)),
+    mev: sum(L, b => B(b.x, "mev")) };
+  const k = (t, v, s) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+  $("#fKpi").innerHTML = [
+    k("Fonlama fazlası (+) / açığı (−)", (T.a > 0 ? "+" : "") + tl(T.a), `mevduat − net krediler · aktife oranı ${pct(A ? T.a / A * 100 : null, 1)}`),
+    k("Likit varlıklar", tl(T.lik), `aktife oranı ${pct(A ? T.lik / A * 100 : null, 1)} · mevduata ${pct(T.mev ? T.lik / T.mev * 100 : null, 1)}`),
+    k("Toptan fonlama", tl(T.top), `pasife oranı ${pct(P ? T.top / P * 100 : null, 1)}`),
+    k("Swap ile net TL fonlama", tl(T.sw), `aktife oranı ${pct(A ? T.sw / A * 100 : null, 1)} · nazım hesaplardan`),
+  ].join("");
+  const r = f => L.map(b => ({ b, v: f(b.x) }));
+  $("#fKart").innerHTML = [
+    rankKart("TP fonlama fazlası / açığı", (T.a0 > 0 ? "+" : "") + tl(T.a0), "TP mevduat − TP net krediler (eksi: açık)", "var(--accent)", r(x => acik(x, 0)), v => (v > 0 ? "+" : "") + tl(v)),
+    rankKart("YP fonlama fazlası / açığı", (T.a1 > 0 ? "+" : "") + tl(T.a1), "YP mevduat − YP net krediler (eksi: açık)", "var(--c1)", r(x => acik(x, 1)), v => (v > 0 ? "+" : "") + tl(v)),
+    rankKart("Likit varlık / mevduat", pct(T.mev ? T.lik / T.mev * 100 : null, 1), "nakit ve TCMB + bankalar + para piyasası + GUD menkul değerler", "var(--c3)", r(x => B(x, "mev") ? likit(x, 2) / B(x, "mev") * 100 : null), v => pct(v, 1)),
+    rankKart("Toptan fonlama / pasif", pct(P ? T.top / P * 100 : null, 1), "alınan krediler + para piyasaları + ihraç edilen MK + sermaye benzeri", "var(--c6)", r(x => B(x, "pasif") ? borc(x, 2) / B(x, "pasif") * 100 : null), v => pct(v, 1)),
+  ].join("");
+  const oran = (f, g) => x => { const a = f(x), b = g(x); return ok(a) && ok(b) && b ? a / b * 100 : null; };
+  tablo("#fTbl", "f", [
+    ["a0", "TP fazla / açık", x => acik(x, 0), "isaret"],
+    ["a1", "YP fazla / açık", x => acik(x, 1), "isaret"],
+    ["a", "Toplam fazla / açık", x => acik(x, 2), "isaret", null, "ana"],
+    ["aa", "Fazla-açık / aktif", oran(x => acik(x, 2), x => B(x, "aktif")), "pct", null, "", L => A ? T.a / A * 100 : null],
+    ["la", "Likit / aktif", oran(x => likit(x, 2), x => B(x, "aktif")), "pct", null, "", L => A ? T.lik / A * 100 : null],
+    ["lm", "Likit / mevduat", oran(x => likit(x, 2), x => B(x, "mev")), "pct", null, "", L => T.mev ? T.lik / T.mev * 100 : null],
+    ["tp", "Toptan / pasif", oran(x => borc(x, 2), x => B(x, "pasif")), "pct", null, "", L => P ? T.top / P * 100 : null],
+    ["sw", "Swap TL fonlama", swapTL, "tl"],
+    ["swa", "Swap / aktif", oran(swapTL, x => B(x, "aktif")), "pct", null, "", L => A ? T.sw / A * 100 : null],
+  ], L, { sk: "a" });
+}
+
 function render() {
   document.querySelectorAll("#sTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.s === S.s));
-  $("#pAnaliz").classList.toggle("hidden", S.s !== "analiz"); $("#pGelir").classList.toggle("hidden", S.s !== "gelir");
+  [["analiz", "#pAnaliz"], ["pasif", "#pPasif"], ["aktif", "#pAktif"], ["fon", "#pFon"], ["gelir", "#pGelir"]].forEach(([k, el]) => $(el).classList.toggle("hidden", S.s !== k));
   $("#grp").innerHTML = GRUP.map(([k, l]) => `<button class="chip" data-g="${k}" aria-pressed="${k === S.g}">${l}</button>`).join("");
   const dd = D.donemler.find(x => x.d === S.d), V = D.v[S.d] || {}, top = D.bankalar.length;
   const tarihler = Object.values(V).map(x => x.t).sort();
@@ -284,7 +442,10 @@ function render() {
   const bek = D.bankalar.filter(b => !V[b.k]);
   $("#banner").classList.toggle("hidden", !bek.length);
   $("#banner").innerHTML = bek.length ? `<b>${dKisa(S.d)}: ${dd.n} banka açıkladı.</b><span>Henüz açıklamayan: ${bek.map(b => esc(b.ad)).join(", ")}. Açıkladıkça (KAP) otomatik eklenir.</span>` : "";
-  if (S.s === "analiz") { $("#ekKontrol").innerHTML = ""; renderAnaliz(); } else renderGelir();
+  if (S.s === "analiz") { $("#ekKontrol").innerHTML = ""; renderAnaliz(); }
+  else if (S.s === "pasif" || S.s === "aktif") { $("#ekKontrol").innerHTML = curSeg(); S.s === "pasif" ? renderPasif() : renderAktif(); }
+  else if (S.s === "fon") { $("#ekKontrol").innerHTML = ""; renderFon(); }
+  else renderGelir();
   $("#src").innerHTML = `Kaynak: KAP'ta yayımlanan BDDK formatındaki konsolide olmayan (solo) finansal raporlar (bilanço ve kâr veya zarar tablosu). Tutarlar milyon TL bazından biçimlendirilmiştir.
     Her banka açıkladığı anda ilgili döneme eklenir; tüm bankaların açıklaması beklenmez. Yıllıklandırılmış rasyolar dönem kârının 12 aya ölçeklenmesiyle, ortalamalar yıl sonu ve dönem sonu bakiyelerinden hesaplanır.`;
 }
@@ -295,6 +456,8 @@ document.addEventListener("click", e => {
   const r = e.target.closest("#rSel button"); if (r) { S.r = r.dataset.r; renderAnaliz(); return; }
   const c = e.target.closest("#curSeg button"); if (c) { S.cur = +c.dataset.c; renderAnaliz(); return; }
   const m = e.target.closest("#gmSeg button"); if (m) { S.gm = m.dataset.m; renderGelir(); return; }
+  const cb = e.target.closest("#cSeg button"); if (cb) { S.cur = +cb.dataset.c; render(); return; }
+  const th = e.target.closest("th[data-sk]"); if (th) { const t = th.closest("table").dataset.t, k = th.dataset.sk; if (S.sk[t] === k) S.sd[t] = !S.sd[t]; else { S.sk[t] = k; S.sd[t] = false; } ({ p: renderPasif, k: renderAktif, f: renderFon })[t](); return; }
 });
 $("#dSel").addEventListener("change", e => { S.d = e.target.value; render(); });
 

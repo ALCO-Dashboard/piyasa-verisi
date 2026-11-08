@@ -97,6 +97,18 @@ GK = [  # anahtar, mevduat bankası adı, katılım bankası adı, düzey, elema
     ("ver", "Vergi karşılığı", "Vergi karşılığı", 0, ["ifrs-full_IncomeTaxExpenseContinuingOperation"]),
     ("nk", "DÖNEM NET KÂRI", "DÖNEM NET KÂRI", 0, ["ifrs-full_ProfitLoss"]),
 ]
+NK = [  # nazım hesaplar: anahtar, ad, elemanlar
+    ("gnk", "Garanti ve kefaletler (gayrinakdi krediler)", ["kap-fr_GuarantiesAndWarranties", "kap-fr_GuaranteesAndWarranties"]),
+    ("taah", "Taahhütler", ["kap-fr_Commitments"]),
+    ("vad_al", "Vadeli döviz alım", ["kap-fr_ForwardForeignCurrencyBuyingTransactions"]),
+    ("vad_sat", "Vadeli döviz satım", ["kap-fr_ForwardForeignCurrencySaleTransactions"]),
+    ("swap_al", "Swap para alım", ["kap-fr_CurrencySwapBuyTransactions", "kap-fr_MoneySwapPurchases"]),
+    ("swap_sat", "Swap para satım", ["kap-fr_CurrencySwapSellTransaction", "kap-fr_MoneySwapSales"]),
+    ("ops_al", "Para alım opsiyonları", ["kap-fr_CurrencyOptionsBuyTransactions"]),
+    ("ops_sat", "Para satım opsiyonları", ["kap-fr_CurrencyOptionsSellTransactions"]),
+    ("fut_al", "Futures para alım", ["kap-fr_CurrencyFuturesBuyTransactions"]),
+    ("fut_sat", "Futures para satım", ["kap-fr_CurrencyFuturesSellTransactions"]),
+]
 KAMU = {"ZRT", "VKF", "HLK", "ZKT", "EKT", "VKK"}
 PEER = {"QNB", "DNZ", "KT"}
 AY_SON = {1: "03-31", 2: "06-30", 3: "09-30", 4: "12-31"}
@@ -125,7 +137,12 @@ def ozet(H):
             x = bul(r["gel"]["satir"], els, ["4", "5", "6", "7"])
             if x is not None:
                 g[key] = [round(y, 1) if y is not None else None for y in x]
-        V.setdefault(d, {})[r["kisa"]] = {"t": r["tarih"], "id": r["id"], "b": b, "g": g}
+        n = {}
+        for key, _, els in NK:
+            x = bul((r.get("naz") or {}).get("satir") or [], els, ["4", "5", "6"])
+            if x is not None:
+                n[key] = [round(y, 1) if y is not None else None for y in x]
+        V.setdefault(d, {})[r["kisa"]] = {"t": r["tarih"], "id": r["id"], "b": b, "g": g, "n": n}
         donem[d] = (r["yil"], r["donem"])
     # 4. çeyrek ve eksik 3 aylık sütunlar: yıllık − 9 aylık
     for d, (y, q) in donem.items():
