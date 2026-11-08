@@ -578,9 +578,12 @@ def riskler(N, BD):
     """Her gösterge için 0-100 risk skoru: piyasa serilerinde son 2 yılın yüzdeliği, makroda eşik kuralları."""
     R = []
 
+    EKO = {"enf", "dis", "uretim", "istihdam", "butce", "buyume"}
+
     def ekle(ad, deger, skor, aciklama, link):
         if ok(skor):
-            R.append({"ad": ad, "v": deger, "skor": round(max(0, min(100, skor))), "seviye": seviye(skor), "a": aciklama, "link": link})
+            R.append({"ad": ad, "v": deger, "skor": round(max(0, min(100, skor))), "seviye": seviye(skor), "a": aciklama, "link": link,
+                      "g": "e" if link in EKO else "p"})
 
     c = N.get("cds")
     if c:
@@ -629,6 +632,15 @@ def riskler(N, BD):
     p = N.get("pmi")
     if p:
         ekle("Reel sektör (imalat PMI)", nf(p["v"]), 50 + (50 - p["v"]) * 8, "50'nin altı daralma", "uretim")
+    g = N.get("gsyh")
+    if g and ok(g.get("yy")):
+        ekle("Büyüme (GSYH, yıllık)", pyuzde(g["yy"]), 60 - g["yy"] * 8, "yavaşlama riski: büyüme düştükçe skor artar", "buyume")
+    i = N.get("issizlik")
+    if i and ok(i.get("v")):
+        ekle("İşgücü piyasası (işsizlik)", yuzde(i["v"]), 50 + (i["v"] - 9) * 10 + (i["dy"] or 0) * 20, "işsizlik oranı ve son aydaki değişimi", "istihdam")
+    b = N.get("butce")
+    if b and ok(b.get("oran")):
+        ekle("Mali disiplin (bütçe / GSYH)", yuzde(b["oran"]), 30 - b["oran"] * 10, "12 aylık bütçe dengesinin GSYH'ya oranı", "butce")
     if BD:
         s = BD["gruplar"].get("sektor")
         if s:
@@ -643,21 +655,26 @@ def riskler(N, BD):
 
 
 # ---------------------------------------------------------------- haberler
-KELIME = [  # (desen, puan, etiket) — Türkiye makro/bankacılık ve piyasayı yakından ilgilendirenler öne
-    (r"\bTCMB\b|Merkez Bankas|Karahan|\bPPK\b|politika faiz", 6, "TCMB"),
-    (r"\bBDDK\b|zorunlu karşılık|katılım bank|katılım fon|Bankacılık Düzenleme", 6, "Bankacılık"),
-    (r"Hazine|Şimşek|Maliye Bakan|tahvil ihale|kira sertifikas|sukuk|bütçe|nakit açığ|borçlanma", 5, "Hazine / Maliye"),
-    (r"enflasyon|TÜFE|ÜFE|\bfiyat artış", 5, "Enflasyon"),
-    (r"Moody|Fitch|S&P|kredi not|\bCDS\b|risk prim", 6, "Kredi notu"),
-    (r"\bTÜİK\b|büyüme|GSYH|işsizlik|cari (açık|denge|işlem)|ödemeler denge|dış ticaret|sanayi üretim|PMI|kapasite kullanım", 4, "Makro veri"),
-    (r"\bSPK\b|fon soruşturma|gözaltı|soruşturma", 3, "Düzenleme"),
-    (r"rezerv|swap|likidite|mevduat|kredi büyüme|kredi faiz|kur korumal|\bKKM\b", 4, "Bankacılık"),
-    (r"\bdolar\b|\bkur\b|Türk liras|\bTL\b|USD/TRY|döviz", 3, "Kur"),
-    (r"\bFed\b|Powell|ECB|Lagarde|BoJ|faiz karar|faiz artır|faiz indir|tahvil faiz", 3, "Küresel MB"),
-    (r"petrol|Brent|doğal gaz|Hürmüz|OPEC|enerji fiyat", 3, "Emtia / Jeopolitik"),
-    (r"İran|İsrail|Rusya|Ukrayna|savaş|saldırı|ateşkes|gerilim|yaptırım", 2, "Jeopolitik"),
-    (r"\bBIST\b|Borsa İstanbul|borsa|Wall Street", 1, "Piyasa"),
-    (r"altın", 1, "Emtia / Jeopolitik"),
+KELIME = [  # (desen, puan, etiket, grup) — grup: p = Piyasa Verileri, e = Ekonomik Göstergeler sekmesinin gündemi
+    (r"\bTCMB\b|Merkez Bankas|Karahan|\bPPK\b|politika faiz", 6, "TCMB", "p"),
+    (r"\bTCMB\b|Merkez Bankas|Karahan|\bPPK\b|politika faiz", 3, "TCMB", "e"),
+    (r"\bBDDK\b|zorunlu karşılık|katılım bank|katılım fon|Bankacılık Düzenleme", 6, "Bankacılık", "p"),
+    (r"tahvil ihale|kira sertifikas|sukuk|borçlanma|DİBS|eurobond", 5, "Hazine ihale", "p"),
+    (r"Hazine|Şimşek|Maliye Bakan|bütçe|nakit açığ|vergi|Orta Vadeli Program|\bOVP\b", 5, "Maliye", "e"),
+    (r"enflasyon|TÜFE|ÜFE|\bfiyat artış|zam", 5, "Enflasyon", "e"),
+    (r"enflasyon|TÜFE", 2, "Enflasyon", "p"),
+    (r"Moody|Fitch|S&P|kredi not|\bCDS\b|risk prim", 6, "Kredi notu", "p"),
+    (r"Moody|Fitch|S&P|kredi not", 3, "Kredi notu", "e"),
+    (r"\bTÜİK\b|büyüme|GSYH|işsizlik|istihdam|cari (açık|denge|işlem)|ödemeler denge|dış ticaret|ihracat|ithalat|sanayi üretim|PMI|kapasite kullanım|güven endeks|perakende|konut satış|turizm|asgari ücret|IMF|OECD|Dünya Bankası", 5, "Makro veri", "e"),
+    (r"\bSPK\b|fon soruşturma|gözaltı|soruşturma", 3, "Düzenleme", "p"),
+    (r"rezerv|swap|likidite|mevduat|kredi büyüme|kredi faiz|kur korumal|\bKKM\b|repo", 4, "Bankacılık", "p"),
+    (r"\bdolar\b|\bkur\b|Türk liras|\bTL\b|USD/TRY|döviz", 3, "Kur", "p"),
+    (r"\bFed\b|Powell|ECB|Lagarde|BoJ|faiz karar|faiz artır|faiz indir|tahvil faiz", 3, "Küresel MB", "p"),
+    (r"petrol|Brent|doğal gaz|Hürmüz|OPEC|enerji fiyat", 3, "Emtia / Jeopolitik", "p"),
+    (r"petrol|doğal gaz|enerji fiyat|tarife|gümrük vergi|ticaret savaş", 2, "Küresel ekonomi", "e"),
+    (r"İran|İsrail|Rusya|Ukrayna|savaş|saldırı|ateşkes|gerilim|yaptırım", 2, "Jeopolitik", "p"),
+    (r"\bBIST\b|Borsa İstanbul|borsa|Wall Street", 1, "Piyasa", "p"),
+    (r"altın", 1, "Emtia / Jeopolitik", "p"),
 ]
 CEZA = [r"kar payı|kâr payı|temettü|bilanço|FAVÖK|net kar|zarardan|halka arz|bedelsiz|\bKAP\b|hisse(de|si|leri)? |sözleşme imzala|ihale kazan",
         r"Bitcoin|Ethereum|kripto|Binance|\bETF",
@@ -679,14 +696,16 @@ def haber_parse(metin):
     return out
 
 
-def haber_puan(h, simdi):
+def haber_puan(h, simdi, grup):
     b = h["b"]
     puan, etiket, best = 0, "", 0
-    for desen, p, e in KELIME:
-        if re.search(desen, b, re.I):
+    for desen, p, e, g in KELIME:
+        if g == grup and re.search(desen, b, re.I):
             puan += p
             if p > best:
                 best, etiket = p, e
+    if best == 0:
+        return -99, ""
     if re.search(KURESEL, b) and not re.search(YERLI, b, re.I):
         puan -= 2                                    # yalnızca yurt dışını ilgilendiren başlık
         etiket = "Küresel" if etiket not in ("Emtia / Jeopolitik", "Jeopolitik") else etiket
@@ -704,37 +723,40 @@ def haber_puan(h, simdi):
 
 
 def haberler(onceki, metin):
+    """Haber havuzunu günceller; her sekme (p: piyasa, e: ekonomi) için ayrı seçilmiş başlıklar döner."""
     simdi = dt.datetime.now(TR)
-    havuz = {h["u"]: h for h in (onceki or [])}
+    havuz = {h["u"]: {"b": h["b"], "t": h["t"], "u": h["u"]} for h in (onceki or [])}
     for h in haber_parse(metin or ""):
         havuz[h["u"]] = {"b": h["b"], "t": h["t"], "u": h["u"]}
     sinir = (simdi - dt.timedelta(days=4)).strftime("%Y-%m-%d %H:%M")
-    hepsi = [h for h in havuz.values() if h["t"] >= sinir]
-    for h in hepsi:
-        h["p"], h["e"] = haber_puan(h, simdi)
-    hepsi.sort(key=lambda h: h["t"], reverse=True)
-    secili, gorulen = [], {}
-    for h in sorted(hepsi, key=lambda h: -h["p"]):
-        if h["p"] < 3 or len(secili) >= 8:
-            continue
-        if gorulen.get(h["e"], 0) >= 3:              # aynı konudan en fazla üç başlık
-            continue
-        gorulen[h["e"]] = gorulen.get(h["e"], 0) + 1
-        secili.append(h)
-    secili.sort(key=lambda h: h["t"], reverse=True)
-    return secili, hepsi[:60]
+    hepsi = sorted((h for h in havuz.values() if h["t"] >= sinir), key=lambda h: h["t"], reverse=True)
+    out = {}
+    for grup, ad in (("p", "piyasa"), ("e", "eko")):
+        puanli = []
+        for h in hepsi:
+            p, e = haber_puan(h, simdi, grup)
+            if p >= (3 if grup == "p" else 2):
+                puanli.append({**h, "p": p, "e": e})
+        secili, gorulen = [], {}
+        for h in sorted(puanli, key=lambda h: -h["p"]):
+            if len(secili) >= 7 or gorulen.get(h["e"], 0) >= 3:   # aynı konudan en fazla üç başlık
+                continue
+            gorulen[h["e"]] = gorulen.get(h["e"], 0) + 1
+            secili.append(h)
+        out[ad] = sorted(secili, key=lambda h: h["t"], reverse=True)
+    return out, hepsi[:80]
 
 
 # ---------------------------------------------------------------- takvim
-TAKVIM_ONEMLI = [  # TCMB yayınlarından özetin takviminde gösterilecekler: (ad içinde geçen ifade, kısa ad, önem 1-3)
-    ("Ödemeler Dengesi", "Ödemeler dengesi", 3), ("Piyasa Katılımcıları", "Piyasa Katılımcıları Anketi", 3),
-    ("Enflasyon Raporu", "Enflasyon Raporu", 3), ("Finansal İstikrar", "Finansal İstikrar Raporu", 3),
-    ("Kapasite Kullanım", "Kapasite kullanım oranı", 2), ("İktisadi Yönelim", "İktisadi yönelim / reel kesim güven", 2),
-    ("Sektörel Enflasyon Beklenti", "Sektörel enflasyon beklentileri", 2), ("Uluslararası Rezervler", "Uluslararası rezervler (haftalık)", 2),
-    ("Menkul Kıymet İstatistikleri", "Yurt dışı yerleşik menkul kıymet", 1), ("Reel Efektif", "Reel efektif döviz kuru", 1),
-    ("Konut Fiyat", "Konut fiyat endeksi", 1), ("Dış Borç", "Dış borç istatistikleri", 1), ("Para ve Banka", "Para ve banka istatistikleri", 1),
-    ("Analitik Bilanço", "TCMB analitik bilanço", 1), ("Fiyat Gelişmeleri", "Aylık fiyat gelişmeleri", 2),
-    ("Zorunlu Karşılığa Tabi Katılım", "ZK'ya tabi katılım fonları", 1),
+TAKVIM_ONEMLI = [  # TCMB yayınlarından özetin takviminde gösterilecekler: (ad içinde geçen ifade, kısa ad, önem 1-3, sekme)
+    ("Ödemeler Dengesi", "Ödemeler dengesi", 3, "e"), ("Piyasa Katılımcıları", "Piyasa Katılımcıları Anketi", 3, "pe"),
+    ("Enflasyon Raporu", "Enflasyon Raporu", 3, "pe"), ("Finansal İstikrar", "Finansal İstikrar Raporu", 3, "p"),
+    ("Kapasite Kullanım", "Kapasite kullanım oranı", 2, "e"), ("İktisadi Yönelim", "İktisadi yönelim / reel kesim güven", 2, "e"),
+    ("Sektörel Enflasyon Beklenti", "Sektörel enflasyon beklentileri", 2, "e"), ("Uluslararası Rezervler", "Uluslararası rezervler (haftalık)", 2, "p"),
+    ("Menkul Kıymet İstatistikleri", "Yurt dışı yerleşik menkul kıymet", 1, "p"), ("Reel Efektif", "Reel efektif döviz kuru", 1, "e"),
+    ("Konut Fiyat", "Konut fiyat endeksi", 1, "e"), ("Dış Borç", "Dış borç istatistikleri", 1, "e"), ("Para ve Banka", "Para ve banka istatistikleri", 1, "p"),
+    ("Analitik Bilanço", "TCMB analitik bilanço", 1, "p"), ("Fiyat Gelişmeleri", "Aylık fiyat gelişmeleri", 2, "e"),
+    ("Zorunlu Karşılığa Tabi Katılım", "ZK'ya tabi katılım fonları", 1, "p"),
 ]
 
 
@@ -757,10 +779,10 @@ def tcmb_takvim(bas, bit, dosya=None):
     out, gor = [], set()
     for x in hepsi:
         ad = (x.get("yayinBilgi") or {}).get("yayimAdi") or ""
-        bul = next(((k, o) for d, k, o in TAKVIM_ONEMLI if d.lower() in ad.lower()), None)
+        bul = next(((k, o, g) for d, k, o, g in TAKVIM_ONEMLI if d.lower() in ad.lower()), None)
         if not bul:
             continue
-        kisa, onem = bul
+        kisa, onem, grup = bul
         t = (x.get("tarih") or "")[:16]
         if not t or not (bas.isoformat() <= t[:10] <= bit.isoformat()):
             continue
@@ -769,7 +791,7 @@ def tcmb_takvim(bas, bit, dosya=None):
             continue
         gor.add(anahtar)
         out.append({"tarih": t[:10], "saat": t[11:16], "ad": kisa, "donem": (x.get("donem") or "").replace(" Haftalık", "").strip(),
-                    "kurum": "TCMB", "tur": "veri", "onem": onem, "url": (x.get("veriLink") or {}).get("link")})
+                    "kurum": "TCMB", "tur": "veri", "onem": onem, "g": grup, "url": (x.get("veriLink") or {}).get("link")})
     return out
 
 
@@ -846,16 +868,16 @@ def takvim(P, Z, FX, dosya=None):
     for yil, lst in ((P or {}).get("ppk") or {}).items():
         for x in lst:
             if bas.isoformat() <= x["tarih"] <= bit.isoformat():
-                L.append({"tarih": x["tarih"], "saat": "14:00", "ad": "PPK faiz kararı", "donem": "", "kurum": "TCMB", "tur": "ppk", "onem": 3, "url": x.get("url")})
+                L.append({"tarih": x["tarih"], "saat": "14:00", "ad": "PPK faiz kararı", "donem": "", "kurum": "TCMB", "tur": "ppk", "onem": 3, "g": "pe", "url": x.get("url")})
             if x.get("ozet") and bas.isoformat() <= x["ozet"] <= bit.isoformat():
-                L.append({"tarih": x["ozet"], "saat": "14:00", "ad": "PPK toplantı özeti", "donem": "", "kurum": "TCMB", "tur": "ppk_ozet", "onem": 2, "url": None})
+                L.append({"tarih": x["ozet"], "saat": "14:00", "ad": "PPK toplantı özeti", "donem": "", "kurum": "TCMB", "tur": "ppk_ozet", "onem": 2, "g": "pe", "url": None})
     for dn in ((Z or {}).get("donemler") or [])[-2:]:
         if dn.get("bit") and bas.isoformat() <= dn["bit"] <= bit.isoformat():
             L.append({"tarih": dn["bit"], "saat": "", "ad": "ZK tesis dönemi sonu", "donem": f"{gun_ad(dn['bas'])}–{gun_ad(dn['bit'])}",
-                      "kurum": "TCMB", "tur": "zk", "onem": 2, "url": None})
+                      "kurum": "TCMB", "tur": "zk", "onem": 2, "g": "p", "url": None})
             yeni = (dt.date.fromisoformat(dn["bit"]) + dt.timedelta(days=1)).isoformat()
             if yeni <= bit.isoformat():
-                L.append({"tarih": yeni, "saat": "", "ad": "Yeni ZK tesis dönemi başlıyor", "donem": "", "kurum": "TCMB", "tur": "zk", "onem": 1, "url": None})
+                L.append({"tarih": yeni, "saat": "", "ad": "Yeni ZK tesis dönemi başlıyor", "donem": "", "kurum": "TCMB", "tur": "zk", "onem": 1, "g": "p", "url": None})
     var = {(x["tarih"], esles(x["ad"])) for x in L if esles(x["ad"])}
     for tarih, v in (FX or {}).items():
         if not (bas.isoformat() <= tarih <= bit.isoformat()):
@@ -868,11 +890,12 @@ def takvim(P, Z, FX, dosya=None):
                 continue
             ek = "; ".join(x for x in ((f"beklenti {k['beklenti']}" if k.get("beklenti") else ""), (f"önceki {k['onceki']}" if k.get("onceki") else "")) if x)
             L.append({"tarih": tarih, "saat": k.get("saat") or "", "ad": k["ad"], "donem": ek, "kurum": "Türkiye" if tr else k["ulke"],
-                      "tur": "tr" if tr else "dunya", "onem": (3 if k.get("onem") == "Yüksek" else 2) if tr else 2, "url": v.get("url")})
+                      "tur": "tr" if tr else "dunya", "onem": (3 if k.get("onem") == "Yüksek" else 2) if tr else 2,
+                      "g": "p" if re.search(r"faiz|rezerv|merkez bank|\bFed\b|ECB|tahvil|bono|ihale|swap", k["ad"], re.I) else "e", "url": v.get("url")})
     # sonraki PPK takvim penceresinin dışındaysa da (öne çıkanlar için) ekle
     gelecek = sorted(x["tarih"] for lst in ((P or {}).get("ppk") or {}).values() for x in lst if x["tarih"] > bit.isoformat())
     if gelecek and not any(x["tur"] == "ppk" and x["tarih"] >= bugun.isoformat() for x in L):
-        L.append({"tarih": gelecek[0], "saat": "14:00", "ad": "PPK faiz kararı", "donem": "", "kurum": "TCMB", "tur": "ppk", "onem": 3, "url": None, "uzak": True})
+        L.append({"tarih": gelecek[0], "saat": "14:00", "ad": "PPK faiz kararı", "donem": "", "kurum": "TCMB", "tur": "ppk", "onem": 3, "g": "pe", "url": None, "uzak": True})
     for x in L:
         x["gun"] = (dt.date.fromisoformat(x["tarih"]) - bugun).days
     L.sort(key=lambda x: (x["tarih"], x["saat"] or "99"))
@@ -956,7 +979,7 @@ def main():
     }
     json.dump(D, open(yol, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     open(os.path.join(cikti, "index.html"), "w", encoding="utf-8").write(open(os.path.join(KOK, "sayfa.html"), encoding="utf-8").read())
-    log(f"Özet: {len(eko)} ekonomik, {len(piy)} piyasa kartı, {len(D['risk'])} risk, {len(secili)}/{len(havuz)} haber, {len(tk)} takvim kalemi"
+    log(f"Özet: {len(eko)} ekonomik, {len(piy)} piyasa kartı, {len(D['risk'])} risk, {len(secili['piyasa'])}+{len(secili['eko'])}/{len(havuz)} haber, {len(tk)} takvim kalemi"
         + (f"; sorun: {', '.join(sorun)}" if sorun else ""))
     try:
         sys.path.insert(0, os.path.join(KOK, "..", "ortak"))
