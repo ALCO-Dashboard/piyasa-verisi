@@ -1156,7 +1156,7 @@ window.alcoPdf = () => {
 };
 function hashGit() {
   const h = location.hash.slice(1);
-  if (h === "rezerv" || h === "zk") { S.tSub = h; $('#tabs button[data-tab="tcmb"]').click(); return true; }
+  if (["pp", "rezerv", "zk", "haftalik"].includes(h)) { S.tSub = h; $('#tabs button[data-tab="tcmb"]').click(); return true; }
   const b = h && $(`#tabs button[data-tab="${h}"]`); if (b) { b.click(); return true; }
   return false;
 }

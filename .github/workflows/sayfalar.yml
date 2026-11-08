@@ -20,6 +20,7 @@ on:
       - "hazine/**"
       - "zk/**"
       - "ekonomi/**"
+      - "ozet/**"
       - "sayfa.html"
   workflow_dispatch:
 
@@ -101,6 +102,10 @@ jobs:
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: python ekonomi/guncelle.py --site site
+
+      - name: Özet sayfasını derle (göstergeler, haber akışı, veri takvimi)
+        continue-on-error: true
+        run: python ozet/guncelle.py --site site
 
       - name: Ortak dosyaları ve TEFAS sayfasını kopyala
         run: |
