@@ -100,10 +100,9 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 .sp circle{fill:var(--c1)}
 .sp line{stroke:var(--axis);stroke-width:1;stroke-dasharray:2 2}
 
-/* BDDK + risk */
-.grid2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px;align-items:start;margin-top:22px}
-#sol>.card+.card{margin-top:14px}
-@media (max-width:1100px){.grid2{grid-template-columns:minmax(0,1fr)}}
+/* BDDK */
+.bdg{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1100px){.bdg{grid-template-columns:minmax(0,1fr)}}
 .tw{overflow-x:auto}
 .bt{width:100%;border-collapse:collapse;font-size:13.5px}
 .bt th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -125,33 +124,26 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 .tip .r{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:12px}
 .tip .r span:first-child{font-family:var(--sans);color:var(--ink-2)}
 .tip .r i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
-.rk{list-style:none;margin:0;padding:0}
-.rk li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;padding:9px 0;border-top:1px solid var(--line);cursor:pointer}
-.rk li:first-child{border-top:0;padding-top:0}
-.rk li:hover .ra{color:var(--accent)}
-.rk .ra{font-size:13.5px;font-weight:600}
-.rk .rv{font-family:var(--mono);font-size:13px;text-align:right;white-space:nowrap}
-.rk .bar{grid-column:1/-1;position:relative;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--up) 0%,var(--c4) 50%,var(--down) 100%);opacity:.85}
-.rk .bar i{position:absolute;top:-3px;width:4px;height:14px;margin-left:-2px;border-radius:2px;background:var(--ink);box-shadow:0 0 0 2px var(--surface)}
-.rk .rd{grid-column:1/-1;font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
-.lv{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:1px 7px;border-radius:5px;white-space:nowrap}
-.lv.dusuk{background:var(--up-wash);color:var(--up)}.lv.orta{background:var(--warn-wash);color:var(--warn)}.lv.yuksek{background:var(--down-wash);color:var(--down)}
 
-/* takvim */
-.tk{margin-top:14px}
-.tkg{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px 20px}
-.tkd h4{margin:0 0 6px;font-size:12.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);display:flex;gap:8px;align-items:center}
-.tkd h4 .bg{font-size:10.5px;background:var(--accent);color:#fff;border-radius:5px;padding:1px 6px}
-.tkd ul{list-style:none;margin:0 0 4px;padding:0}
-.tkd li{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:8px;align-items:baseline;padding:5px 0;border-top:1px solid var(--line);font-size:13px}
-.tkd li .sa{font-family:var(--mono);font-size:12px;color:var(--muted)}
-.tkd li .ad{color:var(--ink)}
-.tkd li .ad small{display:block;font-size:11.5px;color:var(--muted)}
-.tkd li .ad a{color:inherit;text-decoration:none}.tkd li .ad a:hover{color:var(--accent);text-decoration:underline}
-.tkd li.o1 .ad{color:var(--ink-2)}
-.tkd li.o3 .ad{font-weight:700}
-.kr{font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:1px 6px;border-radius:5px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
-.kr.tr{background:var(--accent-wash);color:var(--accent)}
+/* veri takvimi: son 7 gün | önümüzdeki 7 gün */
+.tkg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:22px}
+@media (max-width:900px){.tkg{grid-template-columns:minmax(0,1fr)}}
+.tkp{background:var(--surface);border:1px solid var(--line);border-radius:14px;min-width:0;overflow:hidden}
+.tkh{display:flex;justify-content:space-between;align-items:baseline;padding:13px 18px 11px;border-bottom:1px solid var(--line)}
+.tkh h3{margin:0;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.tkh span{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tkp ul{list-style:none;margin:0;padding:4px 18px 8px;max-height:300px;overflow-y:auto}
+.tkp li{display:grid;grid-template-columns:52px 52px minmax(0,1fr);gap:2px 10px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line)}
+.tkp li:last-child{border-bottom:0}
+.tkp .tg{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.tkp .tg small{display:block;font-size:10.5px}
+.tkp .kr{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--kc,var(--ink-2))}
+.tkp .ad{font-size:13.5px;color:var(--ink);line-height:1.35}
+.tkp .ad a{color:inherit;text-decoration:none}.tkp .ad a:hover{color:var(--accent);text-decoration:underline}
+.tkp .ad small{display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+.tkp li.bugun .tg{color:var(--accent);font-weight:600}
+.tkp li.onemli .ad{font-weight:600}
+.tkp .bos{color:var(--muted);font-size:13px;padding:14px 0}
 .src{font-size:12px;color:var(--muted);margin-top:18px;line-height:1.6}
 @media (max-width:640px){.kc .v{font-size:22px}.subtabs button{padding:8px 12px;font-size:13px}.kgrid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}.kc svg.sp{width:64px}}
 @media print{.tip{display:none!important}.kc{break-inside:avoid}}
@@ -172,29 +164,19 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
         <div class="alt"><span id="newsSrc"></span><a id="newsAll" target="_blank" rel="noopener">Tüm haberler ↗</a></div></aside>
     </section>
 
-    <div class="grid2">
-      <div id="sol">
-        <div class="card" id="bdCard">
-          <div class="cardhead"><div><h3>BDDK haftalık kredi ve mevduat</h3><div class="sub" id="bdSub"></div></div></div>
-          <div class="tw" id="bdTbl"></div>
-          <div class="cardhead" style="margin:16px 0 0"><div class="sub">Haftalık değişim (%) · son 26 hafta</div><div class="seg" id="bdSeg" role="group"></div></div>
+    <div class="card" id="bdCard" style="margin-top:22px">
+      <div class="cardhead"><div><h3>BDDK haftalık kredi ve mevduat</h3><div class="sub" id="bdSub"></div></div></div>
+      <div class="bdg">
+        <div class="tw" id="bdTbl"></div>
+        <div><div class="cardhead" style="margin:0"><div class="sub">Haftalık değişim (%) · son 26 hafta</div><div class="seg" id="bdSeg" role="group"></div></div>
           <div class="chart" id="bdChart"></div>
-          <div class="legend"><span><i style="background:var(--c1)"></i>Sektör</span><span><i style="background:var(--accent)"></i>Katılım</span></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="cardhead"><div><h3>Risk ısı haritası</h3><div class="sub" id="rkSub"></div></div></div>
-        <ul class="rk" id="risk"></ul>
+          <div class="legend"><span><i style="background:var(--c1)"></i>Sektör</span><span><i style="background:var(--accent)"></i>Katılım</span></div></div>
       </div>
     </div>
 
-    <div id="alt">
-      <div class="card tk" id="tkCard">
-        <div class="cardhead"><div><h3>Veri takvimi</h3><div class="sub" id="tkSub"></div></div>
-          <div class="chips"><div class="seg" id="tkSeg" role="group"><button data-v="ileri" aria-pressed="true">Önümüzdeki 7 gün</button><button data-v="geri" aria-pressed="false">Son 7 gün</button></div>
-            <button class="chip" id="tkOnem" aria-pressed="false">Yalnızca önemli</button><button class="chip" id="tkDunya" aria-pressed="true">Küresel veriler</button></div></div>
-        <div class="tkg" id="tk"></div>
-      </div>
+    <div class="tkg">
+      <div class="tkp"><div class="tkh"><h3>Son 7 gün</h3><span id="tkGsay"></span></div><ul id="tkGeri"></ul></div>
+      <div class="tkp"><div class="tkh"><h3>Önümüzdeki 7 gün</h3><span id="tkIsay"></span></div><ul id="tkIleri"></ul></div>
     </div>
     <div class="src" id="src"></div>
   </div>
@@ -206,7 +188,7 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "
 const nf = (v, d = 1) => v == null || isNaN(v) ? "—" : (v < 0 ? "−" : "") + Math.abs(v).toLocaleString("tr-TR", { minimumFractionDigits: d, maximumFractionDigits: d });
 const sgp = (v, d = 2) => v == null || isNaN(v) ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "") + "%" + Math.abs(v).toLocaleString("tr-TR", { minimumFractionDigits: d, maximumFractionDigits: d });
 const GUN = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"], AY = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-const S = { g: location.hash === "#eko" ? "eko" : "piyasa", bd: "kr_tp", tk: "ileri", onem: false, dunya: true };
+const S = { g: location.hash === "#eko" ? "eko" : "piyasa", bd: "kr_tp" };
 const GK = () => S.g === "eko" ? "e" : "p";
 let D;
 
@@ -286,35 +268,28 @@ function bdChart() {
   sv.addEventListener("mouseleave", () => tip.style.display = "none");
 }
 
-function renderRisk() {
-  const R = (D.risk || []).filter(r => (r.g || "p") === GK()), LV = { dusuk: "Düşük", orta: "Orta", yuksek: "Yüksek" };
-  $("#rkSub").textContent = S.g === "eko" ? "0 = düşük, 100 = yüksek risk · makro göstergelerde eşik kuralı" : "0 = düşük, 100 = yüksek risk · son 2 yılın yüzdelik dilimi ve eşik kuralları";
-  $("#risk").innerHTML = R.map(r => `<li data-link="${esc(r.link || "")}"><span class="ra">${esc(r.ad)}</span><span class="rv">${esc(r.v)}</span>
-    <span class="bar"><i style="left:${r.skor}%"></i></span><span class="rd"><span>${esc(r.a || "")}</span><span class="lv ${r.seviye}">${LV[r.seviye]} · ${r.skor}</span></span></li>`).join("") || `<li class="note">Veri yok</li>`;
-}
-
+const KRK = { "TÜİK": "#2563eb", "TCMB": "var(--ink)", "HMB": "#7c3aed", "BDDK": "#d97706", "ABD": "var(--accent)" };
+const ONEMLI = /PPK|Tüketici Fiyat|Ödemeler Dengesi|Gayrisafi Yurt İçi|İşgücü|Sanayi Üretim|Dış Ticaret İstatistik|Bütçe|Piyasa Katılımcıları|Enflasyon Raporu|Finansal İstikrar|Fed|Tarım Dışı|TÜFE|GSYH/i;
 function renderTakvim() {
-  const L = (D.takvim || []).filter(x => (x.g || "pe").includes(GK()) && (S.tk === "ileri" ? x.gun >= 0 && x.gun <= 7 : x.gun < 0 && x.gun >= -7) && (!S.onem || x.onem >= 2) && (S.dunya || x.tur !== "dunya"));
-  const g = {}; L.forEach(x => (g[x.tarih] = g[x.tarih] || []).push(x));
-  const gunler = Object.keys(g).sort(); if (S.tk === "geri") gunler.reverse();
-  $("#tkSub").textContent = S.g === "eko" ? "Türkiye ve küresel makro veri açıklamaları (TCMB takvimi, ForInvest ekonomik takvimi) ve PPK" : "PPK, ZK tesis dönemleri, TCMB para-banka ve rezerv yayınları, küresel faiz kararları";
-  $("#tk").innerHTML = gunler.length ? gunler.map(d => {
-    const t = new Date(d + "T12:00:00"), x0 = g[d][0];
-    return `<div class="tkd"><h4>${GUN[t.getDay()]} ${t.getDate()} ${AY[t.getMonth()]}${x0.gun === 0 ? '<span class="bg">Bugün</span>' : ""}</h4><ul>${g[d].map(x =>
-      `<li class="o${x.onem || 1}"><span class="sa">${esc(x.saat || "—")}</span><span class="ad">${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.ad)}</a>` : esc(x.ad)}${x.donem ? `<small>${esc(x.donem)}</small>` : ""}</span><span class="kr${x.kurum === "TCMB" || x.kurum === "Türkiye" ? " tr" : ""}">${esc(x.kurum)}</span></li>`).join("")}</ul></div>`;
-  }).join("") : `<div class="note">Bu aralıkta takvimde kayıt yok.</div>`;
+  const L = (D.takvim || []).filter(x => !x.uzak && Math.abs(x.gun) <= 7), AYK = AY.map(a => a.slice(0, 3));
+  const sat = x => `<li class="${x.gun === 0 ? "bugun" : ""}${ONEMLI.test(x.ad) ? " onemli" : ""}"><span class="tg">${+x.tarih.slice(8, 10)} ${AYK[+x.tarih.slice(5, 7) - 1]}${x.saat ? `<small>${esc(x.saat)}</small>` : ""}</span>
+    <span class="kr" style="--kc:${KRK[x.kurum] || "var(--ink-2)"}">${esc(x.kurum)}</span>
+    <span class="ad">${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.ad)}</a>` : esc(x.ad)}${x.donem ? `<small>${esc(x.donem)}</small>` : ""}</span></li>`;
+  const geri = L.filter(x => x.gun < 0).sort((a, b) => (b.tarih + b.saat).localeCompare(a.tarih + a.saat)), ileri = L.filter(x => x.gun >= 0);
+  $("#tkGeri").innerHTML = geri.map(sat).join("") || `<li class="bos">Kayıt yok</li>`;
+  $("#tkIleri").innerHTML = ileri.map(sat).join("") || `<li class="bos">Kayıt yok</li>`;
+  $("#tkGsay").textContent = `${geri.length} yayın`; $("#tkIsay").textContent = `${ileri.length} yayın`;
 }
 
 function render() {
   const u = new Date(D.updated);
   $("#upd").textContent = isNaN(u) ? "" : `Güncelleme: ${u.getDate()} ${AY[u.getMonth()]} ${String(u.getHours()).padStart(2, "0")}:${String(u.getMinutes()).padStart(2, "0")}`;
   document.querySelectorAll("#gTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.g === S.g));
-  const piy = S.g === "piyasa";     // piyasa: solda BDDK, takvim altta; ekonomi: solda takvim
+  const piy = S.g === "piyasa";     // BDDK haftalık yalnızca Piyasa Verileri'nde
   $("#bdCard").classList.toggle("hidden", !piy || !D.bddk);
-  (piy ? $("#alt") : $("#sol")).appendChild($("#tkCard"));
-  renderUst(); renderKart(); if (piy) renderBddk(); renderRisk(); renderTakvim();
+  renderUst(); renderKart(); if (piy) renderBddk(); renderTakvim();
   $("#src").innerHTML = `Kartlar sitenin diğer sekmelerindeki verilerden derlenir; karta tıklayınca ilgili sekme açılır. Kaynaklar: TÜİK, TCMB EVDS, HMB, BDDK haftalık bülten, Bloomberg (Excel), Borsa İstanbul.
-    Öne çıkanlar ve risk ısı haritası verilerden kural tabanlı olarak üretilir; yatırım tavsiyesi değildir. Haber başlıkları ve küresel takvim: <a href="https://www.foreks.com/" target="_blank" rel="noopener">ForInvest</a> (yalnızca başlık ve bağlantı).
+    Öne çıkanlar verilerden kural tabanlı olarak üretilir; yatırım tavsiyesi değildir. Veri takvimi: Ulusal Veri Yayımlama Takvimi (TÜİK, TCMB, HMB, BDDK); ABD verileri, haber başlıkları: <a href="https://www.foreks.com/" target="_blank" rel="noopener">ForInvest</a> (yalnızca başlık ve bağlantı).
     Net rezerv ve ZK likiditesi sitedeki hesaplamalara dayanan tahminlerdir.`;
 }
 
@@ -322,9 +297,6 @@ document.addEventListener("click", e => {
   const g = e.target.closest("#gTabs button"); if (g) { S.g = g.dataset.g; try { history.replaceState(null, "", "#" + S.g); } catch (x) {} render(); return; }
   const k = e.target.closest("[data-link]"); if (k && k.dataset.link && !e.target.closest("a")) { git(k.dataset.link); return; }
   const b = e.target.closest("#bdSeg button"); if (b) { S.bd = b.dataset.v; document.querySelectorAll("#bdSeg button").forEach(x => x.setAttribute("aria-pressed", x === b)); bdChart(); return; }
-  const t = e.target.closest("#tkSeg button"); if (t) { S.tk = t.dataset.v; document.querySelectorAll("#tkSeg button").forEach(x => x.setAttribute("aria-pressed", x === t)); renderTakvim(); return; }
-  if (e.target.closest("#tkOnem")) { S.onem = !S.onem; $("#tkOnem").setAttribute("aria-pressed", S.onem); renderTakvim(); return; }
-  if (e.target.closest("#tkDunya")) { S.dunya = !S.dunya; $("#tkDunya").setAttribute("aria-pressed", S.dunya); renderTakvim(); return; }
 });
 let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (D?.bddk && S.g === "piyasa") bdChart(); }, 150); });
 
