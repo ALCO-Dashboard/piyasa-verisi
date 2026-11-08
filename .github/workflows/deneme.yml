@@ -11,13 +11,17 @@ jobs:
       - uses: actions/checkout@v5
       - run: |
           mkdir -p oz
-          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-          curl -sL -A "$UA" -H "Accept: application/json" -o oz/takvim.json -w "takvim %{http_code} %{size_download}\n" "https://www.resmiistatistik.gov.tr/Home/GetTakvimHaberBulteniListesi?dilId=1&yil=2026"
-          python3 -c "
-          import json,collections
-          d=json.load(open('oz/takvim.json')); print(type(d), len(d))
-          print(json.dumps(d[:3],ensure_ascii=False)[:1500])
-          print(collections.Counter(str(x.get('KurumAdi') or x.get('Kurum') or '') for x in d).most_common(30))
-          "
+          python3 - <<'P'
+          import re, time, requests
+          UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+          s = requests.Session(); s.headers["User-Agent"] = UA
+          for ad, bid in [("ALB", 1693434), ("GAR", 1689152), ("VKK", 1694428), ("AKB", 1688326)]:
+              h = s.get(f"https://www.kap.org.tr/tr/Bildirim/{bid}", timeout=60).text
+              ek = re.findall(r'href="(https://www.kap.org.tr/tr/api/file/download/[0-9a-f]+)"[^>]*>([^<]+)', h)
+              print(ad, ek[:4])
+              for u, n in ek[:1]:
+                  time.sleep(3); r = s.get(u, timeout=120); open(f"oz/{ad}.pdf", "wb").write(r.content); print(ad, n, len(r.content), r.headers.get("content-type"))
+              time.sleep(3)
+          P
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan ozet-deneme-veri; git rm -rq --cached .; git add -f oz; git commit -qm veri; git push -f origin ozet-deneme-veri
