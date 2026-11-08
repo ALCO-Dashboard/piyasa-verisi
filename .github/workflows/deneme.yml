@@ -1,0 +1,32 @@
+name: ZK deneme
+on:
+  push:
+    branches: [zk-deneme]
+permissions:
+  contents: write
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          cat > /tmp/al.py <<'PY'
+          import requests, re, os, html, time
+          UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+          S = requests.Session(); S.headers.update({"User-Agent": UA, "Accept-Language": "tr-TR,tr;q=0.9"})
+          os.makedirs("zk", exist_ok=True)
+          sayfalar = {"zk": "https://www.tcmb.gov.tr/wps/wcm/connect/tr/tcmb+tr/main+menu/istatistikler/bankacilik+verileri/zorunlu+karsiliklar",
+                      "depo": "https://www.tcmb.gov.tr/wps/wcm/connect/TR/TCMB+TR/Main+Menu/Istatistikler/Piyasa+Verileri/doviz+depo+limit"}
+          for ad, u in sayfalar.items():
+              r = S.get(u, timeout=60); print(ad, r.status_code, len(r.text))
+              open(f"zk/{ad}.html", "w").write(r.text)
+              for m in re.finditer(r'href="([^"]+\.(?:pdf|xlsx|xls)[^"]*)"', r.text):
+                  h = html.unescape(m.group(1))
+                  if h.startswith("/"): h = "https://www.tcmb.gov.tr" + h
+                  n = re.sub(r"[^A-Za-z0-9.]+", "_", h.split("/")[-1].split("?")[0])[:60]
+                  if any(k in h for k in ["tesis", "TRZK+verileri.xlsx", "zko.pdf", "uygulanan+faiz", "uygulanan%2Bfaiz", "Depo", "depo"]):
+                      time.sleep(1); x = S.get(h, timeout=60); open("zk/" + n, "wb").write(x.content); print("  ", n, x.status_code, len(x.content), h[:150])
+          PY
+          python /tmp/al.py
+          git config user.name bot; git config user.email bot@users.noreply.github.com
+          git checkout --orphan zk-deneme-veri; git rm -rq --cached .; git add -f zk; git commit -qm veri; git push -f origin zk-deneme-veri
