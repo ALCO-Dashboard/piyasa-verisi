@@ -13,10 +13,12 @@ jobs:
           mkdir -p oz
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
           C="curl -sL -A \"$UA\" -c oz/cj -b oz/cj -H Accept-Language:tr-TR"
-          curl -sL -A "$UA" -c oz/cj -b oz/cj -o oz/llms.txt -w "llms %{http_code} %{size_download}\n" https://www.foreks.com/llms.txt || true
-          cat oz/llms.txt | head -80
-          curl -sL -A "$UA" -o oz/main.js -w "main %{http_code} %{size_download}\n" "https://veriportali.tuik.gov.tr/assets/main-C0Z3qMtl.js" || true
-          grep -oE '"/?api/[^"]{2,80}"|`/?api/[^`]{2,80}`|/api/[a-zA-Z/_${}.-]{2,60}' oz/main.js | sort -u | head -80
-          grep -oE '.{60}(takvim|Takvim|calendar|Calendar).{60}' oz/main.js | head -20
+          for f in Home-WxtBW4Qn PressReleases-CmEefiz3 press-CvF4Tmeu press-WcRk5lkh proxy-CBV8GvFO; do
+            curl -sL -A "$UA" -o oz/$f.js "https://veriportali.tuik.gov.tr/assets/$f.js"; sleep 2
+            echo "== $f $(wc -c < oz/$f.js)"; grep -oE '.{0,60}api/.{0,140}' oz/$f.js | head -12
+          done
+          curl -sL -A "$UA" -c oz/cj -b oz/cj -o oz/robots.txt https://www.foreks.com/robots.txt; cat oz/robots.txt
+          curl -sL -A "$UA" -c oz/cj -b oz/cj -o oz/ekotakvim.html -w "ekotakvim %{http_code} %{size_download}\n" https://www.foreks.com/analizler/ekonomik-takvim/ || true
+          grep -oE '.{0,100}(TÜFE|Enflasyon|İşsizlik|Ödemeler).{0,200}' oz/ekotakvim.html | head -8
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan ozet-deneme-veri; git rm -rq --cached .; git add -f oz; git commit -qm veri; git push -f origin ozet-deneme-veri
