@@ -10,17 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: |
-          mkdir -p oz; pip install -q pypdf
+          mkdir -p oz
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-          curl -sL -A "$UA" -o oz/takvim.pdf -w "takvim %{http_code} %{size_download}\n" https://www.tbb.org.tr/sites/default/files/docs/tbb_istatistikleri_yayinlama_takvimi.pdf
-          python3 -c "import pypdf;r=pypdf.PdfReader('oz/takvim.pdf');print('\n'.join(p.extract_text() for p in r.pages)[:4000])"
-          curl -sL -A "$UA" -o oz/ist.html -w "ist %{http_code} %{size_download}\n" https://www.tbb.org.tr/banka-ve-sektor-bilgileri/istatistiki-raporlar
-          python3 - <<'P'
-          import re,html
-          s=open("oz/ist.html",encoding="utf-8",errors="ignore").read()
-          for h,x in re.findall(r'href="([^"]+)"[^>]*>(.*?)</a>',s,re.S):
-              x=re.sub(r'<[^>]+>|\s+',' ',x).strip()
-              if 'istatistiki-raporlar/' in h or 'xls' in h.lower(): print(x[:90],'|',h[:140])
-          P
+          for u in https://www.resmiistatistik.gov.tr/ https://www.resmiistatistik.gov.tr/takvim https://www.resmiistatistik.gov.tr/veri-yayimlama-takvimi https://data.tuik.gov.tr/Kategori/GetTakvim https://www.tuik.gov.tr/Kurumsal/Ulusal_Veri_Yayimlama_Takvimi; do
+            f=oz/$(echo $u | md5sum | cut -c1-6).html; curl -sL -A "$UA" -o $f -w "$u %{http_code} %{size_download} %{url_effective}\n" "$u" || true; sleep 2
+            grep -oiE '(href|src)="[^"]*(takvim|calendar|api)[^"]*"' $f | sort -u | head -15
+          done
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan ozet-deneme-veri; git rm -rq --cached .; git add -f oz; git commit -qm veri; git push -f origin ozet-deneme-veri
