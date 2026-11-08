@@ -1384,7 +1384,9 @@ $("#grpBox").addEventListener("click", e => { const b = e.target.closest("#gMode
 $("#grpBox").addEventListener("change", e => { if (e.target.id === "gAy") { S.sel = e.target.value; renderInf(); } });
 $("#grpBox").addEventListener("toggle", e => { if (e.target.classList?.contains("grpd")) S.gOpen = e.target.open; }, true);
 let rz, lw = innerWidth; addEventListener("resize", () => { if (!D || Math.abs(innerWidth - lw) < 30 && !rz) { } lw = innerWidth; clearTimeout(rz); rz = setTimeout(() => { rz = null; render(); }, 150); });
-const h = location.hash.slice(1); if (h === "piyasa" || h === "makro") S.tab = h; else if (["hazine", "buyume", "istihdam", "uretim", "dis", "butce"].includes(h)) { S.tab = "makro"; S.mk = h; }
+const hashUygula = h => { if (h === "piyasa" || h === "makro") S.tab = h; else if (["enf", "hazine", "buyume", "istihdam", "uretim", "dis", "butce"].includes(h)) { S.tab = "makro"; S.mk = h; } else return false; return true; };
+hashUygula(location.hash.slice(1));
+addEventListener("hashchange", () => { if (hashUygula(location.hash.slice(1)) && D) { render(); scrollTo(0, 0); } });   // Özet sekmesinden gelen bağlantılar
 H = undefined;
 fetch("data/hazine.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { H = j; if (D && S.tab === "makro" && S.mk === "hazine") { renderHazine(); renderSrc(); } });
 fetch("data/ekonomi.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { E = j; if (D && S.tab === "makro" && S.mk in EKT) { renderEko(); renderSrc(); } });

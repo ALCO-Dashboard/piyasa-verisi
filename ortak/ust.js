@@ -25,7 +25,7 @@
     if (!SHELL) document.querySelectorAll("iframe").forEach(f => { try { f.contentWindow.alcoTema && f.contentWindow.alcoTema(t); } catch (e) {} }); };
 
   // PDF: sayfayı açık temada, başlıklı ve A4 yatay olarak yazdır ("PDF olarak kaydet")
-  const AD = { banka: "Bankacılık Verileri", katilim: "Katılım Bülteni", tefas: "TEFAS Verileri", makro: "Makro ve Piyasa Verileri", tcmb: "TCMB" };
+  const AD = { ozet: "Özet", banka: "Bankacılık Verileri", katilim: "Katılım Bülteni", tefas: "TEFAS Verileri", makro: "Makro ve Piyasa Verileri", tcmb: "TCMB" };
   const AYU = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
   document.head.appendChild(Object.assign(document.createElement("style"), { textContent: `
 #alcoPrintHead{display:none}
@@ -101,14 +101,15 @@
 ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
   document.head.appendChild(Object.assign(document.createElement("style"), { textContent: css }));
 
-  const TABS = [["banka", "Bankacılık Verileri", "bankacilik/", "bankacilik/"], ["tefas", "TEFAS Verileri", "", "tefas.html"], ["makro", "Makro ve Piyasa", "makro/", "makro/"]];
-  const ALIAS = { katilim: ["banka", "katilim"], tcmb: ["banka", "rezerv"], rezerv: ["banka", "rezerv"], zk: ["banka", "zk"] };   // eski bağlantılar: Bankacılık Verileri altındaki sekmeler
+  const TABS = [["ozet", "Özet", "ozet/", "ozet/"], ["banka", "Bankacılık Verileri", "bankacilik/", "bankacilik/"], ["tefas", "TEFAS Verileri", "", "tefas.html"], ["makro", "Makro ve Piyasa", "makro/", "makro/"]];
+  const ALIAS = { katilim: ["banka", "katilim"], tcmb: ["banka", "rezerv"], rezerv: ["banka", "rezerv"], zk: ["banka", "zk"], pp: ["banka", "pp"], bddk: ["banka", "bddk"],   // eski bağlantılar ve Özet kartları: alt sekmeler
+    enf: ["makro", "enf"], piyasa: ["makro", "piyasa"], buyume: ["makro", "buyume"], istihdam: ["makro", "istihdam"], uretim: ["makro", "uretim"], dis: ["makro", "dis"], butce: ["makro", "butce"], hazine: ["makro", "hazine"] };
   const SRC = [ // anahtar, ad, sekme, kaç gün içinde "güncel"
     ["bddk_haftalik", "BDDK Haftalık Bülten", "banka", 14], ["bddk_aylik", "BDDK Aylık Bülten", "banka", 75],
     ["evds", "TCMB EVDS", "banka", 7], ["politika", "Para Politikası (TCMB)", "banka", 5],
     ["katilim", "Katılım Bülteni", "banka", 10], ["tefas", "TEFAS", "tefas", 4],
     ["tufe", "Enflasyon (TÜİK)", "makro", 40], ["piyasa", "Piyasa (TLREF, repo)", "makro", 5],
-    ["rezerv", "TCMB Rezervler (EVDS)", "banka", 5], ["zk", "Zorunlu karşılık (TCMB)", "banka", 5], ["hazine", "Hazine Borçlanma (HMB)", "makro", 45], ["ekonomi", "Ekonomik göstergeler (TÜİK, EVDS)", "makro", 45]];
+    ["rezerv", "TCMB Rezervler (EVDS)", "banka", 5], ["zk", "Zorunlu karşılık (TCMB)", "banka", 5], ["hazine", "Hazine Borçlanma (HMB)", "makro", 45], ["ekonomi", "Ekonomik göstergeler (TÜİK, EVDS)", "makro", 45], ["ozet", "Özet ve haber akışı (ForInvest)", "ozet", 2]];
   const now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const fmt = d => `${d.getDate()} ${AY[d.getMonth()]} ${d.getFullYear()}`;
   const parse = s => { if (!s) return null; if (/^\d{4}-\d{2}$/.test(s)) { const [y, m] = s.split("-").map(Number); return new Date(y, m, 0); } const [y, m, d] = s.slice(0, 10).split("-").map(Number); return new Date(y, m - 1, d); };
