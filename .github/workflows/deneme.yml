@@ -11,16 +11,8 @@ jobs:
       - uses: actions/checkout@v5
       - run: |
           mkdir -p oz
-          python3 - <<'PY'
-          import requests, json
-          out = []
-          for p in range(6):
-              j = requests.get("https://appg.tcmb.gov.tr/igmvytsms-dis/veriTakvimi/list", params={"yil": 2026, "ay": 11, "gun": 1, "lang": "tr", "page": p, "size": 20}, headers={"Accept": "application/json", "User-Agent": "Mozilla/5.0"}, timeout=30).json()
-              out += j.get("content") or []
-              if p + 1 >= j["page"]["totalPages"]: break
-          json.dump(out, open("oz/takvim.json", "w"), ensure_ascii=False)
-          print(len(out), sorted({k for x in out for k in x}))
-          for x in out[:80]: print(x["tarih"][:16], x.get("donem"), x["yayinBilgi"]["yayimAdi"][:70], (x.get("veriLink") or {}).get("link", "")[:60])
-          PY
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+          curl -sL -A "$UA" -c oz/cj -b oz/cj -H "Accept-Language: tr-TR" -o oz/edevlet.html -w "edevlet %{http_code} %{size_download} %{url_effective}\n" "https://www.turkiye.gov.tr/tuik-ulusal-veri-yayimlama-takvimi" || true
+          grep -o '<form[^>]*>' oz/edevlet.html | head -5; grep -o 'name="[^"]*"' oz/edevlet.html | sort -u | head -30; grep -c "<tr" oz/edevlet.html || true
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan ozet-deneme-veri; git rm -rq --cached .; git add -f oz; git commit -qm veri; git push -f origin ozet-deneme-veri
