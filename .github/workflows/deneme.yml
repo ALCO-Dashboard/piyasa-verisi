@@ -1,0 +1,19 @@
+name: Özet deneme
+on:
+  push:
+    branches: [ozet-deneme]
+permissions:
+  contents: write
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          mkdir -p oz
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+          for p in 1 2; do curl -s -A "$UA" -o oz/foreks_$p.html -w "foreks $p %{http_code} %{size_download}\n" "https://www.foreks.com/haberler/?page=$p"; sleep 2; done
+          curl -s -A "$UA" -o oz/robots.txt -w "robots %{http_code}\n" https://www.foreks.com/robots.txt
+          curl -s -A "$UA" -H "Accept: application/json" -o oz/takvim.json -w "takvim %{http_code} %{size_download}\n" "https://appg.tcmb.gov.tr/igmvytsms-dis/veriTakvimi/list?yil=2026&ay=11&gun=1&lang=tr&page=0&size=20"
+          git config user.name bot; git config user.email bot@users.noreply.github.com
+          git checkout --orphan ozet-deneme-veri; git rm -rq --cached .; git add -f oz; git commit -qm veri; git push -f origin ozet-deneme-veri
