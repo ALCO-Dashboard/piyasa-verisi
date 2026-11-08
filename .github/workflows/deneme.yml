@@ -13,16 +13,10 @@ jobs:
           mkdir -p oz
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
           C="curl -sL -A \"$UA\" -c oz/cj -b oz/cj -H Accept-Language:tr-TR"
-          curl -sL -A "$UA" -c oz/cj -b oz/cj -o oz/news.txt -w "news %{http_code} %{size_download}\n" https://www.foreks.com/llms-news.txt || true
-          curl -sL -A "$UA" -o oz/tcmb.json -w "tcmb %{http_code} %{size_download}\n" "https://appg.tcmb.gov.tr/igmvytsms-dis/veriTakvimi/list?yil=2026&ay=11&lang=tr&page=0&size=200" || true
-          curl -sL -A "$UA" -o oz/tuik_home.html -w "tuikhome %{http_code} %{size_download}\n" "https://veriportali.tuik.gov.tr/tr/" || true
-          for js in $(grep -o 'src="[^"]*\.js"' oz/tuik_home.html | sed 's/src="//;s/"$//' | head -20); do
-            case "$js" in http*) u="$js";; /*) u="https://veriportali.tuik.gov.tr$js";; *) u="https://veriportali.tuik.gov.tr/tr/$js";; esac
-            f=oz/js_$(basename "$js"); curl -sL -A "$UA" -o "$f" "$u"; sleep 2
-            echo "$u $(wc -c < $f)"; grep -oE '"/?api/[^"]{2,80}"|api/tr/[a-zA-Z/_-]{2,60}|[a-zA-Z/_-]*(calendar|takvim|Calendar|Takvim)[a-zA-Z/_-]*' "$f" | sort -u | head -40
-          done
-          for p in calendar release-calendar press-calendar press/calendar takvim yayin-takvimi calendars; do
-            sleep 6; curl -sL -A "$UA" -o oz/c_$(echo $p|tr / _).txt -w "$p %{http_code} %{size_download} %{content_type}\n" "https://veriportali.tuik.gov.tr/api/tr/$p" || true
-          done
+          curl -sL -A "$UA" -c oz/cj -b oz/cj -o oz/llms.txt -w "llms %{http_code} %{size_download}\n" https://www.foreks.com/llms.txt || true
+          cat oz/llms.txt | head -80
+          curl -sL -A "$UA" -o oz/main.js -w "main %{http_code} %{size_download}\n" "https://veriportali.tuik.gov.tr/assets/main-C0Z3qMtl.js" || true
+          grep -oE '"/?api/[^"]{2,80}"|`/?api/[^`]{2,80}`|/api/[a-zA-Z/_${}.-]{2,60}' oz/main.js | sort -u | head -80
+          grep -oE '.{60}(takvim|Takvim|calendar|Calendar).{60}' oz/main.js | head -20
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan ozet-deneme-veri; git rm -rq --cached .; git add -f oz; git commit -qm veri; git push -f origin ozet-deneme-veri
