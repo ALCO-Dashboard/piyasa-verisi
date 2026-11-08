@@ -12,12 +12,16 @@ jobs:
       - run: |
           mkdir -p oz
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-          C="curl -sL -A \"$UA\" -c oz/cj -b oz/cj -H Accept-Language:tr-TR"
-          curl -sL -A "$UA" -c oz/cj -b oz/cj -o oz/news.txt -w "news %{http_code} %{size_download}\n" https://www.foreks.com/llms-news.txt
-          curl -sL -A "$UA" -c oz/cj -b oz/cj -o oz/analiz.txt -w "analiz %{http_code} %{size_download}\n" https://www.foreks.com/llms-analysis.txt
-          grep -A3 "^### Ekonomik Veri Takvimi" oz/analiz.txt | grep -oE 'https://www.foreks.com/haber/detay/[^)]+' | head -3 > oz/urls.txt; cat oz/urls.txt
-          n=0; for u in $(cat oz/urls.txt); do n=$((n+1)); sleep 3; curl -sL -A "$UA" -c oz/cj -b oz/cj -o oz/tk$n.html -w "tk$n %{http_code} %{size_download}\n" "$u"; done
-          for p in 1 2; do sleep 2; curl -sL -A "$UA" -o oz/tcmb_$p.json "https://appg.tcmb.gov.tr/igmvytsms-dis/veriTakvimi/list?yil=2026&ay=11&lang=tr&page=$p&size=20"; done
-          curl -sL -A "$UA" -o oz/tcmb_0.json "https://appg.tcmb.gov.tr/igmvytsms-dis/veriTakvimi/list?yil=2026&ay=11&lang=tr&page=0&size=20"
+          curl -sL -A "$UA" -o oz/tb.html -w "tb %{http_code} %{size_download}\n" https://turk-bankalari-dashboard.vercel.app/
+          cat oz/tb.html | head -c 3000; echo
+          for js in $(grep -oE '(src|href)="[^"]+\.(js|json)"' oz/tb.html | sed -E 's/^(src|href)="//;s/"$//'); do
+            case "$js" in http*) u="$js";; /*) u="https://turk-bankalari-dashboard.vercel.app$js";; *) u="https://turk-bankalari-dashboard.vercel.app/$js";; esac
+            f=oz/$(basename "$js"); curl -sL -A "$UA" -o "$f" "$u"; echo "== $u $(wc -c < $f)"
+            grep -oE '"[^"]{0,80}\.(json|csv|xlsx)[^"]{0,20}"|fetch\([^)]{0,120}\)|https?://[a-zA-Z0-9./_-]{6,120}' "$f" | sort -u | head -40
+            grep -oiE '.{60}(kaynak|source|tbb|kap\.org|bddk|github).{60}' "$f" | head -10
+          done
+          curl -sL -A "$UA" -o oz/kap.json -w "kap %{http_code} %{size_download}\n" "https://www.kap.org.tr/tr/api/disclosure/members/byCriteria" || true
+          curl -sL -A "$UA" -o oz/kap2.html -w "kap2 %{http_code} %{size_download}\n" "https://www.kap.org.tr/tr/" || true
+          curl -sL -A "$UA" -o oz/tbb.html -w "tbb %{http_code} %{size_download}\n" "https://www.tbb.org.tr/tr/bankacilik/banka-ve-sektor-bilgileri/istatistiki-raporlar/59" || true
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan ozet-deneme-veri; git rm -rq --cached .; git add -f oz; git commit -qm veri; git push -f origin ozet-deneme-veri
