@@ -1,6 +1,7 @@
-name: Özet ve haber akışını güncelle
+name: Özet, haber akışı ve banka bilançolarını güncelle
 
 # Özet sekmesi: haber başlıkları (ForInvest) ve veri takvimi gün içinde saat başı yenilenir.
+# Banka Bilanço Verileri: KAP'ta yeni finansal rapor açıklayan banka saat içinde eklenir (yeni rapor yoksa yalnızca liste kontrol edilir).
 # Göstergeler yayındaki diğer veri dosyalarından derlenir; burada yeni veri çekilmez (birkaç saniye sürer).
 on:
   schedule:
@@ -17,15 +18,18 @@ concurrency:
 jobs:
   ozet:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - run: pip install requests
+      - run: pip install requests openpyxl
       - name: Yayındaki siteyi al
         run: git clone --depth 1 -b gh-pages "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" site
+      - name: Banka bilanço verilerini çek (KAP)
+        continue-on-error: true
+        run: python bilanco/guncelle.py --site site
       - name: Özet sayfasını derle
         run: python ozet/guncelle.py --site site
       - name: Sayfayı yayınla
