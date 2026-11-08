@@ -12,10 +12,12 @@ jobs:
       - run: |
           mkdir -p oz
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-          for pg in kalem-karsilastirma bildirim-sorgu beklenen-bildirim-sorgu; do
-            curl -sL -A "$UA" -o oz/p_$pg.html -w "$pg %{http_code} %{size_download}\n" "https://www.kap.org.tr/tr/$pg"; sleep 2
-            for js in $(grep -oE '"/_next/static/[^"]+\.js"' oz/p_$pg.html | sed 's/"//g'); do f=oz/k_$(basename $js); [ -f $f ] || { curl -sL -A "$UA" -o $f "https://www.kap.org.tr$js"; sleep 0.5; }; done
+          K=https://www.kap.org.tr/tr
+          for s in GENERAL BANK BANKA BDDK FINANCIAL; do
+            sleep 2; curl -sL -A "$UA" -H "Accept: application/json" -o oz/ci_$s.json -w "items $s %{http_code} %{size_download}\n" "$K/api/analysis/compare-items-by-sector/$s"
+            sleep 2; curl -sL -A "$UA" -H "Accept: application/json" -o oz/cs_$s.json -w "companies $s %{http_code} %{size_download}\n" "$K/api/analysis/companies-by-sector/$s"
           done
-          ls oz | wc -l
+          for f in oz/ci_*.json oz/cs_*.json; do echo "== $f"; head -c 600 $f; echo; done
+          sleep 2; curl -sL -A "$UA" -H "Accept: application/json" -o oz/params.json -w "params %{http_code} %{size_download}\n" "$K/api/params"; head -c 1500 oz/params.json; echo
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan ozet-deneme-veri; git rm -rq --cached .; git add -f oz; git commit -qm veri; git push -f origin ozet-deneme-veri
