@@ -12,23 +12,9 @@ jobs:
       - run: |
           mkdir -p oz
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-          K=https://www.kap.org.tr/tr
-          for s in BANKS PAR-BANKS; do
-            sleep 2; curl -sL -A "$UA" -H "Accept: application/json" -o oz/ci_$s.json -w "items $s %{http_code} %{size_download}\n" "$K/api/analysis/compare-items-by-sector/$s"
-            sleep 2; curl -sL -A "$UA" -H "Accept: application/json" -o oz/cs_$s.json -w "companies $s %{http_code} %{size_download}\n" "$K/api/analysis/companies-by-sector/$s"
-          done
-          python3 - <<'P'
-          import json
-          for s in ("BANKS","PAR-BANKS"):
-              c=json.load(open(f"oz/cs_{s}.json")); i=json.load(open(f"oz/ci_{s}.json"))
-              print(s, len(c), [x["company"] for x in c])
-              print(s, len(i), [x["websiteLabel"] for x in i])
-          c=json.load(open("oz/cs_PAR-BANKS.json"))[:2]; i=json.load(open("oz/ci_PAR-BANKS.json"))[:3]
-          body={"companyType":"PAR-BANKS","mkkMemberIdList":[x["mkkMemberOid"] for x in c],"mkkMemberTitleList":[x["company"] for x in c],
-                "yearList":["2026","2025"],"periodList":["2","3"],"itemIdList":[x["itemId"] for x in i],"sectors":["PAR-BANKS"]}
-          json.dump(body,open("oz/body.json","w"),ensure_ascii=False)
-          P
-          sleep 2; curl -sL -A "$UA" -H "Content-Type: application/json" -H "Accept-Language: tr" -X POST --data @oz/body.json -o oz/exp.bin -w "export %{http_code} %{size_download} %{content_type}\n" "$K/api/export/compareItems"
-          file oz/exp.bin; head -c 600 oz/exp.bin | strings | head -20
+          curl -sL -A "$UA" -o oz/b1.html -w "bildirim %{http_code} %{size_download}\n" "https://www.kap.org.tr/tr/Bildirim/1693434"
+          for w in "Kâr Payı Gelirleri" "Kredilerden" "Toplanan Fonlar" "Vadesiz" "BİLANÇO" "KÂR VEYA ZARAR"; do echo "$w: $(grep -o "$w" oz/b1.html | wc -l)"; done
+          grep -oE '"/_next/static/[^"]+\.js"' oz/b1.html | wc -l
+          grep -oE '.{0,200}Kâr Payı Gelirleri.{0,400}' oz/b1.html | head -3
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan ozet-deneme-veri; git rm -rq --cached .; git add -f oz; git commit -qm veri; git push -f origin ozet-deneme-veri
