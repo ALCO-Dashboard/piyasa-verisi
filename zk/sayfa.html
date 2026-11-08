@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zorunlu Karşılık · ALCO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --page:#f4f5f7; --surface:#ffffff; --surface-2:#f8f8f6; --ink:#1a1d26; --ink-2:#4f4e4a; --muted:#85837d;
+  --grid:#e7e6e0; --axis:#c3c2b7; --line:rgba(11,11,11,.10); --accent:#c8102e; --accent-wash:#fdecee;
+  --up:#0b7a0b; --down:#c62828; --bar:#9aa3b5; --bar-hi:#c8102e; --vol:rgba(110,120,140,.28);
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#eda100; --c5:#e87ba4; --c6:#6250d6; --c7:#008300;
+  --mono:"DM Mono","SF Mono",ui-monospace,Menlo,monospace; --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark; --page:#0f1012; --surface:#1a1a19; --surface-2:#222220; --ink:#f0efec; --ink-2:#c3c2b7; --muted:#8f8d86;
+  --grid:#2c2c2a; --axis:#3d3d3a; --line:rgba(255,255,255,.10); --accent:#f0525f; --accent-wash:#3a171b;
+  --up:#3fbf3f; --down:#ef6b6b; --bar:#5d6577; --bar-hi:#f0525f; --vol:rgba(160,170,190,.25);
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#9085e9; --c7:#1f9a1f;}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --page:#0f1012; --surface:#1a1a19; --surface-2:#222220; --ink:#f0efec; --ink-2:#c3c2b7; --muted:#8f8d86;
+  --grid:#2c2c2a; --axis:#3d3d3a; --line:rgba(255,255,255,.10); --accent:#f0525f; --accent-wash:#3a171b;
+  --up:#3fbf3f; --down:#ef6b6b; --bar:#5d6577; --bar-hi:#f0525f; --vol:rgba(160,170,190,.25);
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#9085e9; --c7:#1f9a1f;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+button,select{font:inherit;color:inherit}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.wrap{max-width:1500px;margin:0 auto;padding-inline:16px}
+.top .wrap{padding-block:20px 0}
+.brandtitle{margin:0;font-family:Archivo,var(--sans);font-size:26px;font-weight:800;letter-spacing:.03em;line-height:1.15;text-transform:uppercase;border-bottom:2px solid var(--ink);padding-bottom:10px}
+nav.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+nav.tabs button{font-family:Archivo,var(--sans);font-weight:700;font-size:15px;letter-spacing:.02em;text-transform:uppercase;padding:13px 10px;border:1px solid var(--line);border-bottom:3px solid var(--line);border-radius:10px;background:var(--surface);color:var(--muted);cursor:pointer}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-color:var(--accent);background:var(--accent-wash)}
+main.wrap{padding-block:16px 48px}
+.subtabs{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);margin-bottom:14px}
+.subtabs button{border:0;background:none;padding:9px 18px;font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer}
+.subtabs button+button{border-left:1px solid var(--line)}
+.subtabs button[aria-pressed="true"]{background:var(--accent);color:#fff}
+h2.sec{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px;display:flex;align-items:center;gap:10px}
+h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--kc,var(--line));border-radius:12px;padding:12px 14px;text-align:left;min-width:0}
+button.kpi{cursor:pointer;width:100%}
+button.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent);border-top-color:var(--accent)}
+.kpi .t{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-family:var(--mono);font-size:26px;font-weight:500;line-height:1.2;margin-top:4px;color:var(--ink)}
+.kpi .s{font-size:12.5px;color:var(--ink-2);margin-top:3px}
+.kpi .s b{font-family:var(--mono);font-weight:500}
+.kpi2 .kr{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:4px}
+.kpi2 .kl{font-size:12.5px;font-weight:600;color:var(--ink-2)}.kpi2 .kv{font-family:var(--mono);font-size:22px;color:var(--ink)}
+.kpi .d{font-size:11.5px;color:var(--muted);margin-top:2px}
+.up{color:var(--up)}.down{color:var(--down)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px;min-width:0}
+.cardhead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.cardhead h3{margin:0;font-size:15px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
+.cardhead .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13.5px;line-height:1.2;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-wash);font-weight:600}
+.chip i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.chip.off{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:6px 14px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.chart{position:relative;margin-top:6px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.axis text{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:8px 10px;font-size:12.5px;min-width:170px;z-index:5;display:none}
+.tip b{display:block;font-size:12px;margin-bottom:4px}
+.tip .r{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:12px}
+.tip .r span:first-child{font-family:var(--sans);color:var(--ink-2)}
+.tip .r i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
+.note{font-size:12.5px;color:var(--muted)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:14px;align-items:start}
+@media (max-width:1000px){.grid2{grid-template-columns:minmax(0,1fr)}}
+/* TÜFE ana harcama grupları */
+details.grpd{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+details.grpd>summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+details.grpd>summary::-webkit-details-marker{display:none}
+details.grpd>summary::before{content:"▸";color:var(--muted)}details.grpd[open]>summary::before{content:"▾"}
+details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:.02em}details.grpd>summary span{font-size:12.5px;color:var(--muted)}
+.grph{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.grph select{border:1px solid var(--line);border-radius:9px;padding:6px 10px;background:var(--surface)}
+.grp{width:100%;border-collapse:collapse;font-size:13.5px}
+.grp th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+.grp th:first-child{text-align:left}
+.grp td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono);white-space:nowrap}
+.grp td:first-child{text-align:left;font-family:var(--sans);white-space:normal}
+.grp tr.tot td{font-weight:700;background:var(--surface-2)}
+.hb{display:inline-block;width:110px;height:10px;position:relative;vertical-align:middle;margin-right:8px;background:var(--surface-2);border-radius:3px}
+.hb i{position:absolute;top:0;bottom:0;border-radius:3px}
+.hb::after{content:"";position:absolute;top:-2px;bottom:-2px;left:50%;width:1px;background:var(--axis)}
+.hb.p::after{left:0}
+/* hedef tablosu */
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono)}
+.tbl tr.cur td{background:var(--accent-wash)}
+.tbl td.na{color:var(--muted)}
+.src{font-size:12px;color:var(--muted);margin-top:18px;line-height:1.6}
+#gate{padding:60px 16px;text-align:center;color:var(--muted)}
+.hidden{display:none!important}
+@media (max-width:640px){.kpi .v{font-size:22px}.brandtitle{font-size:21px}.hb{width:60px}}
+@media print{.tip{display:none!important}}
+/* ZK sayfası ek stiller */
+.alco-ic header.top{display:none}
+.alco-ic main.wrap{padding-left:0;padding-right:0}
+.kpis.zk{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.kpi .v.sm{font-size:22px}
+.kpi .v small{font-size:13px;color:var(--muted)}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:1px 6px;border-radius:5px;background:var(--surface-2);color:var(--muted);vertical-align:2px;margin-left:4px}
+.tag.p{background:var(--accent-wash);color:var(--accent)}
+.tblwrap{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.tblwrap .tbl th{position:sticky;top:0;background:var(--surface);z-index:1}
+.tbl td.pos{color:var(--up)}.tbl td.neg{color:var(--down)}
+.tbl td.l,.tbl th.l{text-align:left;font-family:var(--sans)}
+.tbl tr.cur td{background:var(--accent-wash)}
+.tw{overflow-x:auto}
+.hbar{display:inline-block;height:12px;border-radius:3px;background:var(--c1);vertical-align:middle}
+.big{font-family:var(--mono);font-size:30px;line-height:1.2;margin:4px 0}
+.mini{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin:8px 0 14px}
+.mini .kpi .v{font-size:20px}
+.grid2e{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:1000px){.grid2e{grid-template-columns:minmax(0,1fr)}}
+.hdr2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+</style>
+</head>
+<body>
+<div id="alcoTop"></div><script src="../ortak/ust.js" data-page="zk" data-root="../"></script>
+<header class="top"><div class="wrap">
+  <h1 class="brandtitle">Zorunlu Karşılık</h1>
+</div></header>
+<main class="wrap">
+  <div id="gate">Veriler yükleniyor…</div>
+  <section id="pZk" class="hidden">
+    <h2 class="sec" id="zkHead">Zorunlu karşılık</h2>
+    <div class="kpis zk" id="zkKpi"></div>
+    <div class="card">
+      <div class="cardhead"><div><h3>Zorunlu karşılık ve piyasa likiditesi (mr ₺)</h3><div class="sub" id="zkSub"></div></div><span class="chips" id="rng"></span></div>
+      <div class="legend" id="zkLeg"></div>
+      <div class="chart" id="zkChart"></div>
+      <div class="note" id="zkNote"></div>
+    </div>
+    <div class="card">
+      <div class="cardhead"><div><h3>Tesis dönemleri (mr ₺)</h3><div class="sub">En yeni üstte · tesis tutarı = ortalama + önceki dönemden devreden · fark = ortalama tutulan − tesis tutarı</div></div></div>
+      <div class="tblwrap" id="dnBox"></div>
+    </div>
+    <h2 class="sec">Oranlar</h2>
+    <div class="hdr2" style="margin-bottom:12px"><div class="seg" id="sekme" role="group"></div></div>
+    <div id="oranPane">
+      <div class="grid2e">
+        <div class="card">
+          <div class="cardhead"><div><h3 id="orT">Zorunlu karşılık oranları</h3><div class="sub" id="orS"></div></div><div class="seg" id="orPb" role="group"></div></div>
+          <div class="tw" id="orTbl"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3>Ağırlıklı ortalama zorunlu karşılık oranı (%)</h3><div class="sub">Tesis dönemi bazında · TCMB zorunlu karşılıklar veri seti</div></div><span class="chips" id="agR"></span></div>
+          <div class="legend" id="agLeg"></div>
+          <div class="chart" id="agChart"></div>
+        </div>
+      </div>
+    </div>
+    <div id="nemaPane" class="hidden">
+      <div class="grid2e">
+        <div class="card">
+          <div class="cardhead"><div><h3>Türk lirası zorunlu karşılıklara faiz/nema</h3><div class="sub" id="ntS"></div></div></div>
+          <div id="ntBig"></div>
+          <div class="tblwrap" id="ntTbl" style="max-height:300px"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3>Yabancı para zorunlu karşılıklara faiz/nema ve komisyon</h3><div class="sub" id="nyS"></div></div></div>
+          <div class="mini" id="nyKpi"></div>
+          <div class="tblwrap" id="nyTbl" style="max-height:300px"></div>
+        </div>
+      </div>
+    </div>
+    <div id="depoPane" class="hidden">
+      <div class="grid2e">
+        <div class="card">
+          <div class="cardhead"><div><h3>TCMB taraflı döviz depo faiz oranları (%)</h3><div class="sub" id="dpS"></div></div></div>
+          <div class="tw" id="dpTbl"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3>Döviz depo faizlerinin seyri (%)</h3><div class="sub">Değişiklik tarihleri · teminat döviz depo alış (1 ay) ve döviz depo satış (1 hafta)</div></div></div>
+          <div class="legend" id="dpLeg"></div>
+          <div class="chart" id="dpChart"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cardhead"><div><h3>Döviz depo faiz oranları ve limitleri — geçmiş</h3><div class="sub">En yeni üstte</div></div></div>
+        <div class="tblwrap" id="dpHist" style="max-height:320px"></div>
+      </div>
+    </div>
+  </section>
+  <div class="src" id="src"></div>
+</main>
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s);
+const AY = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+const NF = {}; const nf = (v, d = 1) => (NF[d] ||= new Intl.NumberFormat("tr-TR", { minimumFractionDigits: d, maximumFractionDigits: d })).format(v);
+const ok = v => v != null && isFinite(v);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const gunAd = d => d ? `${+d.slice(8, 10)} ${AY[+d.slice(5, 7) - 1]} ${d.slice(0, 4)}` : "—";
+const gunKisa = d => `${+d.slice(8, 10)} ${AY[+d.slice(5, 7) - 1]}${d.slice(2, 4) !== String(new Date().getFullYear()).slice(2) ? " " + d.slice(2, 4) : ""}`;
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+const mr = (v, d = 1) => ok(v) ? (v < 0 ? "−" : "") + nf(Math.abs(v), d) : "—";
+const mrSg = (v, d = 1) => !ok(v) ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "") + nf(Math.abs(v), d);
+const cl = (v, e = .05) => !ok(v) || Math.abs(v) < e ? "" : v > 0 ? "up" : "down";
+const yz = (v, d = 2) => ok(v) ? "%" + nf(v, d) : "—";
+const gunFark = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 864e5);
+
+let D = null;
+const RNG = [["1A", 21], ["3A", 63], ["6A", 126], ["1Y", 252], ["3Y", 756], ["5Y", 1260], ["Tümü", 1e9]];
+const AGR = [["3Y", 78], ["5Y", 130], ["10Y", 260], ["Tümü", 1e9]];
+const SER = [["tesis", "ZK tesis tutarı", "--c2"], ["ortalama", "Ortalama tutulan", "--c3"], ["gereken", "Tutulması gereken (kalan gün ort.)", "--c6"],
+  ["serbest", "Bankalar serbest mevduatı", "--c1"], ["likidite", "Piyasa likidite durumu", "--c4"], ["gunbasi", "Gün başı toplam likidite", "--muted"]];
+const S = { on: new Set(JSON.parse(store.get("zk.on") || '["tesis","ortalama","gereken","serbest","likidite"]')), r: store.get("zk.r") || "6A",
+  sekme: store.get("zk.sekme") || "oran", pb: store.get("zk.pb") || "tl", ar: "10Y" };
+const kaydet = () => { store.set("zk.on", JSON.stringify([...S.on])); store.set("zk.r", S.r); store.set("zk.sekme", S.sekme); store.set("zk.pb", S.pb); };
+
+// ---------------------------------------------------------------- grafik (çizgi + üst üste çubuk)
+function niceTicks(a, b, n) {
+  if (a === b) { a -= 1; b += 1; }
+  const step0 = (b - a) / n, mag = Math.pow(10, Math.floor(Math.log10(step0))), r = step0 / mag;
+  const step = (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * mag, out = [];
+  for (let v = Math.floor(a / step) * step; v <= b + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+// series: [{name,color,vals,type:'line'|'bar',axis:'l'|'r',dash,stack:true,fmt}]
+function chart(el, o) {
+  el.innerHTML = "";
+  const xs = o.xs, n = xs.length, ser = o.series.filter(s => s.vals.some(ok));
+  if (!n || !ser.length) { el.innerHTML = '<div class="empty">Seçili dönemde veri yok.</div>'; return; }
+  const W = Math.max(320, el.clientWidth || 700), H = o.height || 320, hasR = ser.some(s => s.axis === "r");
+  const m = { t: 10, r: hasR ? 58 : 14, b: 26, l: 56 };
+  const bars = ser.filter(x => x.type === "bar"), stk = bars.filter(b => b.stack), solo = bars.filter(b => !b.stack);
+  const ext = ax => {
+    let v = ser.filter(s => (s.axis || "l") === ax && !s.stack).flatMap(s => s.vals.filter(ok));
+    if (ax === "l" && stk.length) for (let i = 0; i < n; i++) { let p = 0, q = 0; for (const b of stk) { const x = b.vals[i]; if (ok(x)) x > 0 ? p += x : q += x; } v.push(p, q); }
+    if (!v.length) return null; let lo = Math.min(...v), hi = Math.max(...v);
+    const z = bars.some(s => (s.axis || "l") === ax) || o.zero; if (z) { lo = Math.min(0, lo); hi = Math.max(0, hi); }
+    const pad = (hi - lo) * .08 || 1; return [z && lo >= 0 ? 0 : lo - pad, hi + pad];
+  };
+  const L = ext("l"), R = hasR ? ext("r") : null;
+  const tl = L ? niceTicks(L[0], L[1], 5) : [], tr = R ? niceTicks(R[0], R[1], 5) : [];
+  const yl0 = L ? Math.min(L[0], tl[0]) : 0, yl1 = L ? Math.max(L[1], tl[tl.length - 1]) : 1;
+  const yr0 = R ? Math.min(R[0], tr[0]) : 0, yr1 = R ? Math.max(R[1], tr[tr.length - 1]) : 1;
+  const iw = W - m.l - m.r, ih = H - m.t - m.b, bw = iw / n;
+  const X = i => m.l + bw * (i + .5), YL = v => m.t + (1 - (v - yl0) / (yl1 - yl0)) * ih, YR = v => m.t + (1 - (v - yr0) / (yr1 - yr0)) * ih;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label || "Grafik")}"><g class="axis">`;
+  for (const t of tl) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${YL(t)}" y2="${YL(t)}" stroke="var(--grid)"/><text x="${m.l - 7}" y="${YL(t) + 4}" text-anchor="end">${o.yFmt ? o.yFmt(t) : nf(t, 0)}</text>`;
+  if (R) for (const t of tr) s += `<text x="${W - m.r + 7}" y="${YR(t) + 4}" text-anchor="start">${o.y2Fmt ? o.y2Fmt(t) : nf(t, 0)}</text>`;
+  if (L && yl0 < 0 && yl1 > 0) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${YL(0)}" y2="${YL(0)}" stroke="var(--axis)"/>`;
+  const nx = Math.max(2, Math.min(o.maxX || 8, Math.floor(iw / 80))), step = Math.max(1, Math.ceil(n / nx));
+  for (let i = n - 1; i >= 0; i -= step) s += `<text x="${X(i)}" y="${H - 6}" text-anchor="${i === n - 1 ? "end" : "middle"}">${o.xFmt ? o.xFmt(xs[i]) : xs[i]}</text>`;
+  s += `<line x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}" stroke="var(--axis)"/></g>`;
+  const w = Math.max(1, bw * (solo.length + (stk.length ? 1 : 0) > 1 ? .8 / (solo.length + (stk.length ? 1 : 0)) : .72)), rx = w > 6 ? 1.5 : 0;
+  if (stk.length) for (let i = 0; i < n; i++) {
+    let p = 0, q = 0; const x = X(i) - w / 2;
+    for (const b of stk) { const v = b.vals[i]; if (!ok(v) || v === 0) continue;
+      const a0 = v > 0 ? p : q, a1 = a0 + v; v > 0 ? p = a1 : q = a1;
+      const y0 = YL(a0), y1 = YL(a1); s += `<rect x="${x.toFixed(2)}" y="${Math.min(y0, y1).toFixed(2)}" width="${w.toFixed(2)}" height="${Math.max(.5, Math.abs(y1 - y0)).toFixed(2)}" rx="${rx}" fill="${b.color}"/>`; }
+  }
+  solo.forEach((b, k) => { const Y = b.axis === "r" ? YR : YL, base = Y(b.axis === "r" ? Math.max(yr0, 0) : Math.max(yl0, Math.min(0, yl1)));
+    b.vals.forEach((v, i) => { if (!ok(v)) return; const y = Y(v), x = X(i) - w / 2;
+      s += `<rect x="${x.toFixed(2)}" y="${Math.min(y, base).toFixed(2)}" width="${w.toFixed(2)}" height="${Math.max(.5, Math.abs(base - y)).toFixed(2)}" rx="${rx}" fill="${b.color}"/>`; }); });
+  for (const l of ser.filter(x => x.type !== "bar")) {
+    const Y = l.axis === "r" ? YR : YL; let d = "", pen = false;
+    l.vals.forEach((v, i) => { if (!ok(v)) { pen = false; return; } d += `${pen ? "L" : "M"}${X(i).toFixed(2)},${Y(v).toFixed(2)}`; pen = true; });
+    if (!l.noLine) s += `<path d="${d}" fill="none" stroke="${l.color}" stroke-width="${l.width || 2}" stroke-linejoin="round" ${l.dash ? `stroke-dasharray="${l.dash}"` : ""}/>`;
+    if (l.marks && n <= 130) l.vals.forEach((v, i) => { if (ok(v)) s += `<circle cx="${X(i).toFixed(2)}" cy="${Y(v).toFixed(2)}" r="${n > 70 ? 1.8 : 3}" fill="${l.color}" stroke="var(--surface)" stroke-width="1"/>`; });
+    const li = l.vals.map(ok).lastIndexOf(true); if (li >= 0 && !l.marks) s += `<circle cx="${X(li)}" cy="${Y(l.vals[li])}" r="3" fill="${l.color}"/>`;
+  }
+  s += `<line class="cur" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" stroke="var(--axis)" stroke-dasharray="3 3" visibility="hidden"/></svg>`;
+  el.insertAdjacentHTML("beforeend", s);
+  const svg = el.querySelector("svg"), tip = el.appendChild(Object.assign(document.createElement("div"), { className: "tip" })), cur = svg.querySelector(".cur");
+  const idx = ev => { const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width; return Math.max(0, Math.min(n - 1, Math.floor((px - m.l) / bw))); };
+  svg.addEventListener("mousemove", ev => {
+    const i = idx(ev), rows = ser.filter(x => ok(x.vals[i]));
+    if (!rows.length) { tip.style.display = "none"; cur.setAttribute("visibility", "hidden"); return; }
+    cur.setAttribute("x1", X(i)); cur.setAttribute("x2", X(i)); cur.setAttribute("visibility", "visible");
+    tip.innerHTML = `<b>${esc(o.tipX ? o.tipX(xs[i], i) : xs[i])}</b>` + rows.map(x => `<div class="r"><span><i style="background:${x.color}"></i>${esc(x.name)}</span><span>${x.fmt ? x.fmt(x.vals[i]) : nf(x.vals[i])}</span></div>`).join("") + (o.tipNote ? `<div class="note" style="margin-top:4px">${o.tipNote(i)}</div>` : "");
+    tip.style.display = "block";
+    const r = el.getBoundingClientRect(), tw = tip.offsetWidth, x = ev.clientX - r.left;
+    tip.style.left = Math.min(Math.max(0, x + 14), r.width - tw) + "px"; tip.style.top = Math.max(0, ev.clientY - r.top - tip.offsetHeight - 10) + "px";
+  });
+  svg.addEventListener("mouseleave", () => { tip.style.display = "none"; cur.setAttribute("visibility", "hidden"); });
+}
+const legend = (el, items, cb) => {
+  el.innerHTML = items.map(it => `<button class="chip${it.on === false ? " off" : ""}" ${it.k ? `data-k="${it.k}" aria-pressed="${it.on !== false}"` : "disabled"} style="${it.k ? "" : "cursor:default"}"><i style="background:${it.color}"></i>${esc(it.name)}</button>`).join("");
+  el.onclick = e => { const b = e.target.closest("button[data-k]"); if (b && cb) cb(b.dataset.k); };
+};
+
+
+const seg = (el, list, cur, cb) => { el.innerHTML = list.map(([k, l]) => `<button data-k="${k}" aria-pressed="${k === cur}">${l}</button>`).join(""); el.onclick = e => { const b = e.target.closest("button[data-k]"); if (b) cb(b.dataset.k); }; };
+const chips = (el, list, cur, cb) => { el.innerHTML = list.map(([k]) => `<button class="chip" data-k="${k}" aria-pressed="${k === cur}">${k}</button>`).join(""); el.onclick = e => { const b = e.target.closest("button[data-k]"); if (b) cb(b.dataset.k); }; };
+
+// ---------------------------------------------------------------- anlık durum
+function renderKpi() {
+  const g = D.gunluk, i = g.dates.length - 1, t = g.dates[i], p = D.donemler[g.donem[i]], n = gunFark(p.bas, t), kalan = 14 - n;
+  const j = i > 0 ? i - 1 : i;
+  $("#zkHead").textContent = `Tesis dönemi ${gunAd(p.bas)} – ${gunAd(p.bit)} · ${n + 1}. gün (${gunAd(t)} verisi)`;
+  const k = (key, t1, v, s, d, kc) => `<button class="kpi" data-s="${key}" aria-pressed="${S.on.has(key)}" style="--kc:var(${kc})"><div class="t">${t1}</div><div class="v sm${key === "likidite" ? " " + cl(v, 1) : ""}">${key === "likidite" ? mrSg(v) : mr(v)} <small>mr ₺</small></div><div class="s">${s}</div><div class="d">${d}</div></button>`;
+  const dS = ok(g.serbest[i]) && ok(g.serbest[j]) ? g.serbest[i] - g.serbest[j] : null;
+  $("#zkKpi").innerHTML =
+    k("tesis", "ZK tesis tutarı", p.tesis, `Ortalama <b>${mr(p.ort)}</b> + devreden <b>${mrSg(p.devir)}</b>`, `Bloke ${mr(p.bloke)} mr ₺ · ${p.kaynak === "pdf" ? `hesaplama ${gunAd(p.hesap)} (geçici)` : p.kaynak === "tahmin" ? "arşivden tahmini" : "PDF yok"}`, "--c2") +
+    k("ortalama", "Ortalama tutulan", g.ortalama[i], n ? `${n} günün gün sonu ortalaması` : "Dönemin ilk günü — henüz gün sonu yok", ok(g.ortalama[i]) && ok(p.tesis) ? `Tesis tutarına göre <b class="${cl(g.ortalama[i] - p.tesis, 1)}">${mrSg(g.ortalama[i] - p.tesis)}</b>` : "Serbest mevduat ortalaması", "--c3") +
+    k("gereken", "Tutulması gereken", g.gereken[i], `Kalan ${kalan} günün ortalaması`, "(Tesis × 14 − tutulan × geçen gün) / kalan gün", "--c6") +
+    k("serbest", "Bankalar serbest mevduatı", g.serbest[i], `Günlük <b class="${cl(dS, 1)}">${mrSg(dS)}</b> mr ₺`, `${gunAd(t)} gün başı · EVDS`, "--c1") +
+    k("likidite", "Piyasa likidite durumu", g.likidite[i], `Gün başı toplam likidite <b>${mr(g.gunbasi[i])}</b>`, ok(g.likidite[i]) ? (g.likidite[i] >= 0 ? "Fazla: gün başı likidite − tutulması gereken" : "Eksik: gün başı likidite − tutulması gereken") : "", "--c4");
+  $("#zkKpi").onclick = e => { const b = e.target.closest("button[data-s]"); if (!b) return; const s = b.dataset.s; S.on.has(s) ? S.on.size > 1 && S.on.delete(s) : S.on.add(s); kaydet(); renderKpi(); renderChart(); };
+}
+function renderChart() {
+  const g = D.gunluk, n = g.dates.length, r = RNG.find(x => x[0] === S.r) || RNG[2], a = Math.max(0, n - r[1]), xs = g.dates.slice(a);
+  chips($("#rng"), RNG, S.r, k => { S.r = k; kaydet(); renderChart(); });
+  legend($("#zkLeg"), SER.map(([k, l, c]) => ({ k, name: l, color: css(c), on: S.on.has(k) })), k => { S.on.has(k) ? S.on.size > 1 && S.on.delete(k) : S.on.add(k); kaydet(); renderKpi(); renderChart(); });
+  const series = SER.filter(([k]) => S.on.has(k)).map(([k, l, c]) => ({ name: l, vals: g[k].slice(a), color: css(c), type: k === "likidite" ? "bar" : "line", width: k === "tesis" ? 2.4 : 2, dash: k === "gunbasi" ? "4 3" : null, fmt: v => mr(v) + " mr ₺" }));
+  $("#zkSub").textContent = `${gunAd(xs[0])} – ${gunAd(xs[xs.length - 1])} · kutulara ya da aşağıdaki etiketlere tıklayarak seri ekleyip çıkarabilirsiniz`;
+  chart($("#zkChart"), { xs, series, height: 360, label: "Zorunlu karşılık", xFmt: r[1] > 300 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd, yFmt: v => nf(v, 0),
+    tipNote: k => { const p = D.donemler[g.donem[a + k]]; return p ? `Tesis dönemi ${gunKisa(p.bas)} – ${gunKisa(p.bit)} · ${gunFark(p.bas, xs[k]) + 1}. gün${p.kaynak === "tahmin" ? " · tesis tutarı tahmini" : ""}` : ""; } });
+  $("#zkNote").innerHTML = "Ortalama tutulan: dönemin geçen günlerinde bankaların TCMB'deki serbest mevduatının gün sonu ortalaması (bir günün gün sonu bakiyesi, sonraki iş gününün gün başı değeridir; hafta sonu ve tatiller önceki iş gününün bakiyesini taşır). Piyasa likidite durumu çubuk olarak gösterilir: + fazla, − eksik. Tesis tutarı PDF'i olmayan geçmiş dönemlerde arşivdeki toplam gereken tutardan bloke kısım (TL tesis edilen − dönemin ortalama serbest mevduatı) düşülerek tahmin edilir; döviz/altınla tesis (ROM) dönemlerinde hesaplanmaz.";
+}
+function renderDonem() {
+  const P = D.donemler.filter(p => p.tesis != null || p.tutulan != null || p.gereken_top != null).slice(-40).reverse(), son = D.donemler[D.gunluk.donem[D.gunluk.dates.length - 1]];
+  const td = (v, c) => `<td class="${c ? (ok(v) && Math.abs(v) >= .05 ? (v > 0 ? "pos" : "neg") : "") : ""}">${c ? mrSg(v) : mr(v)}</td>`;
+  $("#dnBox").innerHTML = `<table class="tbl"><thead><tr><th class="l">Tesis dönemi</th><th>Ortalama</th><th>Devreden</th><th>Tesis tutarı</th><th>Ortalama tutulan</th><th>Fark</th><th>Bloke</th><th>Toplam gereken</th><th>Toplam tesis edilen</th><th class="l">Kaynak</th></tr></thead><tbody>${P.map(p =>
+    `<tr class="${p === son ? "cur" : ""}"><td class="l">${gunKisa(p.bas)} – ${gunAd(p.bit)}</td>${td(p.ort)}${td(p.devir, 1)}${td(p.tesis)}${td(p.tutulan)}${td(p.fark, 1)}${td(p.bloke)}${td(p.gereken_top)}${td(p.edilen_top)}<td class="l">${p.kaynak === "pdf" ? '<span class="tag p">PDF</span>' : p.kaynak === "tahmin" ? '<span class="tag">tahmin</span>' : p === son ? "" : '<span class="tag">arşiv bekleniyor</span>'}</td></tr>`).join("")}</tbody></table>`;
+}
+
+// ---------------------------------------------------------------- oranlar
+function renderOran() {
+  const O = D.oran?.[S.pb];
+  seg($("#orPb"), [["tl", "TL"], ["yp", "YP"]], S.pb, k => { S.pb = k; kaydet(); renderOran(); });
+  if (!O) { $("#orTbl").innerHTML = '<div class="empty">Veri yok.</div>'; return; }
+  $("#orT").textContent = `Zorunlu karşılık oranları · ${S.pb === "tl" ? "Türk lirası" : "Yabancı para"}`;
+  $("#orS").textContent = `Tebliğ ${O.teblig} · yürürlük ${O.donem}${O.onceki_teblig ? ` · önceki: ${O.onceki_teblig} (${O.onceki_donem})` : ""}${O.etiket_tahmini ? " · tablo yapısı değişmiş, kalem adları doğrulanmalı" : ""}`;
+  const mx = Math.max(...O.kalem.map(x => x.oran), 1);
+  $("#orTbl").innerHTML = `<table class="tbl"><thead><tr><th class="l">Yükümlülük</th><th class="l" style="width:34%">Oran</th><th>%</th><th>Önceki</th><th>Değişim</th></tr></thead><tbody>${O.kalem.map(x => { const d = ok(x.onceki) ? x.oran - x.onceki : null;
+    return `<tr><td class="l">${esc(x.ad)}</td><td class="l"><span class="hbar" style="width:${(x.oran / mx * 100).toFixed(1)}%;background:var(${S.pb === "tl" ? "--c1" : "--c3"})"></span></td><td>${nf(x.oran, 1)}</td><td>${ok(x.onceki) ? nf(x.onceki, 1) : "—"}</td><td class="${ok(d) && d ? (d > 0 ? "pos" : "neg") : ""}">${ok(d) ? (d ? (d > 0 ? "+" : "−") + nf(Math.abs(d), 1) + " puan" : "—") : ""}</td></tr>`; }).join("")}</tbody></table>`;
+  const A = D.arsiv?.oran || [], ar = AGR.find(x => x[0] === S.ar), a = Math.max(0, A.length - ar[1]), xs = A.slice(a).map(x => x.bas);
+  chips($("#agR"), AGR, S.ar, k => { S.ar = k; renderOran(); });
+  legend($("#agLeg"), [{ name: "TL", color: css("--c1") }, { name: "YP", color: css("--c3") }]);
+  chart($("#agChart"), { xs, height: 260, label: "Ağırlıklı ortalama ZK oranı", xFmt: d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`, tipX: d => `Tesis dönemi ${gunAd(d)}`, yFmt: v => nf(v, 0),
+    series: [{ name: "TL", vals: A.slice(a).map(x => x.tl), color: css("--c1"), width: 2.2, fmt: v => yz(v) }, { name: "YP", vals: A.slice(a).map(x => x.yp), color: css("--c3"), width: 2.2, fmt: v => yz(v) }] });
+}
+function renderNema() {
+  const T = D.nema_tl || [], Y = D.nema_yp || [], aof = D.aof, t0 = T[0];
+  $("#ntS").textContent = t0 ? `Yürürlük ${gunAd(t0.bas)}'ten bu yana · TCMB` : "";
+  const deger = t0?.baz === "aof" && aof && ok(t0.carpan) ? aof.oran * t0.carpan : null;
+  $("#ntBig").innerHTML = t0 ? `<div class="big">${deger != null ? yz(deger) : esc(t0.kural)}</div><div class="note" style="margin-bottom:10px">${esc(t0.kural)}${deger != null ? ` · TCMB ağırlıklı ortalama fonlama maliyeti ${yz(aof.oran)} (${gunAd(aof.tarih)}) × ${nf(t0.carpan, 2)}` : ""}</div>` : '<div class="empty">Veri yok.</div>';
+  $("#ntTbl").innerHTML = `<table class="tbl"><thead><tr><th class="l">Dönem</th><th class="l">Faiz / nema oranı</th></tr></thead><tbody>${T.map((x, i) => `<tr class="${i ? "" : "cur"}"><td class="l">${gunAd(x.bas)} – ${x.bit ? gunAd(x.bit) : ""}</td><td class="l">${esc(x.kural)}</td></tr>`).join("")}</tbody></table>`;
+  const L = ["USD ZK faiz/nema", "EUR hesaplara komisyon", "USD mevduat ZK komisyonu", "USD dışı döviz ZK komisyonu", "YP mevduat gereken ZK komisyonu"], y0 = Y[0];
+  $("#nyS").textContent = y0 ? `Yürürlük ${gunAd(y0.bas)}'ten bu yana · %, yıllık · TCMB` : "";
+  $("#nyKpi").innerHTML = y0 ? y0.deger.map((v, i) => `<div class="kpi" style="--kc:var(${i ? "--c2" : "--c3"})"><div class="t">${L[i]}</div><div class="v">${yz(v)}</div></div>`).join("") : "";
+  $("#nyTbl").innerHTML = `<table class="tbl"><thead><tr><th class="l">Dönem</th>${L.map(l => `<th>${l}</th>`).join("")}</tr></thead><tbody>${Y.map((x, i) => `<tr class="${i ? "" : "cur"}"><td class="l">${gunAd(x.bas)} – ${x.bit ? gunAd(x.bit) : ""}</td>${x.deger.map(v => `<td>${nf(v, 2)}</td>`).join("")}</tr>`).join("")}</tbody></table>
+    <div class="note" style="padding:8px 10px">Komisyonlar, TCMB'nin belirlediği kur korumalı hesap/TL mevduat payı koşullarını sağlayan bankalara uygulanmaz (TCMB dipnotları).</div>`;
+}
+function renderDepo() {
+  const R = D.depo?.satir || [], son = R[R.length - 1];
+  if (!son) { $("#dpTbl").innerHTML = '<div class="empty">Veri yok.</div>'; return; }
+  const c = k => son[1 + D.depo.kolon.indexOf(k)];
+  $("#dpS").textContent = `Uygulama tarihi ${gunAd(son[0])} · TCMB`;
+  $("#dpTbl").innerHTML = `<table class="tbl"><thead><tr><th class="l"></th><th class="l">Vade</th><th>USD</th><th>EUR</th></tr></thead><tbody>
+    ${[["2g", "2 gün"], ["1h", "1 hafta"], ["2h", "2 hafta"], ["1a", "1 ay"]].map(([k, l], i) => `<tr><td class="l">${i ? "" : "<b>Teminat döviz depo alış</b>"}</td><td class="l">${l}</td><td>${nf(c("alis_" + k + "_usd"), 2)}</td><td>${nf(c("alis_" + k + "_eur"), 2)}</td></tr>`).join("")}
+    <tr><td class="l"><b>Toplam limit</b></td><td class="l">milyar</td><td>${nf(c("limit_usd"), 2)}</td><td>${nf(c("limit_eur"), 2)}</td></tr>
+    ${[["1h", "1 hafta"], ["1a", "1 ay"]].map(([k, l], i) => `<tr><td class="l">${i ? "" : "<b>Döviz depo satış</b>"}</td><td class="l">${l}</td><td>${nf(c("satis_" + k + "_usd"), 2)}</td><td>${nf(c("satis_" + k + "_eur"), 2)}</td></tr>`).join("")}</tbody></table>`;
+  const xs = R.map(r => r[0]), col = k => R.map(r => r[1 + D.depo.kolon.indexOf(k)]);
+  const L = [["alis_1a_usd", "Alış 1 ay USD", "--c1"], ["alis_1a_eur", "Alış 1 ay EUR", "--c3"], ["satis_1h_usd", "Satış 1 hafta USD", "--c2"], ["satis_1h_eur", "Satış 1 hafta EUR", "--c4"]];
+  legend($("#dpLeg"), L.map(([, l, c2]) => ({ name: l, color: css(c2) })));
+  chart($("#dpChart"), { xs, height: 260, label: "Döviz depo faizleri", xFmt: d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`, tipX: gunAd, yFmt: v => nf(v, 0),
+    series: L.map(([k, l, c2]) => ({ name: l, vals: col(k), color: css(c2), width: 2, marks: true, fmt: v => yz(v) })) });
+  $("#dpHist").innerHTML = `<table class="tbl"><thead><tr><th class="l">Tarih</th>${["Alış 2g", "Alış 1h", "Alış 2h", "Alış 1a"].map(h => `<th>${h} USD</th><th>${h} EUR</th>`).join("")}<th>Limit USD</th><th>Limit EUR</th><th>Satış 1h USD</th><th>Satış 1h EUR</th><th>Satış 1a USD</th><th>Satış 1a EUR</th></tr></thead><tbody>${[...R].reverse().map(r => `<tr><td class="l">${gunAd(r[0])}</td>${r.slice(1).map(v => `<td>${nf(v, 2)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+}
+function renderSekme() {
+  seg($("#sekme"), [["oran", "ZK oranları"], ["nema", "ZK nema oranları"], ["depo", "Döviz depo"]], S.sekme, k => { S.sekme = k; kaydet(); renderSekme(); });
+  $("#oranPane").classList.toggle("hidden", S.sekme !== "oran"); $("#nemaPane").classList.toggle("hidden", S.sekme !== "nema"); $("#depoPane").classList.toggle("hidden", S.sekme !== "depo");
+  ({ oran: renderOran, nema: renderNema, depo: renderDepo })[S.sekme]();
+}
+function render() {
+  if (!D?.gunluk?.dates?.length) { $("#gate") && ($("#gate").textContent = "Zorunlu karşılık verisi henüz yok."); return; }
+  $("#pZk").classList.remove("hidden");
+  renderKpi(); renderChart(); renderDonem(); renderSekme();
+  const k = D.kaynak || {}, a = (x, t) => k[x] ? `<a href="${esc(k[x])}" target="_blank" rel="noopener">${t}</a>` : t;
+  const f = D.failed?.length ? ` · <span style="color:var(--down)">güncellenemeyen: ${esc(D.failed.join(", "))} (önceki veri gösteriliyor)</span>` : "";
+  $("#src").innerHTML = `Kaynak: <a href="https://www.tcmb.gov.tr/wps/wcm/connect/tr/tcmb+tr/main+menu/istatistikler/bankacilik+verileri/zorunlu+karsiliklar" target="_blank" rel="noopener">TCMB Zorunlu Karşılıklar</a> — ${a("tesis", "TL cinsinden tesis edilmesi gereken ortalama tutar")}, ${a("arsiv", "zorunlu karşılıklar veri seti")}, ${a("oran", "zorunlu karşılık oranları")}, ${a("nema_tl", "TL")} ve ${a("nema_yp", "YP")} zorunlu karşılıklara uygulanan faiz/nema oranları, ${a("depo", "TCMB taraflı döviz depo faiz oranları ve limitleri")} · TCMB EVDS: bankalar serbest mevduatı, gün başı toplam likidite, TCMB ağırlıklı ortalama fonlama maliyeti. Son güncelleme ${D.updated ? new Date(D.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${f}.`;
+}
+let rz;
+addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => D && render(), 150); });
+fetch("data/zk.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(j => { D = j; $("#gate").remove(); render(); })
+  .catch(e => { $("#gate").textContent = "Veriler yüklenemedi (" + e.message + "). Sayfa henüz güncellenmemiş olabilir."; });
+})();
+</script>
+</body>
+</html>

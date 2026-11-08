@@ -18,6 +18,7 @@ on:
       - "tcmb/**"
       - "bloomberg/**"
       - "hazine/**"
+      - "zk/**"
       - "ekonomi/**"
       - "sayfa.html"
   workflow_dispatch:
@@ -46,7 +47,7 @@ jobs:
 
       - name: Gerekli paketleri kur
         run: |
-          pip install requests cryptography certifi openpyxl pypdf msoffcrypto-tool xlrd
+          pip install requests cryptography certifi openpyxl pypdf msoffcrypto-tool xlrd pdfplumber
           npm install --no-save --no-audit --no-fund xlsx@0.18.5
 
       - name: Yayındaki siteyi al
@@ -82,6 +83,12 @@ jobs:
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
         run: python tcmb/guncelle.py --site site --bbg "$RUNNER_TEMP/bbg.json"
+
+      - name: Zorunlu karşılık verisini çek (TCMB)
+        continue-on-error: true
+        env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: python zk/guncelle.py --site site
 
       - name: Hazine borçlanma verisini çek (HMB)
         continue-on-error: true
