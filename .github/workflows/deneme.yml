@@ -12,9 +12,9 @@ jobs:
       - run: |
           mkdir -p oz
           UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-          for u in https://www.resmiistatistik.gov.tr/ https://www.resmiistatistik.gov.tr/takvim https://www.resmiistatistik.gov.tr/veri-yayimlama-takvimi https://data.tuik.gov.tr/Kategori/GetTakvim https://www.tuik.gov.tr/Kurumsal/Ulusal_Veri_Yayimlama_Takvimi; do
-            f=oz/$(echo $u | md5sum | cut -c1-6).html; curl -sL -A "$UA" -o $f -w "$u %{http_code} %{size_download} %{url_effective}\n" "$u" || true; sleep 2
-            grep -oiE '(href|src)="[^"]*(takvim|calendar|api)[^"]*"' $f | sort -u | head -15
-          done
+          curl -sL -A "$UA" -o oz/main.js -w "main %{http_code} %{size_download}\n" "https://www.resmiistatistik.gov.tr/static/js/main.js?ver=5"
+          grep -oE 'https?://[a-zA-Z0-9./_-]{8,120}' oz/main.js | sort -u | grep -v -E "w3.org|reactjs|fb.me|mui|github" | head -40
+          grep -oE '"/?[a-zA-Z/_-]*(api|Api|takvim|Takvim|calendar|Calendar)[a-zA-Z/_?=&{}$.-]{0,80}"' oz/main.js | sort -u | head -60
+          grep -oE '`[^`]{0,40}(api|Api|takvim|Takvim)[^`]{0,100}`' oz/main.js | sort -u | head -30
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan ozet-deneme-veri; git rm -rq --cached .; git add -f oz; git commit -qm veri; git push -f origin ozet-deneme-veri
