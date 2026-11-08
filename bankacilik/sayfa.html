@@ -328,6 +328,7 @@ section[data-pane="katilim"]{margin:0 -16px}
       <div class="seg" id="tSub">
         <button data-p="pp" aria-pressed="true">Para Politikası</button>
         <button data-p="rezerv" aria-pressed="false">Rezervler</button>
+        <button data-p="zk" aria-pressed="false">Zorunlu Karşılık</button>
         <button data-p="faiz" aria-pressed="false">Faiz, Kâr Payı ve Kart</button>
         <button data-p="aylik" aria-pressed="false">Para ve Banka (Aylık)</button>
         <button data-p="haftalik" aria-pressed="false">Para ve Banka (Haftalık)</button>
@@ -343,6 +344,7 @@ section[data-pane="katilim"]{margin:0 -16px}
     </div>
     <div class="stack hidden" id="ppPane"></div>
     <div class="hidden" id="rezPane"><iframe class="gomu" data-src="../tcmb/" title="TCMB Rezervler"></iframe></div>
+    <div class="hidden" id="zkPane"><iframe class="gomu" data-src="../zk/" title="Zorunlu Karşılık"></iframe></div>
   </section>
 
   <!-- ===================== KATILIM BÜLTENİ ===================== -->
@@ -1078,7 +1080,8 @@ function drawTChart(code) {
 function renderTcmb() {
   $$("#tSub button").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === S.tSub));
   const rz = $("#rezPane"); rz.classList.toggle("hidden", S.tSub !== "rezerv");
-  if (S.tSub === "rezerv") { ppHide(); $("#tBanks").closest(".bar").classList.add("hidden"); $(".tlayout").classList.add("hidden"); gomuAc(rz.querySelector("iframe")); return; }
+  const zp = $("#zkPane"); zp.classList.toggle("hidden", S.tSub !== "zk");
+  if (S.tSub === "rezerv" || S.tSub === "zk") { ppHide(); $("#tBanks").closest(".bar").classList.add("hidden"); $(".tlayout").classList.add("hidden"); gomuAc((S.tSub === "zk" ? zp : rz).querySelector("iframe")); return; }
   if (S.tSub === "pp") { ppRender(); return; } ppHide();
   if (!D.e) { $("#tPanels").innerHTML = '<div class="card empty">EVDS verisi henüz yok.</div>'; $("#tNav").innerHTML = ""; return; }
   const secs = tSections(), sel = tSelTopics();
@@ -1153,7 +1156,7 @@ window.alcoPdf = () => {
 };
 function hashGit() {
   const h = location.hash.slice(1);
-  if (h === "rezerv") { S.tSub = "rezerv"; $('#tabs button[data-tab="tcmb"]').click(); return true; }
+  if (h === "rezerv" || h === "zk") { S.tSub = h; $('#tabs button[data-tab="tcmb"]').click(); return true; }
   const b = h && $(`#tabs button[data-tab="${h}"]`); if (b) { b.click(); return true; }
   return false;
 }
@@ -1162,7 +1165,7 @@ $("#tabs").onclick = e => {
   const b = e.target.closest("button[data-tab]"); if (!b) return; S.tab = b.dataset.tab;
   $$("#tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
   $$("[data-pane]").forEach(p => p.classList.toggle("hidden", p.dataset.pane !== S.tab));
-  try { history.replaceState(null, "", "#" + (S.tab === "tcmb" && S.tSub === "rezerv" ? "rezerv" : S.tab)); } catch {}
+  try { history.replaceState(null, "", "#" + (S.tab === "tcmb" && (S.tSub === "rezerv" || S.tSub === "zk") ? S.tSub : S.tab)); } catch {}
   renderPane();
 };
 let rz, lastW = innerWidth; addEventListener("resize", () => { if (Math.abs(innerWidth - lastW) < 40) return; lastW = innerWidth; clearTimeout(rz); rz = setTimeout(renderPane, 150); });
