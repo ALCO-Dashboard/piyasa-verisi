@@ -11,10 +11,16 @@ jobs:
       - uses: actions/checkout@v5
       - run: |
           mkdir -p oz
-          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-          H=(-A "$UA" -H "Accept: text/html,application/xhtml+xml,*/*;q=0.8" -H "Accept-Language: tr-TR,tr;q=0.9" -c oz/cj -b oz/cj --max-redirs 5)
-          curl -sI "${H[@]}" https://www.foreks.com/haberler/ | head -20 || true
-          for u in https://www.foreks.com/haberler/ https://www.foreks.com/haberler https://foreks.com/haberler/ https://www.foreks.com/llms-news.txt https://www.foreks.com/llms.txt; do
-            n=$(echo "$u" | tr -c 'a-z0-9' '_'); curl -sL "${H[@]}" -o "oz/$n" -w "GET $u -> %{http_code} %{size_download} %{num_redirects} %{url_effective}\n" "$u" || echo "GET $u başarısız $?"; sleep 2; done
+          python3 - <<'PY'
+          import requests, json
+          out = []
+          for p in range(6):
+              j = requests.get("https://appg.tcmb.gov.tr/igmvytsms-dis/veriTakvimi/list", params={"yil": 2026, "ay": 11, "gun": 1, "lang": "tr", "page": p, "size": 20}, headers={"Accept": "application/json", "User-Agent": "Mozilla/5.0"}, timeout=30).json()
+              out += j.get("content") or []
+              if p + 1 >= j["page"]["totalPages"]: break
+          json.dump(out, open("oz/takvim.json", "w"), ensure_ascii=False)
+          print(len(out), sorted({k for x in out for k in x}))
+          for x in out[:80]: print(x["tarih"][:16], x.get("donem"), x["yayinBilgi"]["yayimAdi"][:70], (x.get("veriLink") or {}).get("link", "")[:60])
+          PY
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan ozet-deneme-veri; git rm -rq --cached .; git add -f oz; git commit -qm veri; git push -f origin ozet-deneme-veri
