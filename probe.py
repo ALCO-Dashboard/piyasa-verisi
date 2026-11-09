@@ -1,35 +1,52 @@
-import re, json, requests, io, os, sys, time
+import re, json, requests, io, os, time
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
 s = requests.Session(); s.headers.update({"User-Agent": UA})
 os.makedirs("out", exist_ok=True)
 def kaydet(ad, t): open("out/" + ad, "w", encoding="utf-8").write(t)
-# 1) ana sayfa ve JS paketlerinde API yolları
-h = s.get("https://www.hmb.gov.tr/", timeout=60).text
-kaydet("ana.html", h)
-yollar = set()
-for js in re.findall(r'src="([^"]+\.js)"', h):
-    u = js if js.startswith("http") else "https://www.hmb.gov.tr" + js
+# 1) iç borçlanma stratejisi duyuruları
+for u in ["https://www.hmb.gov.tr/portal/v2/posts?search=borçlanma%20stratejisi&per_page=10&_fields=id,date,slug,title,content",
+          "https://www.hmb.gov.tr/portal/v2/posts?categories=35&per_page=30&_fields=id,date,slug,title,content"]:
+    r = s.get(u, timeout=60); print("POSTS", r.status_code, len(r.text), u); kaydet("posts_" + str(len(os.listdir("out"))) + ".json", r.text)
+    time.sleep(1)
+from pypdf import PdfReader
+t = s.get("https://www.hmb.gov.tr/portal/v2/posts?search=borçlanma%20stratejisi&per_page=10&_fields=id,date,slug,title,content", timeout=60).json()
+pdfs = []
+for p in t:
+    for u in re.findall(r'href="([^"]+\.pdf)"', p["content"]["rendered"]):
+        pdfs.append((p["date"], p["slug"], u))
+print("PDF", pdfs)
+for i, (d, sl, u) in enumerate(pdfs[:3]):
+    b = s.get(u, timeout=90).content
+    open(f"out/strateji_{i}.pdf", "wb").write(b)
     try:
-        t = s.get(u, timeout=60).text
-        yollar |= set(re.findall(r'["`/](portal/v2/[A-Za-z0-9_\-/?=&${}.]+)', t))
-        kaydet("js_" + os.path.basename(u)[:60] + ".txt", "\n".join(sorted(set(re.findall(r'.{0,80}portal/v2.{0,120}', t)))))
+        R = PdfReader(io.BytesIO(b)); kaydet(f"strateji_{i}.txt", f"{d} {sl}\n" + "\n\f\n".join(pg.extract_text() or "" for pg in R.pages))
+        kaydet(f"strateji_{i}_layout.txt", "\n\f\n".join(pg.extract_text(extraction_mode="layout") or "" for pg in R.pages))
     except Exception as e:
-        print("js", u, e)
-print("API yolları:", sorted(yollar))
-# 2) kamu finansmanı istatistikleri sayfasındaki tüm dosyalar
-t = s.get("https://www.hmb.gov.tr/portal/v2/pages?slug=kamu-finansmani-istatistikleri", timeout=90).text.replace("\\/", "/")
-kaydet("kfi.json", t)
-for u in sorted(set(re.findall(r"https://ms\.hmb\.gov\.tr/uploads/[^\"'\s<>]+", t))):
-    print("DOSYA", u)
-# 3) duyuru sayfası denemeleri
-slug = "kasim-2026-ocak-2027-ic-borclanma-stratejisi"
-for u in [f"https://www.hmb.gov.tr/portal/v2/pages?slug={slug}", f"https://www.hmb.gov.tr/portal/v2/pages?slug=duyuru/{slug}",
-          f"https://www.hmb.gov.tr/portal/v2/announcements?slug={slug}", f"https://www.hmb.gov.tr/portal/v2/announcements/{slug}",
-          f"https://www.hmb.gov.tr/portal/v2/duyuru?slug={slug}", f"https://www.hmb.gov.tr/portal/v2/news?slug={slug}",
-          f"https://www.hmb.gov.tr/portal/v2/posts?slug={slug}", "https://www.hmb.gov.tr/portal/v2/announcements", "https://www.hmb.gov.tr/portal/v2/pages?slug=ic-borclanma-stratejisi",
-          "https://www.hmb.gov.tr/portal/v2/pages?slug=borclanma-stratejisi", "https://www.hmb.gov.tr/portal/v2/pages?slug=ihale-takvimi", "https://www.hmb.gov.tr/portal/v2/pages?slug=ic-borclanma-ihale-takvimi"]:
+        print("pdf hata", e)
+    time.sleep(1)
+# 2) tarihçe dosyaları
+import xlrd, openpyxl
+kfi = s.get("https://www.hmb.gov.tr/portal/v2/pages?slug=kamu-finansmani-istatistikleri", timeout=90).text.replace("\\/", "/")
+for desen in ["Doviz-Faiz_Yapisi", "Enstruman_Dagilimi", "Vadeye_Kalan_Ortalama_Suresi", "Merkezi_Yonetim_Dis_Borc_Stoku-", "Ic-Borclanmanin-Ortalama-Vadesi", "Ic-Borclanmanin-Ortalama-Maliyeti"]:
+    m = re.findall(r"https://ms\.hmb\.gov\.tr/uploads/[^\"'\s<>]*" + re.escape(desen) + r"[^\"'\s<>]*\.xlsx?", kfi)
+    if not m: print("YOK", desen); continue
+    u = m[0]; b = s.get(u, timeout=120).content; print("İNDİ", u, len(b))
+    out = []
     try:
-        r = s.get(u, timeout=60); print("DENEME", r.status_code, len(r.text), u); kaydet("d_" + re.sub(r"\W+", "_", u[30:])[:80] + ".txt", r.text[:200000])
+        if u.endswith(".xls"):
+            wb = xlrd.open_workbook(file_contents=b)
+            for sh in wb.sheets():
+                out.append(f"=== SAYFA {sh.name} {sh.nrows}x{sh.ncols}")
+                for r in range(min(sh.nrows, 400)):
+                    out.append(" | ".join(str(sh.cell_value(r, c)) for c in range(min(sh.ncols, 40))))
+        else:
+            wb = openpyxl.load_workbook(io.BytesIO(b), data_only=True, read_only=True)
+            for ws in wb.worksheets:
+                out.append(f"=== SAYFA {ws.title}")
+                for i, r in enumerate(ws.iter_rows(values_only=True)):
+                    if i > 400: break
+                    out.append(" | ".join("" if x is None else str(x) for x in r[:40]))
     except Exception as e:
-        print("DENEME HATA", u, e)
+        out.append(f"HATA {e}")
+    kaydet("x_" + desen.strip("-_") + ".txt", "\n".join(out))
     time.sleep(1)
