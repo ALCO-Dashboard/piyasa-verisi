@@ -55,6 +55,8 @@
     window.addEventListener("afterprint", bitti);
     setTimeout(() => window.print(), koyu || PAGE === "tefas" ? 1500 : 300);   // grafikler yeniden çizilsin
   };
+  // Sunum oluşturucu (seçim modu, izole slayt gösterimi): her sayfada yüklenir
+  if (!document.getElementById("ssJs")) { const s = document.createElement("script"); s.id = "ssJs"; s.src = ROOT + "ortak/sunum.js?v=" + Math.floor(Date.now() / 36e5); s.dataset.root = ROOT; s.dataset.page = PAGE; document.head.appendChild(s); }
   if (EMBED) {
     host.remove();
     document.head.appendChild(Object.assign(document.createElement("style"), { textContent: "#thm{display:none!important}" }));

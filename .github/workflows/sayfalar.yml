@@ -23,6 +23,7 @@ on:
       - "ozet/**"
       - "bilanco/**"
       - "sayfa.html"
+      - "sunum/**"
   workflow_dispatch:
 
 permissions:
@@ -114,7 +115,8 @@ jobs:
 
       - name: Ortak dosyaları ve TEFAS sayfasını kopyala
         run: |
-          mkdir -p site/ortak && cp ortak/ust.js site/ortak/
+          mkdir -p site/ortak/lib site/sunum && cp ortak/ust.js ortak/sunum.js ortak/sunum_sablon.json ortak/sunum_katalog.json site/ortak/
+          cp ortak/lib/* site/ortak/lib/ && cp sunum/sayfa.html site/sunum/index.html
           cp sayfa.html site/tefas.html
           cp ortak/kabuk.html site/index.html
 

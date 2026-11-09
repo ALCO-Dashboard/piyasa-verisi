@@ -1,0 +1,58 @@
+name: Sunum kataloğunu güncelle
+
+# Sunum sayfasındaki "Katalogdan ekle" listesi (ortak/sunum_katalog.json): sitenin tüm sekmelerini tarayıcıda gezip
+# seçilebilir kart, grafik ve tabloları çıkarır. Yeni sekme / kart eklendiğinde elle de çalıştırılabilir (Run workflow).
+on:
+  schedule:
+    - cron: "10 3 * * 1"      # her pazartesi 06:10 (Türkiye saati)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fon-detay-guncelle
+  cancel-in-progress: false
+
+jobs:
+  katalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Tarayıcıyı kur
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.48.2
+          npx playwright install --with-deps chromium
+
+      - name: Yayındaki siteyi al (sunum dosyalarının güncel hâliyle)
+        run: |
+          git clone --depth 1 -b gh-pages "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" site
+          mkdir -p site/ortak/lib && cp ortak/ust.js ortak/sunum.js site/ortak/ && cp ortak/lib/* site/ortak/lib/
+
+      - name: Kataloğu üret
+        run: |
+          (cd site && python3 -m http.server 8765 > /dev/null 2>&1 &)
+          sleep 2
+          node sunum/katalog.mjs http://localhost:8765/ ortak/sunum_katalog.json
+
+      - name: Kaydet ve yayınla
+        run: |
+          git config user.name "fon-detay-bot"
+          git config user.email "fon-detay-bot@users.noreply.github.com"
+          git add ortak/sunum_katalog.json
+          git diff --cached --quiet && { echo "Katalog değişmedi"; exit 0; }
+          git commit -q -m "Sunum kataloğu güncellendi"
+          git pull -q --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"
+          cp ortak/sunum_katalog.json site/ortak/
+          cd site
+          git config user.name "fon-detay-bot"
+          git config user.email "fon-detay-bot@users.noreply.github.com"
+          git add ortak/sunum_katalog.json
+          git commit -q -m "Sunum kataloğu güncellendi"
+          git push origin gh-pages
