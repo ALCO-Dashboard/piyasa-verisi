@@ -1,0 +1,20 @@
+name: Hazine deneme
+on:
+  push:
+    branches: [hazine-deneme]
+permissions:
+  contents: write
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install requests openpyxl
+      - run: python probe.py
+      - run: |
+          git config user.name bot; git config user.email bot@users.noreply.github.com
+          git checkout --orphan hazine-deneme-veri; git rm -rqf --cached .; git add -f out; git commit -qm veri; git push -f origin hazine-deneme-veri
