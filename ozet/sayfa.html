@@ -57,6 +57,11 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 .subtabs button{border:0;background:none;padding:9px 20px;font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer}
 .subtabs button+button{border-left:1px solid var(--line)}
 .subtabs button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.bas .sag{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.sunbtn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;padding:9px 16px;cursor:pointer;box-shadow:0 4px 14px rgba(200,16,46,.25)}
+.sunbtn:hover{filter:brightness(.93)}
+.sunbtn i{font-style:normal;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;background:rgba(255,255,255,.2);font-size:11px}
+.sunbtn .n{font-family:var(--mono);font-size:11.5px;background:#fff;color:var(--accent);border-radius:8px;padding:1px 6px}
 /* ana sıra: öne çıkanlar | kartlar | gündem */
 .ana{display:grid;grid-template-columns:minmax(0,270px) minmax(0,1fr) minmax(0,300px);grid-template-areas:"h k g";gap:20px;align-items:start}
 .ana .kgrid{grid-area:k}.ana .hl{grid-area:h}.ana .gundem{grid-area:g}
@@ -152,7 +157,7 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 <body>
 <div id="alcoTop"></div><script src="../ortak/ust.js" data-page="ozet" data-root="../"></script>
 <header class="top"><div class="wrap">
-  <div class="bas"><div class="subtabs" id="gTabs" role="group" aria-label="Özet konusu"><button data-g="piyasa" aria-pressed="true">Piyasa Verileri</button><button data-g="eko" aria-pressed="false">Ekonomik Göstergeler</button></div><small id="upd"></small></div>
+  <div class="bas"><div class="subtabs" id="gTabs" role="group" aria-label="Özet konusu"><button data-g="piyasa" aria-pressed="true">Piyasa Verileri</button><button data-g="eko" aria-pressed="false">Ekonomik Göstergeler</button></div><div class="sag"><small id="upd"></small><button type="button" class="sunbtn" id="sunumBtn" title="Sitedeki grafik, tablo ve kartlardan sunum oluşturun"><i>▶</i>Sunum oluştur<span class="n hidden" id="sunumN"></span></button></div></div>
 </div></header>
 <main class="wrap">
   <div id="gate">Veriler yükleniyor…</div>
@@ -298,6 +303,11 @@ document.addEventListener("click", e => {
   const k = e.target.closest("[data-link]"); if (k && k.dataset.link && !e.target.closest("a")) { git(k.dataset.link); return; }
   const b = e.target.closest("#bdSeg button"); if (b) { S.bd = b.dataset.v; document.querySelectorAll("#bdSeg button").forEach(x => x.setAttribute("aria-pressed", x === b)); bdChart(); return; }
 });
+// Sunum oluştur: seçim modu, sunum düzenleyicisi ve şablonlar (ortak/sunum.js)
+$("#sunumBtn").addEventListener("click", e => { e.stopPropagation(); if (window.alcoSunum) alcoSunum.menu(e.currentTarget); else location.href = "../sunum/"; });
+const sunumSay = () => { if (!window.alcoSunum) return; const n = alcoSunum.oku().slaytlar.reduce((a, x) => a + x.ogeler.length, 0), el = $("#sunumN"); el.textContent = n; el.classList.toggle("hidden", !n); };
+(function bagla(i) { if (window.alcoSunum) { alcoSunum.dinle(sunumSay); sunumSay(); } else if (i < 80) setTimeout(() => bagla(i + 1), 100); })(0);
+
 let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (D?.bddk && S.g === "piyasa") bdChart(); }, 150); });
 
 fetch("data/ozet.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
