@@ -1,0 +1,40 @@
+name: Banka deneme
+on:
+  push:
+    branches: [banka-deneme]
+permissions:
+  contents: write
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install requests openpyxl pypdf cryptography
+      - run: |
+          git fetch --depth=1 origin gh-pages && mkdir -p out/bilanco/data out/txt && git show FETCH_HEAD:bilanco/data/kap_ham.json > out/bilanco/data/kap_ham.json
+          python3 - <<'X'
+          import json; p="out/bilanco/data/kap_ham.json"; H=json.load(open(p))
+          keep={}
+          for k,r in H["raporlar"].items():
+              d=r.get("dipnot") or {}
+              if k.split("|")[0] in ("FBA","ING","KT","TOM","ZRT") and k.endswith("2026|2") or "cryptography" in str(d.get("hata")):
+                  r.pop("dipnot",None); print("sıfırlandı",k)
+              else:
+                  d["tamam"]=True; r["dipnot"]=d
+          json.dump(H,open(p,"w"))
+          X
+          export DIPNOT_DEBUG=out/txt
+          sed -i 's/^    dipnotlar(H, s, a)$/    dipnotlar(H, s, a)\n    return/' bilanco/guncelle.py
+          python3 -c "
+          import sys,json; sys.path.insert(0,'bilanco'); import guncelle,kap
+          H=json.load(open('out/bilanco/data/kap_ham.json'))
+          class A: pdf_en_fazla=12
+          guncelle.dipnotlar(H, kap.oturum(), A)
+          "
+      - run: |
+          git config user.name bot; git config user.email bot@users.noreply.github.com
+          git checkout --orphan banka-deneme-veri; git rm -rq --cached .; git add -f out/txt; git commit -qm veri; git push -f origin banka-deneme-veri
