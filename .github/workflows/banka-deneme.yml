@@ -37,4 +37,4 @@ jobs:
           "
       - run: |
           git config user.name bot; git config user.email bot@users.noreply.github.com
-          git checkout --orphan banka-deneme-veri; git rm -rq --cached .; git add -f out/txt; git commit -qm veri; git push -f origin banka-deneme-veri
+          git checkout -- . ; git checkout --orphan banka-deneme-veri; git rm -rqf --cached .; git add -f out/txt; git commit -qm veri; git push -f origin banka-deneme-veri
