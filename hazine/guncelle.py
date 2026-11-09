@@ -10,6 +10,9 @@ Kullanılan dosyalar
   - Merkezi Yönetim İç Borç Ödeme Projeksiyonları (Aylık)  → 12 aylık anapara/faiz (milyon TL)
   - Merkezi Yönetim Dış Borç Ödeme Projeksiyonları (Aylık) → 12 aylık anapara/faiz (milyon ABD doları)
   - İç Borç Stokunun Elinde Bulunduranlara Göre Dağılımı   → aylık, milyar TL ve %
+  - Borç Stoku Döviz-Faiz Yapısı, Vadeye Kalan Ortalama Süre, Dış Borç Stoku → aylık geçmiş (kutucuk grafikleri)
+  - Altın / döviz cinsi senet ihraç listeleri               → altın (ton) ve USD/EUR iç borç stokunun aylık geçmişi
+  - İç Borçlanma Stratejisi duyurusu (PDF, aylık)          → önümüzdeki üç ayın iç borç ihraç takvimi
 
 Kullanım: python hazine/guncelle.py --site site
 """
@@ -34,7 +37,15 @@ DOSYALAR = {
     "ic_proj": r"Ic-Borc-Odeme-Projeksiyonlari-Aylik",
     "dis_proj": r"Dis_Borc_Odeme_Projeksiyonlari_Aylik",
     "sahip": r"Elinde_Bulunduranlara_Gore_Dagilimi",
+    "dfy": r"Borc_Stoku_Doviz-Faiz_Yapisi",
+    "vks": r"Vadeye_Kalan_Ortalama_Suresi",
+    "dis_tar": r"Merkezi_Yonetim_Dis_Borc_Stoku-",
+    "ih_altin": r"Altin-Tahvili-",
+    "ih_altin_kira": r"Altina-Dayali-Kira-Sertifikasi-",
+    "ih_doviz": r"Doviz-Cinsi-Sabit-Faizli-Kuponlu-Senetler-20",
+    "ih_doviz_kira": r"Doviz-Cinsi-Kira-Sertifikasi-",
 }
+POSTS = "https://www.hmb.gov.tr/portal/v2/posts?search=bor%C3%A7lanma%20stratejisi&per_page=5&_fields=date,slug,title,content"
 AYLAR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
 AY_NO = {a.lower(): i + 1 for i, a in enumerate(AYLAR)}
 # DİBS listesindeki bölüm başlığı → (kısa tür, para birimi grubu, faiz yapısı)
@@ -86,10 +97,46 @@ def baglantilar(s):
     metin = r.text.replace("\\/", "/")
     out = {}
     for k, desen in DOSYALAR.items():
-        m = re.findall(r"https://ms\.hmb\.gov\.tr/uploads/[^\"'\s<>]*" + desen + r"[^\"'\s<>]*\.xlsx", metin)
+        m = re.findall(r"https://ms\.hmb\.gov\.tr/uploads/[^\"'\s<>]*" + desen + r"[^\"'\s<>]*\.xlsx?(?=[\"'\s<>\\])", metin)
         if m:
             out[k] = m[0]
     return out
+
+
+class Sayfa:
+    """xls (xlrd) ve xlsx (openpyxl) sayfaları için ortak arayüz: ad + satırlar."""
+    def __init__(self, ad, satirlar):
+        self.title, self.R = ad, satirlar
+
+    def iter_rows(self, values_only=True):
+        return iter(self.R)
+
+
+class Kitap:
+    def __init__(self, sayfalar):
+        self.worksheets = sayfalar
+
+
+def xls_ac(b):
+    import xlrd
+    wb = xlrd.open_workbook(file_contents=b)
+    out = []
+    for sh in wb.sheets():
+        R = []
+        for r in range(sh.nrows):
+            satir = []
+            for c in range(sh.ncols):
+                h = sh.cell(r, c)
+                if h.ctype == xlrd.XL_CELL_DATE:
+                    try:
+                        satir.append(xlrd.xldate.xldate_as_datetime(h.value, wb.datemode))
+                        continue
+                    except Exception:
+                        pass
+                satir.append(h.value if h.ctype not in (xlrd.XL_CELL_EMPTY, xlrd.XL_CELL_BLANK) else None)
+            R.append(satir)
+        out.append(Sayfa(sh.name, R))
+    return Kitap(out)
 
 
 def indir(s, url):
@@ -97,6 +144,8 @@ def indir(s, url):
         try:
             r = s.get(url, timeout=120)
             r.raise_for_status()
+            if url.lower().endswith(".xls"):
+                return xls_ac(r.content)
             return openpyxl.load_workbook(io.BytesIO(r.content), data_only=True, read_only=True)
         except Exception:
             if deneme == 2:
@@ -221,6 +270,175 @@ def sahipler(wb, yil_sayisi=6):
     return {"ay": aylar, "satir": satir, "son": len(aylar) - 1 if aylar else None}
 
 
+def _ay(metin):
+    t = str(metin or "").strip().lower().replace("i̇", "i")
+    for a, n in AY_NO.items():
+        if t.startswith(a[:3]):
+            return n
+    return None
+
+
+def doviz_faiz(wb):
+    """Borç stoku döviz-faiz yapısı (milyon TL): aylık iç borç toplamı ve TL cinsi iç borç (TL stok)."""
+    ay, ic, tl = [], [], []
+    for ws in wb.worksheets:
+        if not str(ws.title).strip().isdigit():
+            continue
+        yil = int(str(ws.title).strip())
+        R = [list(r) for r in ws.iter_rows(values_only=True)]
+        g = next((i for i, r in enumerate(R) if any("İÇ BORÇ STOKU" in str(x or "") for x in r)), None)
+        if g is None:
+            continue
+        grup = {}
+        for j, x in enumerate(R[g]):
+            t = str(x or "").strip()
+            if t:
+                grup[t] = j
+        alt = R[g + 1]
+        def top(ad):
+            j0 = grup.get(ad)
+            if j0 is None:
+                return None
+            return next((j for j in range(j0, len(alt)) if str(alt[j] or "").strip().upper() == "TOPLAM"), None)
+        ji, jt = top("İÇ BORÇ STOKU"), top("TL STOK")
+        for r in R[g + 2:g + 14]:
+            m = _ay(r[1] if len(r) > 1 else None)
+            if not m or sayi(r[ji]) is None:
+                continue
+            ay.append(f"{yil}-{m:02d}")
+            ic.append(sayi(r[ji]))
+            tl.append(sayi(r[jt]) if jt is not None else None)
+    o = sorted(range(len(ay)), key=lambda i: ay[i])
+    return {"ay": [ay[i] for i in o], "ic": [ic[i] for i in o], "tl": [tl[i] for i in o]}
+
+
+def vade_suresi(wb):
+    ws = wb.worksheets[0]
+    out = {}
+    for r in ws.iter_rows(values_only=True):
+        r = list(r)
+        t = str(r[1] if len(r) > 1 else "").strip()
+        m = re.match(r"^(\d{4})\s+(\S+)", t)
+        if m and _ay(m.group(2)) and len(r) > 3 and sayi(r[2]) is not None:
+            out[f"{m.group(1)}-{_ay(m.group(2)):02d}"] = (sayi(r[2]), sayi(r[3]))
+    ay = sorted(out)
+    return {"ay": ay, "ic": [out[a][0] for a in ay], "dis": [out[a][1] for a in ay]}
+
+
+def dis_tarihce(wb):
+    """Dış borç stoku (milyon USD), aylık: tahvil ve toplam."""
+    ws = next((w for w in wb.worksheets if re.match(r"^\d{4}-\d{4}$", str(w.title).strip()) and int(str(w.title)[:4]) >= 2000), None)
+    R = [list(r) for r in ws.iter_rows(values_only=True)]
+    yr = next(i for i, r in enumerate(R) if sum(1 for x in r if isinstance(x, (int, float)) and 1980 < x < 2100) >= 3)
+    kol, yil = {}, None
+    for j in range(len(R[yr + 1])):
+        x = R[yr][j] if j < len(R[yr]) else None
+        if isinstance(x, (int, float)) and 1980 < x < 2100:
+            yil = int(x)
+        m = _ay(R[yr + 1][j])
+        if yil and m:
+            kol[j] = f"{yil}-{m:02d}"
+    sat = {str(r[1] or "").strip(): r for r in R if len(r) > 1}
+    th, tp = sat.get("Tahvil"), sat.get("TOPLAM")
+    ay = sorted(set(kol.values()))
+    ters = {v: k for k, v in kol.items()}
+    return {"ay": ay, "tahvil": [sayi(th[ters[a]]) if th and ters[a] < len(th) else None for a in ay],
+            "toplam": [sayi(tp[ters[a]]) if tp and ters[a] < len(tp) else None for a in ay]}
+
+
+def ihrac_listesi(wb, tur):
+    """Altın / döviz cinsi senet ihraç listesi: [(isin, para, valör, itfa, miktar)] — miktar gram ya da döviz."""
+    out = set()
+    for ws in wb.worksheets:
+        bas = None
+        for r in ws.iter_rows(values_only=True):
+            r = list(r)
+            hucre = [str(x or "").strip() for x in r]
+            if any(h.startswith("ISIN") for h in hucre):
+                bul = lambda f: next((j for j, h in enumerate(hucre) if f(h)), None)
+                bas = {"isin": bul(lambda h: h.startswith("ISIN")), "tur": bul(lambda h: h.startswith("Senet Türü")),
+                       "valor": bul(lambda h: h.startswith("Valör")), "itfa": bul(lambda h: h.startswith("İtfa Tarihi")),
+                       "miktar": bul(lambda h: "Miktar" in h)}
+                if None in (bas["isin"], bas["valor"], bas["itfa"], bas["miktar"]):
+                    bas = None
+                continue
+            if not bas:
+                continue
+            isin = hucre[bas["isin"]] if bas["isin"] < len(hucre) else ""
+            if not re.match(r"^TR[A-Z0-9]{9,}", isin):
+                continue
+            v, i, mk = tarih(r[bas["valor"]]), tarih(r[bas["itfa"]]), sayi(r[bas["miktar"]])
+            if isinstance(r[bas["valor"]], float):
+                v = dt.date(1899, 12, 30) + dt.timedelta(days=int(r[bas["valor"]]))
+            if isinstance(r[bas["itfa"]], float):
+                i = dt.date(1899, 12, 30) + dt.timedelta(days=int(r[bas["itfa"]]))
+            if not (v and i and mk):
+                continue
+            st = hucre[bas["tur"]] if bas["tur"] is not None and bas["tur"] < len(hucre) else ""
+            para = "Altın" if tur == "altin" else "EUR" if "Avro" in st or "Euro" in st else "USD"
+            out.add((isin.strip(), para, v.isoformat(), i.isoformat(), mk))
+    return sorted(out)
+
+
+def stok_gecmisi(ihraclar, aylar):
+    """İhraç listelerinden ay sonu tedavüldeki stok: {para: [...]} (altın ton, döviz milyon)."""
+    out = {"USD": [], "EUR": [], "Altın": []}
+    for a in aylar:
+        y, m = int(a[:4]), int(a[5:7])
+        son = (dt.date(y + (m == 12), m % 12 + 1, 1) - dt.timedelta(days=1)).isoformat()
+        for p in out:
+            t = sum(x[4] for x in ihraclar if x[1] == p and x[2] <= son < x[3])
+            out[p].append(round(t / (1e6 if p == "Altın" else 1e6), 3) if t else 0.0)
+    return out
+
+
+def strateji(s):
+    """Son İç Borçlanma Stratejisi duyurusu (PDF): ihraç takvimi ve aylık finansman programı."""
+    from pypdf import PdfReader
+    r = s.get(POSTS, timeout=60)
+    r.raise_for_status()
+    for p in r.json():
+        if "borclanma-stratejisi" not in p.get("slug", ""):
+            continue
+        u = re.findall(r'href="([^"]+\.pdf)"', p["content"]["rendered"])
+        if not u:
+            continue
+        b = s.get(u[0].replace("\\/", "/"), timeout=90).content
+        metin = "\n".join(pg.extract_text() or "" for pg in PdfReader(io.BytesIO(b)).pages)
+        T = r"(\d{1,2}\.\d{2}\.\d{4})"
+        ihr, son = [], None
+        for satir in metin.split("\n"):
+            t = satir.strip()
+            m = re.match(rf"^{T}\s+{T}\s+{T}\s+(.+?)\s+(\d+\s+(?:Yıl|Ay|Gün)(?:\s*/\s*\d+\s+Gün)?)\s+(İhale|Doğrudan Satış|Halka Arz|TAP)(?:\s*/\s*(.+))?$", t)
+            if m:
+                g = lambda k: dt.datetime.strptime(m.group(k), "%d.%m.%Y").date().isoformat()
+                senet = m.group(4).strip()
+                para = "Altın" if "Altın" in senet else "EUR" if "Avro" in senet or "Euro" in senet else "USD" if "Dolar" in senet or "USD" in senet else "TL"
+                son = {"ihale": g(1), "valor": g(2), "itfa": g(3), "senet": senet, "vade": re.sub(r"\s+", " ", m.group(5)),
+                       "yontem": m.group(6) + (" / " + m.group(7).strip() if m.group(7) else ""), "para": para, "sukuk": "Kira" in senet, "not": ""}
+                ihr.append(son)
+            elif son and re.match(r"^\d+ ayda bir (kupon|kira)", t):
+                son["not"] = t
+                son = None
+            else:
+                son = None
+        prog = {}
+        bas = re.search(r"\(Milyar ₺\)\s+(.+)", metin)
+        if bas:
+            aylar = re.findall(r"(Ocak|Şubat|Mart|Nisan|Mayıs|Haziran|Temmuz|Ağustos|Eylül|Ekim|Kasım|Aralık)\s+(\d{4})", bas.group(1))
+            aylar = [f"{y}-{AY_NO[a.lower()]:02d}" for a, y in aylar]
+            for ad, k in (("İç Borç Servisi", "servis"), ("İç Borçlanma", "borclanma"), ("Piyasadan İhale Yoluyla İç Borçlanma", "ihale"),
+                          ("Doğrudan Satışlar", "dogrudan"), ("Kamuya Satışlar", "kamu")):
+                mm = re.search(rf"^\s*{re.escape(ad)}(?:\s*\(\d\))*\s+([\d.,]+)\s+([\d.,]+)\s+([\d.,]+)\s*$", metin, re.M)
+                if mm:
+                    for a, v in zip(aylar, mm.groups()):
+                        prog.setdefault(a, {})[k] = float(v.replace(".", "").replace(",", "."))
+        if ihr:
+            return {"baslik": re.sub(r"<[^>]+>", "", p["title"]["rendered"]).replace("&#8211;", "–"), "tarih": p["date"][:10],
+                    "pdf": u[0], "ihraclar": ihr, "program": prog}
+    return None
+
+
 def cevrim(site, itibar):
     """Stok tarihindeki USD/TRY, EUR/TRY (TCMB döviz alış, EVDS) ve altın TL/gram (LBMA AM × USD/TRY; yoksa BIST AGORT03).
     DİBS listesinde döviz ve altın cinsi senetler TL karşılığıyla verildiği için USD ve ton karşılığı buradan bulunur."""
@@ -291,6 +509,57 @@ def main():
         except Exception as e:
             log(f"HATA {k}: {type(e).__name__}: {e} — önceki veri korunuyor")
             sorun.append(k)
+    # geçmiş seriler (kutucuk grafikleri)
+    gec = {}
+    for k, fn in (("dfy", doviz_faiz), ("vks", vade_suresi), ("dis_tar", dis_tarihce)):
+        if k not in lnk:
+            continue
+        try:
+            gec[k] = fn(indir(s, lnk[k]))
+            D.setdefault("kaynak", {})[k] = lnk[k]
+            log(f"   {k}: {len(gec[k]['ay'])} ay, {gec[k]['ay'][0] if gec[k]['ay'] else '—'}–{gec[k]['ay'][-1] if gec[k]['ay'] else '—'}")
+            time.sleep(1)
+        except Exception as e:
+            log(f"HATA {k}: {type(e).__name__}: {e}")
+            sorun.append(k)
+    ihr = []
+    for k, tur in (("ih_altin", "altin"), ("ih_altin_kira", "altin"), ("ih_doviz", "doviz"), ("ih_doviz_kira", "doviz")):
+        if k not in lnk:
+            continue
+        try:
+            a_ = ihrac_listesi(indir(s, lnk[k]), tur)
+            ihr += a_
+            log(f"   {k}: {len(a_)} ihraç")
+            time.sleep(1)
+        except Exception as e:
+            log(f"HATA {k}: {type(e).__name__}: {e}")
+            sorun.append(k)
+    if gec.get("dfy"):
+        f = gec["dfy"]
+        aylar = [a for a in f["ay"] if a >= "2012-01"]
+        T = {"ay": aylar, "ic_tl": [f["tl"][f["ay"].index(a)] for a in aylar], "ic_top": [f["ic"][f["ay"].index(a)] for a in aylar]}
+        if ihr:
+            T.update({"ic_" + k.lower().replace("altın", "altin"): v for k, v in stok_gecmisi(sorted(set(ihr)), aylar).items()})
+        for k, src, alan in (("vade_ic", "vks", "ic"), ("vade_dis", "vks", "dis"), ("dis_tahvil", "dis_tar", "tahvil")):
+            g_ = gec.get(src)
+            if g_:
+                m_ = dict(zip(g_["ay"], g_[alan]))
+                T[k] = [m_.get(a) for a in aylar]
+        D["tarihce"] = T
+        ic = D.get("ic_stok", {}).get("senetler", [])
+        c_ = D.get("cevrim") or {}
+        if ic and c_.get("usd") and T.get("ic_usd"):
+            log(f"   kontrol (son ay ihraç listesinden / DİBS listesi): USD {T['ic_usd'][-1]:.0f} / {sum(x['tutar'] for x in ic if x['para']=='USD')/c_['usd']/1e6:.0f} mn,"
+                f" EUR {T['ic_eur'][-1]:.0f} / {sum(x['tutar'] for x in ic if x['para']=='EUR')/c_['eur']/1e6:.0f} mn,"
+                f" altın {T['ic_altin'][-1]:.1f} / {sum(x['tutar'] for x in ic if x['para']=='Altın')/(c_.get('altin_gr') or 1)/1e6:.1f} ton")
+    try:
+        st = strateji(s)
+        if st:
+            D["strateji"] = st
+            log(f"   strateji: {st['baslik']} — {len(st['ihraclar'])} ihraç, program {list(st['program'])}")
+    except Exception as e:
+        log(f"HATA iç borçlanma stratejisi: {type(e).__name__}: {e}")
+        sorun.append("strateji")
     try:
         c = cevrim(a.site, D.get("ic_stok", {}).get("itibar"))
         if c:
