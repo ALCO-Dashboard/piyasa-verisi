@@ -275,7 +275,7 @@ def main():
     ap.add_argument("--site", default="site")
     ap.add_argument("--yillar", nargs="*", type=int)
     ap.add_argument("--en-fazla", type=int, default=40, help="bir çalışmada indirilecek en fazla rapor")
-    ap.add_argument("--pdf-en-fazla", type=int, default=12, help="bir çalışmada okunacak en fazla PDF")
+    ap.add_argument("--pdf-en-fazla", type=int, default=25, help="bir çalışmada okunacak en fazla PDF")
     ap.add_argument("--yalniz-ozet", action="store_true", help="KAP'a gitmeden önbellekten banka.json üret")
     a = ap.parse_args()
     cikti = os.path.join(a.site, "bilanco")
