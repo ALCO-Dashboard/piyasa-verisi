@@ -13,6 +13,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import dipnot  # noqa: E402
 import kap  # noqa: E402
 
 KOK = os.path.dirname(os.path.abspath(__file__))
@@ -142,7 +143,14 @@ def ozet(H):
             x = bul((r.get("naz") or {}).get("satir") or [], els, ["4", "5", "6"])
             if x is not None:
                 n[key] = [round(y, 1) if y is not None else None for y in x]
-        V.setdefault(d, {})[r["kisa"]] = {"t": r["tarih"], "id": r["id"], "b": b, "g": g, "n": n}
+        dn = r.get("dipnot") or {}
+        bir, vd = dn.get("bireysel") or {}, dn.get("vade") or {}
+        x = {"t": r["tarih"], "id": r["id"], "b": b, "g": g, "n": n}
+        if bir.get("cari"):
+            x["bir"] = [bir["cari"], bir.get("onceki")]
+        if vd.get("cari"):
+            x["vd"] = [vd["cari"], vd.get("onceki")]
+        V.setdefault(d, {})[r["kisa"]] = x
         donem[d] = (r["yil"], r["donem"])
     # 4. çeyrek ve eksik 3 aylık sütunlar: yıllık − 9 aylık
     for d, (y, q) in donem.items():
@@ -201,7 +209,8 @@ def cek(H, a):
         if yeni >= a.en_fazla:
             break
         try:
-            T = tablo_sec(kap.rapor(s, x["id"]))
+            T, ekler = kap.rapor(s, x["id"])
+            T = tablo_sec(T)
         except kap.Sinir:
             log("  KAP istek sınırına ulaşıldı; kalan raporlar sonraki çalışmada alınacak")
             break
@@ -216,6 +225,7 @@ def cek(H, a):
             log(f"  {k}: bilinmeyen birim {x['birim']}")
             continue
         r = dict(x)
+        r["ekler"] = ekler
         for t in [x for x in ("bil", "naz", "gel") if x in T]:
             r[t] = {"tax": T[t]["tax"], "ad": T[t]["ad"],
                     "satir": [[no, el, lab, {str(kk): round(v * c, 3) for kk, v in vals.items()}] for no, el, lab, vals in T[t]["satir"]]}
@@ -223,6 +233,41 @@ def cek(H, a):
         yeni += 1
         log(f"  {k}: {x['tarih']} bildirim {x['id']} ({len(r['bil']['satir'])} bilanço, {len(r['gel']['satir'])} gelir satırı)")
     log(f"KAP: {yeni} yeni rapor indirildi")
+    dipnotlar(H, s, a)
+
+
+def dipnotlar(H, s, a):
+    """PDF dipnotları (bireysel krediler, mevduat / katılım fonu vade yapısı): en yeni raporlardan başlayarak,
+    bir çalışmada en fazla a.pdf_en_fazla PDF; okunamayan PDF iki kez denenir."""
+    tur = {k: t for k, _, t, _, _ in kap.BANKALAR}
+    bekleyen = [r for r in H["raporlar"].values() if (r.get("dipnot") or {}).get("deneme", 0) < 2 and not (r.get("dipnot") or {}).get("tamam")]
+    bekleyen.sort(key=lambda r: (r["yil"], r["donem"], r["tarih"]), reverse=True)
+    n = 0
+    for r in bekleyen:
+        if n >= a.pdf_en_fazla:
+            break
+        k = f"{r['kisa']}|{r['yil']}|{r['donem']}"
+        d = r.setdefault("dipnot", {})
+        try:
+            if not r.get("ekler"):
+                _, r["ekler"] = kap.rapor(s, r["id"])
+            ek = kap.pdf_ek(r["ekler"])
+            if not ek:
+                d.update(deneme=9, hata="PDF eki yok")
+                continue
+            n += 1
+            sonuc = dipnot.oku(kap.dosya(s, ek[0]), tur.get(r["kisa"]) == "katilim", f"{r['kisa']}_{r['yil']}_{r['donem']}")
+        except kap.Sinir:
+            log("  KAP istek sınırına ulaşıldı (PDF); kalanlar sonraki çalışmada")
+            break
+        except Exception as e:
+            d["deneme"] = d.get("deneme", 0) + 1
+            d["hata"] = f"{type(e).__name__}: {e}"[:200]
+            log(f"  {k} PDF okunamadı: {d['hata']}")
+            continue
+        d.update(sonuc, ek=ek[0], deneme=d.get("deneme", 0) + 1)
+        d["tamam"] = bool(sonuc.get("bireysel") and sonuc.get("vade"))
+        log(f"  {k} dipnot: bireysel {'✓' if sonuc.get('bireysel') else '—'}, vade {'✓' if sonuc.get('vade') else '—'}")
 
 
 def main():
@@ -230,6 +275,7 @@ def main():
     ap.add_argument("--site", default="site")
     ap.add_argument("--yillar", nargs="*", type=int)
     ap.add_argument("--en-fazla", type=int, default=40, help="bir çalışmada indirilecek en fazla rapor")
+    ap.add_argument("--pdf-en-fazla", type=int, default=12, help="bir çalışmada okunacak en fazla PDF")
     ap.add_argument("--yalniz-ozet", action="store_true", help="KAP'a gitmeden önbellekten banka.json üret")
     a = ap.parse_args()
     cikti = os.path.join(a.site, "bilanco")

@@ -140,6 +140,9 @@ main.wrap{padding-block:14px 48px}
 .fk .v{font-family:var(--mono);font-size:24px;margin:4px 0 2px;color:var(--kc,var(--ink))}
 .fk .s{font-size:12.5px;color:var(--muted);margin-bottom:10px}
 .fk .rank{max-height:300px;overflow-y:auto;grid-template-columns:minmax(60px,70px) minmax(0,1fr) 88px}
+.vb{display:flex;height:12px;width:160px;border-radius:3px;overflow:hidden;background:var(--surface-2);margin-left:auto}
+.vb i{display:block;height:100%}
+.not2{font-size:12px;color:var(--muted);margin-top:8px}
 .src{font-size:12px;color:var(--muted);margin-top:16px;line-height:1.6}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
 @media (max-width:640px){.rank{grid-template-columns:minmax(70px,90px) minmax(0,1fr) 72px 58px}.rank .bn span{display:none}.kpi .v{font-size:21px}.subtabs button{padding:8px 12px;font-size:13px}}
@@ -150,7 +153,7 @@ main.wrap{padding-block:14px 48px}
 <div id="alcoTop"></div><script src="../ortak/ust.js" data-page="bilanco" data-root="../"></script>
 <header class="top"><div class="wrap">
   <div class="bas">
-    <div class="subtabs" id="sTabs" role="group" aria-label="Bölüm"><button data-s="analiz" aria-pressed="true">Analiz</button><button data-s="pasif" aria-pressed="false">Yükümlülük Yapısı</button><button data-s="aktif" aria-pressed="false">Aktif Kalemleri</button><button data-s="fon" aria-pressed="false">Fonlama Açığı ve Likidite</button><button data-s="gelir" aria-pressed="false">Gelir Tablosu</button></div>
+    <div class="subtabs" id="sTabs" role="group" aria-label="Bölüm"><button data-s="analiz" aria-pressed="true">Analiz</button><button data-s="pasif" aria-pressed="false">Yükümlülük Yapısı</button><button data-s="aktif" aria-pressed="false">Aktif Kalemleri</button><button data-s="fon" aria-pressed="false">Fonlama Açığı ve Likidite</button><button data-s="krd" aria-pressed="false">Kredi Portföyü</button><button data-s="vade" aria-pressed="false">Mevduat Vade</button><button data-s="gelir" aria-pressed="false">Gelir Tablosu</button></div>
     <div class="donem"><select id="dSel" aria-label="Dönem"></select><div class="rt" id="dInfo"></div></div>
   </div>
 </div></header>
@@ -183,6 +186,14 @@ main.wrap{padding-block:14px 48px}
       <div class="fgrid" id="fKart"></div>
       <div class="card" style="margin-top:14px"><div class="cardhead"><div><h3>Banka bazında fonlama ve likidite</h3><div class="sub">Sütun başlığına tıklayarak sıralayın · fonlama açığı = mevduat (katılım fonu) − net krediler; eksi değer açık, artı değer fazla</div></div></div><div class="tw" id="fTbl"></div></div>
     </section>
+    <section id="pKrd" class="hidden">
+      <div class="kpis bar" id="rKpi"></div>
+      <div class="card"><div class="cardhead"><div><h3>Kredi portföyü</h3><div class="sub" id="rSub"></div></div></div><div class="tw" id="rTbl"></div></div>
+    </section>
+    <section id="pVade" class="hidden">
+      <div class="kpis bar" id="vKpi"></div>
+      <div class="card"><div class="cardhead"><div><h3 id="vTit"></h3><div class="sub" id="vSub"></div></div><div class="legend hidden" id="vLeg"></div></div><div class="tw" id="vTbl"></div></div>
+    </section>
     <section id="pGelir" class="hidden">
       <div class="kpis" id="gKpi"></div>
       <div class="grid2">
@@ -213,7 +224,7 @@ const AY = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "A
 const dAd = d => `${d.slice(0, 4)} ${d.slice(5)}. çeyrek`, dKisa = d => `${d.slice(0, 4)} Ç${d.slice(5)}`;
 const GRUP = [["ALL", "Tümü"], ["TOP10", "İlk 10"], ["TOP10_OZEL", "İlk 10 Özel"], ["PEER", "Peer"], ["MEV", "Mevduat"], ["KAT", "Katılım"], ["KAMU", "Kamu"], ["OZEL", "Özel"]];
 const S = { s: "analiz", d: null, g: "ALL", r: "km", cur: 2, gm: "kum", sk: {}, sd: {} };
-try { const h = location.hash.slice(1); if (["gelir", "pasif", "aktif", "fon"].includes(h)) S.s = h; } catch (e) {}
+try { const h = location.hash.slice(1); if (["gelir", "pasif", "aktif", "fon", "krd", "vade"].includes(h)) S.s = h; } catch (e) {}
 let D, BK = {};
 
 // ---- yardımcılar
@@ -330,13 +341,14 @@ function tablo(el, t, cols, L, opt = {}) {      // cols: [anahtar, başlık, f(x
   const sk = S.sk[t] || opt.sk, asc = !!S.sd[t], c = cols.find(c => c[0] === sk) || cols[cols.length - 1];
   const rows = L.map(b => ({ b, v: cols.map(c => c[2](b.x)) }));
   const ci = cols.indexOf(c); rows.sort((a, b) => ((ok(a.v[ci]) ? a.v[ci] : -1e18) - (ok(b.v[ci]) ? b.v[ci] : -1e18)) * (asc ? 1 : -1));
-  const hucre = (c, v, x, top) => { if (!ok(v)) return `<td class="na">—</td>`; const p = c[4] ? c[4](x, top) : null; const cls = (c[5] || "") + (c[3] === "isaret" ? (v > 0 ? " pos" : v < 0 ? " neg" : "") : "");
-    const f = c[3] === "pct" ? pct(v, 1) : c[3] === "isaret" ? (v > 0 ? "+" : "") + tl(v) : tl(v);
+  const hucre = (c, v, x, top) => { if (c[3] === "bar") { const t = x?.vd?.[0]?.toplam; return `<td>${t && t[6] ? `<span class="vb">${VADE.map(([a, cl], i) => `<i style="width:${t[i] / t[6] * 100}%;background:${cl}" title="${a}: ${pct(t[i] / t[6] * 100, 1)}"></i>`).join("")}</span>` : ""}</td>`; }
+    if (!ok(v)) return `<td class="na">—</td>`; const p = c[4] ? c[4](x, top) : null; const cls = (c[5] || "") + (c[3] === "isaret" ? (v > 0 ? " pos" : v < 0 ? " neg" : "") : "");
+    const f = c[3] === "pct" ? pct(v, 1) : c[3] === "gun" ? nf(v, 0) : c[3] === "isaret" ? (v > 0 ? "+" : "") + tl(v) : tl(v);
     return `<td class="${cls}">${f}${ok(p) ? `<small>${pct(p, 1)}</small>` : ""}</td>`; };
-  const tops = cols.map(c => c[6] ? c[6](L) : sum(L, b => c[2](b.x)));
+  const tops = cols.map(c => c[3] === "bar" ? null : c[6] ? c[6](L) : sum(L, b => c[2](b.x)));
   $(el).innerHTML = `<table class="bt2" data-t="${t}"><thead><tr><th data-sk="_ad">Banka</th>${cols.map(k => `<th data-sk="${k[0]}" class="${k === c ? "on" + (asc ? " asc" : "") : ""} ${k[5] || ""}">${esc(k[1])}</th>`).join("")}</tr></thead>
     <tbody>${rows.map(r => `<tr><td><b>${esc(r.b.k)}</b>${r.b.tur === "katilim" ? '<span class="tag">K</span>' : ""}<small>${esc(r.b.ad)}</small></td>${cols.map((c, i) => hucre(c, r.v[i], r.b.x)).join("")}</tr>`).join("")}</tbody>
-    <tfoot><tr><td>${esc(GRUP.find(g => g[0] === S.g)[1])} toplam</td>${cols.map((c, i) => { const v = tops[i]; if (!ok(v)) return "<td></td>"; return `<td class="${c[5] || ""}">${c[3] === "pct" ? pct(v, 1) : tl(v)}${c[7] ? `<small>${pct(c[7](L), 1)}</small>` : ""}</td>`; }).join("")}</tr></tfoot></table>`;
+    <tfoot><tr><td>${esc(GRUP.find(g => g[0] === S.g)[1])} toplam</td>${cols.map((c, i) => { const v = tops[i]; if (!ok(v)) return "<td></td>"; return `<td class="${c[5] || ""}">${c[3] === "pct" ? pct(v, 1) : c[3] === "gun" ? nf(v, 0) : tl(v)}${c[7] ? `<small>${pct(c[7](L), 1)}</small>` : ""}</td>`; }).join("")}</tr></tfoot></table>`;
 }
 const kpiBar = (t, v, p, alt, renk) => `<div class="kpi" style="--kc:${renk}"><div class="t">${t}</div><div class="v">${v}</div><div class="br"><i style="width:${Math.max(0, Math.min(100, p || 0))}%"></i></div><div class="s"><span>${alt}</span><b>${pct(p, 1)}</b></div></div>`;
 
@@ -432,9 +444,76 @@ function renderFon() {
   ], L, { sk: "a" });
 }
 
+// ---- PDF dipnotlarından: bireysel krediler, mevduat / katılım fonu vade yapısı
+const eksikNot = (L, f) => { const e = L.filter(b => !f(b.x)); return e.length ? `<div class="not2">Dipnot verisi henüz okunamayan: ${e.map(b => esc(b.ad)).join(", ")} (PDF'ler sırayla okunuyor).</div>` : ""; };
+function renderKrd() {
+  const Lt = bankalar(S.d), L = Lt.filter(b => b.x.bir), BR = (x, k, j = 0) => x?.bir?.[j]?.[k];
+  const krd = (x, i = 2) => B(x, "krd", i), krd0 = (x, i = 2) => B(x, "krd", i + 3);
+  const tic = x => ok(krd(x)) && ok(BR(x, "toplam")) ? krd(x) - BR(x, "toplam") : null;
+  const tk = x => (BR(x, "konut") || 0) + (BR(x, "tasit") || 0) + (BR(x, "ihtiyac") || 0) + (BR(x, "diger") || 0);
+  const T = sum(Lt, b => krd(b.x)), T0 = sum(Lt, b => krd0(b.x)), TP = sum(Lt, b => krd(b.x, 0)), TP0 = sum(Lt, b => krd0(b.x, 0)), YP = sum(Lt, b => krd(b.x, 1)), YP0 = sum(Lt, b => krd0(b.x, 1));
+  const KL = sum(L, b => krd(b.x)), BI = sum(L, b => BR(b.x, "toplam")), KK = sum(L, b => BR(b.x, "kk")), TI = KL - BI;
+  const L2 = L.filter(b => ok(BR(b.x, "toplam", 1))), BIa = sum(L2, b => BR(b.x, "toplam")), BI0 = sum(L2, b => BR(b.x, "toplam", 1));   // artış: iki dönemi de olan bankalar
+  const art = (a, b) => `${a - b >= 0 ? "+" : "−"}${tl(Math.abs(a - b))} (${spct(yoy(a, b))})`;
+  $("#rKpi").innerHTML = [
+    kpiBar("Toplam krediler", tl(T), 100, `yılbaşından ${art(T, T0)}`, "var(--ink)"),
+    kpiBar("TP krediler", tl(TP), T ? TP / T * 100 : null, art(TP, TP0), "var(--c1)"),
+    kpiBar("YP krediler", tl(YP), T ? YP / T * 100 : null, art(YP, YP0), "var(--c3)"),
+    kpiBar("Bireysel (tüketici + kart + KMH)", tl(BI), KL ? BI / KL * 100 : null, `yılbaşından ${spct(yoy(BIa, BI0))} (${L2.length} banka)`, "var(--c6)"),
+    kpiBar("Ticari / kurumsal", tl(TI), KL ? TI / KL * 100 : null, "toplam kredi − bireysel", "var(--accent)"),
+    kpiBar("Bireysel kredi kartları", tl(KK), KL ? KK / KL * 100 : null, "personel kartları dahil", "var(--c4)"),
+  ].join("");
+  $("#rSub").textContent = `${dKisa(S.d)} · toplam krediler bilançodan, bireysel kırılım finansal rapor dipnotundan · ${L.length}/${Lt.length} banka · artış yılbaşına (önceki yıl sonu) göre`;
+  const p = f => x => krd(x) ? f(x) / krd(x) * 100 : null;
+  tablo("#rTbl", "r", [
+    ["krd", "Toplam kredi", x => krd(x), "tl", x => T ? krd(x) / T * 100 : null, "ana"],
+    ["bir", "Bireysel", x => BR(x, "toplam"), "tl", p(x => BR(x, "toplam"))],
+    ["konut", "Konut", x => BR(x, "konut"), "tl", p(x => BR(x, "konut"))],
+    ["tasit", "Taşıt", x => BR(x, "tasit"), "tl", p(x => BR(x, "tasit"))],
+    ["iht", "İhtiyaç ve diğer", x => (BR(x, "ihtiyac") || 0) + (BR(x, "diger") || 0), "tl", p(x => (BR(x, "ihtiyac") || 0) + (BR(x, "diger") || 0))],
+    ["kk", "Kredi kartı", x => BR(x, "kk"), "tl", p(x => BR(x, "kk"))],
+    ["kmh", "KMH", x => BR(x, "kmh"), "tl", p(x => BR(x, "kmh"))],
+    ["tic", "Ticari / kurumsal", tic, "tl", p(tic)],
+    ["art", "Kredi artışı (YB)", x => yoy(krd(x), krd0(x)), "pct", null, "", () => yoy(T, T0)],
+    ["bart", "Bireysel artış (YB)", x => yoy(BR(x, "toplam"), BR(x, "toplam", 1)), "pct", null, "", () => yoy(BIa, BI0)],
+  ], L, { sk: "krd" });
+  $("#rTbl").insertAdjacentHTML("beforeend", eksikNot(Lt, x => x.bir));
+}
+
+const VK = [["gk_tl", "Gerçek kişi TL", "var(--accent)"], ["tz_tl", "Tüzel kişi TL", "var(--c3)"], ["yp", "YP (DTH)", "var(--c1)"], ["resmi", "Resmi kuruluş", "var(--c2)"], ["km", "Kıymetli maden", "var(--c4)"], ["bnk", "Bankalar", "var(--c6)"], ["fon", "Fon / vekalet havuzu", "var(--muted)"]];
+const VADE = [["Vadesiz", "var(--muted)"], ["1 aya kadar", "var(--c1)"], ["1-3 ay", "var(--c3)"], ["3-6 ay", "var(--c4)"], ["6-12 ay", "var(--c2)"], ["1 yıl +", "var(--accent)"]];
+const GUN = [0, 15, 60, 135, 270, 450];
+function renderVade() {
+  const Lt = bankalar(S.d), L = Lt.filter(b => b.x.vd), V = (x, k, j = 0) => x?.vd?.[j]?.[k];
+  const top = x => V(x, "toplam")?.[6], T = sum(L, b => top(b.x));
+  const kat = k => sum(L, b => V(b.x, k)?.[6]);
+  $("#vKpi").innerHTML = [kpiBar("Toplam mevduat / katılım fonu", tl(T), 100, `${L.length} banka (dipnot)`, "var(--ink)")].concat(
+    VK.filter(([k]) => k !== "fon" || kat("fon")).map(([k, ad, c]) => kpiBar(ad, tl(kat(k)), T ? kat(k) / T * 100 : null, k === "gk_tl" || k === "yp" ? `vadesiz ${tl(sum(L, b => V(b.x, k)?.[0]))}` : "toplamın", c))).join("");
+  if (S.vg === "vade") {
+    $("#vTit").textContent = "Vade dağılımı";
+    $("#vSub").textContent = `${dKisa(S.d)} · tüm mevduat / katılım fonu · ortalama vade yaklaşık (kova ortası: vadesiz 0, 1 aya kadar 15, 1-3 ay 60, 3-6 ay 135, 6-12 ay 270, 1 yıl+ 450 gün)`;
+    $("#vLeg").classList.remove("hidden"); $("#vLeg").innerHTML = VADE.map(([a, c]) => `<span><i style="background:${c}"></i>${a}</span>`).join("");
+    const ortV = x => { const t = V(x, "toplam"); return t && t[6] ? t.slice(0, 6).reduce((s, v, i) => s + v * GUN[i], 0) / t[6] : null; };
+    const kv = i => x => { const t = V(x, "toplam"); return t ? t[i] : null; };
+    const cols = VADE.map(([a], i) => [`v${i}`, a, kv(i), "tl", x => top(x) ? kv(i)(x) / top(x) * 100 : null]);
+    tablo("#vTbl", "v", [["top", "Toplam", top, "tl", x => T ? top(x) / T * 100 : null, "ana"], ...cols,
+      ["ort", "Ort. vade (gün)", ortV, "gun", null, "", L => { const s = sum(L, b => top(b.x)); return s ? sum(L, b => (ortV(b.x) || 0) * top(b.x)) / s : null; }],
+      ["dag", "Dağılım", x => null, "bar"]], L, { sk: "top" });
+  } else {
+    $("#vTit").textContent = "Mevduat türleri";
+    $("#vSub").textContent = `${dKisa(S.d)} · finansal rapor dipnotu (mevduatın / katılım fonlarının vade yapısı) · hücre altındaki oran bankanın toplamındaki payı · artış yılbaşına göre`;
+    $("#vLeg").classList.add("hidden");
+    const cols = VK.filter(([k]) => k !== "fon" || L.some(b => V(b.x, "fon")?.[6])).map(([k, ad]) => [k, ad, x => V(x, k)?.[6], "tl", x => top(x) ? (V(x, k)?.[6] || 0) / top(x) * 100 : null]);
+    tablo("#vTbl", "v", [["top", "Toplam", top, "tl", x => T ? top(x) / T * 100 : null, "ana"], ...cols,
+      ["vz", "Vadesiz %", x => top(x) ? V(x, "toplam")[0] / top(x) * 100 : null, "pct", null, "", L => T ? sum(L, b => V(b.x, "toplam")[0]) / T * 100 : null],
+      ["art", "Artış (YB)", x => yoy(top(x), V(x, "toplam", 1)?.[6]), "pct", null, "", L => { const L2 = L.filter(b => ok(V(b.x, "toplam", 1)?.[6])); return yoy(sum(L2, b => top(b.x)), sum(L2, b => V(b.x, "toplam", 1)[6])); }]], L, { sk: "top" });
+  }
+  $("#vTbl").insertAdjacentHTML("beforeend", eksikNot(Lt, x => x.vd));
+}
+
 function render() {
   document.querySelectorAll("#sTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.s === S.s));
-  [["analiz", "#pAnaliz"], ["pasif", "#pPasif"], ["aktif", "#pAktif"], ["fon", "#pFon"], ["gelir", "#pGelir"]].forEach(([k, el]) => $(el).classList.toggle("hidden", S.s !== k));
+  [["analiz", "#pAnaliz"], ["pasif", "#pPasif"], ["aktif", "#pAktif"], ["fon", "#pFon"], ["krd", "#pKrd"], ["vade", "#pVade"], ["gelir", "#pGelir"]].forEach(([k, el]) => $(el).classList.toggle("hidden", S.s !== k));
   $("#grp").innerHTML = GRUP.map(([k, l]) => `<button class="chip" data-g="${k}" aria-pressed="${k === S.g}">${l}</button>`).join("");
   const dd = D.donemler.find(x => x.d === S.d), V = D.v[S.d] || {}, top = D.bankalar.length;
   const tarihler = Object.values(V).map(x => x.t).sort();
@@ -445,6 +524,8 @@ function render() {
   if (S.s === "analiz") { $("#ekKontrol").innerHTML = ""; renderAnaliz(); }
   else if (S.s === "pasif" || S.s === "aktif") { $("#ekKontrol").innerHTML = curSeg(); S.s === "pasif" ? renderPasif() : renderAktif(); }
   else if (S.s === "fon") { $("#ekKontrol").innerHTML = ""; renderFon(); }
+  else if (S.s === "krd") { $("#ekKontrol").innerHTML = ""; renderKrd(); }
+  else if (S.s === "vade") { $("#ekKontrol").innerHTML = `<div class="seg" id="vSeg" role="group"><button data-v="tur" aria-pressed="${S.vg !== "vade"}">Mevduat türü</button><button data-v="vade" aria-pressed="${S.vg === "vade"}">Vade dağılımı</button></div>`; renderVade(); }
   else renderGelir();
   $("#src").innerHTML = `Kaynak: KAP'ta yayımlanan BDDK formatındaki konsolide olmayan (solo) finansal raporlar (bilanço ve kâr veya zarar tablosu). Tutarlar milyon TL bazından biçimlendirilmiştir.
     Her banka açıkladığı anda ilgili döneme eklenir; tüm bankaların açıklaması beklenmez. Yıllıklandırılmış rasyolar dönem kârının 12 aya ölçeklenmesiyle, ortalamalar yıl sonu ve dönem sonu bakiyelerinden hesaplanır.`;
@@ -456,8 +537,9 @@ document.addEventListener("click", e => {
   const r = e.target.closest("#rSel button"); if (r) { S.r = r.dataset.r; renderAnaliz(); return; }
   const c = e.target.closest("#curSeg button"); if (c) { S.cur = +c.dataset.c; renderAnaliz(); return; }
   const m = e.target.closest("#gmSeg button"); if (m) { S.gm = m.dataset.m; renderGelir(); return; }
+  const vs = e.target.closest("#vSeg button"); if (vs) { S.vg = vs.dataset.v; render(); return; }
   const cb = e.target.closest("#cSeg button"); if (cb) { S.cur = +cb.dataset.c; render(); return; }
-  const th = e.target.closest("th[data-sk]"); if (th) { const t = th.closest("table").dataset.t, k = th.dataset.sk; if (S.sk[t] === k) S.sd[t] = !S.sd[t]; else { S.sk[t] = k; S.sd[t] = false; } ({ p: renderPasif, k: renderAktif, f: renderFon })[t](); return; }
+  const th = e.target.closest("th[data-sk]"); if (th) { const t = th.closest("table").dataset.t, k = th.dataset.sk; if (S.sk[t] === k) S.sd[t] = !S.sd[t]; else { S.sk[t] = k; S.sd[t] = false; } ({ p: renderPasif, k: renderAktif, f: renderFon, r: renderKrd, v: renderVade })[t](); return; }
 });
 $("#dSel").addEventListener("change", e => { S.d = e.target.value; render(); });
 

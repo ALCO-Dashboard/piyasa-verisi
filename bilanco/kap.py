@@ -140,13 +140,39 @@ class Sinir(Exception):
     """KAP istek sınırı (HTTP 429): bu çalışmada daha fazla rapor istenmez."""
 
 
-def rapor(s, bid):
+def _getir(s, url):
     for deneme in range(3):
         time.sleep(BEKLE if deneme == 0 else 60 * deneme)
-        r = s.get(f"{KAP}/tr/Bildirim/{bid}", timeout=120)
+        r = s.get(url, timeout=180)
         if r.status_code == 429:
             log(f"  KAP istek sınırı (429), {60 * (deneme + 1)} sn bekleniyor")
             continue
         r.raise_for_status()
-        return tablo_oku(r.text)
+        return r
     raise Sinir()
+
+
+def ekler(sayfa):
+    """Bildirim sayfasındaki ekler: [(dosya kimliği, ad)] (tekrarsız)."""
+    out = []
+    for oid, ad in re.findall(r'href="https://www\.kap\.org\.tr/tr/api/file/download/([0-9a-f]+)"[^>]*>([^<]+)', sayfa):
+        if oid not in [x[0] for x in out]:
+            out.append((oid, htmlmod.unescape(ad).strip()))
+    return out
+
+
+def rapor(s, bid):
+    """Bildirim sayfası → (XBRL tabloları, ekler)."""
+    r = _getir(s, f"{KAP}/tr/Bildirim/{bid}")
+    return tablo_oku(r.text), ekler(r.text)
+
+
+def pdf_ek(liste):
+    """Eklerden Türkçe finansal rapor PDF'ini seç."""
+    pdf = [x for x in liste if x[1].lower().endswith(".pdf")]
+    tr = [x for x in pdf if not re.search(r"(^|[^a-z])(eng|english|en|unconsolidated|consolidated|financial|statements|convenience)([^a-z]|$)", x[1].lower())]
+    return (tr or pdf or [None])[0]
+
+
+def dosya(s, oid):
+    return _getir(s, f"{KAP}/tr/api/file/download/{oid}").content
