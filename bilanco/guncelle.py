@@ -240,6 +240,10 @@ def dipnotlar(H, s, a):
     """PDF dipnotları (bireysel krediler, mevduat / katılım fonu vade yapısı): en yeni raporlardan başlayarak,
     bir çalışmada en fazla a.pdf_en_fazla PDF; okunamayan PDF iki kez denenir."""
     tur = {k: t for k, _, t, _, _ in kap.BANKALAR}
+    for r in H["raporlar"].values():          # ayrıştırıcı yenilendiyse eksik kalanlar yeniden denenir
+        d = r.get("dipnot")
+        if d and not d.get("tamam") and d.get("deneme", 0) < 9 and d.get("surum", 1) < dipnot.SURUM:
+            d.update(deneme=0, surum=dipnot.SURUM)
     bekleyen = [r for r in H["raporlar"].values() if (r.get("dipnot") or {}).get("deneme", 0) < 2 and not (r.get("dipnot") or {}).get("tamam")]
     bekleyen.sort(key=lambda r: (r["yil"], r["donem"], r["tarih"]), reverse=True)
     n = 0
@@ -247,7 +251,7 @@ def dipnotlar(H, s, a):
         if n >= a.pdf_en_fazla:
             break
         k = f"{r['kisa']}|{r['yil']}|{r['donem']}"
-        d = r.setdefault("dipnot", {})
+        d = r.setdefault("dipnot", {"surum": dipnot.SURUM})
         try:
             if not r.get("ekler"):
                 _, r["ekler"] = kap.rapor(s, r["id"])
@@ -265,7 +269,7 @@ def dipnotlar(H, s, a):
             d["hata"] = f"{type(e).__name__}: {e}"[:200]
             log(f"  {k} PDF okunamadı: {d['hata']}")
             continue
-        d.update(sonuc, ek=ek[0], deneme=d.get("deneme", 0) + 1)
+        d.update({k: v for k, v in sonuc.items() if v or not d.get(k)}, ek=ek[0], deneme=d.get("deneme", 0) + 1, surum=dipnot.SURUM)
         d["tamam"] = bool(sonuc.get("bireysel") and sonuc.get("vade"))
         log(f"  {k} dipnot: bireysel {'✓' if sonuc.get('bireysel') else '—'}, vade {'✓' if sonuc.get('vade') else '—'}")
 

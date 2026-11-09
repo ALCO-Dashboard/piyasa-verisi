@@ -6,6 +6,7 @@ Cari dönem ve önceki dönem (önceki yıl sonu) tabloları okunur. Tutarlar mi
 import io
 import re
 
+SURUM = 2          # ayrıştırıcı sürümü: artınca eksik okunmuş raporlar yeniden denenir
 SAYI = r"(?:-{1,2}|—|–|\(?\d{1,3}(?:[.,]\d{3})+(?:\.\d{2}(?!\d))?\)?|\(?\d+\)?)"
 SATIR_SON = re.compile(rf"((?:\s+{SAYI})+)\s*$")
 
@@ -61,12 +62,53 @@ def sayi(t):
 
 
 def kucuk(s):
-    return s.replace("İ", "i").replace("I", "ı").lower()
+    return s.replace("İ", "i").replace("I", "ı").lower().replace("î", "i").replace("â", "a").replace("û", "u")
 
 
-def satirlar(metin, n):
+PARCA = re.compile(r"[\d.,()]+|-{1,2}|—|–")
+
+
+def _toplam_tutar(v):
+    """Satırın son sütunu (toplam) önceki sütunların toplamı mı?"""
+    return abs(sum(v[:-1]) - v[-1]) <= max(2.0, abs(v[-1]) * 0.002)
+
+
+def _onar(s, n):
+    """PDF'te sayıların içine boşluk girmişse ("33 .084", "22, 629", "1 7.905") parçaları birleştirip
+    satır toplamını tutan n sayılık okumayı ara. Bulunursa (etiket, değerler)."""
+    t = s.split()
+    k = len(t)
+    while k and PARCA.fullmatch(t[k - 1]):
+        k -= 1
+    etiket, p = " ".join(t[:k]), t[k:][-20:]
+    if len(p) < n:
+        return None
+    tam = re.compile(SAYI)
+    sonuc = []
+
+    def ara(j, grup):                       # sondan başa: p[:j] kaldı, grup = bulunan sayılar (sondan)
+        if sonuc:
+            return
+        if len(grup) == n:
+            v = [sayi(x) for x in reversed(grup)]
+            if _toplam_tutar(v):
+                sonuc.append((" ".join([etiket] + p[:j]).strip(), v))
+            return
+        for i in range(j - 1, max(-1, j - 4), -1):      # en çok 3 parça birleşir
+            g = "".join(p[i:j])
+            if i < j - 1 and any(re.fullmatch(r"-{1,2}|—|–", x) for x in p[i:j]):
+                break
+            if tam.fullmatch(g):
+                ara(i, grup + [g])
+    ara(len(p), [])
+    return sonuc[0] if sonuc else None
+
+
+def satirlar(metin, n, toplamli=False):
     """Metni etiket + n sayı biçimindeki satırlara ayır; sayısı olmayan satırlar (kaymış etiketler) sonrakine eklenir,
-    eksik sayılı satırlar (boş kalemler, harf aralıklı yazılar) atlanır."""
+    eksik sayılı satırlar (boş kalemler, harf aralıklı yazılar) atlanır. Her satır: (etiket, değerler, kendi) — kendi,
+    etiketin yalnız o satıra ait kısmıdır (üstteki sütun başlıkları karışmasın diye).
+    toplamli: son sütun satır toplamıdır; tutmazsa bölünmüş sayılar birleştirilerek yeniden okunur."""
     out, bekleyen = [], []
     duz = []
     for ham in metin.split("\n"):                  # yalnız sayılardan oluşan satır önceki satırın devamıdır (taşan hücreler)
@@ -84,10 +126,16 @@ def satirlar(metin, n):
             ara = re.findall(SAYI, re.sub(r"(?<=\S) {2,}(?=\S)", " - ", m.group(1).strip()))
             if len(ara) == n:
                 toks = ara
-        if len(toks) >= n:
-            etiket = " ".join(bekleyen[-3:] + [(" " + s)[:m.start(1)].strip()]).strip()
+        kendi = (" " + s)[:m.start(1)].strip() if m else ""
+        vals = [sayi(x) for x in toks[-n:]] if len(toks) >= n else None
+        if toplamli and len(toks) >= 2 and not (vals and _toplam_tutar(vals)):
+            o = _onar(s, n)
+            if o:
+                kendi, vals = o
+        if vals:
+            etiket = " ".join(bekleyen[-3:] + [kendi]).strip()
             if etiket and not re.fullmatch(r"[\d\s().,-]*", etiket):
-                out.append((re.sub(r"\s+", " ", etiket), [sayi(x) for x in toks[-n:]]))
+                out.append((re.sub(r"\s+", " ", etiket), vals, re.sub(r"\s+", " ", kendi or (bekleyen[-1] if bekleyen else ""))))
             bekleyen = []
         elif len(toks) >= 2 or re.search(r"-{3,}", s):
             bekleyen = []
@@ -133,7 +181,7 @@ def _bireysel(metin):
         return None
     out = {"konut": 0.0, "tasit": 0.0, "ihtiyac": 0.0, "diger": 0.0, "kk": 0.0, "kmh": 0.0, "tp": 0.0, "yp": 0.0, "toplam": None}
     ust = None
-    for et, v in rows:
+    for et, v, _ in rows:
         e = kucuk(et)
         tot = v[-1]
         if re.match(r"^toplam", e) or re.search(r"(^|\s)toplam\s*(\(.*\))?\s*$", e):
@@ -181,15 +229,16 @@ KOVA = ["vadesiz", "a1", "a3", "a6", "a12", "y1"]
 def _mevduat(metin):
     """Mevduat bankası tablosu: Vadesiz, 7 gün ihbarlı (bazı bankalarda yok), 1 aya kadar, 1-3, 3-6, 6-12, 1 yıl+, birikimli, toplam."""
     yedi = bool(re.search(r"7\s*g[üu]n", metin[:400], re.I))
-    rows = satirlar(metin, 9 if yedi else 8)
+    rows = satirlar(metin, 9 if yedi else 8, toplamli=True)
     out = {}
-    for et, v in rows:
+    for et, v, kendi in rows:
         e = kucuk(et)
+        ke = kucuk(kendi)
         if not yedi:
             v = [v[0], 0.0] + v[1:]
         kova = [v[0], v[1] + v[2], v[3], v[4], v[5], v[6] + v[7]]
         son = e[-60:]
-        k = ("toplam" if re.match(r"^\s*toplam", son.split("  ")[-1]) or e.startswith("toplam") or re.search(r"(^|\s)toplam\s*(\(.*\))?$", e) else
+        k = ("toplam" if ke.startswith("toplam") or re.search(r"(^|\s)toplam\s*(\(.*\))?$", ke) else
              "tasarruf" if "tasarruf" in e else "dth" if re.search(r"döviz\s+tevdiat", e) else "resmi" if e.startswith("resmi") or "resmi kur" in e
              else "ticari" if e.startswith("tic") else "diger" if e.startswith("diğ") or e.startswith("dig") else "km" if "kıymetli" in e or "kiymetli" in e
              else "bnk" if "bankalararası" in e or "bankalar arası" in e or e.startswith("bankalar mevduat") else None)
@@ -217,13 +266,14 @@ def _eksi(a, *bs):
 
 def _katilim(metin):
     """Katılım bankası tablosu: Vadesiz, 1 ay, 3 ay, 6 ay, 9 ay, 1 yıl, 1 yıl+, birikimli, toplam; satırlar I … XV."""
-    rows = satirlar(metin, 9)
+    rows = satirlar(metin, 9, toplamli=True)
     ana, alt, cur = {}, {}, None
-    for et, v in rows:
+    for et, v, kendi in rows:
         e = kucuk(et)
+        ke = kucuk(kendi)
         kova = [v[0], v[1], v[2], v[3], v[4] + v[5], v[6] + v[7]] + [v[8]]
         rm = re.findall(r"(?:^|\s)(XV|XIV|XIII|XII|XI|IX|X|VIII|VII|VI|IV|V|III|II|I)\s*\.", et)
-        if re.search(r"(^|\s)toplam\s*\(", e) or re.match(r"^\s*toplam", e):
+        if re.search(r"(^|\s)toplam\s*\(", ke) or re.match(r"^\s*toplam", ke):
             ana["toplam"] = kova
             break
         if rm:
