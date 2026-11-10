@@ -10,7 +10,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-      - run: pip install requests && python probe.py
-      - run: |
-          git config user.name bot; git config user.email bot@users.noreply.github.com
-          git checkout --orphan hazine-deneme-veri; git rm -rqf --cached .; git add -f out; git commit -qm veri; git push -f origin hazine-deneme-veri
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install requests certifi cryptography && python probe.py
