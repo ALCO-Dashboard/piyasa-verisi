@@ -126,13 +126,13 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
 .hzbas{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.hzbas h2.sec{flex:1;min-width:220px}
 .hzes{align-items:stretch}.hzes>.card{display:flex;flex-direction:column}.hzes>.card>.chart{margin-top:auto}.hzes>.card>.tw{flex:1}
 .hzes .ctl{min-height:36px}
-#mkHazine details.acik{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
-#mkHazine details.acik summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted);list-style:none;display:inline-flex;align-items:center;gap:6px}
-#mkHazine details.acik summary::-webkit-details-marker{display:none}
-#mkHazine details.acik summary::before{content:"ⓘ";font-size:13px}
-#mkHazine details.acik[open] summary{color:var(--ink-2)}
-#mkHazine details.acik .sub{margin-top:6px;line-height:1.5}
-#mkHazine details.acik .sub a{color:var(--accent)}
+#mkHazine details.acik,#psSwap details.acik{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+#mkHazine details.acik summary,#psSwap details.acik summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted);list-style:none;display:inline-flex;align-items:center;gap:6px}
+#mkHazine details.acik summary::-webkit-details-marker,#psSwap details.acik summary::-webkit-details-marker{display:none}
+#mkHazine details.acik summary::before,#psSwap details.acik summary::before{content:"ⓘ";font-size:13px}
+#mkHazine details.acik[open] summary,#psSwap details.acik[open] summary{color:var(--ink-2)}
+#mkHazine details.acik .sub,#psSwap details.acik .sub{margin-top:6px;line-height:1.5}
+#mkHazine details.acik .sub a,#psSwap details.acik .sub a{color:var(--accent)}
 .htalt{display:flex;justify-content:center;margin-top:10px}
 .tbl tr.ay td{background:var(--surface-2);font-family:var(--sans);text-align:left;font-size:12.5px;color:var(--ink-2)}
 .tbl tr.ay td b{color:var(--ink);font-size:13.5px;margin-right:8px}
@@ -375,7 +375,7 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
     </div>
   </section>
   <section id="pPiyasa" class="hidden">
-    <div class="subtabs" role="group" aria-label="Piyasa konu" id="psTabs"><button data-ps="faiz" aria-pressed="true">Kâr/Faiz/Swap Oranları</button><button data-ps="gosterge" aria-pressed="false">Gösterge Oranlar</button><button data-ps="endeks" aria-pressed="false">Endeks ve Emtia</button></div>
+    <div class="subtabs" role="group" aria-label="Piyasa konu" id="psTabs"><button data-ps="faiz" aria-pressed="true">Kâr/Faiz/Swap Oranları</button><button data-ps="gosterge" aria-pressed="false">Gösterge Oranlar</button><button data-ps="endeks" aria-pressed="false">Endeks ve Emtia</button><button data-ps="swap" aria-pressed="false">Yabancı Swap Stoku</button></div>
     <div id="psFaiz">
     <h2 class="sec">Gecelik oranlar ve hacim</h2>
     <div class="kpis" id="pKpi"></div>
@@ -398,6 +398,29 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
         <div class="chart" id="vpChart"></div>
       </div>
     </div>
+    </div>
+    <div id="psSwap" class="hidden">
+      <h2 class="sec">Yabancı swap stoku</h2>
+      <div class="empty hidden" id="swGate"></div>
+      <div id="swBody">
+      <div class="kpis" id="swKpi"></div>
+      <div class="card">
+        <div class="cardhead"><div><h3>Toplam yabancı swap stoku (milyar USD)</h3></div><span class="chips" id="swRange"></span></div>
+        <div class="legend" id="swLeg"></div>
+        <div class="chart" id="swChart"></div>
+        <details class="acik"><summary>Açıklama</summary><div class="sub" id="swSub"></div></details>
+      </div>
+      <div class="grid2 g2e">
+        <div class="card">
+          <div class="cardhead"><div><h3>Haftalık değişim (milyar USD)</h3></div></div>
+          <div class="chart" id="swDChart"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3>Son haftalar (milyon USD)</h3></div></div>
+          <div class="tw" id="swTbl"></div>
+        </div>
+      </div>
+      </div>
     </div>
     <div id="psEndeks" class="hidden">
       <h2 class="sec">Endeks ve emtia</h2>
@@ -821,8 +844,8 @@ $("#gUlke").onclick = e => { const b = e.target.closest("button[data-u]"); if (b
 $("#psTabs").onclick = e => { const b = e.target.closest("button[data-ps]"); if (b) { S.ps = b.dataset.ps; renderPs(); } };
 function renderPs() {
   $$("#psTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.ps === S.ps));
-  $("#psFaiz").classList.toggle("hidden", S.ps !== "faiz"); $("#psGosterge").classList.toggle("hidden", S.ps !== "gosterge"); $("#psEndeks").classList.toggle("hidden", S.ps !== "endeks");
-  if (S.ps === "faiz") { renderPiyasa(); renderBbg(); } else if (S.ps === "gosterge") renderGosterge(); else renderEndeks();
+  $("#psFaiz").classList.toggle("hidden", S.ps !== "faiz"); $("#psGosterge").classList.toggle("hidden", S.ps !== "gosterge"); $("#psEndeks").classList.toggle("hidden", S.ps !== "endeks"); $("#psSwap").classList.toggle("hidden", S.ps !== "swap");
+  if (S.ps === "faiz") { renderPiyasa(); renderBbg(); } else if (S.ps === "gosterge") renderGosterge(); else if (S.ps === "swap") renderSwap(); else renderEndeks();
 }
 
 // ---------------------------------------------------------------- Endeks ve emtia (Bloomberg + LBMA)
@@ -1507,6 +1530,43 @@ const hashUygula = h => { if (h === "piyasa" || h === "makro") S.tab = h; else i
 hashUygula(location.hash.slice(1));
 addEventListener("hashchange", () => { if (hashUygula(location.hash.slice(1)) && D) { render(); scrollTo(0, 0); } });   // Özet sekmesinden gelen bağlantılar
 H = undefined;
+// ---------------------------------------------------------------- Yabancı swap stoku (BDDK BDYPP + TCMB ters swap, haftalık)
+let SW;
+const SW_R = [["6A", 26], ["1Y", 52], ["2Y", 104], ["Tümü", 9999]];
+S.swR = S.swR || "1Y";
+function renderSwap() {
+  const g = $("#swGate"), body = $("#swBody"), x = (SW?.seri || []).filter(r => ok(r.disi));
+  if (!x.length) { g.classList.remove("hidden"); body.classList.add("hidden"); g.textContent = SW === undefined ? "Yükleniyor…" : "Yabancı swap verisi henüz derlenmedi (BDDK haftalık bülteni bir sonraki güncellemede çekilir)."; return; }
+  g.classList.add("hidden"); body.classList.remove("hidden");
+  const son = x[x.length - 1], onc = x[x.length - 2], yb = [...x].reverse().find(r => r.t < son.t.slice(0, 4) + "-01-01");
+  const mr1 = v => ok(v) ? nf(v / 1e3, 1) : "—", fark = (a, b) => ok(a) && ok(b) ? a - b : null;
+  const dH = (v, d = 1) => ok(v) ? `<span class="${cls(v, .05)}">${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(Math.abs(v) / 1e3, d)} Mr</span>` : "—";
+  $("#swKpi").innerHTML = [
+    `<div class="kpi" style="--kc:var(--c1)"><div class="t">Toplam yabancı swap stoku</div><div class="v">${mr1(son.top)} Mr USD</div><div class="s">Haftalık ${dH(fark(son.top, onc?.top))} · yılbaşından ${dH(fark(son.top, yb?.top))}</div><div class="d">${gunAd(son.t)} · BDDK + TCMB</div></div>`,
+    `<div class="kpi" style="--kc:var(--c3)"><div class="t">BDDK bilanço dışı YP pozisyonu</div><div class="v">${mr1(son.disi)} Mr USD</div><div class="s">Haftalık ${dH(fark(son.disi, onc?.disi))}</div><div class="d">Sektör · haftalık bülten</div></div>`,
+    `<div class="kpi" style="--kc:var(--c4)"><div class="t">TCMB ters swap stoku</div><div class="v">${ok(son.ters) ? nf(son.ters / 1e3, 2) : "—"} Mr USD</div><div class="s">Haftalık ${dH(fark(son.ters, onc?.ters), 2)}</div><div class="d">Satım yönlü stok · ${son.ters_t ? gunAd(son.ters_t) : "—"}</div></div>`,
+    `<div class="kpi kpi2" style="--kc:var(--c6)"><div class="t">Bankacılık YP pozisyonu</div><div class="kr"><span class="kl">Bilanço içi</span><span class="kv">${mr1(son.ici)} Mr</span></div><div class="kr"><span class="kl">Net genel</span><span class="kv">${mr1(son.net)} Mr</span></div><div class="d">Net genel / yasal özkaynak %${ok(son.net) && son.ozk ? nf(son.net / son.ozk * 100, 1) : "—"}</div></div>`].join("");
+  rangeChips($("#swRange"), SW_R, S.swR, k => { S.swR = k; renderSwap(); });
+  const n = SW_R.find(r => r[0] === S.swR)[1], y = x.slice(-n), xs = y.map(r => r.t), uzun = n > 60;
+  const ser = [{ name: "BDDK bilanço dışı YP pozisyonu", vals: y.map(r => r.disi / 1e3), color: css("--c3"), type: "bar", fmt: v => nf(v, 1) + " Mr USD" },
+    { name: "TCMB ters swap", vals: y.map(r => ok(r.ters) ? r.ters / 1e3 : null), color: css("--c4"), type: "bar", fmt: v => nf(v, 2) + " Mr USD" }];
+  $("#swLeg").innerHTML = ser.map(s_ => `<span class="chip" style="cursor:default"><i style="background:${s_.color}"></i>${s_.name}</span>`).join("");
+  const xFmt = uzun ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa;
+  chart($("#swChart"), { xs, series: ser, stack: true, height: 320, label: "Toplam yabancı swap stoku", xFmt, tipX: gunAd, maxX: 12, totFmt: v => nf(v, 1) + " Mr USD", yFmt: v => nf(v, 0) });
+  const z = x.slice(-27), dz = z.slice(1).map((r, i) => fark(r.top, z[i].top));
+  chart($("#swDChart"), { xs: z.slice(1).map(r => r.t), height: 240, label: "Haftalık değişim", xFmt: gunKisa, tipX: gunAd, maxX: 9, yFmt: v => nf(v, 0),
+    series: [{ name: "Toplam swap stokunda haftalık değişim", vals: dz.map(v => ok(v) ? v / 1e3 : null), color: css("--c1"), type: "bar", barColors: dz.map(v => css(v < 0 ? "--down" : "--up")), fmt: v => (v > 0 ? "+" : "") + nf(v, 2) + " Mr USD" }] });
+  const t = x.slice(-8).reverse();
+  $("#swTbl").innerHTML = `<table class="tbl"><thead><tr><th class="l">Hafta</th><th>BDYPP</th><th>TCMB ters swap</th><th>Toplam</th><th>Haftalık Δ</th><th>Bilanço içi</th><th>Net genel</th></tr></thead><tbody>`
+    + t.map(r => { const i = x.indexOf(r), d = fark(r.top, x[i - 1]?.top);
+      return `<tr><td class="l">${gunAd(r.t)}</td><td>${nf(r.disi, 0)}</td><td>${ok(r.ters) ? nf(r.ters, 0) : "—"}</td><td><b>${ok(r.top) ? nf(r.top, 0) : "—"}</b></td><td>${ok(d) ? `<span class="${cls(d, 50)}">${d > 0 ? "+" : d < 0 ? "−" : ""}${nf(Math.abs(d), 0)}</span>` : "—"}</td><td>${nf(r.ici, 0)}</td><td>${nf(r.net, 0)}</td></tr>`; }).join("") + "</tbody></table>";
+  $("#swSub").innerHTML = `<b>Toplam yabancı swap stoku = BDDK bilanço dışı yabancı para pozisyonu (BDYPP) + TCMB ters swap stoku.</b> `
+    + `BDYPP: <a href="${esc(SW.kaynak?.bddk || "https://www.bddk.org.tr/BultenHaftalik")}" target="_blank" rel="noopener">BDDK Haftalık Bülten</a> › Yabancı Para Pozisyonu, Sektör, milyon USD (bilanço dışı YP varlıklar − yükümlülükler). `
+    + `TCMB ters swap: <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> › TCMB Taraflı Swap İşlemleri › Toplam stok (satım yönlü), bülten tarihindeki ya da ondan önceki son iş günündeki değer. `
+    + `Çekinceler: BDYPP bankaların tüm karşı taraflarla (yurt içi müşteriler dahil) türev işlemlerinin net döviz pozisyonudur; yabancılarla yapılan swap stokunun yaygın kullanılan yaklaşık göstergesidir, doğrudan ölçümü değildir. `
+    + `TCMB ters swap stoku TCMB'nin yurt içi bankalarla yaptığı satım yönlü swap ihalelerinden oluşur. Bilanço içi pozisyon ve net genel pozisyon bilgi için aynı BDDK tablosundan verilmiştir. Son güncelleme ${SW.updated ? new Date(SW.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${SW.failed?.length ? ` · son çekimde alınamayan: ${SW.failed.join(", ")} (önceki veri gösteriliyor)` : ""}.`;
+}
+fetch("data/swap.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { SW = j; if (S.tab === "piyasa" && S.ps === "swap") renderSwap(); });
 fetch("data/hazine.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { H = j; if (D && S.tab === "makro" && S.mk === "hazine") { renderHazine(); renderSrc(); } });
 fetch("data/ekonomi.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { E = j; if (D && S.tab === "makro" && S.mk in EKT) { renderEko(); renderSrc(); } });
 const bbgYukle = fetch("data/bbg.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
