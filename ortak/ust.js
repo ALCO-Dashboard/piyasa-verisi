@@ -141,9 +141,9 @@ ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
   if (SHELL) { // tek sayfa: sekmeler iframe; bir kez açılan sekme bellekte kalır, geçiş anında olur
     const box = document.getElementById("alcoFrames"), frames = {};
     const show = k => {
-      let ic = null; if (ALIAS[k]) [k, ic] = ALIAS[k];
+      let ic = null; if (ALIAS[k]) [k, ic] = ALIAS[k]; else if (/^piyasa-/.test(k)) [k, ic] = ["makro", k];   // Özet kartları: piyasa-<alt sekme>[-<kalem>]
       if (!TABS.some(t => t[0] === k)) k = TABS[0][0];
-      if (ic && frames[k]) { try { frames[k].contentWindow.location.hash = ic; } catch (e) {} }
+      if (ic && frames[k]) { try { const w = frames[k].contentWindow; if (w.location.hash === "#" + ic) w.dispatchEvent(new HashChangeEvent("hashchange")); else w.location.hash = ic; } catch (e) {} }
       host.querySelectorAll("nav.at-tabs a").forEach(a => { if (a.dataset.k === k) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
       for (const [kk, f] of Object.entries(frames)) f.hidden = kk !== k;
       if (!frames[k]) {

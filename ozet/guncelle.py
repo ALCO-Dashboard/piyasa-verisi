@@ -311,7 +311,7 @@ def piyasa(M, B, P, TC, Z, N):
             w = once(s, 7)
             dbp = (s[-1][1] - w) * 100 if ok(w) else None
             K.append(kart("tlref", "TLREF", yuzde(s[-1][1], 2), f"BIST repo-ters repo gecelik referans", gun_ad(s[-1][0]),
-                          f"{sg(dbp, 0)} bp/hafta" if ok(dbp) else None, "", spark([v for _, v in s], 60), "piyasa", "Borsa İstanbul"))
+                          f"{sg(dbp, 0)} bp/hafta" if ok(dbp) else None, "", spark([v for _, v in s], 60), "piyasa-tlref", "Borsa İstanbul"))
             N["tlref"] = dict(v=s[-1][1], dbp=dbp)
     # USD/TRY (EVDS döviz alış, günlük) + spot EUR/TRY (Bloomberg)
     dl = (P or {}).get("daily") or {}
@@ -325,7 +325,7 @@ def piyasa(M, B, P, TC, Z, N):
         usd_spot = (vi.get("USDTRY") or {}).get("spot")
         alt = (f"spot <b>{nf(usd_spot, 4)}</b>" if ok(usd_spot) else "") + (f" · EUR/TRY <b>{nf(eur, 4)}</b>" if ok(eur) else "")
         K.append(kart("usdtry", "USD/TRY", nf(s[-1][1], 4), alt, f"TCMB döviz alış · {gun_ad(s[-1][0])}",
-                      f"{pyuzde(dw, 2)}/hafta" if ok(dw) else None, yon(dw, False), spark([v for _, v in s], 60), "pp", "TCMB / Bloomberg"))
+                      f"{pyuzde(dw, 2)}/hafta" if ok(dw) else None, yon(dw, False), spark([v for _, v in s], 60), None, "TCMB / Bloomberg"))
         N["usd"] = dict(v=s[-1][1], dw=dw, d30=ch(s[-1][1], once(s, 30)), seri=s)
     # BIST 100
     bi = bbg_seri(B, "Borsa Ve Diğer", ticker="XU100 Index")
@@ -334,7 +334,7 @@ def piyasa(M, B, P, TC, Z, N):
         bk = bbg_seri(B, "Borsa Ve Diğer", ticker="XBANK Index")
         bkw = ch(bk[-1][1], once(bk, 7)) if bk else None
         K.append(kart("bist", "BIST 100", nf(bi[-1][1], 0), f"bankacılık endeksi <b>{pyuzde(bkw)}</b>/hafta" if ok(bkw) else "", gun_ad(bi[-1][0]),
-                      f"{pyuzde(dw)}/hafta" if ok(dw) else None, yon(dw, True), spark([v for _, v in bi], 60), "piyasa", "Bloomberg"))
+                      f"{pyuzde(dw)}/hafta" if ok(dw) else None, yon(dw, True), spark([v for _, v in bi], 60), "piyasa-endeks-borsa", "Bloomberg"))
         N["bist"] = dict(v=bi[-1][1], dw=dw, bkw=bkw, seri=bi)
     # CDS
     cds = bbg_seri(B, "CDS", etiket="5Y CDS")
@@ -342,7 +342,7 @@ def piyasa(M, B, P, TC, Z, N):
         w = once(cds, 7)
         dbp = cds[-1][1] - w if ok(w) else None
         K.append(kart("cds", "Türkiye 5Y CDS", f"{nf(cds[-1][1], 0)} bp", f"1 ay önce <b>{nf(once(cds, 30), 0)} bp</b>", gun_ad(cds[-1][0]),
-                      f"{sg(dbp, 0)} bp/hafta" if ok(dbp) else None, yon(dbp, False), spark([v for _, v in cds], 60), "piyasa", "Bloomberg"))
+                      f"{sg(dbp, 0)} bp/hafta" if ok(dbp) else None, yon(dbp, False), spark([v for _, v in cds], 60), "piyasa-endeks-cds", "Bloomberg"))
         N["cds"] = dict(v=cds[-1][1], dbp=dbp, seri=cds)
     # tahvil
     t2 = bbg_seri(B, "TRY TAHVİL GÖSTERGE", etiket="2Y")
@@ -352,21 +352,21 @@ def piyasa(M, B, P, TC, Z, N):
         dbp = (t2[-1][1] - w) * 100 if ok(w) else None
         alt = f"10 yıl <b>{yuzde(t10[-1][1], 2)}</b>" if t10 else ""
         K.append(kart("tahvil", "2 yıllık gösterge tahvil", yuzde(t2[-1][1], 2), alt, gun_ad(t2[-1][0]),
-                      f"{sg(dbp, 0)} bp/hafta" if ok(dbp) else None, yon(dbp, False), spark([v for _, v in t2], 60), "piyasa", "Bloomberg"))
+                      f"{sg(dbp, 0)} bp/hafta" if ok(dbp) else None, yon(dbp, False), spark([v for _, v in t2], 60), "piyasa-gosterge", "Bloomberg"))
         N["tahvil"] = dict(v2=t2[-1][1], v10=t10[-1][1] if t10 else None, dbp=dbp, seri=t2)
     # Brent ve altın
     br = bbg_seri(B, "Borsa Ve Diğer", ticker="CO1 Comdty")
     if br:
         dw = ch(br[-1][1], once(br, 7))
         K.append(kart("brent", "Brent petrol", f"{nf(br[-1][1], 2)} $", f"1 ay <b>{pyuzde(ch(br[-1][1], once(br, 30)))}</b>", gun_ad(br[-1][0]),
-                      f"{pyuzde(dw)}/hafta" if ok(dw) else None, yon(dw, False), spark([v for _, v in br], 60), "piyasa", "Bloomberg"))
+                      f"{pyuzde(dw)}/hafta" if ok(dw) else None, yon(dw, False), spark([v for _, v in br], 60), "piyasa-endeks-brent", "Bloomberg"))
         N["brent"] = dict(v=br[-1][1], dw=dw, seri=br)
     au = bbg_seri(B, "Kıymetli Maden", ticker="XAUUSD Curncy")
     if au:
         dw = ch(au[-1][1], once(au, 7))
         yb = next((v for d, v in reversed(au) if d < f"{au[-1][0][:4]}-01-01"), None)
         K.append(kart("altin", "Ons altın", f"{nf(au[-1][1], 0)} $", f"yılbaşından <b>{pyuzde(ch(au[-1][1], yb))}</b>", gun_ad(au[-1][0]),
-                      f"{pyuzde(dw)}/hafta" if ok(dw) else None, "", spark([v for _, v in au], 60), "piyasa", "Bloomberg"))
+                      f"{pyuzde(dw)}/hafta" if ok(dw) else None, "", spark([v for _, v in au], 60), "piyasa-endeks-altin", "Bloomberg"))
         N["altin"] = dict(v=au[-1][1], dw=dw)
     # rezerv
     R = (TC or {}).get("rezerv") or {}

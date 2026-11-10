@@ -88,7 +88,7 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 /* gösterge kartları */
 .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px;align-content:start}
 .kc{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px 10px;text-align:left;cursor:pointer;min-width:0;transition:border-color .15s,box-shadow .15s}
-.kc:hover{border-color:var(--accent);box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.kc:hover{border-color:var(--accent);box-shadow:0 4px 14px rgba(0,0,0,.06)}.kc.nolink{cursor:default}.kc.nolink:hover{border-color:var(--line);box-shadow:none}
 .kc .t{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:6px}
 .kc .t span:last-child{opacity:0;color:var(--accent);transition:opacity .15s}.kc:hover .t span:last-child{opacity:1}
 .kc .vr{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:4px}
@@ -212,8 +212,8 @@ function spark(v) {
   const [li, ly] = p[p.length - 1], z = lo < 0 && hi > 0 ? `<line x1="0" x2="${W}" y1="${Y(0).toFixed(1)}" y2="${Y(0).toFixed(1)}"/>` : "";
   return `<svg class="sp" viewBox="0 0 ${W} ${H}" aria-hidden="true">${z}<path class="ar" d="${d}L${X(li).toFixed(1)} ${H}L${X(p[0][0]).toFixed(1)} ${H}Z"/><path d="${d}"/><circle cx="${X(li).toFixed(1)}" cy="${Y(ly).toFixed(1)}" r="2.4"/></svg>`;
 }
-const kart = k => `<button class="kc" data-link="${esc(k.link || "")}" title="${esc(k.kaynak ? "Kaynak: " + k.kaynak : "")}">
-  <div class="t"><span>${esc(k.ad)}</span><span>Detay →</span></div>
+const kart = k => `<button class="kc${k.link ? "" : " nolink"}" data-link="${esc(k.link || "")}" title="${esc(k.kaynak ? "Kaynak: " + k.kaynak : "")}">
+  <div class="t"><span>${esc(k.ad)}</span>${k.link ? "<span>Detay →</span>" : ""}</div>
   <div class="vr"><span class="v">${esc(k.v)}</span>${k.d ? `<span class="pill ${k.dc || ""}">${esc(k.d)}</span>` : ""}</div>
   <div class="s">${k.alt || ""}</div>
   <div class="f"><span class="d">${esc(k.donem || "")}</span>${spark(k.spark)}</div></button>`;
