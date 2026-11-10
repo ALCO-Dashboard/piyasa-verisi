@@ -135,7 +135,7 @@ input[type=search]{border:1px solid var(--line);background:var(--surface);border
 .seg.trate{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-right:4px}
 .seg.trate button{border:0;background:var(--surface);padding:6px 12px;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer}
 .seg.trate button+button{border-left:1px solid var(--line)}.seg.trate button[aria-pressed="true"]{background:var(--accent);color:#fff}
-.fhead{align-items:flex-start}.fttl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}.fttl h3{margin:0}
+.fhead{align-items:flex-start}.fson{margin-top:4px;font-size:12px;color:var(--muted)}.sub.fnot{margin:6px 0 0;font-size:12px}.fttl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}.fttl h3{margin:0}
 .fbank{display:flex;flex-wrap:wrap;gap:6px}.fbank .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
 .frow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;margin:4px 0 10px}
 .trng{display:flex;flex-wrap:wrap;align-items:center;gap:4px}.trng .chip.sm{font-size:11.5px;padding:3px 9px}
@@ -1059,7 +1059,7 @@ function tPanel(pr) {
     <div class="cardhead"><div><h3>${esc(g.name)}${bTag}</h3><div class="kv"><span>Son veri <b>${dShort(g.dates[n - 1])}</b></span>${g.flow ? "<span>Haftalık değişim · milyon ABD doları</span>" : ""}${fb ? `<span>${esc(fb)}</span>` : ""}</div></div>
       <div class="chips">${rateConv(g) ? `<div class="seg trate" role="group" aria-label="Oran gösterimi"><button data-rate="efektif" aria-pressed="${S.tRate === "efektif"}">Efektif yıllık</button><button data-rate="basit" aria-pressed="${S.tRate === "basit"}">Yıllık basit</button></div>` : ""}${tRangeHtml()}</div></div>
     ${g.curs.length > 1 || g.typs.length > 1 ? `<div class="tflt">${g.curs.length > 1 ? `<div class="seg tcur" role="group" aria-label="Para birimi">${g.curs.map(c => `<button data-cur="${c}" aria-pressed="${S.tCur[key] === c}">${CUR_LAB[c]}</button>`).join("")}</div>` : ""}${g.typs.length > 1 ? `<div class="ttyp" role="group" aria-label="Mevduat türü">${g.typs.map(t => `<button class="chip sm" data-typ="${t}" aria-pressed="${(S.tTyp[key] || []).includes(t)}">${t}</button>`).join("")}</div>` : ""}</div>` : ""}
-    <div data-tsub="${key}" class="sub" style="margin-bottom:2px"></div><div data-tchart="${key}"></div>
+    <div data-tchart="${key}"></div><div data-tsub="${key}" class="sub fnot"></div>
     <details class="tser" data-open="${key}"${S.tOpen.has(key) ? " open" : ""}><summary>Seri tablosu <span>${nVis} seri · grafiğe seri eklemek ve dönem karşılaştırmak için aç</span></summary>
     <div class="bar" style="margin-top:12px"><span class="period"><select data-ta="${key}" aria-label="Başlangıç">${opt(A)}</select><span class="arrow">→</span><select data-tb="${key}" aria-label="Bitiş">${opt(B)}</select></span><div class="chips">${quick}</div>
       <span class="sep"></span><button class="chip" data-clear="${key}">Seçimi temizle</button></div>
@@ -1130,13 +1130,13 @@ function fPanel(it) {
       rows += `<tr class="row l${evdsLvl(s_.name)}${on ? " sel" : ""}" data-s="${esc(s_.code)}" data-g="${g.code}"><td class="chk"><input type="checkbox" ${on ? "checked" : ""} aria-label="Grafiğe ekle"></td><td class="nm">${esc(s_.name)}</td><td>${fmtFull(a, kind)}</td><td>${fmtFull(b, kind)}</td>${dc}${pc}</tr>`;
     }
   }
-  const son = gs.map(({ bank, g }) => gs.length > 1 ? `${esc(F_BANK[bank])} <b>${dShort(g.dates[g.dates.length - 1])}</b>` : `<b>${dShort(g.dates[g.dates.length - 1])}</b>`).join(" · ");
+  const sd = gs.map(({ g }) => g.dates[g.dates.length - 1]).sort().pop(), son = isMonth(sd) ? dShort(sd) : `${+sd.slice(8, 10)} ${AYU[+sd.slice(5, 7) - 1]} ${sd.slice(2, 4)}`;
   return `<article class="card" data-f="${it.id}" data-g="${g0.code}">
-    <div class="cardhead fhead"><div class="fttl"><h3>${esc(it.name)}</h3><div class="fbank" role="group" aria-label="Banka grubu">${bankCh}</div></div>
+    <div class="cardhead fhead"><div><div class="fttl"><h3>${esc(it.name)}</h3><div class="fbank" role="group" aria-label="Banka grubu">${bankCh}</div></div><div class="fson">Son veri: ${son}</div></div>
       <div class="chips">${modCh}${rateConv(g0) ? `<div class="seg trate" role="group" aria-label="Oran gösterimi"><button data-rate="efektif" aria-pressed="${S.tRate === "efektif"}">Efektif yıllık</button><button data-rate="basit" aria-pressed="${S.tRate === "basit"}">Yıllık basit</button></div>` : ""}</div></div>
-    <div class="frow"><div class="kv"><span>Son veri ${son}</span><span>${S.fMode[it.id] === "stok" ? "Stok: dönem sonundaki tüm portföyün ağırlıklı ortalaması" : "Akım: dönem içinde yeni kullandırılan / açılan hesaplar"}</span></div>${tRangeHtml()}</div>
+    <div class="frow">${tRangeHtml()}</div>
     ${curs.length > 1 || typs.length > 1 ? `<div class="tflt">${curs.length > 1 ? `<div class="seg tcur" role="group" aria-label="Para birimi">${curs.map(c => `<button data-fcur="${c}" aria-pressed="${S.fCur[it.id] === c}">${CUR_LAB[c]}</button>`).join("")}</div>` : ""}${typs.length > 1 ? `<div class="ttyp" role="group" aria-label="Mevduat türü">${typs.map(t => `<button class="chip sm" data-ftyp="${t}" aria-pressed="${(S.fTyp[it.id] || []).includes(t)}">${t}</button>`).join("")}</div>` : ""}</div>` : ""}
-    <div data-tsub="${key}" class="sub" style="margin-bottom:2px"></div><div data-tchart="${key}"></div>
+    <div data-tchart="${key}"></div><div data-tsub="${key}" class="sub fnot"></div>
     <details class="tser" data-open="${key}"${S.tOpen.has(key) ? " open" : ""}><summary>Seri tablosu <span>${nVis} seri · grafiğe seri eklemek ve dönem karşılaştırmak için aç</span></summary>
     <div class="bar" style="margin-top:12px"><span class="period"><select data-ta="${g0.code}" aria-label="Başlangıç">${opt(A)}</select><span class="arrow">→</span><select data-tb="${g0.code}" aria-label="Bitiş">${opt(B)}</select></span><div class="chips">${quick}</div>
       <span class="sep"></span><button class="chip sm" data-fclear="${it.id}">Seçimi temizle</button></div>
@@ -1149,14 +1149,14 @@ function drawFChart(id) {
   const series = [];
   gs.forEach(({ bank, g }, gi) => (S.tSel[g.code] || []).filter(c => g.vals[c]).forEach(c => {
     const b = fBase(g, c); if (!(b in renk)) renk[b] = pal[Object.keys(renk).length % pal.length];
-    const ad = (g.idx[c]?.name || c).replace(/\s*\((TL|ABD doları|Euro)[^)]*\)\s*$/i, "").replace(/[,\s]+$/, "").trim();
+    const ad = (g.idx[c]?.name || c).replace(/\s*\((TL|ABD doları|Euro)[^)]*\)\s*$/i, "").replace(/[,\s]+$/, "").replace(/\)\)+$/, ")").trim();
     series.push({ name: `${ad} · ${F_EK[bank]}`, color: renk[b], dash: F_DASH[gi] || false,
       data: clipT(g.dates.map((d, k) => [d, ok(g.vals[c][k]) ? tConv(g, c, g.vals[c][k] * g.scale) : null, toTime(d)]), S.tRange) });
   }));
   if (!series.length) { sub.textContent = ""; el.innerHTML = '<div class="empty">Grafikte göstermek için seri tablosundan seri işaretleyin.</div>'; return; }
   const sec = series.slice(0, 12), rc = rateConv(gs[0].g);
   const rn = !rc ? "" : S.tRate === "basit" ? (rc === "dep" ? " · yıllık basit oran (vade: 1 ay 32, 3 ay 91, 6 ay 181 gün; toplam 32 gün; 1 yıl ve üzeri değişmez)" : " · yıllık basit oran (efektif yıllıktan aylık bileşik ×12)") : " · efektif yıllık (bileşik) oran, EVDS'deki haliyle";
-  sub.textContent = "%" + rn + (gs.length > 1 ? " · düz çizgi " + F_BANK[gs[0].bank].toLocaleLowerCase("tr-TR") + ", kesikli " + gs.slice(1).map(x => F_BANK[x.bank].toLocaleLowerCase("tr-TR")).join(", noktalı ") : "") + (series.length > 12 ? " · grafikte ilk 12 seri" : "");
+  sub.textContent = (S.fMode[id] === "stok" ? "Stok: dönem sonundaki tüm portföyün ağırlıklı ortalaması" : "Akım: dönem içinde yeni kullandırılan / açılan hesaplar") + " · %" + rn + (gs.length > 1 ? " · düz çizgi " + F_BANK[gs[0].bank].toLocaleLowerCase("tr-TR") + ", kesikli " + gs.slice(1).map(x => F_BANK[x.bank].toLocaleLowerCase("tr-TR")).join(", noktalı ") : "") + (series.length > 12 ? " · grafikte ilk 12 seri" : "");
   lineChart(el, { series: sec, yFmt: v => nf(2).format(v) });
   fVeri(el, key, sec, "pct");
 }
