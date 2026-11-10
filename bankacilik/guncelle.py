@@ -526,6 +526,13 @@ def main():
             except Exception as e:
                 log(f"HATA {ad}: {type(e).__name__}: {e} — önceki veri korunuyor")
                 sorun.append(ad)
+        try:                                                         # yabancı swap stoku (Makro ve Piyasa › Piyasa)
+            log("== yabancı swap stoku")
+            sys.path.insert(0, KOK)
+            import swap
+            swap.guncelle(sys.modules[__name__], a.site, os.environ.get("EVDS_API_KEY", ""), log)
+        except Exception as e:
+            log(f"HATA yabancı swap: {type(e).__name__}: {e}")
 
     for f in DOSYALAR:
         json.dump(D[f], open(os.path.join(veri_dizin, f + ".json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
