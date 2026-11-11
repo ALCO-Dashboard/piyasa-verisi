@@ -324,9 +324,17 @@ def piyasa(M, B, P, TC, Z, N):
         eur = (vi.get("EURTRY") or {}).get("spot")
         usd_spot = (vi.get("USDTRY") or {}).get("spot")
         alt = (f"spot <b>{nf(usd_spot, 4)}</b>" if ok(usd_spot) else "") + (f" · EUR/TRY <b>{nf(eur, 4)}</b>" if ok(eur) else "")
-        K.append(kart("usdtry", "USD/TRY", nf(s[-1][1], 4), alt, f"TCMB döviz alış · {gun_ad(s[-1][0])}",
-                      f"{pyuzde(dw, 2)}/hafta" if ok(dw) else None, yon(dw, False), spark([v for _, v in s], 60), None, "TCMB / Bloomberg"))
         N["usd"] = dict(v=s[-1][1], dw=dw, d30=ch(s[-1][1], once(s, 30)), seri=s)
+    # TRY implied yield (Bloomberg, TL Londra swap: O/N; 1 ay ve 3 ay alt satırda)
+    im = bbg_seri(B, "TL LONDRA SWAP", etiket="O/N")
+    if im:
+        w = once(im, 7)
+        dbp = (im[-1][1] - w) * 100 if ok(w) else None
+        m1, m3 = bbg_seri(B, "TL LONDRA SWAP", etiket="1M"), bbg_seri(B, "TL LONDRA SWAP", etiket="3M")
+        alt = " · ".join(x for x in [f"1 ay <b>{yuzde(m1[-1][1], 2)}</b>" if m1 else "", f"3 ay <b>{yuzde(m3[-1][1], 2)}</b>" if m3 else ""] if x)
+        K.append(kart("tryimp", "TRY Implied Yield (O/N)", yuzde(im[-1][1], 2), alt, f"Bloomberg · {gun_ad(im[-1][0])}",
+                      f"{sg(dbp, 0)} bp/hafta" if ok(dbp) else None, "", spark([v for _, v in im], 60), "piyasa-imp", "Bloomberg"))
+        N["tryimp"] = dict(v=im[-1][1], dbp=dbp)
     # BIST 100
     bi = bbg_seri(B, "Borsa Ve Diğer", ticker="XU100 Index")
     if bi:

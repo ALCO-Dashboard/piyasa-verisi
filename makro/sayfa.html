@@ -1563,6 +1563,7 @@ $("#grpBox").addEventListener("change", e => { if (e.target.id === "gAy") { S.se
 $("#grpBox").addEventListener("toggle", e => { if (e.target.classList?.contains("grpd")) S.gOpen = e.target.open; }, true);
 let rz, lw = innerWidth; addEventListener("resize", () => { if (!D || Math.abs(innerWidth - lw) < 30 && !rz) { } lw = innerWidth; clearTimeout(rz); rz = setTimeout(() => { rz = null; render(); }, 150); });
 const hashUygula = h => {
+  if (h === "piyasa-imp") { S.tab = "piyasa"; S.ps = "faiz"; S.impT = "O/N"; S.pOn = new Set(["imp"]); return true; }   // Özet: TRY Implied Yield kartı
   const pm = /^piyasa-(tlref|endeks|gosterge|swap|faiz)(?:-(\w+))?$/.exec(h);     // Özet kartlarından: alt sekme ve kalem
   if (pm) { S.tab = "piyasa"; S.ps = pm[1] === "tlref" ? "faiz" : pm[1]; if (pm[1] === "tlref") S.pOn = new Set(["tlref"]); if (pm[1] === "endeks" && pm[2]) S.ee = pm[2]; if (pm[1] === "gosterge") S.gU = "tr"; return true; }
   if (h === "piyasa" || h === "makro") S.tab = h; else if (["enf", "hazine", "buyume", "istihdam", "uretim", "dis", "butce"].includes(h)) { S.tab = "makro"; S.mk = h; } else return false; return true; };
