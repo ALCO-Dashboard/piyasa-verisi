@@ -7,10 +7,18 @@ permissions:
 jobs:
   d:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - run: pip install requests certifi cryptography && python probe.py
+      - run: |
+          git fetch --depth=1 origin gh-pages
+          git show FETCH_HEAD:data.json > t/data.json
+          mkdir -p t/bankacilik/data && git show FETCH_HEAD:bankacilik/data/evds.json > t/bankacilik/data/evds.json
+          cd t && (python3 -m http.server 8768 >/dev/null 2>&1 &) && sleep 1
+          npm i playwright@1.48.2 >/dev/null 2>&1 && npx playwright install chromium >/dev/null 2>&1
+          mkdir -p ../out
+          node shot.js ../out/t1.png '#t-kar' 'fill:#d0=2026-09-14' '[data-ks="getiri"]' '[data-ks="akim"]' '#cc-dd button[data-c="Para Piyasası"]' '#cc-tr button[data-c="Döviz"]' '#cc-tr button[data-c="Para Piyasası"]' 2>&1 | tee ../out/log1.txt
+          node shot.js ../out/t2.png '#t-kar' 'fill:#d0=2026-09-14' '[data-ks="deger"]' '[data-ks="yatirimci"]' 'fill:#ps=50' 2>&1 | tee ../out/log2.txt
+      - run: |
+          git config user.name bot; git config user.email bot@users.noreply.github.com
+          git checkout --orphan hazine-deneme-veri; git rm -rqf --cached .; git add -f out; git commit -qm veri; git push -f origin hazine-deneme-veri
