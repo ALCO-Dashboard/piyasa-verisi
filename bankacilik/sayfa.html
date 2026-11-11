@@ -136,6 +136,7 @@ input[type=search]{border:1px solid var(--line);background:var(--surface);border
 .seg.trate button{border:0;background:var(--surface);padding:6px 12px;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer}
 .seg.trate button+button{border-left:1px solid var(--line)}.seg.trate button[aria-pressed="true"]{background:var(--accent);color:#fff}
 .fhead{align-items:flex-start}.fson{margin-top:4px;font-size:12px;color:var(--muted)}.sub.fnot{margin:6px 0 0;font-size:12px}.fttl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}.fttl h3{margin:0}
+.ftur{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.ftur .chip.sm{font-size:12.5px;padding:4px 12px}
 .fbank{display:flex;flex-wrap:wrap;gap:6px}.fbank .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
 .frow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;margin:4px 0 10px}
 .trng{display:flex;flex-wrap:wrap;align-items:center;gap:4px}.trng .chip.sm{font-size:11.5px;padding:3px 9px}
@@ -1087,6 +1088,12 @@ function drawTChart(code) {
 const F_BANK = { mevduat: "Mevduat bankaları", katilim: "Katılım bankaları", finansman: "Finansman şirketleri" };
 const F_EK = { mevduat: "faiz", katilim: "kâr payı", finansman: "finansman şirketi faizi" };
 const F_DASH = [false, "6 4", "2 3"];
+const F_GAD = { mevduat: "Mevduat", katilim: "Katılım", finansman: "Finansman" };
+// kalem türleri (sekmeler): ana seriler; KMH / ÖCH dahil ve "hariç" varyantları yalnız seri tablosundan seçilir
+const F_TUR = {
+  kredi: [["ihtiyac", "İhtiyaç", /^İhtiyaç Kredisi \(/], ["tasit", "Taşıt", /^Taşıt Kredisi \(/], ["konut", "Konut", /^Konut Kredisi/], ["ticari", "Ticari", /^Ticari Krediler \((TL|Euro|ABD)/], ["tuketici", "Tüketici", /^Tüketici Kredisi \((TL|İhtiyaç\+Taşıt\+Konut\)+ \(TL)/]],
+  mevduat: [["a1", "1 Aya Kadar", /^1 Aya Kadar/], ["a3", "3 Aya Kadar", /^3 Aya Kadar/], ["a6", "6 Aya Kadar", /^6 Aya Kadar/], ["y1", "1 Yıla Kadar", /^1 Yıla Kadar/], ["y1p", "1 Yıl ve Üzeri", /^1 Yıl ve Daha Uzun/], ["top", "Toplam", /^Toplam/]] };
+const fTur = (it, g, c) => { const n = g.idx[c]?.name || ""; if (/KMH|ÖCH|Tüzel Kişi/.test(n)) return null; return (F_TUR[it.id] || []).find(t => t[2].test(n)) || null; };
 const fColor = b => b === "finansman" ? cssVar("--c7") : gColor(b);
 const fBase = (g, c) => trLower(tMeta(g)[c]?.base || g.idx[c]?.name || c).replace(/\(.*$/, "").replace(/[^a-z0-9çğıöşü]/g, "");
 function fState(it) {
@@ -1117,6 +1124,9 @@ function fPanel(it) {
   const { A, B } = tAB(g0), n = g0.dates.length, kind = g0.kind;
   const bankCh = st.var_.map(b => `<button class="chip sm" data-fb="${b}" aria-pressed="${S.fBank[it.id].includes(b)}"><span class="dot" style="background:${fColor(b)}"></span>${esc(F_BANK[b] || gName(b))}</button>`).join("");
   const modCh = st.modlar.length > 1 ? `<div class="seg trate" role="group" aria-label="Akım / stok">${st.modlar.map(m => `<button data-fm="${m}" aria-pressed="${S.fMode[it.id] === m}" title="${m === "akim" ? "Dönem içinde kullandırılan / açılan yeni hesaplar" : "Dönem sonundaki tüm portföy (stok)"}">${m === "akim" ? "Akım" : "Stok"}</button>`).join("")}</div>` : `<span class="note">${S.fMode[it.id] === "stok" ? "Stok" : "Akım"}</span>`;
+  const turV = (F_TUR[it.id] || []).filter(t => gs.some(({ g }) => g.series.some(x => tFilter(g)(x.code) && fTur(it, g, x.code) === t)));
+  const turOn = t => gs.some(({ g }) => (S.tSel[g.code] || []).some(c => fTur(it, g, c) === t));
+  const turCh = turV.length ? `<div class="ftur" role="group" aria-label="Tür">${turV.map(t => `<button class="chip sm" data-ftur="${t[0]}" aria-pressed="${turOn(t)}">${t[1]}</button>`).join("")}</div>` : "";
   const opt = sel => g0.dates.map((d, i) => `<option value="${i}"${i === sel ? " selected" : ""}>${dLabel(d)}</option>`).reverse().join("");
   const quick = (g0.weekly ? QUICK.w : QUICK.m).map(([l, k, q]) => { const i = idxBack(g0.dates, B, k, q); return `<button class="chip sm" data-q="${g0.code}" data-i="${i}" aria-pressed="${i === A}">${l}</button>`; }).join("");
   let rows = "", nVis = 0;
@@ -1135,7 +1145,7 @@ function fPanel(it) {
     <div class="cardhead fhead"><div><div class="fttl"><h3>${esc(it.name)}</h3><div class="fbank" role="group" aria-label="Banka grubu">${bankCh}</div></div><div class="fson">Son veri: ${son}</div></div>
       <div class="chips">${modCh}${rateConv(g0) ? `<div class="seg trate" role="group" aria-label="Oran gösterimi"><button data-rate="efektif" aria-pressed="${S.tRate === "efektif"}">Efektif yıllık</button><button data-rate="basit" aria-pressed="${S.tRate === "basit"}">Yıllık basit</button></div>` : ""}</div></div>
     <div class="frow">${tRangeHtml()}</div>
-    ${curs.length > 1 || typs.length > 1 ? `<div class="tflt">${curs.length > 1 ? `<div class="seg tcur" role="group" aria-label="Para birimi">${curs.map(c => `<button data-fcur="${c}" aria-pressed="${S.fCur[it.id] === c}">${CUR_LAB[c]}</button>`).join("")}</div>` : ""}${typs.length > 1 ? `<div class="ttyp" role="group" aria-label="Mevduat türü">${typs.map(t => `<button class="chip sm" data-ftyp="${t}" aria-pressed="${(S.fTyp[it.id] || []).includes(t)}">${t}</button>`).join("")}</div>` : ""}</div>` : ""}
+    ${curs.length > 1 || typs.length > 1 ? `<div class="tflt">${curs.length > 1 ? `<div class="seg tcur" role="group" aria-label="Para birimi">${curs.map(c => `<button data-fcur="${c}" aria-pressed="${S.fCur[it.id] === c}">${CUR_LAB[c]}</button>`).join("")}</div>` : ""}${typs.length > 1 ? `<div class="ttyp" role="group" aria-label="Mevduat türü">${typs.map(t => `<button class="chip sm" data-ftyp="${t}" aria-pressed="${(S.fTyp[it.id] || []).includes(t)}">${t}</button>`).join("")}</div>` : ""}</div>` : ""}${turCh}
     <div data-tchart="${key}"></div><div data-tsub="${key}" class="sub fnot"></div>
     <details class="tser" data-open="${key}"${S.tOpen.has(key) ? " open" : ""}><summary>Seri tablosu <span>${nVis} seri · grafiğe seri eklemek ve dönem karşılaştırmak için aç</span></summary>
     <div class="bar" style="margin-top:12px"><span class="period"><select data-ta="${g0.code}" aria-label="Başlangıç">${opt(A)}</select><span class="arrow">→</span><select data-tb="${g0.code}" aria-label="Bitiş">${opt(B)}</select></span><div class="chips">${quick}</div>
@@ -1146,13 +1156,16 @@ function fPanel(it) {
 function drawFChart(id) {
   const it = tSections().flatMap(x => x.items).find(x => x.id === id), key = "f:" + id, el = $(`#tPanels [data-tchart="${key}"]`); if (!it || !el) return;
   const { gs } = fState(it), pal = PAL(), renk = {}, sub = $(`#tPanels [data-tsub="${key}"]`);
-  const series = [];
+  const turlar = F_TUR[id] || [], cokTyp = (S.fTyp[id] || []).length > 1, ham = [];
   gs.forEach(({ bank, g }, gi) => (S.tSel[g.code] || []).filter(c => g.vals[c]).forEach(c => {
-    const b = fBase(g, c); if (!(b in renk)) renk[b] = pal[Object.keys(renk).length % pal.length];
-    const ad = (g.idx[c]?.name || c).replace(/\s*\((TL|ABD doları|Euro)[^)]*\)\s*$/i, "").replace(/[,\s]+$/, "").replace(/\)\)+$/, ")").trim();
-    series.push({ name: `${ad} · ${F_EK[bank]}`, color: renk[b], dash: F_DASH[gi] || false,
+    const t = fTur(it, g, c), b = t ? t[0] : fBase(g, c); if (!(b in renk)) renk[b] = pal[Object.keys(renk).length % pal.length];
+    const ad = t ? t[1] : (g.idx[c]?.name || c).replace(/\s*\((TL|ABD doları|Euro)[^)]*\)\s*$/i, "").replace(/[,\s]+$/, "").replace(/\)\)+$/, ")").trim();
+    const typ = cokTyp && tMeta(g)[c]?.typ && tMeta(g)[c].typ !== "Mevduat" ? " " + tMeta(g)[c].typ.toLocaleLowerCase("tr-TR") : "";
+    ham.push({ sira: [t ? turlar.indexOf(t) : 99, ad, typ, gi], name: gs.length > 1 ? `${ad}${typ} (${F_GAD[bank]})` : ad + typ, color: renk[b], dash: F_DASH[gi] || false,
       data: clipT(g.dates.map((d, k) => [d, ok(g.vals[c][k]) ? tConv(g, c, g.vals[c][k] * g.scale) : null, toTime(d)]), S.tRange) });
   }));
+  const cmp = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+  const series = ham.sort((x, y) => cmp(x.sira[0], y.sira[0]) || cmp(x.sira[1], y.sira[1]) || cmp(x.sira[2], y.sira[2]) || x.sira[3] - y.sira[3]);
   if (!series.length) { sub.textContent = ""; el.innerHTML = '<div class="empty">Grafikte göstermek için seri tablosundan seri işaretleyin.</div>'; return; }
   const sec = series.slice(0, 12), rc = rateConv(gs[0].g);
   const rn = !rc ? "" : S.tRate === "basit" ? (rc === "dep" ? " · yıllık basit oran (vade: 1 ay 32, 3 ay 91, 6 ay 181 gün; toplam 32 gün; 1 yıl ve üzeri değişmez)" : " · yıllık basit oran (efektif yıllıktan aylık bileşik ×12)") : " · efektif yıllık (bileşik) oran, EVDS'deki haliyle";
@@ -1218,6 +1231,13 @@ function bindTcmb() {
     const fa = e.target.closest("article[data-f]"), fid = fa && fa.dataset.f;
     const fb = e.target.closest("button[data-fb]"); if (fb) { const k = fb.dataset.fb, cur = S.fBank[fid] || []; S.fBank[fid] = cur.includes(k) ? (cur.length > 1 ? cur.filter(x => x !== k) : cur) : cur.concat(k); store.set("bv.fbank", JSON.stringify(S.fBank)); renderTcmb(); return; }
     const fm = e.target.closest("button[data-fm]"); if (fm) { S.fMode[fid] = fm.dataset.fm; store.set("bv.fmode", JSON.stringify(S.fMode)); renderTcmb(); return; }
+    const fu = e.target.closest("button[data-ftur]"); if (fu) {
+      const it = tSections().flatMap(x => x.items).find(x => x.id === fid), t = (F_TUR[fid] || []).find(x => x[0] === fu.dataset.ftur), { gs } = fState(it);
+      const ac = fu.getAttribute("aria-pressed") !== "true";
+      if (!ac && $$(`article[data-f="${fid}"] button[data-ftur][aria-pressed="true"]`).length <= 1) return;   // en az bir tür açık kalsın
+      for (const { g } of gs) { const vis = tFilter(g), kod = g.series.map(x => x.code).filter(c => vis(c) && fTur(it, g, c) === t);
+        S.tSel[g.code] = ac ? [...new Set((S.tSel[g.code] || []).concat(kod))] : (S.tSel[g.code] || []).filter(c => !kod.includes(c)); }
+      renderTcmb(); return; }
     const fc = e.target.closest("button[data-fcur]"); if (fc) { S.fCur[fid] = fc.dataset.fcur; renderTcmb(); return; }
     const ft = e.target.closest("button[data-ftyp]"); if (ft) { const t = ft.dataset.ftyp, cur = S.fTyp[fid] || []; S.fTyp[fid] = cur.includes(t) ? (cur.length > 1 ? cur.filter(x => x !== t) : cur) : cur.concat(t); renderTcmb(); return; }
     const fcl = e.target.closest("button[data-fclear]"); if (fcl) { $$(`article[data-f="${fcl.dataset.fclear}"] tr.row[data-g]`).forEach(r => { S.tSel[r.dataset.g] = []; }); renderTcmb(); return; }
