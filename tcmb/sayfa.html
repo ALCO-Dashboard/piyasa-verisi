@@ -118,6 +118,10 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
 .wf .kpi{flex:1 1 150px}
 .wf .op{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:20px;color:var(--muted);flex:0 0 14px}
 .kpi .v.sm{font-size:22px}
+.dtin{font:inherit;font-size:12.5px;padding:3px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}.chips .arrow{color:var(--muted);font-size:12px}
+.wf .kpi[role=button]{cursor:pointer;transition:border-color .15s,background .15s}.wf .kpi[role=button]:hover{border-color:var(--lc)}
+.wf .kpi[aria-pressed="true"]{background:color-mix(in srgb,var(--lc) 9%,var(--surface));border-color:var(--lc);box-shadow:0 0 0 1px var(--lc) inset}
+.wf .kpi .t .ln{float:right;width:16px;height:3px;border-radius:2px;background:var(--lc);margin-top:6px;opacity:.25}.wf .kpi[aria-pressed="true"] .t .ln{opacity:1}
 .kpi.res{--kc:var(--c6)}
 .tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:1px 6px;border-radius:5px;background:var(--surface-2);color:var(--muted);vertical-align:2px;margin-left:4px}
 .tag.w{background:#fff3dc;color:#8a5a00}
@@ -148,6 +152,12 @@ details.meth code{font-family:var(--mono);font-size:12px;background:var(--surfac
     <div class="subtabs" role="group" aria-label="TCMB konu" style="margin-top:16px"><button aria-pressed="true">Rezervler</button></div>
     <h2 class="sec" id="wfHead">Net rezerv hesabı</h2>
     <div class="wf" id="wf"></div>
+    <div class="card" id="lvCard">
+      <div class="cardhead"><div><h3>Rezerv seviyeleri (mr $)</h3><div class="sub" id="lvSub"></div></div><span class="chips" id="lvRng"></span></div>
+      <div class="legend" id="lvLeg"></div>
+      <div class="chart" id="lvChart"></div>
+      <div class="note" id="lvNote">Çizgileri yukarıdaki kutucuklara tıklayarak ekleyip çıkarın (birden çok seçilebilir); altın, döviz ve LBMA AM fiyatı grafiğin altındaki düğmelerden. Altın = rezerv altını (ons) × LBMA AM · döviz = dış varlıklar − altın.</div>
+    </div>
     <h2 class="sec">Tahmini net müdahale</h2>
     <div class="periods" id="mdKpi"></div>
     <div class="card">
@@ -156,18 +166,6 @@ details.meth code{font-family:var(--mono);font-size:12px;background:var(--surfac
       <div class="legend" id="dcLeg"></div>
       <div class="chart" id="dcChart"></div>
       <div class="note" id="dcNote"></div>
-    </div>
-    <div class="grid2">
-      <div class="card">
-        <div class="cardhead"><div><h3>Rezerv seviyeleri (mr $)</h3><div class="sub">Günlük analitik bilanço · dönem seçimi üstteki grafikle ortak</div></div></div>
-        <div class="legend" id="lvLeg"></div>
-        <div class="chart" id="lvChart"></div>
-      </div>
-      <div class="card">
-        <div class="cardhead"><div><h3>Brüt rezerv: altın ve döviz (mr $)</h3><div class="sub">Altın = rezerv altını (ons) × LBMA AM · döviz = dış varlıklar − altın</div></div></div>
-        <div class="legend" id="adLeg"></div>
-        <div class="chart" id="adChart"></div>
-      </div>
     </div>
     <div class="card">
       <div class="cardhead"><div><h3>Günlük detay (mn $)</h3><div class="sub" id="tbSub"></div></div></div>
@@ -214,7 +212,12 @@ const cl = v => !ok(v) || Math.abs(v) < .5 ? "" : v > 0 ? "up" : "down";
 
 let D = null;
 const RNG = [["1H", 5], ["2H", 10], ["1A", 21], ["3A", 63], ["6A", 126], ["1Y", 252], ["YB", "ytd"], ["Tümü", 1e9]];
-const S = { r: store.get("tcmb.rng") || "1A", lv: JSON.parse(store.get("tcmb.lv") || '{"net":1,"shn":1,"brut":0}'), cum: store.get("tcmb.cum") !== "0" };
+const S = { r: store.get("tcmb.rng") || "1A", lr: store.get("tcmb.lrng") || "1Y", cum: store.get("tcmb.cum") !== "0", oz: { a: "", b: "" }, loz: { a: "", b: "" },
+  lv: (() => { try { const x = JSON.parse(store.get("tcmb.lv2") || "null"); if (x && typeof x === "object") return x; } catch {} return { a02: 1, net: 1, shn: 1, altin: 0, doviz: 0, lbma: 0 }; })() };
+// seviye grafiği çizgileri: anahtar → [ad, renk]; kutucuklar ilk yedisini, grafik altındaki düğmeler son üçünü açar/kapatır
+const LV = { a02: ["Brüt rezerv (A02)", "--c3"], a11: ["Dış yükümlülükler (A11)", "--c2"], a13: ["Kamu döviz mevduatı (A13)", "--c5"], a14: ["Banka döviz mevduatı (A14)", "#8a6d3b"],
+  net: ["Net rezerv", "--c1"], swap: ["Swap", "--c4"], shn: ["Swap hariç net rezerv", "--c6"], altin: ["Altın", "#a16207"], doviz: ["Döviz", "--c1"], lbma: ["LBMA AM (sağ eksen, $/ons)", "--muted"] };
+const lvRenk = k => LV[k][1].startsWith("--") ? css(LV[k][1]) : LV[k][1];
 
 // ---------------------------------------------------------------- grafik (çizgi + üst üste çubuk)
 function niceTicks(a, b, n) {
@@ -284,18 +287,33 @@ function chart(el, o) {
   });
   svg.addEventListener("mouseleave", () => { tip.style.display = "none"; cur.setAttribute("visibility", "hidden"); });
 }
+const $$ = s => [...document.querySelectorAll(s)];
 const legend = (el, items, cb) => {
   el.innerHTML = items.map(it => `<button class="chip${it.on === false ? " off" : ""}" ${it.k ? `data-k="${it.k}" aria-pressed="${it.on !== false}"` : "disabled"} style="${it.k ? "" : "cursor:default"}"><i style="background:${it.color}"></i>${esc(it.name)}</button>`).join("");
   el.onclick = e => { const b = e.target.closest("button[data-k]"); if (b && cb) cb(b.dataset.k); };
 };
 
 // ---------------------------------------------------------------- dönem
-function aralik() {
-  const g = D.rezerv, n = g.dates.length, r = RNG.find(x => x[0] === S.r) || RNG[2];
+function aralik(key = S.r, oz = S.oz) {
+  const g = D.rezerv, n = g.dates.length;
+  if (key === "Tarih") {      // özel tarih aralığı: [başlangıç, bitiş] iş günlerine yuvarlanır
+    const a = Math.max(1, g.dates.findIndex(d => d >= (oz.a || g.dates[0]))), bi = g.dates.map(d => d <= (oz.b || g.dates[n - 1])).lastIndexOf(true);
+    return [Math.min(a, Math.max(1, bi)), Math.max(Math.min(a, Math.max(1, bi)) + 1, bi + 1)];
+  }
+  const r = RNG.find(x => x[0] === key) || RNG[2];
   let a;
   if (r[1] === "ytd") { const y = g.dates[n - 1].slice(0, 4); a = g.dates.findIndex(d => d.slice(0, 4) === y); }
   else a = Math.max(0, n - r[1]);
   return [Math.max(a, 1), n];      // ilk günün değişimi yok
+}
+function rngCiz(el, key, oz, sec) {
+  const g = D.rezerv, n = g.dates.length, [a, b] = aralik(key, oz);
+  el.innerHTML = `<button class="chip" data-k="Tarih" aria-pressed="${key === "Tarih"}">Tarih</button>` + (key === "Tarih"
+    ? `<input type="date" class="dtin" data-o="a" value="${oz.a || g.dates[a]}" min="${g.dates[0]}" max="${g.dates[n - 1]}" aria-label="Başlangıç tarihi"><span class="arrow">→</span><input type="date" class="dtin" data-o="b" value="${oz.b || g.dates[b - 1]}" min="${g.dates[0]}" max="${g.dates[n - 1]}" aria-label="Bitiş tarihi">` : "")
+    + RNG.map(([k]) => `<button class="chip" data-k="${k}" aria-pressed="${k === key}">${k}</button>`).join("");
+  el.onclick = e => { const x = e.target.closest("button[data-k]"); if (!x) return;
+    if (x.dataset.k === "Tarih" && !oz.a) { const [a0, b0] = aralik(key, oz); oz.a = g.dates[a0]; oz.b = g.dates[b0 - 1]; } sec(x.dataset.k); };
+  el.onchange = e => { const x = e.target.closest("input[data-o]"); if (!x || !x.value) return; oz[x.dataset.o] = x.value; if (oz.a && oz.b && oz.a > oz.b) [oz.a, oz.b] = [oz.b, oz.a]; sec("Tarih"); };
 }
 const topla = (arr, a, b) => { let s = 0, k = 0; for (let i = a; i < b; i++) if (ok(arr[i])) { s += arr[i]; k++; } return k ? s : null; };
 
@@ -303,18 +321,18 @@ const topla = (arr, a, b) => { let s = 0, k = 0; for (let i = a; i < b; i++) if 
 function renderWf() {
   const g = D.rezerv, n = g.dates.length, i = n - 1, j = n - 2, t = g.dates[i];
   const k14 = g.k14_ay[i], swap = ok(g.shn[i]) ? g.shn[i] - g.net[i] : null, swapP = ok(g.shn[j]) ? g.shn[j] - g.net[j] : null;
-  const card = (ad, v, onc, alt, c, inv) => { const d = ok(v) && ok(onc) ? v - onc : null;
-    return `<div class="kpi" style="--kc:var(${c})"><div class="t">${ad}</div><div class="v sm">${mr(v)} <span style="font-size:13px;color:var(--muted)">mr $</span></div>
+  const card = (ad, v, onc, alt, c, inv, k) => { const d = ok(v) && ok(onc) ? v - onc : null;
+    return `<div class="kpi" role="button" tabindex="0" data-lv="${k}" aria-pressed="${!!S.lv[k]}" title="Rezerv seviyeleri grafiğinde göster" style="--kc:var(${c});--lc:${lvRenk(k)}"><div class="t">${ad}<i class="ln"></i></div><div class="v sm">${mr(v)} <span style="font-size:13px;color:var(--muted)">mr $</span></div>
       <div class="s">Günlük <b class="${cl(inv ? -d : d)}">${sg(d)}</b> mn $</div><div class="d">${alt}</div></div>`; };
   const op = x => `<div class="op" aria-hidden="true">${x}</div>`;
   $("#wfHead").textContent = `Net rezerv hesabı · ${gunAd(t)}`;
-  $("#wf").innerHTML = card("Brüt (A02)", g.a02[i], g.a02[j], "Dış varlıklar", "--c3") + op("−") +
-    card("Dış yük. (A11)", g.a11[i], g.a11[j], "Dış yükümlülükler", "--c2", 1) + op("−") +
-    card("Kamu dvz (A13)", g.a13[i], g.a13[j], "Kamu ve diğer döviz mevduatı", "--c2", 1) + op("−") +
-    card("Banka dvz (A14)", g.a14[i], g.a14[j], "Bankalar döviz mevduatı", "--c2", 1) + op("=") +
-    card("Net rezerv", g.net[i], g.net[j], "A02 − A11 − A13 − A14", "--c1") + op("+") +
-    card("Swap", swap, swapP, k14 ? `${ayAd(k14)} sonu K14 + günlük TCMB swap stoku` : "K14 yok", "--c4") + op("=") +
-    card("Swap hariç net", g.shn[i], g.shn[j], "Net rezerv + swap", "--c6");
+  $("#wf").innerHTML = card("Brüt (A02)", g.a02[i], g.a02[j], "Dış varlıklar", "--c3", 0, "a02") + op("−") +
+    card("Dış yük. (A11)", g.a11[i], g.a11[j], "Dış yükümlülükler", "--c2", 1, "a11") + op("−") +
+    card("Kamu dvz (A13)", g.a13[i], g.a13[j], "Kamu ve diğer döviz mevduatı", "--c2", 1, "a13") + op("−") +
+    card("Banka dvz (A14)", g.a14[i], g.a14[j], "Bankalar döviz mevduatı", "--c2", 1, "a14") + op("=") +
+    card("Net rezerv", g.net[i], g.net[j], "A02 − A11 − A13 − A14", "--c1", 0, "net") + op("+") +
+    card("Swap", swap, swapP, k14 ? `${ayAd(k14)} sonu K14 + günlük TCMB swap stoku` : "K14 yok", "--c4", 0, "swap") + op("=") +
+    card("Swap hariç net", g.shn[i], g.shn[j], "Net rezerv + swap", "--c6", 0, "shn");
 }
 function renderMd() {
   const g = D.rezerv, n = g.dates.length, t = g.dates[n - 1], [a] = aralik();
@@ -322,13 +340,13 @@ function renderMd() {
   const ay = g.dates.findIndex(x => x.slice(0, 7) === t.slice(0, 7)), yb = g.dates.findIndex(x => x.slice(0, 4) === t.slice(0, 4));
   const fkSon = g.fk[n - 1];
   const kart = (ad, s, alt) => `<div class="kpi" style="--kc:var(${ok(s) && s < 0 ? "--down" : "--up"})"><div class="t">${ad}</div><div class="v sm ${cl(s)}">${mrSg(s, 2)} <span style="font-size:13px;color:var(--muted)">mr $</span></div><div class="d">${alt}</div></div>`;
-  const r = RNG.find(x => x[0] === S.r);
+  const r = RNG.find(x => x[0] === S.r) || ["özel"];
   $("#mdKpi").innerHTML =
     kart("Son iş günü", g.mudahale[n - 1], `${gunAd(t)}${fkSon === "B" ? ' <span class="tag w">B</span>' : ""}`) +
     kart("Bu hafta", topla(g.mudahale, Math.max(1, hafta), n), `${gunKisa(g.dates[Math.max(1, hafta)])} – ${gunKisa(t)}`) +
     kart("Bu ay", topla(g.mudahale, Math.max(1, ay), n), ayAd(t.slice(0, 7))) +
     kart("Yılbaşından", topla(g.mudahale, Math.max(1, yb), n), `${t.slice(0, 4)} · ${n - Math.max(1, yb)} iş günü`) +
-    kart(`Seçili dönem (${r[0]})`, topla(g.mudahale, a, n), `${gunKisa(g.dates[a])} – ${gunKisa(t)}`);
+    kart(`Seçili dönem (${r[0]})`, topla(g.mudahale, a, aralik()[1]), `${gunKisa(g.dates[a])} – ${gunKisa(g.dates[aralik()[1] - 1])}`);
 }
 function renderDc() {
   const g = D.rezerv, [a, b] = aralik(), xs = g.dates.slice(a, b), sl = k => g[k].slice(a, b);
@@ -353,19 +371,19 @@ function renderDc() {
   $("#dcNote").innerHTML = `Çubuklar üst üste: net müdahale + altın fiyat etkisi + swap etkisi = net rezerv değişimi (nokta).${nB ? ` Seçili dönemde ${nB} günün altın fiyatı LBMA yerine BIST ortalamasıyla tahmin edildi; bu günlerde müdahale ile altın etkisi arasındaki ayrım daha belirsizdir.` : ""}`;
 }
 function renderLv() {
-  const g = D.rezerv, [a, b] = aralik(), xs = g.dates.slice(a - 1, b), sl = k => g[k].slice(a - 1, b).map(v => ok(v) ? v / 1000 : null);
-  const L = [["brut", "Brüt rezerv (A02)", "--c3"], ["net", "Net rezerv", "--c1"], ["shn", "Swap hariç net rezerv", "--c6"]];
-  legend($("#lvLeg"), L.map(([k, n, c]) => ({ k, name: n, color: css(c), on: !!S.lv[k] })), k => { S.lv[k] = S.lv[k] ? 0 : 1; store.set("tcmb.lv", JSON.stringify(S.lv)); renderLv(); });
-  chart($("#lvChart"), { xs, height: 280, label: "Rezerv seviyeleri", xFmt: gunKisa, tipX: gunAd, yFmt: v => nf(v, 0), zero: S.lv.shn && g.shn.some(v => v < 0),
-    series: L.filter(([k]) => S.lv[k]).map(([k, n, c]) => ({ name: n, vals: sl(k), color: css(c), width: 2.2, fmt: v => nf(v, 1) + " mr $" })) });
-}
-function renderAd() {
-  const g = D.rezerv, [a, b] = aralik(), xs = g.dates.slice(a - 1, b), sl = k => g[k].slice(a - 1, b).map(v => ok(v) ? v / 1000 : null);
-  const C = { al: css("--c4"), dv: css("--c1"), p: css("--muted") };
-  legend($("#adLeg"), [{ name: "Altın", color: C.al }, { name: "Döviz", color: C.dv }, { name: "LBMA AM (sağ eksen, $/ons)", color: C.p }]);
-  chart($("#adChart"), { xs, height: 280, label: "Altın ve döviz rezervi", xFmt: gunKisa, tipX: gunAd, yFmt: v => nf(v, 0), y2Fmt: v => nf(v, 0),
-    series: [{ name: "Altın", vals: sl("altin"), color: C.al, width: 2.2, fmt: v => nf(v, 1) + " mr $" }, { name: "Döviz", vals: sl("doviz"), color: C.dv, width: 2.2, fmt: v => nf(v, 1) + " mr $" },
-      { name: "LBMA AM", vals: g.fiyat.slice(a - 1, b), color: C.p, axis: "r", width: 1.4, dash: "4 3", fmt: v => nf(v, 2) + " $" }] });
+  const g = D.rezerv, [a, b] = aralik(S.lr, S.loz), xs = g.dates.slice(a - 1, b), n = g.dates.length;
+  const seri = k => k === "swap" ? g.shn.map((v, i) => ok(v) && ok(g.net[i]) ? v - g.net[i] : null) : g[k];
+  const sl = k => seri(k).slice(a - 1, b).map(v => ok(v) ? v / 1000 : null);
+  rngCiz($("#lvRng"), S.lr, S.loz, k => { S.lr = k; if (k !== "Tarih") store.set("tcmb.lrng", S.lr); renderLv(); });
+  const ekstra = ["altin", "doviz", "lbma"];
+  legend($("#lvLeg"), ekstra.map(k => ({ k, name: LV[k][0], color: lvRenk(k), on: !!S.lv[k] })), k => { S.lv[k] = S.lv[k] ? 0 : 1; store.set("tcmb.lv2", JSON.stringify(S.lv)); renderLv(); });
+  const sec = Object.keys(LV).filter(k => S.lv[k]);
+  const series = sec.map(k => k === "lbma" ? { name: "LBMA AM", vals: g.fiyat.slice(a - 1, b), color: lvRenk(k), axis: "r", width: 1.4, dash: "4 3", fmt: v => nf(v, 2) + " $/ons" }
+    : { name: LV[k][0], vals: sl(k), color: lvRenk(k), width: 2.2, dash: k === "altin" || k === "doviz" ? "6 3" : "", fmt: v => nf(v, 1) + " mr $" });
+  $("#lvSub").textContent = `Günlük analitik bilanço · ${gunAd(xs[0])} – ${gunAd(xs[xs.length - 1])}`;
+  chart($("#lvChart"), { xs, height: 320, label: "Rezerv seviyeleri", xFmt: gunKisa, tipX: gunAd, yFmt: v => nf(v, 0), y2Fmt: v => nf(v, 0),
+    zero: series.some(x => x.axis !== "r" && x.vals.some(v => ok(v) && v < 0)), series });
+  $$("#wf [data-lv]").forEach(x => x.setAttribute("aria-pressed", !!S.lv[x.dataset.lv]));
 }
 function renderTb() {
   const g = D.rezerv, [a, b] = aralik(), rows = [];
@@ -386,12 +404,15 @@ function renderWk() {
 function render() {
   if (!D?.rezerv?.dates?.length) { $("#gate") && ($("#gate").textContent = "Rezerv verisi henüz yok."); return; }
   $("#pRez").classList.remove("hidden");
-  const rc = $("#rng"); rc.innerHTML = RNG.map(([k]) => `<button class="chip" data-k="${k}" aria-pressed="${k === S.r}">${k}</button>`).join("");
-  rc.onclick = e => { const b = e.target.closest("button[data-k]"); if (b) { S.r = b.dataset.k; store.set("tcmb.rng", S.r); render(); } };
-  renderWf(); renderMd(); renderDc(); renderLv(); renderAd(); renderTb(); renderWk();
+  rngCiz($("#rng"), S.r, S.oz, k => { S.r = k; if (k !== "Tarih") store.set("tcmb.rng", S.r); render(); });
+  renderWf(); renderMd(); renderDc(); renderLv(); renderTb(); renderWk();
   const f = D.failed?.length ? ` · <span style="color:var(--down)">güncellenemeyen: ${D.failed.join(", ")} (önceki veri gösteriliyor)</span>` : "";
   $("#src").innerHTML = `Kaynak: <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> (analitik bilanço, haftalık vaziyet, merkez bankası rezervleri, TCMB taraflı swap işlemleri, uluslararası rezervler ve döviz likiditesi tablosu, döviz kurları, Borsa İstanbul altın piyasası) · <a href="https://www.lbma.org.uk/prices-and-data/lbma-precious-metal-prices" target="_blank" rel="noopener">LBMA</a> (altın AM fiyatı, <a href="https://goldsilver.com/price-charts/historical-london-fix/" target="_blank" rel="noopener">goldsilver.com</a> London Fix tablosu üzerinden). Net müdahale tahminidir. Son güncelleme ${D.updated ? new Date(D.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${f}.`;
 }
+// kutucuklar: seviye grafiğinde çizgi aç/kapat
+{ const t = e => { const k = e.target.closest("[data-lv]"); if (!k) return; const x = k.dataset.lv; S.lv[x] = S.lv[x] ? 0 : 1; store.set("tcmb.lv2", JSON.stringify(S.lv)); renderLv(); };
+  document.addEventListener("click", e => { if (e.target.closest("#wf")) t(e); });
+  document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.closest("#wf [data-lv]")) { e.preventDefault(); t(e); } }); }
 let rz, lw = innerWidth;
 addEventListener("resize", () => { lw = innerWidth; clearTimeout(rz); rz = setTimeout(() => { rz = null; D && render(); }, 150); });
 fetch("data/tcmb.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
