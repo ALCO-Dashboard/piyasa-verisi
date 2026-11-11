@@ -1091,7 +1091,7 @@ const F_DASH = [false, "6 4", "2 3"];
 const F_GAD = { mevduat: "Mevduat", katilim: "Katılım", finansman: "Finansman" };
 // kalem türleri (sekmeler): ana seriler; KMH / ÖCH dahil ve "hariç" varyantları yalnız seri tablosundan seçilir
 const F_TUR = {
-  kredi: [["ihtiyac", "İhtiyaç", /^İhtiyaç Kredisi \(/], ["tasit", "Taşıt", /^Taşıt Kredisi \(/], ["konut", "Konut", /^Konut Kredisi/], ["ticari", "Ticari", /^Ticari Krediler \((TL|Euro|ABD)/], ["tuketici", "Tüketici", /^Tüketici Kredisi \((TL|İhtiyaç\+Taşıt\+Konut\)+ \(TL)/]],
+  kredi: [["ihtiyac", "İhtiyaç", /^İhtiyaç Kredisi \(/], ["tasit", "Taşıt", /^Taşıt Kredisi \(/], ["konut", "Konut", /^Konut Kredisi/], ["ticari", "Ticari", /^Ticari Krediler \((TL|Euro|ABD)/], ["tuketici", "Tüketici (İhtiyaç+Taşıt+Konut)", /^Tüketici Kredisi \((TL|İhtiyaç\+Taşıt\+Konut\)+ \(TL)/]],
   mevduat: [["a1", "1 Aya Kadar", /^1 Aya Kadar/], ["a3", "3 Aya Kadar", /^3 Aya Kadar/], ["a6", "6 Aya Kadar", /^6 Aya Kadar/], ["y1", "1 Yıla Kadar", /^1 Yıla Kadar/], ["y1p", "1 Yıl ve Üzeri", /^1 Yıl ve Daha Uzun/], ["top", "Toplam", /^Toplam/]] };
 const fTur = (it, g, c) => { const n = g.idx[c]?.name || ""; if (/KMH|ÖCH|Tüzel Kişi/.test(n)) return null; return (F_TUR[it.id] || []).find(t => t[2].test(n)) || null; };
 const fColor = b => b === "finansman" ? cssVar("--c7") : gColor(b);
