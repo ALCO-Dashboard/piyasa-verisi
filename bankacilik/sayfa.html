@@ -124,6 +124,14 @@ input[type=search]{border:1px solid var(--line);background:var(--surface);border
 @media (max-width:900px){.split{grid-template-columns:minmax(0,1fr)}}
 .up{color:var(--up)} .down{color:var(--down)}
 .tdata .tdb{display:flex;justify-content:flex-end;margin-top:4px}
+.fdgw{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin:0 0 10px}
+.fdgt{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.fdg{max-width:100%;min-width:0;display:inline-flex;align-items:baseline;gap:6px;border:1px solid var(--line);border-radius:10px;padding:4px 10px;font-size:12.5px;background:var(--surface)}
+.fdg i{width:8px;height:8px;border-radius:50%;display:inline-block;align-self:center}
+.fdg .nm{min-width:0;flex:0 1 auto;color:var(--ink-2);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fdg b{font:600 12.5px var(--mono)}.fdg small{font:500 11.5px var(--mono)}
+.fdg .up,.tdd2 .up{color:var(--up)}.fdg .down,.tdd2 .down{color:var(--down)}
+.tdd2 td.l,.tdd2 th.l{text-align:left;white-space:normal}.tdd2 td.l i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
 .tdw{margin-top:8px;max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:10px}
 .tdw table{font-size:11.5px;width:100%;border-collapse:collapse}
 .tdw th,.tdw td{padding:4px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
@@ -141,6 +149,7 @@ svg text.yunit{font-family:var(--sans,inherit);font-size:10.5px;fill:var(--muted
 .fbank{display:flex;flex-wrap:wrap;gap:6px}.fbank .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
 .frow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;margin:4px 0 10px}
 .trng{display:flex;flex-wrap:wrap;align-items:center;gap:4px}.trng .chip.sm{font-size:11.5px;padding:3px 9px}
+.prng .period select{font:inherit;font-size:12px;padding:3px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 .trng .tdt{font:inherit;font-size:12px;padding:2px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 .trng .arrow{color:var(--muted);font-size:12px}
 .tbl-wrap tr.grp td{background:var(--surface-2);font-weight:700;font-size:12.5px;color:var(--ink-2)}.tbl-wrap tr.grp .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
@@ -451,7 +460,7 @@ const S = {
   tab: "bddk",
   bFreq: store.get("bv.freq") || "w", bA: null, bB: null, bGroups: (store.get("bv.groups") || "katilim").split(","), bCurs: (store.get("bv.curs") || store.get("bv.cur") || "Toplam").split(",").filter(x => ["TP", "YP", "Toplam"].includes(x)), bVeri: !!store.get("bv.veri"), bTables: {},
   bColOverride: {}, bChk: {}, bIdx: {}, bOpenN: new Set(),
-  tSub: "pp", tTopics: {}, tAB: {}, tClosed: new Set(["faiz|Banka ve Kredi Kartı İstatistikleri"]), tBank: store.get("bv.tbank") || "katilim", tBankSet: (store.get("bv.tbanks") || store.get("bv.tbank") || "katilim").split(",").filter(Boolean), tA: null, tB: null, tSel: {}, tRange: "1 Yıl", tFrom: "", tTo: "", fMode: {}, fBank: {}, fCur: {}, fTyp: {}, tCur: {}, tTyp: {}, tOpen: new Set(), tData: new Set(), tRate: store.get("bv.trate") || "efektif",
+  tSub: "pp", tRg: {}, tTopics: {}, tAB: {}, tClosed: new Set(["faiz|Banka ve Kredi Kartı İstatistikleri"]), tBank: store.get("bv.tbank") || "katilim", tBankSet: (store.get("bv.tbanks") || store.get("bv.tbank") || "katilim").split(",").filter(Boolean), tA: null, tB: null, tSel: {}, tRange: "1 Yıl", tFrom: "", tTo: "", fMode: {}, fBank: {}, fCur: {}, fTyp: {}, tCur: {}, tTyp: {}, tOpen: new Set(), tData: new Set(), tRate: store.get("bv.trate") || "efektif",
   aSel: [], aIndex: false, aRange: "2Y", aSrc: "all",
 };
 let D = null;
@@ -580,12 +589,24 @@ function axisScale(kind, maxAbs) {
 }
 const RANGES = [["1Y", 366], ["2Y", 731], ["3Y", 1096], ["5Y", 1827], ["Tümü", 1e7]];
 const T_RANGES = [["1 Ay", 31], ["3 Ay", 92], ["6 Ay", 183], ["Yılbaşı", "ytd"], ["1 Yıl", 366], ["3 Yıl", 1096], ["Tümü", 1e7]]; // TCMB panelleri; "Tarih": elle aralık
-function clipT(data, key) {
+function clipT(data, key, fa = S.tFrom, fb = S.tTo) {
   const v = data.filter(p => ok(p[1])); if (!v.length) return data;
-  if (key === "Tarih") { const a = S.tFrom ? toTime(S.tFrom) : -Infinity, b = S.tTo ? toTime(S.tTo) + 864e5 - 1 : Infinity; return data.filter(p => p[2] >= a && p[2] <= b); }
+  if (key === "Tarih") { const a = fa ? toTime(fa) : -Infinity, b = fb ? toTime(fb) + 864e5 - 1 : Infinity; return data.filter(p => p[2] >= a && p[2] <= b); }
   const days = (RANGES.concat(T_RANGES).find(r => r[0] === key) || [0, 1e7])[1], son = Math.max(...v.map(p => p[2]));
   const st = days === "ytd" ? +new Date(new Date(son).getFullYear(), 0, 1) - 864e5 * 1.5 : son - days * 864e5;
   return data.filter(p => p[2] >= st);
+}
+// Para ve Banka (aylık/haftalık): BDDK'daki gibi dönem listesi (başlangıç → bitiş) + hızlı aralıklar; durum alt sekmeye özgü
+const TR_SUB = new Set(["aylik", "haftalik"]);
+const T_RANGES_M = [["3 Ay", 92], ["6 Ay", 183], ["Yılbaşı", "ytd"], ["1 Yıl", 366], ["3 Yıl", 1096], ["Tümü", 1e7]];
+const rSt = () => TR_SUB.has(S.tSub) ? (S.tRg[S.tSub] ||= { r: "1 Yıl", a: "", b: "" }) : null;
+const rList = g => isMonth(g.dates[g.dates.length - 1] || "") ? T_RANGES_M : T_RANGES;
+function pRangeHtml(g, rs) {
+  const L = rList(g); if (rs.r !== "Tarih" && !L.some(x => x[0] === rs.r)) rs.r = "1 Yıl";
+  const x = clipT(g.dates.map(d => [d, 1, toTime(d)]), rs.r, rs.a, rs.b), a = x.length ? x[0][0] : g.dates[0], b = x.length ? x[x.length - 1][0] : g.dates[g.dates.length - 1];
+  const opt = sel => g.dates.map(d => `<option value="${d}"${d === sel ? " selected" : ""}>${dLabel(d)}</option>`).reverse().join("");
+  return `<div class="trng prng" role="group" aria-label="Dönem"><span class="period"><select data-rf aria-label="Başlangıç dönemi">${opt(a)}</select><span class="arrow">→</span><select data-rt aria-label="Bitiş dönemi">${opt(b)}</select></span>`
+    + L.map(([k]) => `<button class="chip sm" data-rk="${k}" aria-pressed="${rs.r === k}">${k}</button>`).join("") + `</div>`;
 }
 const tRangeHtml = () => `<div class="trng" role="group" aria-label="Tarih aralığı"><button class="chip sm" data-rk="Tarih" aria-pressed="${S.tRange === "Tarih"}">Tarih</button>${S.tRange === "Tarih" ? `<input type="date" class="tdt" data-tfrom value="${S.tFrom || ""}" aria-label="Başlangıç tarihi"><span class="arrow">→</span><input type="date" class="tdt" data-tto value="${S.tTo || ""}" aria-label="Bitiş tarihi">` : ""}${T_RANGES.map(([k]) => `<button class="chip sm" data-rk="${k}" aria-pressed="${S.tRange === k}">${k}</button>`).join("")}</div>`;
 function rangeChips(el, cur, onChange) {
@@ -1087,7 +1108,7 @@ function tPanel(pr) {
   }
   return `<article class="card" data-g="${key}">
     <div class="cardhead"><div><h3>${esc(g.name)}${bTag}</h3><div class="kv"><span>Son veri <b>${dShort(g.dates[n - 1])}</b></span>${g.flow ? "<span>Haftalık değişim · milyon ABD doları</span>" : ""}${fb ? `<span>${esc(fb)}</span>` : ""}</div></div>
-      <div class="chips">${rateConv(g) ? `<div class="seg trate" role="group" aria-label="Oran gösterimi"><button data-rate="efektif" aria-pressed="${S.tRate === "efektif"}">Efektif yıllık</button><button data-rate="basit" aria-pressed="${S.tRate === "basit"}">Yıllık basit</button></div>` : ""}${tRangeHtml()}</div></div>
+      <div class="chips">${rateConv(g) ? `<div class="seg trate" role="group" aria-label="Oran gösterimi"><button data-rate="efektif" aria-pressed="${S.tRate === "efektif"}">Efektif yıllık</button><button data-rate="basit" aria-pressed="${S.tRate === "basit"}">Yıllık basit</button></div>` : ""}${rSt() ? pRangeHtml(g, rSt()) : tRangeHtml()}</div></div>
     ${g.curs.length > 1 || g.typs.length > 1 ? `<div class="tflt">${g.curs.length > 1 ? `<div class="seg tcur" role="group" aria-label="Para birimi">${g.curs.map(c => `<button data-cur="${c}" aria-pressed="${S.tCur[key] === c}">${CUR_LAB[c]}</button>`).join("")}</div>` : ""}${g.typs.length > 1 ? `<div class="ttyp" role="group" aria-label="Mevduat türü">${g.typs.map(t => `<button class="chip sm" data-typ="${t}" aria-pressed="${(S.tTyp[key] || []).includes(t)}">${t}</button>`).join("")}</div>` : ""}</div>` : ""}
     <div data-tchart="${key}"></div><div data-tsub="${key}" class="sub fnot"></div>
     <details class="tser" data-open="${key}"${S.tOpen.has(key) ? " open" : ""}><summary>Seri tablosu <span>${nVis} seri · grafiğe seri eklemek ve dönem karşılaştırmak için aç</span></summary>
@@ -1101,7 +1122,7 @@ function drawTChart(code) {
   const sel = (S.tSel[code] || []).filter(c => g.vals[c]).slice(0, 8), pal = PAL(), sc = g.scale;
   const sub = $(`#tPanels [data-tsub="${code}"]`);
   if (!sel.length) { sub.textContent = ""; el.innerHTML = '<div class="empty">Grafikte göstermek için tablodan seri işaretleyin.</div>'; return; }
-  let series = sel.map((c, i) => ({ name: g.idx[c]?.name || c, color: pal[i], data: clipT(g.dates.map((d, k) => [d, ok(g.vals[c][k]) ? tConv(g, c, g.vals[c][k] * sc) : null, toTime(d)]), S.tRange) }));
+  let series = sel.map((c, i) => ({ name: g.idx[c]?.name || c, color: pal[i], data: clipT(g.dates.map((d, k) => [d, ok(g.vals[c][k]) ? tConv(g, c, g.vals[c][k] * sc) : null, toTime(d)]), ...(rSt() ? [rSt().r, rSt().a, rSt().b] : [S.tRange])) }));
   const mx = Math.max(0, ...series.flatMap(s => s.data.map(p => Math.abs(p[1] || 0)))), as = axisScale(g.kind, mx);
   const raw = series.map(s => ({ name: s.name, color: s.color, data: s.data }));
   series.forEach(s => s.data = s.data.map(p => [p[0], ok(p[1]) ? p[1] / as.k : null, p[2]]));
@@ -1178,7 +1199,7 @@ function fPanel(it) {
   return `<article class="card" data-f="${it.id}" data-g="${g0.code}">
     <div class="cardhead fhead"><div><div class="fttl"><h3>${esc(it.name)}</h3><div class="fbank" role="group" aria-label="Banka grubu">${bankCh}</div></div><div class="fson">Son veri: ${son}</div></div>
       <div class="chips">${modCh}${rateConv(g0) ? `<div class="seg trate" role="group" aria-label="Oran gösterimi"><button data-rate="efektif" aria-pressed="${S.tRate === "efektif"}">Efektif yıllık</button><button data-rate="basit" aria-pressed="${S.tRate === "basit"}">Yıllık basit</button></div>` : ""}</div></div>
-    <div class="frow">${tRangeHtml()}</div>
+    <div class="frow">${rSt() ? pRangeHtml(g0, rSt()) : tRangeHtml()}</div>
     ${curs.length > 1 || typs.length > 1 ? `<div class="tflt">${curs.length > 1 ? `<div class="seg tcur" role="group" aria-label="Para birimi">${curs.map(c => `<button data-fcur="${c}" aria-pressed="${S.fCur[it.id] === c}">${CUR_LAB[c]}</button>`).join("")}</div>` : ""}${typs.length > 1 ? `<div class="ttyp" role="group" aria-label="Mevduat türü">${typs.map(t => `<button class="chip sm" data-ftyp="${t}" aria-pressed="${(S.fTyp[it.id] || []).includes(t)}">${t}</button>`).join("")}</div>` : ""}</div>` : ""}${turCh}
     <div data-tchart="${key}"></div><div data-tsub="${key}" class="sub fnot"></div>
     <details class="tser" data-open="${key}"${S.tOpen.has(key) ? " open" : ""}><summary>Seri tablosu <span>${nVis} seri · grafiğe seri eklemek ve dönem karşılaştırmak için aç</span></summary>
@@ -1198,7 +1219,7 @@ function drawFChart(id) {
     const typ = cokTyp && tMeta(g)[c]?.typ && tMeta(g)[c].typ !== "Mevduat" ? " " + tMeta(g)[c].typ.toLocaleLowerCase("tr-TR") : "";
     const ad2 = gs.length > 1 && !t ? ad.replace(/^[\d.]+\s*/, "") : ad;
     ham.push({ sira: [t ? turlar.indexOf(t) : 100 + ord[nk], t ? ad : "", typ, gi], name: gs.length > 1 ? `${ad2}${typ} (${F_GAD[bank]})` : ad + typ, color: renk[b], dash: F_DASH[gi] || false,
-      data: clipT(g.dates.map((d, k) => [d, ok(g.vals[c][k]) ? tConv(g, c, g.vals[c][k] * g.scale) : null, toTime(d)]), S.tRange) });
+      data: clipT(g.dates.map((d, k) => [d, ok(g.vals[c][k]) ? tConv(g, c, g.vals[c][k] * g.scale) : null, toTime(d)]), ...(rSt() ? [rSt().r, rSt().a, rSt().b] : [S.tRange])) });
   }));
   const cmp = (a, b) => a < b ? -1 : a > b ? 1 : 0;
   const series = ham.sort((x, y) => cmp(x.sira[0], y.sira[0]) || cmp(x.sira[1], y.sira[1]) || cmp(x.sira[2], y.sira[2]) || x.sira[3] - y.sira[3]);
@@ -1209,7 +1230,31 @@ function drawFChart(id) {
   const mn = { stok: "Stok: dönem sonundaki tüm portföyün ağırlıklı ortalaması", akim: "Akım: dönem içinde yeni kullandırılan / açılan hesaplar" }[S.fMode[id]];
   sub.textContent = [mn, rn.replace(/^ · /, ""), gs.length > 1 ? "düz çizgi " + F_BANK[gs[0].bank].toLocaleLowerCase("tr-TR") + ", kesikli " + gs.slice(1).map(x => F_BANK[x.bank].toLocaleLowerCase("tr-TR")).join(", noktalı ") : "", series.length > 12 ? "grafikte ilk 12 seri" : ""].filter(Boolean).join(" · ");
   lineChart(el, { series: sec, yFmt: v => nf(as.d).format(v), unit: as.lab });
-  fVeri(el, key, raw, kind);
+  if (rSt()) { fDegis(el, raw, kind, gs[0].g.flow); fVeriD(el, key, raw, kind, gs[0].g.flow); } else fVeri(el, key, raw, kind);
+}
+// Para ve Banka: seçili aralığın ilk ve son dönemi arasındaki değişim (tutar ve %); akım serilerinde dönem toplamı
+function fDeg(s, flow) {
+  const v = s.data.filter(p => ok(p[1])); if (!v.length) return null;
+  const a = v[0], b = v[v.length - 1];
+  return { a, b, d: flow ? v.slice(1).reduce((t, p) => t + p[1], 0) : b[1] - a[1], p: flow ? null : pct(b[1], a[1]) };
+}
+function fDegis(el, raw, kind, flow) {
+  const h = raw.map(s => { const x = fDeg(s, flow); if (!x) return "";
+    const dv = kind === "pct" && !flow ? fmtBp(x.d * 100) : fmtVal(x.d, kind, true), c = cls(x.d, kind === "pct" ? .005 : 1e-9);
+    return `<span class="fdg"><i style="background:${s.color}"></i><span class="nm">${esc(s.name)}</span><b class="${c}">${dv}</b>${ok(x.p) ? `<small class="${cls(x.p, .05)}">(${fmtPct(x.p, 2)})</small>` : ""}</span>`; }).join("");
+  if (!h) return;
+  const v0 = raw.find(s => s.data.some(p => ok(p[1]))), x0 = v0 && fDeg(v0, flow);
+  el.insertAdjacentHTML("afterbegin", `<div class="fdgw"><div class="fdgt">${flow ? "Dönem toplamı" : "Değişim"}${x0 ? ` · ${dShort(x0.a[0])} → ${dShort(x0.b[0])}` : ""}</div>${h}</div>`);
+}
+function fVeriD(el, key, raw, kind, flow) {
+  const open = S.tData.has(key), foot = el.appendChild(Object.assign(document.createElement("div"), { className: "tdata" }));
+  foot.innerHTML = `<div class="tdb"><button class="chip sm" data-tdata="${key}" aria-pressed="${open}">${open ? "Veriyi gizle" : "Veri"}</button></div>`;
+  if (!open) return;
+  const rows = raw.map(s => ({ s, x: fDeg(s, flow) })).filter(r => r.x), x0 = rows[0]?.x;
+  const unit = kind === "pct" ? "%" : kind === "tl" ? "milyon TL" : kind === "usd" ? "milyon ABD doları" : "";
+  foot.insertAdjacentHTML("beforeend", `<div class="tdw tdd2"><table><thead><tr><th class="l">Seri${unit ? ` <small>${unit}</small>` : ""}</th><th>${x0 ? dShort(x0.a[0]) : ""}</th><th>${x0 ? dShort(x0.b[0]) : ""}</th><th>${flow ? "Dönem toplamı" : "Değişim"}</th>${flow ? "" : "<th>%</th>"}</tr></thead><tbody>`
+    + rows.map(({ s, x }) => { const [dc, pc] = flow ? [`<td class="${cls(x.d, 1e-9)}">${fmtVal(x.d, kind, true)}</td>`, ""] : deltaCells(x.a[1], x.b[1], kind);
+      return `<tr><td class="l"><i style="background:${s.color}"></i>${esc(s.name)}</td><td>${fmtFull(x.a[1], kind)}</td><td>${fmtFull(x.b[1], kind)}</td>${dc}${pc}</tr>`; }).join("") + "</tbody></table></div>");
 }
 // "Veri" düğmesi: grafikteki seriler; ilk açılışta son 5 dönem görünür, eskiler kaydırarak
 function fVeri(el, key, raw, kind) {
@@ -1257,6 +1302,8 @@ function bindTcmb() {
   $("#tPanels").addEventListener("toggle", e => { const d = e.target.closest && e.target.closest("details[data-open]"); if (!d) return; d.open ? S.tOpen.add(d.dataset.open) : S.tOpen.delete(d.dataset.open); }, true);
   $("#tPanels").addEventListener("change", e => {
     const t = e.target;
+    if (t.matches("select[data-rf], select[data-rt]") && rSt()) { const art = t.closest("article"), rs = rSt();
+      rs.a = art.querySelector("select[data-rf]").value; rs.b = art.querySelector("select[data-rt]").value; if (rs.a > rs.b) [rs.a, rs.b] = [rs.b, rs.a]; rs.r = "Tarih"; renderTcmb(); return; }
     if (t.matches("input[data-tfrom], input[data-tto]")) { if (t.dataset.tfrom !== undefined) S.tFrom = t.value; else S.tTo = t.value; tRedraw(); return; }
     const code = t.dataset.ta || t.dataset.tb; if (!code) return; const ab = S.tAB[code];
     if (t.dataset.ta) { ab.A = +t.value; if (ab.A >= ab.B) ab.B = Math.min(D.e.groups[code].dates.length - 1, ab.A + 1); } else { ab.B = +t.value; if (ab.A >= ab.B) ab.A = Math.max(0, ab.B - 1); }
@@ -1287,7 +1334,8 @@ function bindTcmb() {
       if (cur.includes(t)) { if (cur.length > 1) S.tTyp[code] = cur.filter(x => x !== t); }
       else { S.tTyp[code] = cur.concat(t); const add = (S.tSel[code] || []).map(c => tTwin(g, c, null, t)).filter(Boolean); S.tSel[code] = [...new Set((S.tSel[code] || []).concat(add))]; }
       renderTcmb(); return; }
-    const rk = e.target.closest("button[data-rk]"); if (rk) { const once = S.tRange; S.tRange = rk.dataset.rk; store.set("bv.trange", S.tRange);
+    const rk = e.target.closest("button[data-rk]"); if (rk && rSt()) { rSt().r = rk.dataset.rk; renderTcmb(); return; }
+    if (rk) { const once = S.tRange; S.tRange = rk.dataset.rk; store.set("bv.trange", S.tRange);
       if ((once === "Tarih") !== (S.tRange === "Tarih")) { if (S.tRange === "Tarih" && !S.tFrom) { const d = new Date(); d.setFullYear(d.getFullYear() - 1); S.tFrom = d.toISOString().slice(0, 10); } renderTcmb(); return; }
       $$("#tPanels button[data-rk]").forEach(x => x.setAttribute("aria-pressed", x.dataset.rk === S.tRange)); tRedraw(); return; }
     const cl = e.target.closest("button[data-clear]"); if (cl) { S.tSel[cl.dataset.clear] = []; renderTcmb(); return; }
