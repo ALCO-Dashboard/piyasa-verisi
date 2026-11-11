@@ -73,6 +73,7 @@ div.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--ac
 .cardhead h3{margin:0;font-size:15px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
 .cardhead .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
 .chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.dtin{font:inherit;font-size:12.5px;padding:3px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}.chips .arrow{color:var(--muted);font-size:12px}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13.5px;line-height:1.2;display:inline-flex;align-items:center;gap:6px}
 .chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-wash);font-weight:600}
 .chip i{width:10px;height:10px;border-radius:3px;display:inline-block}
@@ -680,6 +681,25 @@ function renderBk() {
 
 // ---------------------------------------------------------------- piyasa
 const P_R = [["1A", 31], ["3A", 92], ["6A", 183], ["1Y", 366], ["Tümü", 1e5]];
+// piyasa grafiklerinde özel tarih aralığı: "Tarih" seçilince başlangıç → bitiş
+const OZ = {};
+function tarihChips(el, id, cur, dates, cb) {
+  const oz = OZ[id] ||= { a: "", b: "" }, son = dates[dates.length - 1] || "", ilk = dates[0] || "";
+  el.innerHTML = `<button class="chip" data-k="Tarih" aria-pressed="${cur === "Tarih"}">Tarih</button>` + (cur === "Tarih"
+    ? `<input type="date" class="dtin" data-o="a" value="${oz.a}" min="${ilk}" max="${son}" aria-label="Başlangıç tarihi"><span class="arrow">→</span><input type="date" class="dtin" data-o="b" value="${oz.b}" min="${ilk}" max="${son}" aria-label="Bitiş tarihi">` : "")
+    + P_R.map(([k]) => `<button class="chip" data-k="${k}" aria-pressed="${k === cur}">${k}</button>`).join("");
+  el.onclick = e => { const b = e.target.closest("button[data-k]"); if (!b) return;
+    if (b.dataset.k === "Tarih" && !oz.a) { const g = (P_R.find(r => r[0] === cur) || P_R[2])[1]; oz.a = new Date(Date.parse(son) - Math.min(g, 3650) * 864e5).toISOString().slice(0, 10); oz.b = son; }
+    cb(b.dataset.k); };
+  el.onchange = e => { const x = e.target.closest("input[data-o]"); if (!x || !x.value) return; oz[x.dataset.o] = x.value; if (oz.a && oz.b && oz.a > oz.b) [oz.a, oz.b] = [oz.b, oz.a]; cb("Tarih"); };
+}
+// seçili aralıktaki tarihlerin indeksleri ve eksen için gün uzunluğu
+function tarihKes(dates, id, cur) {
+  if (cur === "Tarih") { const oz = OZ[id] || {}, a = oz.a || dates[0], b = oz.b || dates[dates.length - 1];
+    return { ix: dates.map((d, i) => d >= a && d <= b ? i : -1).filter(i => i >= 0), gun: (Date.parse(b) - Date.parse(a)) / 864e5 }; }
+  const gun = (P_R.find(r => r[0] === cur) || P_R[2])[1], bas = new Date(Date.parse(dates[dates.length - 1]) - gun * 864e5).toISOString().slice(0, 10);
+  return { ix: dates.map((d, i) => d >= bas ? i : -1).filter(i => i >= 0), gun };
+}
 const IMP = [["O/N", "O/N", "Gecelik"], ["1A", "1M", "1 aylık"], ["3A", "3M", "3 aylık"], ["6A", "6M", "6 aylık"], ["1Y", "1Y", "1 yıllık"]];
 const bCol = (sh, et) => { const t = B?.tablolar?.[sh]; if (!t) return null; const j = t.kolonlar.findIndex(k => k.etiket === et); return j < 0 ? null : { dates: t.dates, rate: t.v[j], ticker: t.kolonlar[j].ticker }; };
 const impT = () => IMP.find(x => x[0] === S.impT) || IMP[0];
@@ -716,7 +736,7 @@ function renderPiyasa() {
       <div class="d">${gunAd(x.t)} · ${PKAY[k]}</div></button>`);
   }
   $("#pKpi").innerHTML = kp.join("");
-  rangeChips($("#pRange"), P_R, S.pR, k => { S.pR = k; renderPiyasa(); });
+
   const lines = PK.filter(k => on(k) && has(k)), tek = lines.length === 1 ? lines[0] : null;
   const bars = tek && PSEL[tek].bars.length && pSrc(tek).vol_tl?.some(ok) ? [tek] : [];
   const hepsi = PK.filter(has).every(on);
@@ -727,7 +747,8 @@ function renderPiyasa() {
     + `<button class="chip" data-p="all" aria-pressed="${hepsi}">Tümünü karşılaştır</button>`;
   const all = [...new Set([...lines, ...bars].flatMap(k => pSrc(k).dates))].sort();
   if (!all.length) { $("#pChart").innerHTML = '<div class="empty">Veri yok.</div>'; return; }
-  const gun = P_R.find(r => r[0] === S.pR)[1], bas = new Date(Date.parse(all[all.length - 1]) - gun * 864e5).toISOString().slice(0, 10), xs = all.filter(d => d >= bas);
+  tarihChips($("#pRange"), "p", S.pR, all, k => { S.pR = k; renderPiyasa(); });
+  const { ix: pix, gun } = tarihKes(all, "p", S.pR), xs = pix.map(i => all[i]);
   const map = (d, k) => { const o = {}; d.dates.forEach((t, i) => o[t] = d[k][i]); return xs.map(t => o[t] ?? null); };
   const series = [];
   for (const k of bars) series.push({ name: pAd(k) + " hacim", type: "bar", axis: "r", color: css("--vol"), vals: map(pSrc(k), "vol_tl").map(v => ok(v) ? v / 1e9 : null), fmt: v => "₺" + nf(v, 1) + " mr" });
@@ -797,9 +818,8 @@ function egriKart(cfg) {
       tipX: x => { const k = xs.indexOf(x), d = cv && ok(vals[k]) && ok(cv[k]) ? vals[k] - cv[k] : null; return x + (ok(d) ? ` · değişim ${bp(d)}` : ""); },
       series, onClick: k => { if (et[k]) { st.v = et[k]; egriKart(cfg); } } });
   } else {
-    rangeChips(q(".er"), P_R, st.r, k => { st.r = k; egriKart(cfg); });
-    const j = et.indexOf(st.v), gun = P_R.find(r => r[0] === st.r)[1], last = t.dates[t.dates.length - 1];
-    const bas = new Date(Date.parse(last) - gun * 864e5).toISOString().slice(0, 10), ix = t.dates.map((d, i) => d >= bas ? i : -1).filter(i => i >= 0);
+    tarihChips(q(".er"), "e" + cfg.id, st.r, t.dates, k => { st.r = k; egriKart(cfg); });
+    const j = et.indexOf(st.v), { ix, gun } = tarihKes(t.dates, "e" + cfg.id, st.r);
     const xs = ix.map(i => t.dates[i]), vals = ix.map(i => t.v[j][i]), li = lastIdx(vals);
     q(".et").textContent = cfg.baslik(kod, VADE[st.v] || st.v);
     q(".es").textContent = `${t.kolonlar[j].ticker} · son ${li >= 0 ? pct(vals[li], 3) + " (" + gunAd(xs[li]) + ")" : "—"} · Bloomberg`;
@@ -885,9 +905,10 @@ function renderEndeks() {
   }
   $("#eeKpi").innerHTML = kp.join("");
   const e = EE.find(x => x.k === S.ee);
-  rangeChips($("#eeRange"), P_R, S.eeR, k => { S.eeR = k; renderEndeks(); });
-  const gun = P_R.find(r => r[0] === S.eeR)[1], xFmt = gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa;
-  const kes = s => { const last = s.dates[s.dates.length - 1], bas = new Date(Date.parse(last) - gun * 864e5).toISOString().slice(0, 10); return s.dates.map((d, i) => d >= bas ? i : -1).filter(i => i >= 0); };
+  const ds0 = (e.k === "borsa" ? bSeri(BORSA, "XU100 Index") : e.seri())?.dates || [];
+  tarihChips($("#eeRange"), "ee", S.eeR, ds0, k => { S.eeR = k; renderEndeks(); });
+  const gun = tarihKes(ds0.length ? ds0 : ["2000-01-01"], "ee", S.eeR).gun, xFmt = gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa;
+  const kes = s => tarihKes(s.dates, "ee", S.eeR).ix;
   if (e.k === "borsa") {
     const var_ = ENDEKS.filter(([t]) => bSeri(BORSA, t)?.vals.some(ok));
     for (const t of [...S.eeIdx]) if (!var_.some(x => x[0] === t)) S.eeIdx.delete(t);
