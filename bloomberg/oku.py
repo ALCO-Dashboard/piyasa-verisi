@@ -108,6 +108,8 @@ def tablo(kolonlar, satirlar):
     return {"kolonlar": [kolonlar[j] for j in keep], "dates": [d.isoformat() for d in dates], "v": [v[j] for j in keep]}
 
 
+ARALIK = {"XAUUSD Curncy": 500}     # ticker → en düşük makul değer
+
 ALAN = re.compile(r"^[A-Z][A-Z0-9_]+$")          # PX_LAST gibi alan adı
 
 
@@ -252,6 +254,18 @@ def oku(wb):
                 print(f"   atlandı (düzen tanınmadı): {ws.title}")
         except Exception as e:
             print(f"UYARI {ws.title} okunamadı: {type(e).__name__}: {e}")
+    # makul aralık denetimi: şablonda formül yanlış hücreye bakarsa (ör. XAUUSD sütununa gümüş, ~30–80 $) değerler atılır
+    for ad, t in T.items():
+        for k, kol in enumerate(t["kolonlar"]):
+            lo = ARALIK.get(kol.get("ticker"))
+            if lo is None:
+                continue
+            kotu = sum(1 for x in t["v"][k] if x is not None and x < lo)
+            if kotu:
+                print(f"UYARI {ad} › {kol['ticker']}: {kotu} değer {lo} altında (başka bir seriye bakıyor olabilir) — atıldı")
+                t["v"][k] = [x if x is None or x >= lo else None for x in t["v"][k]]
+        keep = [k for k in range(len(t["kolonlar"])) if any(x is not None for x in t["v"][k])]
+        t["kolonlar"], t["v"] = [t["kolonlar"][k] for k in keep], [t["v"][k] for k in keep]
     tick = {}
     for t in T.values():
         for k, kol in enumerate(t["kolonlar"]):
