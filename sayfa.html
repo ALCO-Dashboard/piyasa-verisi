@@ -44,6 +44,13 @@ button.b{cursor:pointer}
 .kpi{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--kc,var(--acc));border-radius:12px;padding:12px 14px}
 .kpi .v{font-family:var(--mono);font-weight:700;font-size:22px;margin:6px 0 2px}
 .kpi .n{color:var(--mut);font-size:12px}
+.kpi[role=button]{cursor:pointer;transition:border-color .15s,box-shadow .15s}.kpi[role=button]:hover{border-color:var(--kc)}
+.kpi[aria-pressed=true]{background:color-mix(in srgb,var(--kc) 9%,var(--card));border-color:var(--kc);box-shadow:0 0 0 1px var(--kc) inset}
+.kpi .hint{float:right;font-size:10.5px;font-weight:600;color:var(--kc);opacity:0;transition:opacity .15s}.kpi[role=button]:hover .hint,.kpi[aria-pressed=true] .hint{opacity:1}
+.cch{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.cch button{font:inherit;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--mut);cursor:pointer}
+.cch button .dot{border-radius:50%;opacity:.35}.cch button[aria-pressed=true]{color:var(--fg);border-color:var(--c)}.cch button[aria-pressed=true] .dot{opacity:1}
+.cch .all{margin-left:auto;border-style:dashed}
+.psz{font:inherit;font-size:12.5px;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg)}
 .g2{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px}
 .g11{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
@@ -128,12 +135,12 @@ details.note summary{cursor:pointer;font-weight:600;color:var(--acc);list-style-
 <div class="kpis" id="kpis"></div>
 <div id="v-tl" style="display:contents">
 <div class="g2">
-<div class="box fill"><div class="trh"><h2 id="tr-t"></h2><div class="ov" id="ov"><button class="b" id="ov-b" aria-expanded="false" aria-controls="ov-p">＋ Grafik ekle</button><div class="ovp" id="ov-p" hidden><div class="ovh">TCMB haftalık (EVDS) · sağ eksen</div><label><input type="checkbox" value="tl"> Türk lirası mevduatı</label><label><input type="checkbox" value="yp"> Yabancı para mevduatı</label><label><input type="checkbox" value="ypk"> YP mevduat değişimi (kur etkisinden arındırılmış)</label><div class="ovs" id="ov-s"></div></div></div></div><div class="ch"><canvas id="c-tr"></canvas></div></div>
+<div class="box fill"><div class="trh"><h2 id="tr-t"></h2><div class="ov" id="ov"><button class="b" id="ov-b" aria-expanded="false" aria-controls="ov-p">＋ Grafik ekle</button><div class="ovp" id="ov-p" hidden><div class="ovh">TCMB haftalık (EVDS) · sağ eksen</div><label><input type="checkbox" value="tl"> Türk lirası mevduatı</label><label><input type="checkbox" value="yp"> Yabancı para mevduatı</label><label><input type="checkbox" value="ypk"> YP mevduat değişimi (kur etkisinden arındırılmış)</label><div class="ovs" id="ov-s"></div></div></div></div><div class="ch"><canvas id="c-tr"></canvas></div><div class="cch" id="cc-tr" role="group" aria-label="Kategoriler"></div></div>
 <div class="box"><h2 id="dn-t"></h2><div class="dn"><canvas id="c-dn"></canvas></div><div class="cl" id="cl"></div></div>
 </div>
 <div class="box"><h2 id="pd-t"></h2><div class="pdl" id="pdl"></div></div>
 <div class="g11">
-<div class="box"><h2 id="dd-t"></h2><div class="ch s"><canvas id="c-dd"></canvas></div></div>
+<div class="box"><h2 id="dd-t"></h2><div class="ch s"><canvas id="c-dd"></canvas></div><div class="cch" id="cc-dd" role="group" aria-label="Kategoriler"></div></div>
 <div class="box"><h2 id="wk-t"></h2><div class="ch s"><canvas id="c-wk"></canvas></div></div>
 </div>
 </div>
@@ -143,7 +150,7 @@ details.note summary{cursor:pointer;font-weight:600;color:var(--acc);list-style-
 </div>
 <div class="box row">
 <span class="tot" id="tot"></span>
-<span class="row right pg"><span id="xs" class="xtot"></span><button class="b" id="xl" hidden>Excel'e aktar</button><button class="b" id="clr">Sütun filtrelerini temizle</button><button class="b" id="pv">‹ Önceki</button><span id="pi" class="fx"></span><button class="b" id="nx">Sonraki ›</button></span>
+<span class="row right pg"><span id="xs" class="xtot"></span><button class="b" id="xl" hidden>Excel'e aktar</button><button class="b" id="clr">Sütun filtrelerini temizle</button><label class="fx">Göster <select id="ps" class="psz" aria-label="Sayfada gösterilecek fon sayısı"><option>25</option><option>50</option><option>100</option><option>250</option></select></label><button class="b" id="pv">‹ Önceki</button><span id="pi" class="fx"></span><button class="b" id="nx">Sonraki ›</button></span>
 </div>
 <div class="tw"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div>
 <details class="note"><summary>Açıklamaları göster</summary><p id="note"></p></details>
@@ -161,7 +168,9 @@ const $=id=>document.getElementById(id);
 
 const UC={USD:'#059669',EUR:'#2563eb',TL:'#4f46e5',XAG:'#64748b',GBP:'#7c3aed',XAU:'#b45309'},UN={TL:'TL',USD:'Dolar',EUR:'Euro',GBP:'Pound',XAU:'Altın',XAG:'Gümüş'},UO=['USD','EUR','TL','XAG','GBP','XAU'];
 const FXI={USD:0,EUR:1,GBP:2,XAU:3,XAG:4},N=DATES.length,YB=Math.max(0,DATES.indexOf('2025-12-31'));
-let cmp=false,own=false,i1=N-1,i0=YB,sortK='v1',dir=-1,page=0,colF={},LCUR=[];const PS=25;const FUN='<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M1 2h14l-5.5 6.5V14l-3-1.5V8.5z" fill="currentColor"/></svg>';const sp=v=>v==null?'—':(v>0?'+':v<0?'-':'')+'%'+nf(Math.abs(v),1);
+let cmp=false,own=false,i1=N-1,i0=YB,sortK='v1',dir=-1,page=0,colF={},LCUR=[];let PS=25;try{const x=+localStorage.getItem('fd-ps');if([25,50,100,250].includes(x))PS=x}catch(e){}
+// kutucuk seçimi (trend grafiğine katman) ve kategori çipleri
+let KSEL=new Set(),COFF=new Set(),DOFF=new Set();try{KSEL=new Set(JSON.parse(localStorage.getItem('fd-ksel')||'[]'))}catch(e){}const FUN='<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M1 2h14l-5.5 6.5V14l-3-1.5V8.5z" fill="currentColor"/></svg>';const sp=v=>v==null?'—':(v>0?'+':v<0?'-':'')+'%'+nf(Math.abs(v),1);
 const snap=s=>{let k=-1;for(let i=0;i<N;i++)if(DATES[i]<=s)k=i;return k<0?0:k};const snapU=s=>Math.max(YB,snap(s));
 const back1m=i=>{const d=new Date(DATES[i]+'T00:00:00Z');d.setUTCMonth(d.getUTCMonth()-1);const s=d.toISOString().slice(0,10);return s<DATES[0]?-1:snap(s)};
 const days=(a,b)=>(Date.parse(DATES[b])-Date.parse(DATES[a]))/864e5;
@@ -250,11 +259,11 @@ const reveal={id:'reveal',beforeDatasetsDraw(c){const p=c.$rv;if(p==null||p>=1)r
 function mkChart(el,cfg){const lin=cfg.type!='doughnut';if(lin)cfg.plugins=[reveal];const c=new Chart(el,cfg);if(lin&&!RM){c.$rv=0;c.draw();const t0=performance.now(),st=n=>{if(!c.ctx||!c.canvas)return;const p=Math.min(1,(n-t0)/1200);c.$rv=1-Math.pow(1-p,2);try{c.draw()}catch(e){return}if(p<1)requestAnimationFrame(st)};requestAnimationFrame(st)}return c}
 let CH=[],PEND=[];const mkc=(el,cfg)=>{PEND.push([el,cfg])};
 function wavg(F,key,o){let a=0,b=0;F.forEach(f=>{const w=V[f][i1],r=key(f,o);if(w&&r!=null){a+=r*w;b+=w}});return b?a/b:null}
-function weeks(a,b){const W=[];let cur=null;for(let t=a+1;t<=b;t++){const d=new Date(DATES[t]+'T00:00:00Z');const mo=new Date(d);mo.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));const k=mo.toISOString().slice(0,10);if(!cur||cur.k!=k){cur={k,ts:[]};W.push(cur)}cur.ts.push(t)}return W}
+function weeks(a,b){const W=[];let cur=null;for(let t=a+1;t<=b;t++){const d=new Date(DATES[t]+'T00:00:00Z');const fr=new Date(d);fr.setUTCDate(d.getUTCDate()+((5-d.getUTCDay()+7)%7));const k=fr.toISOString().slice(0,10);if(!cur||cur.k!=k){cur={k,ts:[]};W.push(cur)}cur.ts.push(t)}return W}
 function draw(){const R=rows(),all=R.filter(f=>V[f][i1]);RCUR=R;CH.forEach(c=>c.destroy());CH=[];
  const m=m1(),cap=r=>r!=null&&r>200?null:r,k1=(f,o)=>ann(cap(ret(f,m,i1,o)),m,i1),kp=(f,o)=>cap(ret(f,i0,i1,o));
  const a=cmp?Math.min(i0,i1):YB,b=i1,cu=$('f-cur').value,ob=FXI[cu]<3,fmtR=v=>v==null?'—':'%'+nf(v,1);
- const tl=F=>F.reduce((s,f)=>s+V[f][i1]*1000,0),P0=pa(),nfl=all.reduce((s,f)=>s+flow(f,P0,i1,false),0);
+ const tl=F=>F.reduce((s,f)=>s+V[f][i1]*1000,0),P0=pa(),nfl=R.reduce((s,f)=>s+flow(f,P0,i1,false),0);
  let fa=0,fb=0;all.forEach(f=>{if(META[f][9]!=null){fa+=META[f][9]*V[f][i1];fb+=V[f][i1]}});
  const invs=all.reduce((s,f)=>s+(KS[f][i1]||0),0),wr=wavg(all,k1,ob);
  const K=[{t:'Toplam fon değeri',x:tl(all),f:v=>big(v)+' ₺',n:`${all.length} fon`+(cmp?` · ${tr(DATES[i0])}: ${big(R.reduce((s,f)=>s+(V[f][i0]||0)*1000,0))} ₺`:''),c:'#2563eb'},
@@ -262,7 +271,9 @@ function draw(){const R=rows(),all=R.filter(f=>V[f][i1]);RCUR=R;CH.forEach(c=>c.
   {t:cmp?'Dönem net akım':'1A net akım',x:nfl,f:v=>sgn(big(v),v)+' ₺',k:cls(nfl),n:`${tr(DATES[P0])} – ${tr(DATES[i1])}`,c:'#dc2626'},
   {t:'Toplam yatırımcı',x:invs||null,f:big,n:'Fon bazında toplam; birden çok fonu olan kişi tekrar sayılır',c:'#0d9488'},
   {t:'Ort. yönetim ücreti',x:fb?fa/fb:null,f:v=>v==null?'—':'%'+nf(v,2),n:'Yıllık, fon değeri ağırlıklı',c:'#b45309'}];
- $('kpis').innerHTML=K.map(k=>`<div class="kpi" style="--kc:${k.c}"><div class="lbl">${k.t}</div><div class="v ${k.k||''}">${k.f(k.x)}</div><div class="n">${k.n}</div></div>`).join('');
+ const KK=['deger','getiri','akim','yatirimci',null];
+ $('kpis').innerHTML=K.map((k,i)=>KK[i]&&!own?`<div class="kpi" role="button" tabindex="0" data-ks="${KK[i]}" aria-pressed="${KSEL.has(KK[i])}" title="Trend grafiğinde göster" style="--kc:${k.c}"><div class="lbl">${k.t}<span class="hint">${KSEL.has(KK[i])?'grafikte ✓':'grafikte göster'}</span></div><div class="v ${k.k||''}">${k.f(k.x)}</div><div class="n">${k.n}</div></div>`
+  :`<div class="kpi" style="--kc:${k.c}"><div class="lbl">${k.t}</div><div class="v ${k.k||''}">${k.f(k.x)}</div><div class="n">${k.n}</div></div>`).join('');
  [...$('kpis').querySelectorAll('.v')].forEach((el,i)=>countUp(el,K[i].x,K[i].f));
  const cs=getComputedStyle(document.documentElement),tok=n=>cs.getPropertyValue(n).trim(),mut=tok('--mut'),line=tok('--line'),card=tok('--card'),pos=tok('--pos'),neg=tok('--neg');
  Chart.defaults.font.family='DM Sans, system-ui, sans-serif';Chart.defaults.color=mut;Chart.defaults.animation=RM?false:{duration:700};
@@ -272,9 +283,25 @@ function draw(){const R=rows(),all=R.filter(f=>V[f][i1]);RCUR=R;CH.forEach(c=>c.
   const tix=new Int32Array(N).fill(-1);wk.forEach((w,j)=>w.ts.forEach(t=>tix[t]=j));
   R.forEach(f=>{const c=META[f][2],s=ser[c],v=V[f],x=FL[f],w=wf[c];for(let i=a;i<=b;i++){if(v[i])s[i-a]+=v[i]*1000;if(i>a&&x[i])w[tix[i]]+=x[i]}});
   const used=cats.filter(c=>ser[c].some(x=>x>0)).sort((x,y)=>ser[y][b-a]-ser[x][b-a]);
-  const ovs=ovSets(a,b,getComputedStyle(document.body).color);
-  mkc($('c-tr'),{type:'line',data:{labels:lab,datasets:used.map(c=>({label:c,data:Array.from(ser[c]),borderColor:CC[c],backgroundColor:CC[c],fill:false,borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.15})).concat(ovs)},
-   options:{maintainAspectRatio:false,animation:prog(b-a+1),interaction:{mode:'index',intersect:false},scales:{x:xs,y:ys(v=>big(v),0),...ovAxes(ovs)},plugins:{legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,usePointStyle:true}},tooltip:{filter:t=>t.parsed.y!=null,callbacks:{title:t=>tr(DATES[a+t[0].dataIndex]),label:t=>t.dataset.ov?` ${t.dataset.label}: ${t.dataset.type=='bar'?sgn(big(t.parsed.y),t.parsed.y):big(t.parsed.y)} ${t.dataset.ov}`:` ${t.dataset.label}: ${big(t.parsed.y)} ₺`,footer:t=>'Fon toplamı: '+big(t.filter(x=>!x.dataset.ov).reduce((s,x)=>s+x.parsed.y,0))+' ₺'}}}}});
+  const ovs=ovSets(a,b,getComputedStyle(document.body).color),fg=getComputedStyle(document.body).color;
+  // kategori çipleri (tekli/çoklu; varsayılan hepsi)
+  const chips=(id,off)=>{$(id).innerHTML=used.map(c=>`<button data-c="${c}" aria-pressed="${!off.has(c)}" style="--c:${CC[c]}"><i class="dot" style="--c:${CC[c]}"></i>${c}</button>`).join('')+(off.size?`<button class="all" data-c="">Tümünü seç</button>`:'')};
+  chips('cc-tr',COFF);chips('cc-dd',DOFF);
+  const vis=used.filter(c=>!COFF.has(c));
+  // kutucuk katmanları: toplam değer (sol eksen), getiri ya da yatırımcı (sağ eksen, çizgi), net akım (sağ eksen, çubuk)
+  const kds=[],kax={};
+  if(KSEL.has('deger')){const tt=new Float64Array(b-a+1);used.forEach(c=>ser[c].forEach((x,i)=>tt[i]+=x));kds.push({type:'line',label:'Toplam fon değeri',kp:v=>big(v)+' ₺',data:Array.from(tt),borderColor:fg,backgroundColor:fg,borderWidth:2.5,pointRadius:0,pointHoverRadius:4,tension:.15,fill:false,order:0})}
+  if(KSEL.has('getiri')){const d=[];for(let i=a;i<=b;i++){const mm=back1m(i);if(mm<0){d.push(null);continue}let x=0,y=0;R.forEach(f=>{const w=V[f][i],r=ann(cap(ret(f,mm,i,ob)),mm,i);if(w&&r!=null){x+=r*w;y+=w}});d.push(y?x/y:null)}
+   kds.push({type:'line',label:'Ağırlıklı ort. getiri (1A, yıllık)',kp:v=>'%'+nf(v,1),yAxisID:'yK',data:d,borderColor:'#059669',backgroundColor:'#059669',borderWidth:2,borderDash:[5,3],pointRadius:0,pointHoverRadius:4,tension:.15,fill:false,order:0});
+   kax.yK={position:'right',grid:{display:false},border:{display:false},ticks:{maxTicksLimit:5,color:'#059669',font:{size:10.5},callback:v=>'%'+nf(v,v%1?1:0)}}}
+  if(KSEL.has('yatirimci')){const d=[];for(let i=a;i<=b;i++){let x=0;R.forEach(f=>{x+=KS[f][i]||0});d.push(x||null)}
+   kds.push({type:'line',label:'Toplam yatırımcı',kp:v=>big(v),yAxisID:'yK',data:d,borderColor:'#0d9488',backgroundColor:'#0d9488',borderWidth:2,borderDash:[5,3],pointRadius:0,pointHoverRadius:4,tension:.15,fill:false,order:0});
+   kax.yK={position:'right',grid:{display:false},border:{display:false},ticks:{maxTicksLimit:5,color:'#0d9488',font:{size:10.5},callback:v=>big(v)}}}
+  if(KSEL.has('akim')){const d=[null];for(let i=a+1;i<=b;i++){let x=0;R.forEach(f=>{x+=FL[f][i]||0});d.push(x)}const mx=Math.max(1,...d.filter(x=>x!=null).map(Math.abs));
+   kds.push({type:'bar',label:'Günlük net akım',kp:v=>sgn(big(v),v)+' ₺',yAxisID:'yNA',data:d,backgroundColor:d.map(x=>x>=0?'rgba(31,138,76,.45)':'rgba(200,16,46,.45)'),barThickness:4,order:5});
+   kax.yNA={position:'right',grid:{display:false},border:{display:false},min:-mx*1.15,max:mx*3.3,ticks:{maxTicksLimit:5,color:'#dc2626',font:{size:10.5},callback:v=>Math.abs(v)>mx*1.2?'':sgn(big(v),v)}}}
+  mkc($('c-tr'),{type:'line',data:{labels:lab,datasets:vis.map(c=>({label:c,data:Array.from(ser[c]),borderColor:CC[c],backgroundColor:CC[c],fill:false,borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.15})).concat(kds,ovs)},
+   options:{maintainAspectRatio:false,animation:prog(b-a+1),interaction:{mode:'index',intersect:false},scales:{x:xs,y:ys(v=>big(v),0),...kax,...ovAxes(ovs)},plugins:{legend:{display:!!(kds.length||ovs.length),position:'bottom',labels:{boxWidth:10,boxHeight:10,usePointStyle:true,filter:l=>{const d=kds.concat(ovs);return d.some(x=>x.label===l.text)}}},tooltip:{filter:t=>t.parsed.y!=null,callbacks:{title:t=>tr(DATES[a+t[0].dataIndex]),label:t=>t.dataset.kp?` ${t.dataset.label}: ${t.dataset.kp(t.parsed.y)}`:t.dataset.ov?` ${t.dataset.label}: ${t.dataset.type=='bar'?sgn(big(t.parsed.y),t.parsed.y):big(t.parsed.y)} ${t.dataset.ov}`:` ${t.dataset.label}: ${big(t.parsed.y)} ₺`,footer:t=>{const x=t.filter(x=>!x.dataset.ov&&!x.dataset.kp);return x.length>1?'Seçili kategoriler: '+big(x.reduce((s,x)=>s+x.parsed.y,0))+' ₺':''}}}}}});
   const cnt={};all.forEach(f=>cnt[META[f][2]]=(cnt[META[f][2]]||0)+1);const du=used.filter(c=>ser[c][b-a]>0),dv=du.map(c=>ser[c][b-a]),dt=dv.reduce((s,x)=>s+x,0);
   mkc($('c-dn'),{type:'doughnut',data:{labels:du,datasets:[{data:dv,backgroundColor:du.map(c=>CC[c]),borderColor:card,borderWidth:2}]},options:{maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false},tooltip:{callbacks:{label:t=>` ${big(t.parsed)} ₺ · %${nf(t.parsed/dt*100,1)}`}}}}});
   $('cl').innerHTML=du.map((c,i)=>`<div><i class="dot" style="--c:${CC[c]}"></i><span>${c}</span><span class="c">${cnt[c]||0} fon</span><span class="a">${big(dv[i])} ₺</span></div>`).join('');
@@ -285,14 +312,16 @@ function draw(){const R=rows(),all=R.filter(f=>V[f][i1]);RCUR=R;CH.forEach(c=>c.
    $('pd-t').textContent='Portföy Dağılımı — İlk 10 Varlık · '+tr(PD.d[si]);
    $('pdl').innerHTML=rw.map((x,i)=>`<div class="${i>9?'o':''}"><span class="p">%${nf(x[1],1)}</span><span class="n">${x[0]}</span></div>`).join('')||'<div class="o"><span class="n">Bu seçim için portföy dağılımı verisi yok.</span></div>'}
   $('dn-t').textContent='Dağılım — '+tr(DATES[i1]);
-  const tot=new Float64Array(b-a+1);used.forEach(c=>ser[c].forEach((x,i)=>tot[i]+=x));const dd=Array.from(tot).map((x,i)=>i?x-tot[i-1]:0).slice(1);
+  const tot=new Float64Array(b-a+1);used.forEach(c=>ser[c].forEach((x,i)=>tot[i]+=x));
+  const tdd=new Float64Array(b-a+1);used.filter(c=>!DOFF.has(c)).forEach(c=>ser[c].forEach((x,i)=>tdd[i]+=x));const dd=Array.from(tdd).map((x,i)=>i?x-tdd[i-1]:0).slice(1),ddc=tdd[b-a]-tdd[0];
   const chg=tot[b-a]-tot[0],chp=tot[0]?chg/tot[0]*100:null,wsum=used.reduce((s,c)=>s+wf[c].reduce((x,y)=>x+y,0),0),rng=`${tr(DATES[a])} – ${tr(DATES[b])}`;
   $('tr-t').innerHTML=`Fon Toplam Değeri Trendi — Kategori Bazlı (₺) · ${rng} · <span class="${cls(chg)}">Değişim: ${sgn(big(chg),chg)} ₺ (${sp(chp)})</span>`;
-  $('dd-t').innerHTML=`Günlük Fon Değeri Değişimi — Toplam (₺) · ${rng} · <span class="${cls(chg)}">${sgn(big(chg),chg)} ₺</span>`;
+  $('dd-t').innerHTML=`Günlük Fon Değeri Değişimi — ${DOFF.size?'Seçili kategoriler':'Toplam'} (₺) · ${rng} · <span class="${cls(ddc)}">${sgn(big(ddc),ddc)} ₺</span>`;
   $('wk-t').innerHTML=`Haftalık Para Akımı — Kategori Bazlı (₺) · ${rng} · <span class="${cls(wsum)}">${sgn(big(wsum),wsum)} ₺</span>`;
+  $('wk-t').title='Haftalar cuma günü kapanır; ilk çubuk başlangıç tarihinden ilk cumaya, son çubuk son cumadan bitiş tarihine kadardır.';
   mkc($('c-dd'),{type:'bar',data:{labels:lab.slice(1),datasets:[{data:dd,backgroundColor:dd.map(x=>x>=0?pos:neg),borderRadius:2}]},options:{maintainAspectRatio:false,animation:barAn(dd.length),scales:{x:xs,y:ys(v=>big(v))},plugins:{legend:{display:false},tooltip:{callbacks:{title:t=>tr(DATES[a+1+t[0].dataIndex]),label:t=>' '+sgn(big(t.parsed.y),t.parsed.y)+' ₺'}}}}});
   const wu=used.filter(c=>wf[c].some(x=>x));
-  mkc($('c-wk'),{type:'bar',data:{labels:wk.map(w=>tr(DATES[w.ts[w.ts.length-1]]).slice(0,5)),datasets:wu.map(c=>({label:c,data:Array.from(wf[c]),backgroundColor:CC[c],borderColor:card,borderWidth:1}))},options:{maintainAspectRatio:false,animation:barAn(wk.length),interaction:{mode:'index',intersect:false},scales:{x:{...xs,stacked:true},y:ys(v=>big(v),1)},plugins:{legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,usePointStyle:true}},tooltip:{callbacks:{title:t=>'Hafta sonu '+t[0].label,label:t=>` ${t.dataset.label}: ${sgn(big(t.parsed.y),t.parsed.y)} ₺`,footer:t=>{const s=t.reduce((s,x)=>s+x.parsed.y,0);return 'Net: '+sgn(big(s),s)+' ₺'}}}}}});
+  mkc($('c-wk'),{type:'bar',data:{labels:wk.map(w=>tr(DATES[w.ts[w.ts.length-1]]).slice(0,5)),datasets:wu.map(c=>({label:c,data:Array.from(wf[c]),backgroundColor:CC[c],borderColor:card,borderWidth:1}))},options:{maintainAspectRatio:false,animation:barAn(wk.length),interaction:{mode:'index',intersect:false},scales:{x:{...xs,stacked:true},y:ys(v=>big(v),1)},plugins:{legend:{position:'bottom',labels:{boxWidth:10,boxHeight:10,usePointStyle:true}},tooltip:{callbacks:{title:t=>{const w=wk[t[0].dataIndex],s=w.ts[0]-1;return tr(DATES[Math.max(a,s)])+' – '+tr(DATES[w.ts[w.ts.length-1]])},label:t=>` ${t.dataset.label}: ${sgn(big(t.parsed.y),t.parsed.y)} ₺`,footer:t=>{const s=t.reduce((s,x)=>s+x.parsed.y,0);return 'Net: '+sgn(big(s),s)+' ₺'}}}}}});
  }else{const us=UO.filter(c=>all.some(f=>U(f)==c)),wk=weeks(a,b),tix=new Int32Array(N).fill(-1);wk.forEach((w,j)=>w.ts.forEach(t=>tix[t]=j));
   const D=us.map(c=>{const F=R.filter(f=>U(f)==c),s=new Float64Array(b-a+1),w=new Float64Array(wk.length);
    F.forEach(f=>{const v=V[f],x=FL[f];for(let i=a;i<=b;i++){const q=fx(c,i);if(v[i])s[i-a]+=v[i]*1000/q;if(i>a&&x[i])w[tix[i]]+=x[i]/q}});
@@ -319,7 +348,13 @@ $('xl').onclick=async()=>{if(!DL||!window.XLSX)return;const X=[...COLS,['Birim',
  try{await DL.save({filename:`fon-detay-${TAB.toLowerCase()}-${cmp?DATES[i0]+'_':''}${DATES[i1]}.xlsx`,data:new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})])});$('xs').textContent=`${LCUR.length} fon Excel'e aktarıldı`}catch(err){$('xs').textContent=err&&err.code=='declined'?'':'Excel dosyası oluşturulamadı'+(err&&err.code?' ('+err.code+')':'')}};
 $('clr').onclick=()=>{colF={};page=0;head();table()};
 ['f-cat','f-kat','f-oz','f-cur','f-pys','f-tf'].forEach(i=>$(i).addEventListener('change',()=>{page=0;draw()}));
-$('pv').onclick=()=>{page--;table()};$('nx').onclick=()=>{page++;table()};
+$('pv').onclick=()=>{page--;table()};
+$('ps').value=String(PS);$('ps').onchange=e=>{PS=+e.target.value;try{localStorage.setItem('fd-ps',PS)}catch(x){}page=0;table()};
+{const kt=e=>{const k=e.target.closest('[data-ks]');if(!k)return;const x=k.dataset.ks;if(KSEL.has(x))KSEL.delete(x);else{KSEL.add(x);if(x=='getiri')KSEL.delete('yatirimci');if(x=='yatirimci')KSEL.delete('getiri')}try{localStorage.setItem('fd-ksel',JSON.stringify([...KSEL]))}catch(z){}draw()};
+ $('kpis').addEventListener('click',kt);$('kpis').addEventListener('keydown',e=>{if(e.key=='Enter'||e.key==' '){e.preventDefault();kt(e)}})}
+const cct=(id,set)=>$(id).addEventListener('click',e=>{const b=e.target.closest('button[data-c]');if(!b)return;const c=b.dataset.c,all=[...$(id).querySelectorAll('button[data-c]:not(.all)')].map(x=>x.dataset.c);
+ if(!c)set.clear();else if(!set.size)all.forEach(x=>{if(x!=c)set.add(x)});else if(set.has(c))set.delete(c);else if(all.filter(x=>!set.has(x)).length>1)set.add(c);if(all.every(x=>!set.has(x)))set.clear();draw()});
+cct('cc-tr',COFF);cct('cc-dd',DOFF);$('nx').onclick=()=>{page++;table()};
 const press=(a,b,on)=>{$(a).setAttribute('aria-pressed',on);$(b).setAttribute('aria-pressed',!on)};
 {const ob=$('ov-b'),op=$('ov-p'),lab=()=>{ob.textContent=OV.length?`＋ Grafik ekle (${OV.length})`:'＋ Grafik ekle';ob.classList.toggle('on',OV.length>0)};
  op.querySelectorAll('input').forEach(i=>i.checked=OV.includes(i.value));lab();if(OV.length)evLoad();
