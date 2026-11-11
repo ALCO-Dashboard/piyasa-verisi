@@ -82,8 +82,26 @@ def metin(v):
     return v.strip() if isinstance(v, str) else ("" if v is None else str(v))
 
 
+def yarim_gun(satirlar):
+    """Excel gün içinde yenilenip yüklenince son satır çoğu sütunda bir önceki günün kapanışını taşır,
+    birkaç sütun ise gün içi (kapanmamış) değerdir — ör. O/N sabah 49,41, akşam 39,88. Bu satır atılır.
+    Kural: en az 3 dolu sütunun en az üçte ikisi önceki satırla birebir aynıysa son gün henüz kapanmamış sayılır."""
+    if len(satirlar) < 2:
+        return None
+    d1, d0 = sorted(satirlar)[-2:]
+    a, b = satirlar[d0], satirlar[d1]
+    ortak = [(x, y) for x, y in zip(a, b) if x is not None and y is not None]
+    if len(ortak) >= 3 and sum(x == y for x, y in ortak) >= len(ortak) * 2 / 3:
+        return d0
+    return None
+
+
 def tablo(kolonlar, satirlar):
     """kolonlar: [{etiket, ticker}], satirlar: {tarih: [değerler]} → artan tarihli tablo."""
+    d0 = yarim_gun(satirlar)
+    if d0:
+        print(f"   {d0.isoformat()} satırı atlandı: gün kapanmamış (sütunların çoğu önceki günle aynı)")
+        satirlar = {d: v for d, v in satirlar.items() if d != d0}
     dates = sorted(satirlar)
     v = [[(round(satirlar[d][j], 6) if satirlar[d][j] is not None else None) for d in dates] for j in range(len(kolonlar))]
     keep = [j for j in range(len(kolonlar)) if any(x is not None for x in v[j])]
