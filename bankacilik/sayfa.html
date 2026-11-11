@@ -179,6 +179,24 @@ tr.detail td{background:var(--surface-2);cursor:default;white-space:normal}
 td.na{color:var(--muted)}
 td .sm{color:var(--muted);font-size:11px;margin-left:6px}
 td .sm.up{color:var(--up)} td .sm.down{color:var(--down)}
+.bctl{display:flex;flex-direction:column;gap:8px;margin:8px 0 12px}
+.bctl .brow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.bctl .period select{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.bctl .chip{font-size:13px;padding:5px 11px}
+.bctl .gch{border-radius:12px;padding:6px 14px 6px 12px;align-items:flex-start;min-width:118px}
+.bctl .gch .dot{margin-top:5px}
+.bctl .gch .gl{display:flex;flex-direction:column;gap:2px;text-align:left}
+.bctl .gch small{font:500 11.5px var(--mono);color:var(--muted);white-space:nowrap}
+.bctl .gch small.up{color:var(--up)}.bctl .gch small.down{color:var(--down)}
+.bctl .seg button{padding:5px 14px;font-size:13px}
+.btitle{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap}
+.btitle .headline{margin:0}
+.btitle .headline .big{font-size:22px}.btitle .headline .pc{font-size:14px}.btitle .headline .lvl{font-size:13px}
+.bveri{display:flex;justify-content:flex-end;margin:6px 0 4px}
+.bveri label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:13px;cursor:pointer;background:var(--surface)}
+.bveri label:has(input:checked){border-color:var(--accent);background:var(--accent-wash,transparent)}
+.bdata{margin-top:8px}
+@media (max-width:640px){.bctl .gch{flex:1 1 calc(50% - 4px);min-width:0;padding:5px 9px}.bctl .gch small{font-size:10.5px;white-space:normal}}
 .cgrid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:20px;align-items:start}
 @media (max-width:1000px){.cgrid{grid-template-columns:minmax(0,1fr)}}
 .chartbox{position:sticky;top:8px;min-width:0}
@@ -314,17 +332,6 @@ section[data-pane="katilim"]{margin:0 -16px}
     <div class="bar">
       <div class="seg" id="bFreq"><button data-f="w" aria-pressed="true">Haftalık Bülten</button><button data-f="m" aria-pressed="false">Aylık Bülten</button></div>
       <span class="sep"></span>
-      <span class="period"><select id="bA" aria-label="Başlangıç dönemi"></select><span class="arrow">→</span><select id="bB" aria-label="Bitiş dönemi"></select></span>
-      <div class="chips" id="bQuick"></div>
-    </div>
-    <div class="bar">
-      <span class="lbl">Banka grubu</span><div class="chips" id="bGroups"></div>
-      <span class="note">Birden fazla grup seçerek yan yana karşılaştırabilirsiniz.</span>
-    </div>
-    <div class="bar">
-      <span class="lbl">Para birimi</span><div class="chips" id="bCur"></div>
-    </div>
-    <div class="bar">
       <span class="lbl">Tablo</span>
       <details class="dd" id="bTablesDD"><summary id="bTablesSum">Tümü</summary><div class="ddpanel" id="bTables"></div></details>
     </div>
@@ -433,7 +440,7 @@ async function loadAll() {
 // =============================================================== durum
 const S = {
   tab: "bddk",
-  bFreq: store.get("bv.freq") || "w", bA: null, bB: null, bGroups: (store.get("bv.groups") || "katilim").split(","), bCur: store.get("bv.cur") || "Toplam", bTables: {},
+  bFreq: store.get("bv.freq") || "w", bA: null, bB: null, bGroups: (store.get("bv.groups") || "katilim").split(","), bCur: store.get("bv.cur") || "Toplam", bVeri: !!store.get("bv.veri"), bTables: {},
   bColOverride: {}, bChk: {}, bIdx: {}, bOpenN: new Set(),
   tSub: "pp", tTopics: {}, tAB: {}, tClosed: new Set(["faiz|Banka ve Kredi Kartı İstatistikleri"]), tBank: store.get("bv.tbank") || "katilim", tBankSet: (store.get("bv.tbanks") || store.get("bv.tbank") || "katilim").split(",").filter(Boolean), tA: null, tB: null, tSel: {}, tRange: "1 Yıl", tFrom: "", tTo: "", fMode: {}, fBank: {}, fCur: {}, fTyp: {}, tCur: {}, tTyp: {}, tOpen: new Set(), tData: new Set(), tRate: store.get("bv.trate") || "efektif",
   aSel: [], aIndex: false, aRange: "2Y", aSrc: "all",
@@ -643,11 +650,6 @@ function renderBddk() {
   if (S.bB == null || S.bB >= n) S.bB = n - 1;
   if (S.bA == null || S.bA >= S.bB) S.bA = Math.min(S.bB - 1, idxBack(M.dates, S.bB, M.freq, 1));
   S.bA = Math.max(0, S.bA);
-  const opt = sel => M.dates.map((d, i) => `<option value="${i}"${i === sel ? " selected" : ""}>${dLabel(d)}</option>`).reverse().join("");
-  $("#bA").innerHTML = opt(S.bA); $("#bB").innerHTML = opt(S.bB);
-  $("#bQuick").innerHTML = QUICK[M.freq].map(([l, k, q]) => { const i = idxBack(M.dates, S.bB, k, q); const avail = i < S.bB && (k === "ytd" || Math.abs((toTime(M.dates[S.bB]) - toTime(M.dates[i])) / 864e5 - (k === "w" ? q * 7 : q * 30.4)) < (k === "w" ? 8 : 20)); return `<button class="chip" data-i="${i}" aria-pressed="${i === S.bA}"${avail ? "" : " disabled style=\"opacity:.4;cursor:default\""}>${l}</button>`; }).join("");
-  $("#bGroups").innerHTML = GROUPS.map(g => `<button class="chip" aria-pressed="${S.bGroups.includes(g.key)}" data-g="${g.key}"><span class="dot" style="background:${gColor(g.key)}"></span>${esc(g.name)}</button>`).join("");
-  $("#bCur").innerHTML = [["TP", "TP"], ["YP", "YP"], ["Toplam", "Toplam"]].map(([c, l]) => `<button class="chip" aria-pressed="${S.bCur === c}" data-c="${c}">${l}</button>`).join("");
   const keys = M.tables.map(t => t.key);
   if (!S.bTables[S.bFreq]) S.bTables[S.bFreq] = [DEFAULT_TABLE[S.bFreq]].filter(k => keys.includes(k));
   const selT = S.bTables[S.bFreq] = S.bTables[S.bFreq].filter(k => keys.includes(k));
@@ -776,7 +778,7 @@ function bddkCard(M, t) {
     const a = V(hn, g0, A), b = V(hn, g0, B), d = ok(a) && ok(b) ? b - a : null;
     head = `<div class="headline"><span class="big ${cls(d, 1e-9)}">${kh === "pct" ? fmtBp(ok(d) ? d * 100 : null) : fmtVal(d, kh, true)}</span>${kh !== "pct" ? `<span class="pc ${cls(pct(b, a), .05)}">(${fmtPct(pct(b, a), 2)})</span>` : ""}<span class="lvl">${esc(hn.name)} · <b>${fmtVal(a, kh)}</b> → <b>${fmtVal(b, kh)}</b></span></div>`;
   } else {
-    head = `<div class="headline">${groups.map(g => { const a = V(hn, g, A), b = V(hn, g, B); const v = kh === "pct" ? (ok(a) && ok(b) ? (b - a) * 100 : null) : pct(b, a); return `<span class="lvl"><span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${gColor(g)};margin-right:5px"></span>${esc(gName(g))} <b class="${cls(v, kh === "pct" ? .5 : .05)}">${kh === "pct" ? fmtBp(v) : fmtPct(v, 2)}</b></span>`; }).join("")}<span class="lvl">· ${esc(hn.name)}</span></div>`;
+    head = `<div class="headline"><span class="lvl">${esc(hn.name)} · grup değişimleri aşağıda</span></div>`;
   }
   const vis = visibleNodes(M, t);
   const hasKids = Object.values(tr.byKey).some(n => n.kids.length);
@@ -801,12 +803,27 @@ function bddkCard(M, t) {
       body += `<tr class="row lrow${on ? " sel" : ""}${x.depth === 0 ? " root" : ""}" data-t="${t.key}" data-n="${esc(x.n.key)}"><td class="chk"><input type="checkbox" ${on ? "checked" : ""} aria-label="Grafiğe ekle"></td>${nameCell(x)}${groups.map(g => { const a = V(x.n, g, A), b = V(x.n, g, B); const dvv = k === "pct" ? (ok(a) && ok(b) ? (b - a) * 100 : null) : pct(b, a); return `<td>${fmtVal(b, k)}<span class="sm ${cls(dvv, k === "pct" ? .5 : .05)}">${ok(b) ? (k === "pct" ? fmtBp(dvv) : fmtPct(dvv)) : ""}</span></td>`; }).join("")}</tr>`;
     }
   }
+  // grafiğe gömülü kontroller (durum ortak: S.bA/S.bB/S.bGroups/S.bCur)
+  const opt = sel => M.dates.map((d, i) => `<option value="${i}"${i === sel ? " selected" : ""}>${dLabel(d)}</option>`).reverse().join("");
+  const quick = QUICK[M.freq].map(([l, k, q]) => { const i = idxBack(M.dates, B, k, q); const avail = i < B && (k === "ytd" || Math.abs((toTime(M.dates[B]) - toTime(M.dates[i])) / 864e5 - (k === "w" ? q * 7 : q * 30.4)) < (k === "w" ? 8 : 20)); return `<button class="chip" data-bq="${i}" aria-pressed="${i === A}"${avail ? "" : " disabled style=\"opacity:.4;cursor:default\""}>${l}</button>`; }).join("");
+  const veri = !!S.bVeri;
+  const gchip = g => { let val = "", cl = "";
+    if (!veri) { const a = V(hn, g.key, A), b = V(hn, g.key, B);
+      if (kh === "pct") { const d = ok(a) && ok(b) ? (b - a) * 100 : null; val = ok(d) ? fmtBp(d) : "—"; cl = cls(d, .5); }
+      else { const d = ok(a) && ok(b) ? b - a : null, p = pct(b, a); val = ok(d) ? `${fmtVal(d, kh, true)} · ${fmtPct(p, 2)}` : "—"; cl = cls(d, 1e-9); } }
+    return `<button class="chip gch" aria-pressed="${groups.includes(g.key)}" data-bg="${g.key}"><span class="dot" style="background:${gColor(g.key)}"></span><span class="gl"><span>${esc(g.name)}</span>${veri ? "" : `<small class="${cl}">${val}</small>`}</span></button>`; };
+  const ctl = `<div class="bctl">
+      <div class="brow"><span class="period"><select data-ba aria-label="Başlangıç dönemi">${opt(A)}</select><span class="arrow">→</span><select data-bb aria-label="Bitiş dönemi">${opt(B)}</select></span>${quick}</div>
+      <div class="brow">${GROUPS.map(gchip).join("")}</div>
+      <div class="brow"><div class="seg" role="group" aria-label="Para birimi">${[["TP", "TP"], ["YP", "YP"], ["Toplam", "Toplam"]].map(([cc, l]) => `<button data-bc="${cc}" aria-pressed="${S.bCur === cc}">${l}</button>`).join("")}</div></div>
+    </div>`;
   const tools = hasKids ? `<div class="treetools"><button class="more" data-expand="${t.key}">Tümünü aç</button><button class="more" data-collapse="${t.key}">Tümünü kapat</button></div>` : "";
   return `<article class="card" data-card="${t.key}">
-    <div class="cardhead"><div><h3>${esc(t.name)}</h3><div class="sub">${esc(unit)} · ${esc(multi ? groups.map(gName).join(", ") : gName(g0))} · ${dShort(M.dates[A])} → ${dShort(M.dates[B])}</div></div><div>${colSel}</div></div>
-    ${head}
-    <div class="cgrid"><div style="min-width:0"><div class="tbl-wrap lt"><table><thead>${th}</thead><tbody>${body}</tbody></table></div>${tools}</div>
-      <div class="chartbox"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="sub" data-csub="${t.key}"></span><label class="note"><input type="checkbox" data-idx="${t.key}"${S.bIdx[tid] ? " checked" : ""}> Endeks (dönem başı = 100)</label></div><div data-chart="${t.key}"></div></div></div>
+    <div class="cardhead"><div><div class="btitle"><h3>${esc(t.name)}</h3>${veri ? "" : head}</div><div class="sub">${esc(unit)} · ${esc(multi ? groups.map(gName).join(", ") : gName(g0))} · ${dShort(M.dates[A])} → ${dShort(M.dates[B])}</div></div><div>${colSel}</div></div>
+    ${ctl}
+    <div class="chartbox" style="position:static"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="sub" data-csub="${t.key}"></span><label class="note"><input type="checkbox" data-idx="${t.key}"${S.bIdx[tid] ? " checked" : ""}> Endeks (dönem başı = 100)</label></div><div data-chart="${t.key}"></div></div>
+    <div class="bveri"><label><input type="checkbox" data-bveri${veri ? " checked" : ""}> Veri</label></div>
+    ${veri ? `<div class="bdata"><div class="tbl-wrap lt"><table><thead>${th}</thead><tbody>${body}</tbody></table></div>${tools}</div>` : ""}
   </article>`;
 }
 function drawCardChart(M, t) {
@@ -842,15 +859,6 @@ function refreshCard(key) {
 }
 function bindBddk() {
   $("#bFreq").onclick = e => { const b = e.target.closest("button"); if (!b) return; S.bFreq = b.dataset.f; store.set("bv.freq", S.bFreq); S.bA = S.bB = null; renderBddk(); };
-  $("#bA").onchange = e => { S.bA = +e.target.value; if (S.bA >= S.bB) S.bB = Math.min(curOf().dates.length - 1, S.bA + 1); renderBddk(); };
-  $("#bB").onchange = e => { S.bB = +e.target.value; if (S.bA >= S.bB) S.bA = Math.max(0, S.bB - 1); renderBddk(); };
-  $("#bQuick").onclick = e => { const b = e.target.closest("button"); if (!b || b.disabled) return; S.bA = +b.dataset.i; if (S.bA >= S.bB) S.bA = Math.max(0, S.bB - 1); renderBddk(); };
-  $("#bGroups").onclick = e => {
-    const b = e.target.closest("button"); if (!b) return; const g = b.dataset.g;
-    if (S.bGroups.includes(g)) { if (S.bGroups.length > 1) S.bGroups = S.bGroups.filter(x => x !== g); } else S.bGroups = GROUPS.map(x => x.key).filter(k => k === g || S.bGroups.includes(k));
-    store.set("bv.groups", S.bGroups.join(",")); renderBddk();
-  };
-  $("#bCur").onclick = e => { const b = e.target.closest("button"); if (!b) return; S.bCur = b.dataset.c; S.bColOverride = {}; store.set("bv.cur", S.bCur); renderBddk(); };
   $("#bTables").onchange = e => {
     const sel = S.bTables[S.bFreq] || [];
     const gb = e.target.closest("input[data-grp]");
@@ -860,10 +868,19 @@ function bindBddk() {
   };
   document.addEventListener("click", e => { const dd = $("#bTablesDD"); if (dd.open && !dd.contains(e.target)) dd.open = false; });
   $("#bCards").addEventListener("change", e => {
+    const t_ = e.target;
+    if (t_.matches("select[data-ba]")) { S.bA = +t_.value; if (S.bA >= S.bB) S.bB = Math.min(curOf().dates.length - 1, S.bA + 1); renderBddk(); return; }
+    if (t_.matches("select[data-bb]")) { S.bB = +t_.value; if (S.bA >= S.bB) S.bA = Math.max(0, S.bB - 1); renderBddk(); return; }
+    if (t_.matches("input[data-bveri]")) { S.bVeri = t_.checked; store.set("bv.veri", S.bVeri ? "1" : ""); renderBddk(); return; }
     const ix = e.target.closest("input[data-idx]"); if (ix) { S.bIdx[S.bFreq + ix.dataset.idx] = ix.checked; drawCardChart(curOf(), curOf().tables.find(x => x.key === ix.dataset.idx)); return; }
     const s = e.target.closest("select[data-colsel]"); if (!s) return; S.bColOverride[S.bFreq + s.dataset.colsel] = +s.value; refreshCard(s.dataset.colsel); });
   $("#bCards").addEventListener("click", e => {
     const M = curOf();
+    const q = e.target.closest("button[data-bq]"); if (q) { if (q.disabled) return; S.bA = +q.dataset.bq; if (S.bA >= S.bB) S.bA = Math.max(0, S.bB - 1); renderBddk(); return; }
+    const gb = e.target.closest("button[data-bg]"); if (gb) { const g = gb.dataset.bg;
+      if (S.bGroups.includes(g)) { if (S.bGroups.length > 1) S.bGroups = S.bGroups.filter(x => x !== g); } else S.bGroups = GROUPS.map(x => x.key).filter(k => k === g || S.bGroups.includes(k));
+      store.set("bv.groups", S.bGroups.join(",")); renderBddk(); return; }
+    const bc = e.target.closest("button[data-bc]"); if (bc) { S.bCur = bc.dataset.bc; S.bColOverride = {}; store.set("bv.cur", S.bCur); renderBddk(); return; }
     const op = e.target.closest("button[data-open]"); if (op) { const k = op.dataset.open; S.bOpenN.has(k) ? S.bOpenN.delete(k) : S.bOpenN.add(k); refreshCard(op.closest("article").dataset.card); return; }
     const ex = e.target.closest("button[data-expand],button[data-collapse]");
     if (ex) {
@@ -1299,6 +1316,7 @@ window.alcoPdf = () => {
 function hashGit() {
   const h = location.hash.slice(1);
   if (["pp", "rezerv", "zk", "haftalik"].includes(h)) { S.tSub = h; $('#tabs button[data-tab="tcmb"]').click(); return true; }
+  if (h === "bddkw" || h === "bddkm") { S.bFreq = h === "bddkw" ? "w" : "m"; S.bA = S.bB = null; $('#tabs button[data-tab="bddk"]').click(); return true; }
   const b = h && $(`#tabs button[data-tab="${h}"]`); if (b) { b.click(); return true; }
   return false;
 }
