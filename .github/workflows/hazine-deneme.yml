@@ -17,9 +17,7 @@ jobs:
           cd t && (python3 -m http.server 8768 >/dev/null 2>&1 &) && sleep 1
           npm i playwright@1.48.2 >/dev/null 2>&1 && npx playwright install chromium >/dev/null 2>&1
           mkdir -p ../out
-          node shot.js ../out/t1.png 2>&1 | tee ../out/log1.txt
-          node shot.js ../out/t2.png '[data-ks="yatirimci"]' '[data-ks="akim"]' '[data-ks="deger"]' 2>&1 | tee ../out/log2.txt
-          node shot.js ../out/t3.png '[data-ks="akim"]' '[data-ks="deger"]' 2>&1 | tee ../out/log3.txt
+          node dn.js 2>&1 | tee ../out/log1.txt
       - run: |
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan hazine-deneme-veri; git rm -rqf --cached .; git add -f out; git commit -qm veri; git push -f origin hazine-deneme-veri
