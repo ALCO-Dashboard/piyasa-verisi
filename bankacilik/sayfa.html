@@ -189,6 +189,8 @@ td .sm.up{color:var(--up)} td .sm.down{color:var(--down)}
 .bctl .gch small{font:500 11.5px var(--mono);color:var(--muted);white-space:nowrap}
 .bctl .gch small.up{color:var(--up)}.bctl .gch small.down{color:var(--down)}
 .bctl .seg button{padding:5px 14px;font-size:13px}
+.bcur{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.bcur .seg button{padding:5px 14px;font-size:13px}
 .btitle{display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap}
 .btitle .headline{margin:0}
 .btitle .headline .big{font-size:22px}.btitle .headline .pc{font-size:14px}.btitle .headline .lvl{font-size:13px}
@@ -781,15 +783,9 @@ function visibleNodes(M, t) {
 function bddkCard(M, t) {
   const A = S.bA, B = S.bB, c = colFor(t), groups = S.bGroups, multi = groups.length > 1, g0 = groups[0];
   const tid = M.freq + t.key, tr = treeOf(M, t), hn = tr.roots[0], chk = chkOf(M, t);
-  const colSel = t.cols.length > 1 ? `<label class="note">Kolon <select data-colsel="${t.key}">${t.cols.map((cn, i) => `<option value="${i}"${i === c ? " selected" : ""}>${esc(cn)}</option>`).join("")}</select></label>` : `<span class="note">${esc(t.cols[0] || "")}</span>`;
-  const unit = t.scale !== 1 ? "Milyon TL (BDDK'da bin TL)" : (M.freq === "m" && (t.no === 15 || t.no === 17) ? "Rasyolar %, değişim baz puan" : M.freq === "m" && t.no === 16 ? "Adet" : "Milyon TL");
   const kh = nodeKind(M, t, hn, c), V = (n, g, i) => nodeVal(M, t, n, g, c, i);
-  const EX = !!S.bIdx[tid], ix = (a, b) => ok(a) && ok(b) && a ? b / a * 100 : null;   // endeks (dönem başı = 100) görünümü: değişimler yüzde
   let head;
-  if (!multi && EX && kh !== "pct") {
-    const a = V(hn, g0, A), b = V(hn, g0, B), p = pct(b, a);
-    head = `<div class="headline"><span class="big ${cls(p, .05)}">${fmtPct(p, 2)}</span><span class="lvl">${esc(hn.name)} · endeks <b>100</b> → <b>${ok(ix(a, b)) ? nf(2).format(ix(a, b)) : "—"}</b></span></div>`;
-  } else if (!multi) {
+  if (!multi) {
     const a = V(hn, g0, A), b = V(hn, g0, B), d = ok(a) && ok(b) ? b - a : null;
     head = `<div class="headline"><span class="big ${cls(d, 1e-9)}">${kh === "pct" ? fmtBp(ok(d) ? d * 100 : null) : fmtVal(d, kh, true)}</span>${kh !== "pct" ? `<span class="pc ${cls(pct(b, a), .05)}">(${fmtPct(pct(b, a), 2)})</span>` : ""}<span class="lvl">${esc(hn.name)} · <b>${fmtVal(a, kh)}</b> → <b>${fmtVal(b, kh)}</b></span></div>`;
   } else {
@@ -801,22 +797,21 @@ function bddkCard(M, t) {
   const nameCell = x => `<td class="nm" style="padding-left:${8 + x.depth * 16}px"><div class="nmw">${caret(x)}<span class="${x.depth === 0 ? "b" : ""}${x.n.row ? "" : " syn"}">${esc(x.n.name)}</span></div></td>`;
   let th, body = "";
   if (!multi) {
-    const all = vis.map(x => { const k = nodeKind(M, t, x.n, c), a = V(x.n, g0, A), b = V(x.n, g0, B), e = EX && k !== "pct";
-      return { ...x, k, a, b, e, d: e ? pct(b, a) : ok(a) && ok(b) ? (b - a) * (k === "pct" ? 100 : 1) : null }; });
-    const inner = all.filter(x => x.depth > 0 && x.k === kh && ok(x.d) && Math.abs(x.d) < 1e4); const pool = inner.length ? inner : all.filter(x => ok(x.d) && x.k === kh);
+    const all = vis.map(x => { const k = nodeKind(M, t, x.n, c), a = V(x.n, g0, A), b = V(x.n, g0, B); return { ...x, k, a, b, d: ok(a) && ok(b) ? (b - a) * (k === "pct" ? 100 : 1) : null }; });
+    const inner = all.filter(x => x.depth > 0 && x.k === kh && ok(x.d)); const pool = inner.length ? inner : all.filter(x => ok(x.d) && x.k === kh);
     const mx = Math.max(...pool.map(x => Math.abs(x.d)), 1e-9);
-    th = `<tr><th class="chk"></th><th>Kalem</th><th>${dShort(M.dates[A])}${EX ? " (=100)" : ""}</th><th>${dShort(M.dates[B])}${EX ? " · endeks" : ""}</th><th class="barh">Değişim${EX ? " (%)" : ""}</th></tr>`;
+    th = `<tr><th class="chk"></th><th>Kalem</th><th>${dShort(M.dates[A])}</th><th>${dShort(M.dates[B])}</th><th class="barh">Değişim</th></tr>`;
     for (const x of all) {
       const on = chk.includes(x.n.key), w = ok(x.d) ? Math.min(1, Math.abs(x.d) / mx) * 50 : 0, pos = x.d >= 0;
-      const lab = x.k === "pct" ? fmtBp(x.d) : x.e ? fmtPct(x.d, 2) : fmtVal(x.d, x.k, true), p = x.k === "pct" || x.e ? null : pct(x.b, x.a);
-      body += `<tr class="row lrow${on ? " sel" : ""}${x.depth === 0 ? " root" : ""}" data-t="${t.key}" data-n="${esc(x.n.key)}"><td class="chk"><input type="checkbox" ${on ? "checked" : ""} aria-label="Grafiğe ekle"></td>${nameCell(x)}<td>${x.e ? (ok(x.a) && x.a ? "100,00" : "—") : fmtFull(x.a, x.k)}</td><td>${x.e ? (ok(ix(x.a, x.b)) ? nf(2).format(ix(x.a, x.b)) : "—") : fmtFull(x.b, x.k)}</td>`
-        + `<td class="barc" title="${p != null ? fmtPct(p, 2) : ""}">${ok(x.d) ? `<span class="mb"><i style="${pos ? "left" : "right"}:50%;width:${w}%;background:${pos ? "var(--up-bar)" : "var(--down-bar)"}"></i></span>` : `<span class="mb"></span>`}<span class="v ${cls(x.d, x.e ? .005 : 1e-9)}">${ok(x.d) ? lab : ""}</span></td></tr>`;
+      const lab = x.k === "pct" ? fmtBp(x.d) : fmtVal(x.d, x.k, true), p = x.k === "pct" ? null : pct(x.b, x.a);
+      body += `<tr class="row lrow${on ? " sel" : ""}${x.depth === 0 ? " root" : ""}" data-t="${t.key}" data-n="${esc(x.n.key)}"><td class="chk"><input type="checkbox" ${on ? "checked" : ""} aria-label="Grafiğe ekle"></td>${nameCell(x)}<td>${fmtFull(x.a, x.k)}</td><td>${fmtFull(x.b, x.k)}</td>`
+        + `<td class="barc" title="${p != null ? fmtPct(p, 2) : ""}">${ok(x.d) ? `<span class="mb"><i style="${pos ? "left" : "right"}:50%;width:${w}%;background:${pos ? "var(--up-bar)" : "var(--down-bar)"}"></i></span>` : `<span class="mb"></span>`}<span class="v ${cls(x.d, 1e-9)}">${ok(x.d) ? lab : ""}</span></td></tr>`;
     }
   } else {
-    th = `<tr><th class="chk"></th><th>Kalem</th>${groups.map(g => `<th><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${gColor(g)};margin-right:6px"></span>${esc(gName(g))}<br><span style="font-weight:400;color:var(--muted)">${dShort(M.dates[B])} · ${EX ? "endeks · %" : "değişim"}</span></th>`).join("")}</tr>`;
+    th = `<tr><th class="chk"></th><th>Kalem</th>${groups.map(g => `<th><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${gColor(g)};margin-right:6px"></span>${esc(gName(g))}<br><span style="font-weight:400;color:var(--muted)">${dShort(M.dates[B])} · değişim</span></th>`).join("")}</tr>`;
     for (const x of vis) {
       const k = nodeKind(M, t, x.n, c), on = chk.includes(x.n.key);
-      body += `<tr class="row lrow${on ? " sel" : ""}${x.depth === 0 ? " root" : ""}" data-t="${t.key}" data-n="${esc(x.n.key)}"><td class="chk"><input type="checkbox" ${on ? "checked" : ""} aria-label="Grafiğe ekle"></td>${nameCell(x)}${groups.map(g => { const a = V(x.n, g, A), b = V(x.n, g, B); const dvv = k === "pct" ? (ok(a) && ok(b) ? (b - a) * 100 : null) : pct(b, a); return `<td>${EX && k !== "pct" ? (ok(ix(a, b)) ? nf(2).format(ix(a, b)) : "—") : fmtVal(b, k)}<span class="sm ${cls(dvv, k === "pct" ? .5 : .05)}">${ok(b) ? (k === "pct" ? fmtBp(dvv) : fmtPct(dvv)) : ""}</span></td>`; }).join("")}</tr>`;
+      body += `<tr class="row lrow${on ? " sel" : ""}${x.depth === 0 ? " root" : ""}" data-t="${t.key}" data-n="${esc(x.n.key)}"><td class="chk"><input type="checkbox" ${on ? "checked" : ""} aria-label="Grafiğe ekle"></td>${nameCell(x)}${groups.map(g => { const a = V(x.n, g, A), b = V(x.n, g, B); const dvv = k === "pct" ? (ok(a) && ok(b) ? (b - a) * 100 : null) : pct(b, a); return `<td>${fmtVal(b, k)}<span class="sm ${cls(dvv, k === "pct" ? .5 : .05)}">${ok(b) ? (k === "pct" ? fmtBp(dvv) : fmtPct(dvv)) : ""}</span></td>`; }).join("")}</tr>`;
     }
   }
   // grafiğe gömülü kontroller (durum ortak: S.bA/S.bB/S.bGroups/S.bCur)
@@ -824,19 +819,17 @@ function bddkCard(M, t) {
   const quick = QUICK[M.freq].map(([l, k, q]) => { const i = idxBack(M.dates, B, k, q); const avail = i < B && (k === "ytd" || k === "all" || Math.abs((toTime(M.dates[B]) - toTime(M.dates[i])) / 864e5 - (k === "w" ? q * 7 : q * 30.4)) < (k === "w" ? 8 : 20)); return `<button class="chip" data-bq="${i}" aria-pressed="${i === A}"${avail ? "" : " disabled style=\"opacity:.4;cursor:default\""}>${l}</button>`; }).join("");
   const veri = !!S.bVeri;
   const gchip = g => { let val = "", cl = "";
-    if (!veri) { const a = V(hn, g.key, A), b = V(hn, g.key, B);
+    { const a = V(hn, g.key, A), b = V(hn, g.key, B);
       if (kh === "pct") { const d = ok(a) && ok(b) ? (b - a) * 100 : null; val = ok(d) ? fmtBp(d) : "—"; cl = cls(d, .5); }
-      else if (EX) { const p = pct(b, a); val = ok(p) ? fmtPct(p, 2) : "—"; cl = cls(p, .005); }
       else { const d = ok(a) && ok(b) ? b - a : null, p = pct(b, a); val = ok(d) ? `${fmtVal(d, kh, true)} · ${fmtPct(p, 2)}` : "—"; cl = cls(d, 1e-9); } }
-    return `<button class="chip gch" aria-pressed="${groups.includes(g.key)}" data-bg="${g.key}"><span class="dot" style="background:${gColor(g.key)}"></span><span class="gl"><span>${esc(g.name)}</span>${veri ? "" : `<small class="${cl}">${val}</small>`}</span></button>`; };
+    return `<button class="chip gch" aria-pressed="${groups.includes(g.key)}" data-bg="${g.key}"><span class="dot" style="background:${gColor(g.key)}"></span><span class="gl"><span>${esc(g.name)}</span><small class="${cl}">${val}</small></span></button>`; };
   const ctl = `<div class="bctl">
       <div class="brow"><span class="period"><select data-ba aria-label="Başlangıç dönemi">${opt(A)}</select><span class="arrow">→</span><select data-bb aria-label="Bitiş dönemi">${opt(B)}</select></span>${quick}</div>
       <div class="brow">${GROUPS.map(gchip).join("")}</div>
-      <div class="brow"><div class="seg" role="group" aria-label="Para birimi">${CURS.map(cc => `<button data-bc="${cc}" aria-pressed="${curList().includes(cc)}">${cc}</button>`).join("")}</div>${curList().length > 1 ? `<span class="note">Tablo ve rakamlar: ${curList()[0]}</span>` : ""}</div>
     </div>`;
   const tools = hasKids ? `<div class="treetools"><button class="more" data-expand="${t.key}">Tümünü aç</button><button class="more" data-collapse="${t.key}">Tümünü kapat</button></div>` : "";
   return `<article class="card" data-card="${t.key}">
-    <div class="cardhead"><div><div class="btitle"><details class="dd tdd"><summary title="Tablo seç"><h3>${esc(t.name)}</h3></summary><div class="ddpanel">${tableMenu(M, t.key)}</div></details>${veri ? "" : head}</div><div class="sub">${esc(unit)} · ${esc(multi ? groups.map(gName).join(", ") : gName(g0))} · ${dShort(M.dates[A])} → ${dShort(M.dates[B])}</div></div><div>${colSel}</div></div>
+    <div class="cardhead"><div><div class="btitle"><details class="dd tdd"><summary title="Tablo seç"><h3>${esc(t.name)}</h3></summary><div class="ddpanel">${tableMenu(M, t.key)}</div></details>${head}</div></div><div class="bcur">${curList().length > 1 ? `<span class="note">Tablo ve rakamlar: ${curList()[0]}</span>` : ""}<div class="seg" role="group" aria-label="Para birimi">${CURS.map(cc => `<button data-bc="${cc}" aria-pressed="${curList().includes(cc)}">${cc}</button>`).join("")}</div></div></div>
     ${ctl}
     <div class="chartbox" style="position:static"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="sub" data-csub="${t.key}"></span><label class="note"><input type="checkbox" data-idx="${t.key}"${S.bIdx[tid] ? " checked" : ""}> Endeks (dönem başı = 100)</label></div><div data-chart="${t.key}"></div></div>
     <div class="bveri"><label><input type="checkbox" data-bveri${veri ? " checked" : ""}> Veri</label></div>
@@ -872,7 +865,7 @@ function drawCardChart(M, t) {
     series = series.map(s => ({ ...s, data: s.data.map(p => [p[0], ok(p[1]) ? p[1] / as.k : null, p[2]]) }));
     yFmt = v => nf(as.d).format(v); lab = `Bakiye · ${as.lab}`; var bUnit = as.lab;
   }
-  sub.textContent = `${lab} · ${dShort(M.dates[S.bA])} – ${dShort(M.dates[S.bB])}${over ? " · ilk 8 çizgi" : ""}`;
+  sub.textContent = over ? "Grafikte ilk 8 çizgi gösteriliyor" : "";
   lineChart(el, { series, height: 340, yFmt, gapDays: M.freq === "w" ? 15 : 0, unit: typeof bUnit === "string" ? bUnit : "endeks" });
 }
 function refreshCard(key) {
@@ -887,7 +880,7 @@ function bindBddk() {
     if (t_.matches("select[data-ba]")) { S.bA = +t_.value; if (S.bA >= S.bB) S.bB = Math.min(curOf().dates.length - 1, S.bA + 1); renderBddk(); return; }
     if (t_.matches("select[data-bb]")) { S.bB = +t_.value; if (S.bA >= S.bB) S.bA = Math.max(0, S.bB - 1); renderBddk(); return; }
     if (t_.matches("input[data-bveri]")) { S.bVeri = t_.checked; store.set("bv.veri", S.bVeri ? "1" : ""); renderBddk(); return; }
-    const ix = e.target.closest("input[data-idx]"); if (ix) { S.bIdx[S.bFreq + ix.dataset.idx] = ix.checked; refreshCard(ix.dataset.idx); return; }
+    const ix = e.target.closest("input[data-idx]"); if (ix) { S.bIdx[S.bFreq + ix.dataset.idx] = ix.checked; drawCardChart(curOf(), curOf().tables.find(x => x.key === ix.dataset.idx)); return; }
     const s = e.target.closest("select[data-colsel]"); if (!s) return; S.bColOverride[S.bFreq + s.dataset.colsel] = +s.value; refreshCard(s.dataset.colsel); });
   $("#bCards").addEventListener("click", e => {
     const M = curOf();
