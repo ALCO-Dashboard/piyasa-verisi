@@ -447,7 +447,7 @@ async function loadAll() {
 // =============================================================== durum
 const S = {
   tab: "bddk",
-  bFreq: store.get("bv.freq") || "w", bA: null, bB: null, bGroups: (store.get("bv.groups") || "katilim").split(","), bCur: store.get("bv.cur") || "Toplam", bVeri: !!store.get("bv.veri"), bTables: {},
+  bFreq: store.get("bv.freq") || "w", bA: null, bB: null, bGroups: (store.get("bv.groups") || "katilim").split(","), bCurs: (store.get("bv.curs") || store.get("bv.cur") || "Toplam").split(",").filter(x => ["TP", "YP", "Toplam"].includes(x)), bVeri: !!store.get("bv.veri"), bTables: {},
   bColOverride: {}, bChk: {}, bIdx: {}, bOpenN: new Set(),
   tSub: "pp", tTopics: {}, tAB: {}, tClosed: new Set(["faiz|Banka ve Kredi Kartı İstatistikleri"]), tBank: store.get("bv.tbank") || "katilim", tBankSet: (store.get("bv.tbanks") || store.get("bv.tbank") || "katilim").split(",").filter(Boolean), tA: null, tB: null, tSel: {}, tRange: "1 Yıl", tFrom: "", tTo: "", fMode: {}, fBank: {}, fCur: {}, fTyp: {}, tCur: {}, tTyp: {}, tOpen: new Set(), tData: new Set(), tRate: store.get("bv.trate") || "efektif",
   aSel: [], aIndex: false, aRange: "2Y", aSrc: "all",
@@ -610,15 +610,20 @@ function renderMeta() {
 
 // =============================================================== BDDK
 const curOf = () => S.bFreq === "w" ? D.w : D.m;
-function colFor(t) {
-  const ov = S.bColOverride[S.bFreq + t.key]; if (ov != null && ov < t.cols.length) return ov;
+const CURS = ["TP", "YP", "Toplam"];
+const curList = () => { const l = CURS.filter(c => (S.bCurs || []).includes(c)); return l.length ? l : ["Toplam"]; };
+// para birimi kolonu; cur verilmezse seçili ilk para birimi (tablo, başlık ve grup rakamları bunu kullanır)
+function colFor(t, cur) {
+  const ov = S.bColOverride[S.bFreq + t.key]; if (cur == null && ov != null && ov < t.cols.length) return ov;
+  cur = cur || curList()[0];
   const n = t.cols.map(c => trLower(c).replace(/\s+/g, " ").trim());
-  const tgt = S.bCur === "Toplam" ? ["toplam"] : [trLower(S.bCur), "toplam " + trLower(S.bCur)];
+  const tgt = cur === "Toplam" ? ["toplam"] : [trLower(cur), "toplam " + trLower(cur)];
   for (const x of tgt) { const i = n.lastIndexOf(x); if (i >= 0) return i; }
   return t.cols.length - 1;
 }
 function idxBack(dates, from, kind, n) {
   // kind: 'w' hafta, 'm' ay, 'ytd' yılbaşı (önceki yılın son dönemi)
+  if (kind === "all") return 0;
   if (kind === "ytd") { const y = dates[from].slice(0, 4); for (let i = from; i >= 0; i--) if (dates[i].slice(0, 4) < y) return i; return 0; }
   const t = toDate(dates[from]); const target = kind === "w" ? +t - n * 7 * 864e5 : +new Date(t.getFullYear(), t.getMonth() - n + 1, 0);
   for (let i = from; i >= 0; i--) if (toTime(dates[i]) <= target + 864e5) return i; return 0;
@@ -648,14 +653,15 @@ const TABLE_GROUPS = {
   ],
 };
 const DEFAULT_TABLE = { m: "1", w: "krediler" };
-const QUICK = { w: [["Önceki Hafta", "w", 1], ["1 Ay", "w", 4], ["3 Ay", "w", 13], ["Yılbaşı", "ytd"], ["1 Yıl", "w", 52]], m: [["Önceki Ay", "m", 1], ["3 Ay", "m", 3], ["Yılbaşı", "ytd"], ["1 Yıl", "m", 12]] };
+const QUICK = { w: [["2 Hafta", "w", 2], ["1 Ay", "w", 4], ["3 Ay", "w", 13], ["6 Ay", "w", 26], ["Yılbaşı", "ytd"], ["1 Yıl", "w", 52], ["Tümü", "all"]],
+  m: [["1 Ay", "m", 1], ["3 Ay", "m", 3], ["6 Ay", "m", 6], ["Yılbaşı", "ytd"], ["1 Yıl", "m", 12], ["Tümü", "all"]] };
 function renderBddk() {
   const M = curOf();
   $$("#bFreq button").forEach(b => b.setAttribute("aria-pressed", b.dataset.f === S.bFreq));
   if (!M) { $("#bCards").innerHTML = '<div class="card empty">Bu bülten için veri henüz yok.</div>'; return; }
   const n = M.dates.length;
   if (S.bB == null || S.bB >= n) S.bB = n - 1;
-  if (S.bA == null || S.bA >= S.bB) S.bA = Math.min(S.bB - 1, idxBack(M.dates, S.bB, M.freq, 1));
+  if (S.bA == null || S.bA >= S.bB) S.bA = Math.min(S.bB - 1, M.freq === "w" ? idxBack(M.dates, S.bB, "w", 4) : idxBack(M.dates, S.bB, "m", 1));
   S.bA = Math.max(0, S.bA);
   const keys = M.tables.map(t => t.key);
   if (!S.bTables[S.bFreq]) S.bTables[S.bFreq] = [DEFAULT_TABLE[S.bFreq]].filter(k => keys.includes(k));
@@ -810,7 +816,7 @@ function bddkCard(M, t) {
   }
   // grafiğe gömülü kontroller (durum ortak: S.bA/S.bB/S.bGroups/S.bCur)
   const opt = sel => M.dates.map((d, i) => `<option value="${i}"${i === sel ? " selected" : ""}>${dLabel(d)}</option>`).reverse().join("");
-  const quick = QUICK[M.freq].map(([l, k, q]) => { const i = idxBack(M.dates, B, k, q); const avail = i < B && (k === "ytd" || Math.abs((toTime(M.dates[B]) - toTime(M.dates[i])) / 864e5 - (k === "w" ? q * 7 : q * 30.4)) < (k === "w" ? 8 : 20)); return `<button class="chip" data-bq="${i}" aria-pressed="${i === A}"${avail ? "" : " disabled style=\"opacity:.4;cursor:default\""}>${l}</button>`; }).join("");
+  const quick = QUICK[M.freq].map(([l, k, q]) => { const i = idxBack(M.dates, B, k, q); const avail = i < B && (k === "ytd" || k === "all" || Math.abs((toTime(M.dates[B]) - toTime(M.dates[i])) / 864e5 - (k === "w" ? q * 7 : q * 30.4)) < (k === "w" ? 8 : 20)); return `<button class="chip" data-bq="${i}" aria-pressed="${i === A}"${avail ? "" : " disabled style=\"opacity:.4;cursor:default\""}>${l}</button>`; }).join("");
   const veri = !!S.bVeri;
   const gchip = g => { let val = "", cl = "";
     if (!veri) { const a = V(hn, g.key, A), b = V(hn, g.key, B);
@@ -820,7 +826,7 @@ function bddkCard(M, t) {
   const ctl = `<div class="bctl">
       <div class="brow"><span class="period"><select data-ba aria-label="Başlangıç dönemi">${opt(A)}</select><span class="arrow">→</span><select data-bb aria-label="Bitiş dönemi">${opt(B)}</select></span>${quick}</div>
       <div class="brow">${GROUPS.map(gchip).join("")}</div>
-      <div class="brow"><div class="seg" role="group" aria-label="Para birimi">${[["TP", "TP"], ["YP", "YP"], ["Toplam", "Toplam"]].map(([cc, l]) => `<button data-bc="${cc}" aria-pressed="${S.bCur === cc}">${l}</button>`).join("")}</div></div>
+      <div class="brow"><div class="seg" role="group" aria-label="Para birimi">${CURS.map(cc => `<button data-bc="${cc}" aria-pressed="${curList().includes(cc)}">${cc}</button>`).join("")}</div>${curList().length > 1 ? `<span class="note">Tablo ve rakamlar: ${curList()[0]}</span>` : ""}</div>
     </div>`;
   const tools = hasKids ? `<div class="treetools"><button class="more" data-expand="${t.key}">Tümünü aç</button><button class="more" data-collapse="${t.key}">Tümünü kapat</button></div>` : "";
   return `<article class="card" data-card="${t.key}">
@@ -839,12 +845,17 @@ function drawCardChart(M, t) {
   if (!nodes.length) { sub.textContent = ""; el.innerHTML = '<div class="empty">Grafikte görmek için soldan kalem işaretleyin.</div>'; return; }
   const idx = []; for (let i = S.bA; i <= S.bB; i++) idx.push(i);
   const kinds = [...new Set(nodes.map(n => nodeKind(M, t, n, c)))];
-  const DASH = [false, "6 4", "2 3", "10 3 2 3"];
+  const DASH = [false, "6 4", "2 3", "10 3 2 3"], CURC = { TP: "--c1", YP: "--c3", Toplam: "--c4" };
+  // para birimleri: aynı kolona düşenler tek çizgi (TP/YP ayrımı olmayan tablolar)
+  const cl = curList().length > 1 ? curList().map(cu => [cu, colFor(t, cu)]).filter((x, i, a) => a.findIndex(y => y[1] === x[1]) === i) : [[curList()[0], c]];
+  const mc = cl.length > 1, mg = groups.length > 1;
   let series = [];
-  nodes.forEach((n, ri) => groups.forEach(g => {
-    series.push({ name: groups.length > 1 ? `${gName(g)} · ${n.name}` : n.name, color: groups.length > 1 ? gColor(g) : pal[ri % 8], dash: groups.length > 1 ? DASH[ri % 4] : false,
-      data: idx.map(i => [M.dates[i], nodeVal(M, t, n, g, c, i), toTime(M.dates[i])]) });
-  }));
+  nodes.forEach((n, ri) => groups.forEach(g => cl.forEach(([cu, cc], ci) => {
+    const name = [mg ? gName(g) : "", n.name, mc ? cu : ""].filter(Boolean).join(" · ");
+    const color = mg ? gColor(g) : mc ? cssVar(CURC[cu]) || pal[ci] : pal[ri % 8];
+    const dash = mg ? DASH[(mc ? ci : ri) % 4] : mc ? DASH[ri % 4] : false;
+    series.push({ name, color, dash, data: idx.map(i => [M.dates[i], nodeVal(M, t, n, g, cc, i), toTime(M.dates[i])]) });
+  })));
   const over = series.length > 8; series = series.slice(0, 8);
   let yFmt, lab;
   if (kinds.length > 1 || S.bIdx[M.freq + t.key]) {
@@ -880,7 +891,8 @@ function bindBddk() {
     const gb = e.target.closest("button[data-bg]"); if (gb) { const g = gb.dataset.bg;
       if (S.bGroups.includes(g)) { if (S.bGroups.length > 1) S.bGroups = S.bGroups.filter(x => x !== g); } else S.bGroups = GROUPS.map(x => x.key).filter(k => k === g || S.bGroups.includes(k));
       store.set("bv.groups", S.bGroups.join(",")); renderBddk(); return; }
-    const bc = e.target.closest("button[data-bc]"); if (bc) { S.bCur = bc.dataset.bc; S.bColOverride = {}; store.set("bv.cur", S.bCur); renderBddk(); return; }
+    const bc = e.target.closest("button[data-bc]"); if (bc) { const c = bc.dataset.bc, l = curList();
+      S.bCurs = l.includes(c) ? (l.length > 1 ? l.filter(x => x !== c) : l) : CURS.filter(x => x === c || l.includes(x)); S.bColOverride = {}; store.set("bv.curs", S.bCurs.join(",")); renderBddk(); return; }
     const op = e.target.closest("button[data-open]"); if (op) { const k = op.dataset.open; S.bOpenN.has(k) ? S.bOpenN.delete(k) : S.bOpenN.add(k); refreshCard(op.closest("article").dataset.card); return; }
     const ex = e.target.closest("button[data-expand],button[data-collapse]");
     if (ex) {
