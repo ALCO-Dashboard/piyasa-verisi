@@ -23,6 +23,12 @@ SEKTOR = "10001"
 ILK_YIL = 2021       # TCMB swap serisi 4 Ocak 2021'de başlıyor
 EN_FAZLA = 60
 TERS = "TP.SWAPTEKTAR.TOTALSTOKSATIMYONLU"
+# EVDS bie_mknethar — Yurt dışı yerleşiklerin menkul kıymet stoku ve net alımları (haftalık, Cuma, milyon USD)
+MK_ILK = dt.date(2020, 9, 11)
+MK = {"stok": "TP.MKNETHAR.M13", "stok_ic": "TP.MKNETHAR.M14", "stok_hisse": "TP.MKNETHAR.M1", "stok_dibs": "TP.MKNETHAR.M2",
+      "stok_osba": "TP.MKNETHAR.M6", "stok_disi": "TP.MKNETHAR.M15", "stok_eb": "TP.MKNETHAR.M16",
+      "net": "TP.MKNETHAR.M20", "net_ic": "TP.MKNETHAR.M21", "net_hisse": "TP.MKNETHAR.M7", "net_dibs": "TP.MKNETHAR.M8",
+      "net_osba": "TP.MKNETHAR.M12", "net_disi": "TP.MKNETHAR.M22", "net_eb": "TP.MKNETHAR.M23"}
 
 
 def _bddk(g, D, log):
@@ -87,14 +93,25 @@ def _ters(g, D, anahtar, log):
     log(f"   swap/TCMB ters swap: {len(D['ters'])} gün, son {max(D['ters']) if D['ters'] else '—'}")
 
 
+def _mk(g, D, anahtar, log):
+    s = requests.Session()
+    s.headers.update({"key": anahtar, "User-Agent": g.UA})
+    bas = MK_ILK if not D["mk"] else dt.date.fromisoformat(max(D["mk"])) - dt.timedelta(days=60)
+    ham = g.evds_cek(s, list(MK.values()), bas, dt.date.today())
+    ters = {v: k for k, v in MK.items()}
+    for t, v in ham.items():
+        D["mk"][t] = {ters[c]: x for c, x in v.items() if c in ters}
+    log(f"   menkul kıymet/EVDS: {len(D['mk'])} hafta, son {max(D['mk']) if D['mk'] else '—'}")
+
+
 def guncelle(g, site, anahtar, log):
     yol = os.path.join(site, "makro", "data", "swap.json")
     os.makedirs(os.path.dirname(yol), exist_ok=True)
     try:
         eski = json.load(open(yol, encoding="utf-8"))
-        D = {"hafta": eski.get("_hafta", {}), "ters": eski.get("_ters", {})}
+        D = {"hafta": eski.get("_hafta", {}), "ters": eski.get("_ters", {}), "mk": eski.get("_mk", {})}
     except Exception:
-        D = {"hafta": {}, "ters": {}}
+        D = {"hafta": {}, "ters": {}, "mk": {}}
     sorun = []
     try:
         _bddk(g, D, log)
@@ -107,8 +124,13 @@ def guncelle(g, site, anahtar, log):
         except Exception as e:
             log(f"HATA swap/TCMB: {type(e).__name__}: {e} — önceki veri korunuyor")
             sorun.append("tcmb")
+        try:
+            _mk(g, D, anahtar, log)
+        except Exception as e:
+            log(f"HATA menkul kıymet/EVDS: {type(e).__name__}: {e} — önceki veri korunuyor")
+            sorun.append("mk")
     else:
-        sorun.append("tcmb")
+        sorun += ["tcmb", "mk"]
     gunler = sorted(D["ters"])
     seri = []
     for wid in sorted(D["hafta"], key=int):
@@ -118,9 +140,11 @@ def guncelle(g, site, anahtar, log):
         ters = D["ters"][tg] if tg else (0.0 if h["t"] < "2021-01-04" else None)
         seri.append({"id": int(wid), "t": h["t"], "disi": h["disi"], "ici": h["ici"], "net": h["net"], "ozk": h["ozk"],
                      "ters": ters, "ters_t": tg, "top": h["disi"] + ters if ters is not None and h["disi"] is not None else None})
-    out = {"updated": g.simdi(), "birim": "milyon USD", "seri": seri, "failed": sorun,
-           "kaynak": {"bddk": g.BDDK_H, "evds": "https://evds3.tcmb.gov.tr", "ters_kod": TERS},
-           "_hafta": D["hafta"], "_ters": D["ters"]}
+    mkt = sorted(t for t in D["mk"] if D["mk"][t].get("stok") is not None)
+    mk = {"dates": mkt, "s": {k: [D["mk"][t].get(k) for t in mkt] for k in MK}}
+    out = {"updated": g.simdi(), "birim": "milyon USD", "seri": seri, "mk": mk, "failed": sorun,
+           "kaynak": {"bddk": g.BDDK_H, "evds": "https://evds3.tcmb.gov.tr", "ters_kod": TERS, "mk_grup": "bie_mknethar"},
+           "_hafta": D["hafta"], "_ters": D["ters"], "_mk": D["mk"]}
     json.dump(out, open(yol, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     if seri:
         x = seri[-1]

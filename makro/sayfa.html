@@ -376,7 +376,7 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
     </div>
   </section>
   <section id="pPiyasa" class="hidden">
-    <div class="subtabs" role="group" aria-label="Piyasa konu" id="psTabs"><button data-ps="faiz" aria-pressed="true">Kâr/Faiz/Swap Oranları</button><button data-ps="gosterge" aria-pressed="false">Gösterge Oranlar</button><button data-ps="endeks" aria-pressed="false">Endeks ve Emtia</button><button data-ps="swap" aria-pressed="false">Yabancı Swap Stoku</button></div>
+    <div class="subtabs" role="group" aria-label="Piyasa konu" id="psTabs"><button data-ps="faiz" aria-pressed="true">Kâr/Faiz/Swap Oranları</button><button data-ps="gosterge" aria-pressed="false">Gösterge Oranlar</button><button data-ps="endeks" aria-pressed="false">Endeks ve Emtia</button><button data-ps="swap" aria-pressed="false">Yabancı Stoğu</button></div>
     <div id="psFaiz">
     <h2 class="sec">Gecelik oranlar ve hacim</h2>
     <div class="kpis" id="pKpi"></div>
@@ -401,7 +401,7 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
     </div>
     </div>
     <div id="psSwap" class="hidden">
-      <h2 class="sec">Yabancı swap stoku</h2>
+      <h2 class="sec">Yabancı stoğu</h2>
       <div class="empty hidden" id="swGate"></div>
       <div id="swBody">
       <div class="kpis" id="swKpi"></div>
@@ -420,6 +420,21 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
           <div class="cardhead"><div><h3>Son haftalar (milyon USD)</h3></div></div>
           <div class="tw" id="swTbl"></div>
         </div>
+      </div>
+      </div>
+      <h2 class="sec" style="margin-top:22px">Yabancıların menkul kıymet portföyü</h2>
+      <div class="empty hidden" id="mkGate"></div>
+      <div id="mkBody">
+      <div class="kpis" id="mkKpi"></div>
+      <div class="card">
+        <div class="cardhead"><div><h3 id="mkT"></h3></div><div class="hdr2"><div class="seg" id="mkMod" role="group" aria-label="Gösterim"><button data-m="net">Haftalık net alım</button><button data-m="stok">Stok</button></div><span class="chips" id="mkRange"></span></div></div>
+        <div class="chips" id="mkSer" style="margin:2px 0 8px"></div>
+        <div class="chart" id="mkChart"></div>
+        <details class="acik"><summary>Açıklama</summary><div class="sub" id="mkSub"></div></details>
+      </div>
+      <div class="card">
+        <div class="cardhead"><div><h3>Son haftalar (milyon USD)</h3></div></div>
+        <div class="tw" id="mkTbl"></div>
       </div>
       </div>
     </div>
@@ -683,21 +698,21 @@ function renderBk() {
 const P_R = [["1A", 31], ["3A", 92], ["6A", 183], ["1Y", 366], ["Tümü", 1e5]];
 // piyasa grafiklerinde özel tarih aralığı: "Tarih" seçilince başlangıç → bitiş
 const OZ = {};
-function tarihChips(el, id, cur, dates, cb) {
+function tarihChips(el, id, cur, dates, cb, PR = P_R) {
   const oz = OZ[id] ||= { a: "", b: "" }, son = dates[dates.length - 1] || "", ilk = dates[0] || "";
   el.innerHTML = `<button class="chip" data-k="Tarih" aria-pressed="${cur === "Tarih"}">Tarih</button>` + (cur === "Tarih"
     ? `<input type="date" class="dtin" data-o="a" value="${oz.a}" min="${ilk}" max="${son}" aria-label="Başlangıç tarihi"><span class="arrow">→</span><input type="date" class="dtin" data-o="b" value="${oz.b}" min="${ilk}" max="${son}" aria-label="Bitiş tarihi">` : "")
-    + P_R.map(([k]) => `<button class="chip" data-k="${k}" aria-pressed="${k === cur}">${k}</button>`).join("");
+    + PR.map(([k]) => `<button class="chip" data-k="${k}" aria-pressed="${k === cur}">${k}</button>`).join("");
   el.onclick = e => { const b = e.target.closest("button[data-k]"); if (!b) return;
-    if (b.dataset.k === "Tarih" && !oz.a) { const g = (P_R.find(r => r[0] === cur) || P_R[2])[1]; oz.a = new Date(Date.parse(son) - Math.min(g, 3650) * 864e5).toISOString().slice(0, 10); oz.b = son; }
+    if (b.dataset.k === "Tarih" && !oz.a) { const g = (PR.find(r => r[0] === cur) || PR[2])[1]; oz.a = new Date(Date.parse(son) - Math.min(g, 3650) * 864e5).toISOString().slice(0, 10); oz.b = son; }
     cb(b.dataset.k); };
   el.onchange = e => { const x = e.target.closest("input[data-o]"); if (!x || !x.value) return; oz[x.dataset.o] = x.value; if (oz.a && oz.b && oz.a > oz.b) [oz.a, oz.b] = [oz.b, oz.a]; cb("Tarih"); };
 }
 // seçili aralıktaki tarihlerin indeksleri ve eksen için gün uzunluğu
-function tarihKes(dates, id, cur) {
+function tarihKes(dates, id, cur, PR = P_R) {
   if (cur === "Tarih") { const oz = OZ[id] || {}, a = oz.a || dates[0], b = oz.b || dates[dates.length - 1];
     return { ix: dates.map((d, i) => d >= a && d <= b ? i : -1).filter(i => i >= 0), gun: (Date.parse(b) - Date.parse(a)) / 864e5 }; }
-  const gun = (P_R.find(r => r[0] === cur) || P_R[2])[1], bas = new Date(Date.parse(dates[dates.length - 1]) - gun * 864e5).toISOString().slice(0, 10);
+  const gun = (PR.find(r => r[0] === cur) || PR[2])[1], bas = new Date(Date.parse(dates[dates.length - 1]) - gun * 864e5).toISOString().slice(0, 10);
   return { ix: dates.map((d, i) => d >= bas ? i : -1).filter(i => i >= 0), gun };
 }
 const IMP = [["O/N", "O/N", "Gecelik"], ["1A", "1M", "1 aylık"], ["3A", "3M", "3 aylık"], ["6A", "6M", "6 aylık"], ["1Y", "1Y", "1 yıllık"]];
@@ -865,7 +880,7 @@ $("#psTabs").onclick = e => { const b = e.target.closest("button[data-ps]"); if 
 function renderPs() {
   $$("#psTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.ps === S.ps));
   $("#psFaiz").classList.toggle("hidden", S.ps !== "faiz"); $("#psGosterge").classList.toggle("hidden", S.ps !== "gosterge"); $("#psEndeks").classList.toggle("hidden", S.ps !== "endeks"); $("#psSwap").classList.toggle("hidden", S.ps !== "swap");
-  if (S.ps === "faiz") { renderPiyasa(); renderBbg(); } else if (S.ps === "gosterge") renderGosterge(); else if (S.ps === "swap") renderSwap(); else renderEndeks();
+  if (S.ps === "faiz") { renderPiyasa(); renderBbg(); } else if (S.ps === "gosterge") renderGosterge(); else if (S.ps === "swap") { renderSwap(); renderMk(); } else renderEndeks();
 }
 
 // ---------------------------------------------------------------- Endeks ve emtia (Bloomberg + LBMA)
@@ -1556,7 +1571,7 @@ addEventListener("hashchange", () => { if (hashUygula(location.hash.slice(1)) &&
 H = undefined;
 // ---------------------------------------------------------------- Yabancı swap stoku (BDDK BDYPP + TCMB ters swap, haftalık)
 let SW;
-const SW_R = [["6A", 26], ["1Y", 52], ["2Y", 104], ["Tümü", 9999]];
+const SW_R = [["1A", 31], ["3A", 92], ["6A", 183], ["1Y", 366], ["2Y", 731], ["Tümü", 1e5]];
 S.swR = S.swR || "1Y";
 function renderSwap() {
   const g = $("#swGate"), body = $("#swBody"), x = (SW?.seri || []).filter(r => ok(r.disi));
@@ -1570,8 +1585,9 @@ function renderSwap() {
     `<div class="kpi" style="--kc:var(--c3)"><div class="t">BDDK bilanço dışı YP pozisyonu</div><div class="v">${mr1(son.disi)} Mr USD</div><div class="s">Haftalık ${dH(fark(son.disi, onc?.disi))}</div><div class="d">Sektör · haftalık bülten</div></div>`,
     `<div class="kpi" style="--kc:var(--c4)"><div class="t">TCMB ters swap stoku</div><div class="v">${ok(son.ters) ? nf(son.ters / 1e3, 2) : "—"} Mr USD</div><div class="s">Haftalık ${dH(fark(son.ters, onc?.ters), 2)}</div><div class="d">Satım yönlü stok · ${son.ters_t ? gunAd(son.ters_t) : "—"}</div></div>`,
     `<div class="kpi kpi2" style="--kc:var(--c6)"><div class="t">Bankacılık YP pozisyonu</div><div class="kr"><span class="kl">Bilanço içi</span><span class="kv">${mr1(son.ici)} Mr</span></div><div class="kr"><span class="kl">Net genel</span><span class="kv">${mr1(son.net)} Mr</span></div><div class="d">Net genel / yasal özkaynak %${ok(son.net) && son.ozk ? nf(son.net / son.ozk * 100, 1) : "—"}</div></div>`].join("");
-  rangeChips($("#swRange"), SW_R, S.swR, k => { S.swR = k; renderSwap(); });
-  const n = SW_R.find(r => r[0] === S.swR)[1], y = x.slice(-n), xs = y.map(r => r.t), uzun = n > 60;
+  const xd = x.map(r => r.t);
+  tarihChips($("#swRange"), "sw", S.swR, xd, k => { S.swR = k; renderSwap(); }, SW_R);
+  const { ix: swIx, gun: swGun } = tarihKes(xd, "sw", S.swR, SW_R), y = swIx.map(i => x[i]), xs = y.map(r => r.t), uzun = swGun > 400;
   const ser = [{ name: "BDDK bilanço dışı YP pozisyonu", vals: y.map(r => r.disi / 1e3), color: css("--c3"), type: "bar", fmt: v => nf(v, 1) + " Mr USD" },
     { name: "TCMB ters swap", vals: y.map(r => ok(r.ters) ? r.ters / 1e3 : null), color: css("--c4"), type: "bar", fmt: v => nf(v, 2) + " Mr USD" }];
   $("#swLeg").innerHTML = ser.map(s_ => `<span class="chip" style="cursor:default"><i style="background:${s_.color}"></i>${s_.name}</span>`).join("");
@@ -1590,7 +1606,40 @@ function renderSwap() {
     + `Çekinceler: BDYPP bankaların tüm karşı taraflarla (yurt içi müşteriler dahil) türev işlemlerinin net döviz pozisyonudur; yabancılarla yapılan swap stokunun yaygın kullanılan yaklaşık göstergesidir, doğrudan ölçümü değildir. `
     + `TCMB ters swap stoku TCMB'nin yurt içi bankalarla yaptığı satım yönlü swap ihalelerinden oluşur. Bilanço içi pozisyon ve net genel pozisyon bilgi için aynı BDDK tablosundan verilmiştir. Son güncelleme ${SW.updated ? new Date(SW.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${SW.failed?.length ? ` · son çekimde alınamayan: ${SW.failed.join(", ")} (önceki veri gösteriliyor)` : ""}.`;
 }
-fetch("data/swap.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { SW = j; if (S.tab === "piyasa" && S.ps === "swap") renderSwap(); });
+// ---------------------------------------------------------------- Yabancıların menkul kıymet portföyü (EVDS bie_mknethar, haftalık)
+const MK_K = [["", "Toplam", "--c1"], ["_hisse", "Hisse senedi", "--c3"], ["_dibs", "DİBS", "--c4"], ["_osba", "ÖSBA", "--c6"], ["_eb", "Eurobond", "--c2"]];
+S.mkR = S.mkR || "1Y"; S.mkM = S.mkM || "net"; S.mkS = S.mkS || new Set(["", "_hisse"]);
+function renderMk() {
+  const g = $("#mkGate"), body = $("#mkBody"), M = SW?.mk, d = M?.dates || [];
+  if (!d.length) { g.classList.remove("hidden"); body.classList.add("hidden"); g.textContent = SW === undefined ? "Yükleniyor…" : "Menkul kıymet verisi henüz derlenmedi (TCMB EVDS bir sonraki güncellemede çekilir)."; return; }
+  g.classList.add("hidden"); body.classList.remove("hidden");
+  const v = (k, i) => M.s[k]?.[i], n = d.length - 1, yb = d.findLastIndex(t => t < d[n].slice(0, 4) + "-01-01");
+  const ytd = k => { let t = 0, ok_ = false; for (let i = yb + 1; i <= n; i++) if (ok(v(k, i))) { t += v(k, i); ok_ = true; } return ok_ ? t : null; };
+  const sg = (x, b = 1e3, dd = 2) => ok(x) ? `<span class="${cls(x, .05)}">${x > 0 ? "+" : x < 0 ? "−" : ""}${nf(Math.abs(x) / b, dd)}</span>` : "—";
+  $("#mkKpi").innerHTML = MK_K.filter(([k]) => k !== "_osba").map(([k, l, c]) => `<div class="kpi" style="--kc:var(${c})"><div class="t">${k ? l + " stoku" : "Toplam menkul kıymet stoku"}</div><div class="v">${ok(v("stok" + k, n)) ? nf(v("stok" + k, n) / 1e3, 1) : "—"} Mr USD</div>`
+    + `<div class="s">Haftalık net ${sg(v("net" + k, n), 1, 0)} mn · yılbaşından ${sg(ytd("net" + k))} Mr</div><div class="d">${gunAd(d[n])} · TCMB EVDS</div></div>`).join("");
+  $("#mkMod").querySelectorAll("button").forEach(b => { b.setAttribute("aria-pressed", b.dataset.m === S.mkM); b.onclick = () => { S.mkM = b.dataset.m; renderMk(); }; });
+  $("#mkSer").innerHTML = MK_K.map(([k, l, c]) => `<button class="chip" data-k="${k}" aria-pressed="${S.mkS.has(k)}"><i style="background:${css(c)}"></i>${l}</button>`).join("");
+  $("#mkSer").onclick = e => { const b = e.target.closest("button[data-k]"); if (!b) return; const k = b.dataset.k;
+    if (S.mkS.has(k)) { if (S.mkS.size > 1) S.mkS.delete(k); } else S.mkS.add(k); renderMk(); };
+  tarihChips($("#mkRange"), "mk", S.mkR, d, k => { S.mkR = k; renderMk(); }, SW_R);
+  const { ix, gun } = tarihKes(d, "mk", S.mkR, SW_R), xs = ix.map(i => d[i]), net = S.mkM === "net";
+  $("#mkT").textContent = net ? "Yabancıların haftalık net menkul kıymet alımı (milyon USD)" : "Yabancıların menkul kıymet stoku (milyar USD)";
+  const sec = MK_K.filter(([k]) => S.mkS.has(k));
+  const ser = sec.map(([k, l, c]) => net
+    ? { name: l, vals: ix.map(i => v("net" + k, i) ?? null), color: css(c), type: "bar", fmt: x => (x > 0 ? "+" : "") + nf(x, 1) + " mn USD",
+        barColors: sec.length === 1 ? ix.map(i => css((v("net" + k, i) ?? 0) < 0 ? "--down" : "--up")) : undefined }
+    : { name: l, vals: ix.map(i => ok(v("stok" + k, i)) ? v("stok" + k, i) / 1e3 : null), color: css(c), width: 2, fmt: x => nf(x, 2) + " Mr USD" });
+  const xFmt = gun > 400 ? (t => `${AY[+t.slice(5, 7) - 1]} ${t.slice(2, 4)}`) : gunKisa;
+  chart($("#mkChart"), { xs, series: ser, height: 320, label: $("#mkT").textContent, xFmt, tipX: gunAd, maxX: 12, yFmt: x => nf(x, net ? 0 : 0) });
+  const son = [...Array(Math.min(8, d.length)).keys()].map(j => n - j);
+  $("#mkTbl").innerHTML = `<table class="tbl"><thead><tr><th class="l">Hafta</th><th>Toplam stok</th><th>Toplam net</th><th>Hisse stok</th><th>Hisse net</th><th>DİBS stok</th><th>DİBS net</th><th>Eurobond stok</th><th>Eurobond net</th></tr></thead><tbody>`
+    + son.map(i => `<tr><td class="l">${gunAd(d[i])}</td>` + ["", "_hisse", "_dibs", "_eb"].map(k => `<td>${ok(v("stok" + k, i)) ? nf(v("stok" + k, i), 0) : "—"}</td><td>${sg(v("net" + k, i), 1, 1)}</td>`).join("") + "</tr>").join("") + "</tbody></table>";
+  $("#mkSub").innerHTML = `Kaynak: <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> › Menkul Kıymet İstatistikleri › Yurt dışı yerleşiklerin mülkiyetindeki menkul kıymetler (haftalık, Cuma, milyon USD). `
+    + `<b>Stok</b> piyasa değeriyle ölçülür; fiyat ve kur hareketleriyle de değişir. <b>Haftalık net alım</b> yalnızca alım-satım işlemlerini gösterir (fiyat/kur etkisi arındırılmış); pozitif = yabancı girişi. `
+    + `Toplam = yurt içi menkul kıymetler (hisse senedi, DİBS, ÖSBA ve diğer) + yurt dışı ihraçlar (eurobond vb.); geri alım/ters repo gibi geçici işlemler hariçtir. Veriler TCMB tarafından genellikle Perşembe günleri bir önceki haftanın Cuma'sı için yayımlanır.`;
+}
+fetch("data/swap.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { SW = j; if (S.tab === "piyasa" && S.ps === "swap") { renderSwap(); renderMk(); } });
 fetch("data/hazine.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { H = j; if (D && S.tab === "makro" && S.mk === "hazine") { renderHazine(); renderSrc(); } });
 fetch("data/ekonomi.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { E = j; if (D && S.tab === "makro" && S.mk in EKT) { renderEko(); renderSrc(); } });
 const bbgYukle = fetch("data/bbg.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null);
