@@ -23,7 +23,7 @@ KAP = "https://www.kap.org.tr"
 KAP_ILK = dt.date(2021, 1, 1)
 PENCERE = 85              # gün; tüm bankalar tek sorguda, KAP yanıtı 2000 satırla sınırlı
 LISTE_EN_FAZLA = 3        # çalışma başına geçmişe dönük liste sorgusu
-DETAY_EN_FAZLA = 25       # çalışma başına bildirim sayfası
+DETAY_EN_FAZLA = 40       # çalışma başına bildirim sayfası
 BEKLE = 2.5
 
 EVDS_ILK = dt.date(2015, 1, 1)
@@ -40,6 +40,9 @@ BDDK = [("send", "7", "1", 2), ("send_dt", "7", "2", 2), ("sek", "7", "3", 2),
 
 RE_ADAY = re.compile(r"sendikasyon|syndicat|murabaha|seküritizasyon|securiti|\bdpr\b|kredi (temin|sözleşme|anlaşma|sağla)|kredi.*temin"
                      r"|yurt ?dışı.*(kredi|finansman)|kaynak temin|finansman temin", re.I)
+RE_DISLA = re.compile(r"tahvil|bono|borçlanma ara[cç]|derecelendirme|ihraç|kira sertifika|sukuk", re.I)       # özet: kredi değil, ihraç duyurusu
+RE_KARAR = re.compile(r"yetki verilmesine|ihraç tavanı|ihraç limiti|program\w* kurul", re.I)                 # metin: işlem değil, karar/yetki
+RE_TAM = re.compile(r"(\d{1,3}(?:\.\d{3}){2,})(?:,-)?\s*(ABD\s*Dolar[ıi]|Amerikan\s*Dolar[ıi]|USD|Dolar|Avro|Euro|EUR)\b", re.I)   # 178.500.000,- Avro
 RE_TUTAR = re.compile(r"(\d[\d.,]*)\s*(milyon|milyar)\s*(ABD\s*Dolar[ıi]|Amerikan\s*Dolar[ıi]|USD|Dolar|Avro|Euro|EUR)\b", re.I)
 RE_VADE = re.compile(r"(\d[\d.]*)\s*gün(?:lük)?\s*vadeli|(\d+)\s*(yıl|ay)(?:\s*\d+\s*(?:iş\s*)?gün[üu]?)?\s*vadeli", re.I)
 RE_MAL = re.compile(r"(SOFR|Euribor)\s*\+\s*%\s*(\d+(?:[.,]\d+)?)", re.I)
@@ -64,21 +67,23 @@ def ayristir(metin):
         else:
             gun = round(int(m.group(2)) * (365 if m.group(3).lower() == "yıl" else 30.44))
         vadeler.append((m.start(), gun))
-    dilim = []
-    for m in RE_TUTAR.finditer(t):
+    dilim, yedek = [], []
+    ham = [(m, _sayi(m.group(1)) * (1000 if m.group(2).lower() == "milyar" else 1), m.group(3)) for m in RE_TUTAR.finditer(t)]
+    ham += [(m, int(m.group(1).replace(".", "")) / 1e6, m.group(2)) for m in RE_TAM.finditer(t)]
+    for m, v, birim in sorted(ham, key=lambda x: x[0].start()):
+        pb = "EUR" if re.match(r"avro|euro|eur", birim, re.I) else "USD"
         once = t[max(0, m.start() - 28):m.start()].lower()
-        if re.search(r"toplam|yaklaşık|karşılığı|eşdeğeri", once):      # dilimlerin toplamı; ayrı dilim değil
+        sonra_m = t[m.end():m.end() + 18].lower()
+        if re.search(r"toplam", once) or re.search(r"karşılığı|eşdeğeri", sonra_m):      # dilimlerin toplamı / eski kredi; ayrı dilim değil
+            yedek.append((pb, v))
             continue
-        try:
-            v = _sayi(m.group(1)) * (1000 if m.group(2).lower() == "milyar" else 1)
-        except ValueError:
-            continue
-        pb = "EUR" if re.match(r"avro|euro|eur", m.group(3), re.I) else "USD"
         cumle_sonu = t.find(". ", m.end())
         sonra = [g for p, g in vadeler if p >= m.end() and (cumle_sonu < 0 or p < cumle_sonu)]
         once_v = [g for p, g in vadeler if p < m.start()]
         gun = sonra[0] if sonra else (once_v[-1] if once_v else (vadeler[0][1] if vadeler else None))
         dilim.append({"pb": pb, "tutar": round(v, 3), "gun": gun, "maliyet": None, "_p": m.start()})
+    if not dilim and yedek:                      # yalnızca toplam verilmiş
+        dilim.append({"pb": yedek[-1][0], "tutar": round(yedek[-1][1], 3), "gun": vadeler[0][1] if vadeler else None, "maliyet": None, "_p": 0})
     # ilk maliyet cümlesinden sonra gelen tutarlar genelde tekrar/açıklamadır
     mal = [(m.start(), "USD" if m.group(1).lower() == "sofr" else "EUR", m.group(1).upper() if m.group(1).lower() == "sofr" else "Euribor",
             float(m.group(2).replace(",", "."))) for m in RE_MAL.finditer(t)]
@@ -193,7 +198,7 @@ def _kap(g, K, log):
         for x in L:
             ad = (x.get("kapTitle") or "").strip()
             ozet = (x.get("summary") or "").strip()
-            if ad not in banka or not (x.get("subject") or "").startswith("Özel Durum") or not RE_ADAY.search(ozet):
+            if ad not in banka or not (x.get("subject") or "").startswith("Özel Durum") or not RE_ADAY.search(ozet) or RE_DISLA.search(ozet):
                 continue
             bid = str(x["disclosureIndex"])
             if bid in K["ham"]:
@@ -234,10 +239,14 @@ def _kap_cikti(K, kur):
         k = kur.get(once[-1]) if once else None
         return k["eur"] / k["usd"] if k and k.get("usd") and k.get("eur") else None
 
-    out = []
-    for bid, v in K["ham"].items():
-        if v.get("metin") is None:
+    out, gorulen = [], set()
+    for bid, v in sorted(K["ham"].items(), key=lambda kv: int(kv[0])):
+        if v.get("metin") is None or RE_DISLA.search(v["ozet"]) or RE_KARAR.search(v["metin"]):
             continue
+        imza = (v["t"], v["banka"], v["metin"][:160])
+        if imza in gorulen:                       # aynı gün yinelenen açıklama
+            continue
+        gorulen.add(imza)
         dilim, ek = ayristir(v["metin"])
         usd = sum(d["tutar"] for d in dilim if d["pb"] == "USD")
         eur = sum(d["tutar"] for d in dilim if d["pb"] == "EUR")
