@@ -1,0 +1,18 @@
+name: Hazine deneme
+on:
+  push:
+    branches: [hazine-deneme]
+permissions:
+  contents: write
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          mkdir -p out && pip install requests >/dev/null 2>&1
+          cd t && python3 kapp.py 2>&1 | tee ../out/log1.txt
+      - run: |
+          git config user.name bot; git config user.email bot@users.noreply.github.com
+          git checkout --orphan hazine-deneme-veri; git rm -rqf --cached .; git add -f out; git commit -qm veri; git push -f origin hazine-deneme-veri
