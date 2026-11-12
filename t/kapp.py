@@ -13,7 +13,7 @@ def sorgu(oid, bas, bit):
     return r
 bugun = dt.date.today()
 # tarih araligi siniri
-for gun in (1100, 2500):
+for gun in (365, 366, 400):
     r = sorgu(U["AKBANK T.A.Ş."], bugun - dt.timedelta(days=gun), bugun); print("aralik", gun, r.status_code, len(r.content), (len(r.json()) if r.ok and r.text[:1] == "[" else r.text[:200])); time.sleep(3)
 ADLAR = ["AKBANK T.A.Ş.", "TÜRKİYE GARANTİ BANKASI A.Ş.", "TÜRKİYE İŞ BANKASI A.Ş.", "YAPI VE KREDİ BANKASI A.Ş.", "TÜRKİYE VAKIFLAR BANKASI T.A.O.", "T.C. ZİRAAT BANKASI A.Ş.", "TÜRKİYE HALK BANKASI A.Ş.", "QNB BANK A.Ş.", "DENİZBANK A.Ş.", "TÜRK EKONOMİ BANKASI A.Ş.",
          "KUVEYT TÜRK KATILIM BANKASI A.Ş.", "ALBARAKA TÜRK KATILIM BANKASI A.Ş.", "TÜRKİYE FİNANS KATILIM BANKASI A.Ş.", "VAKIF KATILIM BANKASI A.Ş.", "ZİRAAT KATILIM BANKASI A.Ş.", "TÜRKİYE SINAİ KALKINMA BANKASI A.Ş.", "TÜRKİYE İHRACAT KREDİ BANKASI A.Ş."]
@@ -21,7 +21,7 @@ RE = re.compile(r"sendikasyon|syndicat|murabaha|seküritizasyon|securiti|dpr|yur
 bul = []
 for ad in ADLAR:
     if ad not in U: print("YOK", ad); continue
-    r = sorgu(U[ad], bugun - dt.timedelta(days=720), bugun); time.sleep(2.5)
+    r = sorgu(U[ad], bugun - dt.timedelta(days=360), bugun); time.sleep(2.5)
     if not r.ok: print(ad, r.status_code); continue
     L = r.json(); ozet = {}
     for x in L:
