@@ -508,6 +508,8 @@ function prepEvds(raw) {
   const kindOf = g => { const u = trLower(g.unit || ""); if (/bin tl/.test(u)) return "tl"; if (/abd/.test(u)) return "usd"; if (/ağırlıklı|yüzde/.test(u)) return "pct"; if (/işlem/.test(u)) return "count"; return "idx"; };
   for (const g of Object.values(raw.groups)) {
     g.kind = kindOf(g); g.scale = /bin tl/.test(trLower(g.unit || "")) ? 1 / 1000 : 1; g.weekly = /HAFTA/.test(g.freq || "");
+    // TL tablolarındaki "(Milyon ABD Doları)" bilgi satırları: birimi ayrı (milyon USD), TL ölçeği uygulanmaz, grafikte sağ eksen
+    g.usd = new Set(); if (g.kind === "tl") for (const s of g.series || []) if (/milyon abd dolar/i.test(s.name)) { g.usd.add(s.code); if (g.scale !== 1 && g.vals?.[s.code]) g.vals[s.code] = g.vals[s.code].map(v => ok(v) ? v / g.scale : v); }
     g.flow = !!g.akim; // haftalık değişim (akım) serisi: dönem karşılaştırması yerine dönem toplamı
     g.idx = Object.fromEntries((g.series || []).map(s => [s.code, s]));
   }
@@ -517,19 +519,21 @@ function prepEvds(raw) {
 const evdsLvl = name => { const m = /^\s*(\d+(?:\.\d+)*)\.?\s*([a-zçğıöşü]{1,3}\.)?/i.exec(name); if (!m) return 1; const depth = m[1].split(".").length + (m[2] ? 1 : 0); return Math.min(3, depth - 1); };
 
 // =============================================================== grafik (tek eksen, SVG)
-function lineChart(el, { series, height = 340, yFmt, gapDays = 0, unit = "" }) {
+function lineChart(el, { series, height = 340, yFmt, gapDays = 0, unit = "", y2Fmt, unit2 = "" }) {
   el.innerHTML = "";
   series = series.filter(s => s.data.some(p => ok(p[1])));
   if (!series.length) { el.innerHTML = '<div class="empty">Seçili dönemde veri yok.</div>'; return; }
   if (series.length > 1) {
     const lg = document.createElement("div"); lg.className = "legend";
-    lg.innerHTML = series.map(s => `<span><i style="${s.dash ? `background:none;border-top:2px ${s.dash === "2 3" ? "dotted" : "dashed"} ${s.color};height:0` : `background:${s.color}`}"></i>${esc(s.name)}${s.dash === true ? " (kesikli)" : ""}</span>`).join("");
+    lg.innerHTML = series.map(s => `<span><i style="${s.dash ? `background:none;border-top:2px ${s.dash === "2 3" ? "dotted" : "dashed"} ${s.color};height:0` : `background:${s.color}`}"></i>${esc(s.name)}${s.dash === true ? " (kesikli)" : ""}${s.axis === "r" && series.some(x => x.axis !== "r") ? " (sağ eksen)" : ""}</span>`).join("");
     el.appendChild(lg);
   }
   const box = el.appendChild(Object.assign(document.createElement("div"), { className: "chart" }));
-  const W = Math.max(320, box.clientWidth || el.clientWidth || 640), H = height, m = { t: unit ? 24 : 12, r: 16, b: 26, l: 64 };
-  const all = series.flatMap(s => s.data.filter(p => ok(p[1])));
-  const x0 = Math.min(...all.map(p => p[2])); let x1 = Math.max(...all.map(p => p[2])); if (x1 === x0) x1 = x0 + 864e5;
+  const sagV = series.some(s => s.axis === "r") && series.some(s => s.axis !== "r");
+  const W = Math.max(320, box.clientWidth || el.clientWidth || 640), H = height, m = { t: unit || unit2 ? 24 : 12, r: sagV ? 60 : 16, b: 26, l: 64 };
+  const all0 = series.flatMap(s => s.data.filter(p => ok(p[1])));
+  const all = sagV ? series.filter(s => s.axis !== "r").flatMap(s => s.data.filter(p => ok(p[1]))) : all0;
+  const x0 = Math.min(...all0.map(p => p[2])); let x1 = Math.max(...all0.map(p => p[2])); if (x1 === x0) x1 = x0 + 864e5;
   let y0 = Math.min(...all.map(p => p[1])), y1 = Math.max(...all.map(p => p[1]));
   if (y0 === y1) { y0 -= Math.abs(y0) * 0.05 || 1; y1 += Math.abs(y1) * 0.05 || 1; }
   const allPos = y0 >= 0;
@@ -538,10 +542,19 @@ function lineChart(el, { series, height = 340, yFmt, gapDays = 0, unit = "" }) {
   const ticks = niceTicks(y0, y1, 5).filter(t => !allPos || t >= 0); y0 = Math.min(y0, ticks[0]); y1 = Math.max(y1, ticks[ticks.length - 1]);
   if (new Set(ticks.map(yFmt)).size < ticks.length && ticks.length > 1) { let d = 0; while (d < 4 && new Set(ticks.map(v => nf(d).format(v))).size < ticks.length) d++; yFmt = v => nf(d).format(v); }
   const X = t => m.l + (t - x0) / (x1 - x0) * (W - m.l - m.r);
-  const Y = y => m.t + (1 - (y - y0) / (y1 - y0)) * (H - m.t - m.b);
+  const YL = y => m.t + (1 - (y - y0) / (y1 - y0)) * (H - m.t - m.b);
+  let YR = YL, rt = [];
+  if (sagV) { const ar = series.filter(s => s.axis === "r").flatMap(s => s.data.filter(p => ok(p[1])).map(p => p[1]));
+    let r0 = Math.min(...ar), r1 = Math.max(...ar); if (r0 === r1) { r0 -= Math.abs(r0) * .05 || 1; r1 += Math.abs(r1) * .05 || 1; }
+    const rp = (r1 - r0) * .08, pos = r0 >= 0; r0 -= rp; r1 += rp; if (pos && r0 < 0) r0 = 0;
+    rt = niceTicks(r0, r1, 5).filter(t => !pos || t >= 0); r0 = Math.min(r0, rt[0]); r1 = Math.max(r1, rt[rt.length - 1]);
+    YR = y => m.t + (1 - (y - r0) / (r1 - r0)) * (H - m.t - m.b); y2Fmt = y2Fmt || yFmt; }
+  const YS = s => s.axis === "r" && sagV ? YR : YL, Y = YL;
   const span = x1 - x0;
   let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Zaman serisi grafiği"><g class="axis">${unit ? `<text x="${m.l - 8}" y="10" text-anchor="end" class="yunit">${esc(unit)}</text>` : ""}`;
   for (const t of ticks) svg += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)"/><text x="${m.l - 8}" y="${Y(t) + 4}" text-anchor="end">${yFmt(t)}</text>`;
+  if (sagV) { svg += unit2 ? `<text x="${W - 2}" y="10" text-anchor="end" class="yunit">${esc(unit2)}</text>` : "";
+    for (const t of rt) svg += `<text x="${W - m.r + 8}" y="${YR(t) + 4}" text-anchor="start">${y2Fmt(t)}</text>`; }
   const nX = Math.max(2, Math.min(7, Math.floor((W - m.l) / 105)));
   for (let i = 0; i < nX; i++) { const t = x0 + span * i / (nX - 1); const d = new Date(t); const lab = span > 400 * 864e5 ? `${AY[d.getMonth()]} ${String(d.getFullYear()).slice(2)}` : `${d.getDate()} ${AY[d.getMonth()]}`; svg += `<text x="${X(t)}" y="${H - 6}" text-anchor="${i === 0 ? "start" : i === nX - 1 ? "end" : "middle"}">${lab}</text>`; }
   svg += `<line x1="${m.l}" x2="${W - m.r}" y1="${H - m.b}" y2="${H - m.b}" stroke="var(--axis)"/></g>`;
@@ -550,11 +563,11 @@ function lineChart(el, { series, height = 340, yFmt, gapDays = 0, unit = "" }) {
     for (const [, y, t] of s.data) {
       if (!ok(y)) { pen = false; continue; }
       if (pen && gapDays && t - prev > gapDays * 864e5) pen = false;
-      d += (pen ? "L" : "M") + X(t).toFixed(1) + " " + Y(y).toFixed(1) + (pen ? "" : "h0.01"); pen = true; prev = t;
+      d += (pen ? "L" : "M") + X(t).toFixed(1) + " " + YS(s)(y).toFixed(1) + (pen ? "" : "h0.01"); pen = true; prev = t;
     }
     svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"${s.dash ? ` stroke-dasharray="${s.dash === true ? "6 4" : s.dash}"` : ""}/>`;
     const lp = [...s.data].reverse().find(p => ok(p[1]));
-    if (lp) svg += `<circle cx="${X(lp[2])}" cy="${Y(lp[1])}" r="3.5" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`;
+    if (lp) svg += `<circle cx="${X(lp[2])}" cy="${YS(s)(lp[1])}" r="3.5" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`;
   }
   svg += `<line class="xh" y1="${m.t}" y2="${H - m.b}" stroke="var(--axis)" stroke-dasharray="3 3" opacity="0"/><g class="dots"></g><rect x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent"/></svg><div class="tip"></div>`;
   box.innerHTML = svg;
@@ -564,7 +577,7 @@ function lineChart(el, { series, height = 340, yFmt, gapDays = 0, unit = "" }) {
     const r = svgEl.getBoundingClientRect(); const px = (ev.clientX - r.left) * (W / r.width);
     const t = x0 + (px - m.l) / (W - m.l - m.r) * span;
     let rows = "", dd = "", head = null;
-    series.forEach(s => { const p = near(s, t); if (!p) return; if (!head || p[2] > head[2]) head = p; rows += `<div class="r"><span><i style="background:${s.color}"></i>${esc(s.name)}</span><b>${yFmt(p[1])}</b></div>`; dd += `<circle cx="${X(p[2])}" cy="${Y(p[1])}" r="4" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`; });
+    series.forEach(s => { const p = near(s, t); if (!p) return; if (!head || p[2] > head[2]) head = p; rows += `<div class="r"><span><i style="background:${s.color}"></i>${esc(s.name)}</span><b>${(s.axis === "r" && sagV ? y2Fmt : yFmt)(p[1])}${s.axis === "r" && sagV && unit2 ? " <small>" + esc(unit2) + "</small>" : ""}</b></div>`; dd += `<circle cx="${X(p[2])}" cy="${YS(s)(p[1])}" r="4" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`; });
     if (!head) return;
     const cx = X(head[2]); xh.setAttribute("x1", cx); xh.setAttribute("x2", cx); xh.setAttribute("opacity", 1); dots.innerHTML = dd;
     tip.innerHTML = `<div class="d">${dLabel(head[0])}</div>${rows}`; tip.style.opacity = 1;
@@ -1191,8 +1204,8 @@ function fPanel(it) {
     for (const s_ of g.series) {
       const arr = g.vals[s_.code]; if (!arr || !vis(s_.code)) continue; nVis++;
       const a = a_ >= 0 && ok(arr[a_]) ? tConv(g, s_.code, arr[a_] * g.scale) : null, b = b_ >= 0 && ok(arr[b_]) ? tConv(g, s_.code, arr[b_] * g.scale) : null;
-      const [dc, pc] = deltaCells(a, b, kind), on = S.tSel[g.code].includes(s_.code);
-      rows += `<tr class="row l${evdsLvl(s_.name)}${on ? " sel" : ""}" data-s="${esc(s_.code)}" data-g="${g.code}"><td class="chk"><input type="checkbox" ${on ? "checked" : ""} aria-label="Grafiğe ekle"></td><td class="nm">${esc(s_.name)}</td><td>${fmtFull(a, kind)}</td><td>${fmtFull(b, kind)}</td>${dc}${pc}</tr>`;
+      const sk = g.usd?.has(s_.code) ? "usd" : kind, [dc, pc] = deltaCells(a, b, sk), on = S.tSel[g.code].includes(s_.code);
+      rows += `<tr class="row l${evdsLvl(s_.name)}${on ? " sel" : ""}" data-s="${esc(s_.code)}" data-g="${g.code}"><td class="chk"><input type="checkbox" ${on ? "checked" : ""} aria-label="Grafiğe ekle"></td><td class="nm">${esc(s_.name)}</td><td>${fmtFull(a, sk)}</td><td>${fmtFull(b, sk)}</td>${dc}${pc}</tr>`;
     }
   }
   const sd = gs.map(({ g }) => g.dates[g.dates.length - 1]).sort().pop(), son = isMonth(sd) ? dShort(sd) : `${+sd.slice(8, 10)} ${AYU[+sd.slice(5, 7) - 1]} ${sd.slice(2, 4)}`;
@@ -1212,24 +1225,27 @@ function drawFChart(id) {
   const it = tSections().flatMap(x => x.items).find(x => x.id === id), key = "f:" + id, el = $(`#tPanels [data-tchart="${key}"]`); if (!it || !el) return;
   const { gs } = fState(it), pal = PAL(), renk = {}, sub = $(`#tPanels [data-tsub="${key}"]`);
   const turlar = F_TUR[id] || [], cokTyp = (S.fTyp[id] || []).length > 1, ham = [], ord = {};
-  gs.forEach(({ bank, g }, gi) => (S.tSel[g.code] || []).filter(c => g.vals[c]).forEach(c => {
-    const t = fTur(it, g, c), nk = fNorm(g.idx[c]?.name || c), b = t ? t[0] : nk; if (!(b in renk)) renk[b] = pal[Object.keys(renk).length % pal.length];
+  // aynı adlı farklı kalemler ("10.TOPLAM", "15.TOPLAM") ayrı renk alır
+  gs.forEach(({ bank, g }, gi) => { const say = {}; (S.tSel[g.code] || []).filter(c => g.vals[c]).forEach(c => {
+    const t = fTur(it, g, c), nk0 = fNorm(g.idx[c]?.name || c), nk = nk0 + "#" + (say[nk0] = (say[nk0] || 0) + 1), b = t ? t[0] : nk; if (!(b in renk)) renk[b] = pal[Object.keys(renk).length % pal.length];
     if (!(nk in ord)) ord[nk] = Object.keys(ord).length;
     const ad = t ? t[1] : (g.idx[c]?.name || c).replace(/\s*\((TL|ABD doları|Euro)[^)]*\)\s*$/i, "").replace(/[,\s]+$/, "").replace(/\)\)+$/, ")").trim();
     const typ = cokTyp && tMeta(g)[c]?.typ && tMeta(g)[c].typ !== "Mevduat" ? " " + tMeta(g)[c].typ.toLocaleLowerCase("tr-TR") : "";
     const ad2 = gs.length > 1 && !t ? ad.replace(/^[\d.]+\s*/, "") : ad;
-    ham.push({ sira: [t ? turlar.indexOf(t) : 100 + ord[nk], t ? ad : "", typ, gi], name: gs.length > 1 ? `${ad2}${typ} (${F_GAD[bank]})` : ad + typ, color: renk[b], dash: F_DASH[gi] || false,
+    ham.push({ usd: g.usd?.has(c), sira: [t ? turlar.indexOf(t) : 100 + ord[nk], t ? ad : "", typ, gi], name: gs.length > 1 ? `${ad2}${typ} (${F_GAD[bank]})` : ad + typ, color: renk[b], dash: F_DASH[gi] || false,
       data: clipT(g.dates.map((d, k) => [d, ok(g.vals[c][k]) ? tConv(g, c, g.vals[c][k] * g.scale) : null, toTime(d)]), ...(rSt() ? [rSt().r, rSt().a, rSt().b] : [S.tRange])) });
-  }));
+  }); });
   const cmp = (a, b) => a < b ? -1 : a > b ? 1 : 0;
   const series = ham.sort((x, y) => cmp(x.sira[0], y.sira[0]) || cmp(x.sira[1], y.sira[1]) || cmp(x.sira[2], y.sira[2]) || x.sira[3] - y.sira[3]);
   if (!series.length) { sub.textContent = ""; el.innerHTML = '<div class="empty">Grafikte göstermek için seri tablosundan seri işaretleyin.</div>'; return; }
-  const kind = gs[0].g.kind, mx = Math.max(0, ...series.flatMap(s => s.data.map(p => Math.abs(p[1] || 0)))), as = axisScale(kind, mx);
-  const raw = series.slice(0, 12).map(s => ({ ...s })), sec = raw.map(s => ({ ...s, data: s.data.map(p => [p[0], ok(p[1]) ? p[1] / as.k : null, p[2]]) })), rc = rateConv(gs[0].g);
+  const kind = gs[0].g.kind, sagV = kind === "tl" && series.some(s => s.usd) && series.some(s => !s.usd);
+  const mxOf = l => Math.max(0, ...l.flatMap(s => s.data.map(p => Math.abs(p[1] || 0))));
+  const as = axisScale(sagV || series.every(s => s.usd) ? (series.every(s => s.usd) ? "usd" : kind) : kind, mxOf(sagV ? series.filter(s => !s.usd) : series)), as2 = sagV ? axisScale("usd", mxOf(series.filter(s => s.usd))) : null;
+  const raw = series.slice(0, 12).map(s => ({ ...s, kind: s.usd ? "usd" : kind })), sec = raw.map(s => { const k = sagV && s.usd ? as2.k : as.k; return { ...s, axis: sagV && s.usd ? "r" : undefined, data: s.data.map(p => [p[0], ok(p[1]) ? p[1] / k : null, p[2]]) }; }), rc = rateConv(gs[0].g);
   const rn = !rc ? "" : S.tRate === "basit" ? (rc === "dep" ? " · yıllık basit oran (vade: 1 ay 32, 3 ay 91, 6 ay 181 gün; toplam 32 gün; 1 yıl ve üzeri değişmez)" : " · yıllık basit oran (efektif yıllıktan aylık bileşik ×12)") : " · efektif yıllık (bileşik) oran, EVDS'deki haliyle";
   const mn = { stok: "Stok: dönem sonundaki tüm portföyün ağırlıklı ortalaması", akim: "Akım: dönem içinde yeni kullandırılan / açılan hesaplar" }[S.fMode[id]];
   sub.textContent = [mn, rn.replace(/^ · /, ""), gs.length > 1 ? "düz çizgi " + F_BANK[gs[0].bank].toLocaleLowerCase("tr-TR") + ", kesikli " + gs.slice(1).map(x => F_BANK[x.bank].toLocaleLowerCase("tr-TR")).join(", noktalı ") : "", series.length > 12 ? "grafikte ilk 12 seri" : ""].filter(Boolean).join(" · ");
-  lineChart(el, { series: sec, yFmt: v => nf(as.d).format(v), unit: as.lab });
+  lineChart(el, { series: sec, yFmt: v => nf(as.d).format(v), unit: as.lab, ...(as2 ? { y2Fmt: v => nf(as2.d).format(v), unit2: as2.lab } : {}) });
   if (rSt()) { fDegis(el, raw, kind, gs[0].g.flow); fVeriD(el, key, raw, kind, gs[0].g.flow); } else fVeri(el, key, raw, kind);
 }
 // Para ve Banka: seçili aralığın ilk ve son dönemi arasındaki değişim (tutar ve %); akım serilerinde dönem toplamı
@@ -1239,8 +1255,8 @@ function fDeg(s, flow) {
   return { a, b, d: flow ? v.slice(1).reduce((t, p) => t + p[1], 0) : b[1] - a[1], p: flow ? null : pct(b[1], a[1]) };
 }
 function fDegis(el, raw, kind, flow) {
-  const h = raw.map(s => { const x = fDeg(s, flow); if (!x) return "";
-    const dv = kind === "pct" && !flow ? fmtBp(x.d * 100) : fmtVal(x.d, kind, true), c = cls(x.d, kind === "pct" ? .005 : 1e-9);
+  const h = raw.map(s => { const x = fDeg(s, flow), kind_ = s.kind || kind; if (!x) return "";
+    const dv = kind_ === "pct" && !flow ? fmtBp(x.d * 100) : fmtVal(x.d, kind_, true), c = cls(x.d, kind_ === "pct" ? .005 : 1e-9);
     return `<span class="fdg"><i style="background:${s.color}"></i><span class="nm">${esc(s.name)}</span><b class="${c}">${dv}</b>${ok(x.p) ? `<small class="${cls(x.p, .05)}">(${fmtPct(x.p, 2)})</small>` : ""}</span>`; }).join("");
   if (!h) return;
   const v0 = raw.find(s => s.data.some(p => ok(p[1]))), x0 = v0 && fDeg(v0, flow);
@@ -1253,8 +1269,8 @@ function fVeriD(el, key, raw, kind, flow) {
   const rows = raw.map(s => ({ s, x: fDeg(s, flow) })).filter(r => r.x), x0 = rows[0]?.x;
   const unit = kind === "pct" ? "%" : kind === "tl" ? "milyon TL" : kind === "usd" ? "milyon ABD doları" : "";
   foot.insertAdjacentHTML("beforeend", `<div class="tdw tdd2"><table><thead><tr><th class="l">Seri${unit ? ` <small>${unit}</small>` : ""}</th><th>${x0 ? dShort(x0.a[0]) : ""}</th><th>${x0 ? dShort(x0.b[0]) : ""}</th><th>${flow ? "Dönem toplamı" : "Değişim"}</th>${flow ? "" : "<th>%</th>"}</tr></thead><tbody>`
-    + rows.map(({ s, x }) => { const [dc, pc] = flow ? [`<td class="${cls(x.d, 1e-9)}">${fmtVal(x.d, kind, true)}</td>`, ""] : deltaCells(x.a[1], x.b[1], kind);
-      return `<tr><td class="l"><i style="background:${s.color}"></i>${esc(s.name)}</td><td>${fmtFull(x.a[1], kind)}</td><td>${fmtFull(x.b[1], kind)}</td>${dc}${pc}</tr>`; }).join("") + "</tbody></table></div>");
+    + rows.map(({ s, x }) => { const k = s.kind || kind, [dc, pc] = flow ? [`<td class="${cls(x.d, 1e-9)}">${fmtVal(x.d, k, true)}</td>`, ""] : deltaCells(x.a[1], x.b[1], k);
+      return `<tr><td class="l"><i style="background:${s.color}"></i>${esc(s.name)}${k !== kind && k === "usd" ? " <small>(mn $)</small>" : ""}</td><td>${fmtFull(x.a[1], k)}</td><td>${fmtFull(x.b[1], k)}</td>${dc}${pc}</tr>`; }).join("") + "</tbody></table></div>");
 }
 // "Veri" düğmesi: grafikteki seriler; ilk açılışta son 5 dönem görünür, eskiler kaydırarak
 function fVeri(el, key, raw, kind) {
