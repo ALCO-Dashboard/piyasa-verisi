@@ -7,12 +7,17 @@ permissions:
 jobs:
   d:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
-      - run: |
-          mkdir -p out && pip install requests >/dev/null 2>&1
-          cd t && python3 kapp.py 2>&1 | tee ../out/log1.txt
+      - env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+        run: |
+          mkdir -p out site/makro/data && pip install requests cryptography >/dev/null 2>&1
+          git fetch -q --depth=1 origin borclanma && git checkout -q FETCH_HEAD -- bankacilik
+          git fetch -q --depth=1 origin gh-pages && git show FETCH_HEAD:bankacilik/data/bddk_aylik.json > aylik.json
+          python3 t/bp.py 2>&1 | tee out/log1.txt
+          cp site/makro/data/borclanma.json out/
       - run: |
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan hazine-deneme-veri; git rm -rqf --cached .; git add -f out; git commit -qm veri; git push -f origin hazine-deneme-veri
