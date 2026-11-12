@@ -1,0 +1,66 @@
+== tur 1
+   borçlanma/EVDS: aylık 140 dönem (son 2026-08), haftalık 322, kur 1494 gün
+   KAP liste 2026-08-19 → 2026-11-12: 842 bildirim, 13 yeni aday
+   KAP liste 2026-05-26 → 2026-08-19: 996 bildirim, 12 yeni aday
+   KAP liste 2026-03-02 → 2026-05-26: 1088 bildirim, 14 yeni aday
+   KAP liste 2025-12-07 → 2026-03-02: 988 bildirim, 10 yeni aday
+   KAP: 49 aday bildirim, metni bekleyen 24, tarama 2025-12-07 → 2026-11-12
+   borçlanma: BDDK 37 ay, KAP 25 işlem (13 sendikasyon), son: 2026-11-10 Yapı Kredi 931 mn $
+== tur 2
+   borçlanma/EVDS: aylık 140 dönem (son 2026-08), haftalık 322, kur 1494 gün
+   KAP liste 2026-11-02 → 2026-11-12: 125 bildirim, 0 yeni aday
+   KAP liste 2025-09-13 → 2025-12-07: 831 bildirim, 19 yeni aday
+   KAP liste 2025-06-20 → 2025-09-13: 937 bildirim, 12 yeni aday
+   KAP liste 2025-03-27 → 2025-06-20: 1021 bildirim, 16 yeni aday
+   KAP: 96 aday bildirim, metni bekleyen 46, tarama 2025-03-27 → 2026-11-12
+   borçlanma: BDDK 37 ay, KAP 50 işlem (17 sendikasyon), son: 2026-11-10 Yapı Kredi 931 mn $
+2026-11-12 Denizbank diger 195.0 | Avrupa İmar ve Kalkınma Bankası (EBRD) ile İmzalanan Kredi S | [('EUR', 50.0, 1825, None), ('EUR', 50.0, 1825, None), ('EUR', 75.0, 1825, None)]
+2026-11-11 TKYB diger 280.8 | Alman Kalkınma Bankası (KfW) ile Kredi Anlaşması İmzalanması | [('EUR', 250.0, None, None)]
+2026-11-10 Yapı Kredi sendikasyon 930.8 | Sendikasyon kredisi anlaşması | [('USD', 349.0, 367, 125), ('EUR', 356.5, 367, 100), ('USD', 97.0, 734, 175), ('EUR', 77.0, 734, 145)]
+2026-11-09 TEB sendikasyon None | Sendikasyon Kredisi Hakkında | []
+2026-10-26 TEB sendikasyon None | Sendikasyon Kredisi Hakkında | []
+2026-10-26 Akbank sendikasyon 541.6 | Sendikasyon Kredisi Hakkında | [('USD', 134.5, 367, 125), ('EUR', 146.0, 367, 100), ('USD', 132.0, 730, 175), ('EUR', 5.0, 730, 145), ('USD', 106.0, 1095, 200)]
+2026-10-13 Vakıfbank diger 223.8 | Kredi Anlaşması Hakkında | [('EUR', 200.0, 3650, None)]
+2026-10-07 Şekerbank sendikasyon None | Hollanda Kalkınma Bankası (FMO) Liderliğinde Temin Edilen Se | []
+2026-09-15 Akbank dpr None | DPR Programının Kurulması | []
+2026-09-05 TSKB diger 232.1 | IBRD ile imzalanan kredi sözleşmesi hk. | [('EUR', 200.0, None, None)]
+2026-09-05 TKYB diger None | Uluslararası İmar ve Kalkınma Bankası (IBRD Dünya Bankası) i | []
+2026-08-21 Destek Yatirim Bankasi diger 50.0 | Yurt dışında ve yurt içinde halka arz edilmeksizin satılmak  | [('USD', 50.0, None, None)]
+2026-08-20 İş Bankası diger 200.0 | Kredi Sözleşmesi Hakkında | [('USD', 200.0, 1095, None)]
+2026-07-20 TSKB sendikasyon 226.7 | Sendikasyon Kredisi Sözleşmesi | [('USD', 65.0, 367, None), ('EUR', 141.4, 367, None)]
+2026-07-09 ING sendikasyon 172.0 | Sendikasyon Kredisi Hk. | [('USD', 86.0, 367, 125), ('EUR', 54.0, 367, 110), ('USD', 5.0, 734, 175), ('EUR', 17.0, 734, 160)]
+2026-06-30 Burgan Bank sendikasyon None | Sendikasyon kredisi hakkında | []
+2026-06-30 TKYB diger 228.1 | Fransız Kalkınma Ajansı (AFD) ile kredi anlaşması imzalanmas | [('EUR', 200.0, None, None)]
+2026-06-24 TKYB diger 350.0 | Japon Uluslararası İşbirliği Bankası(JBIC) ile kredi anlaşma | [('USD', 350.0, None, None)]
+2026-06-15 Denizbank sendikasyon 732.0 | Sendikasyon Kredisi Sözleşmesi | [('USD', 265.0, 367, 125), ('EUR', 154.0, 367, 110), ('USD', 118.0, 734, 175), ('EUR', 5.0, 734, 160), ('USD', 165.0, 1095, 200)]
+2026-06-12 TSKB diger 350.0 | Japonya Uluslararası İşbirliği Bankası (JBIC) ile İmzalanan  | [('USD', 350.0, None, None)]
+2026-06-11 İş Bankası sendikasyon 1259.8 | Sendikasyon Kredisi Hakkında | [('USD', 658.8, 367, 125), ('EUR', 520.31, 367, 110)]
+2026-06-11 Garanti BBVA sendikasyon 300.9 | Sendikasyon kredisi hakkında | [('USD', 32.5, 367, 125), ('EUR', 23.5, 367, 110), ('USD', 105.25, 731, 175), ('EUR', 40.0, 731, 160), ('USD', 87.5, 1096, 200), ('EUR', 2.0, 1096, 180)]
+2026-06-08 TKYB diger 116.4 | Avrupa Yatırım Bankası (EIB) ile kredi anlaşması imzalanması | [('EUR', 100.0, None, None)]
+2026-06-04 Yapı Kredi sendikasyon 1102.6 | Sendikasyon kredisi anlaşması | [('USD', 255.5, 367, 125), ('EUR', 482.25, 367, 110), ('USD', 178.0, 734, 175), ('EUR', 65.0, 734, 160), ('USD', 33.5, 1101, 200)]
+2026-06-04 QNB sendikasyon 400.7 | Bankamızca sürdürülebilirlik bağlantılı sendikasyon kredisi  | [('USD', 106.7, 367, 125), ('EUR', 76.1, 367, 110), ('USD', 120.0, 734, 175), ('EUR', 5.0, 734, 160), ('USD', 67.0, 1101, 200), ('EUR', 11.0, 1101, 180)]
+2026-05-20 Halkbank diger None | Yabancı Kaynak Temini | []
+2026-05-18 Vakıfbank sendikasyon 1151.9 | Sendikasyon Kredisi Anlaşması | [('USD', 484.0, 367, 125), ('EUR', 574.0, 367, 110)]
+2026-05-11 Destek Yatirim Bankasi diger 62.5 | Yurt dışında ve yurt içinde halka arz edilmeksizin satılmak  | [('USD', 62.5, None, None)]
+2026-05-11 Vakıfbank dpr 1300.0 | Havale Akımlarına Dayalı DPR İşlemi Hakkında | [('USD', 1300.0, None, None)]
+2026-05-11 Vakıfbank dpr 1300.0 | Havale Akımlarına Dayalı DPR İşlemi Hakkında | [('USD', 1300.0, None, None)]
+2026-05-07 TSKB diger None | Bankamızın İmzaladığı Uluslararası İmar ve Kalkınma Bankası  | []
+2026-04-29 Ziraat Bankası sendikasyon 1745.8 | Sendikasyon Kredisi Hakkında | [('USD', 849.0, 367, 125), ('EUR', 767.0, 367, 110)]
+2026-04-16 TSKB diger 176.8 | Fransız Kalkınma Ajansı ile İmzalanan Kredi Sözleşmesi Hk. | [('EUR', 150.0, None, None)]
+2026-03-26 Akbank sendikasyon 702.4 | Sendikasyon Kredisi Hakkında | [('USD', 124.85, 367, 125), ('EUR', 175.4, 367, 110), ('USD', 202.0, 730, 175), ('EUR', 60.0, 730, 160), ('USD', 102.5, 1095, 200)]
+2026-03-25 Şekerbank diger 58.0 | Güneydoğu Avrupa Fonu (EFSE) ile imzalanan kredi sözleşmesi | [('EUR', 50.0, None, None)]
+2026-03-23 Halkbank dpr None | GMTN ve DPR Programları Kurulumuna İlişkin Yönetim Kurulu Ka | []
+2026-03-16 Vakıfbank diger 1719.1 | Uluslararası İmar ve Kalkınma Bankası Kısmi Garantili Projes | [('EUR', 1500.0, 3650, None)]
+2026-03-04 Destek Yatirim Bankasi diger 69.0 | Yurt dışında ve yurt içinde halka arz edilmeksizin satılmak  | [('USD', 69.0, None, None)]
+2026-03-03 Anadolubank diger None | Yurtdışı YP Tahvil / Finansman Bonosu İhracı. | []
+2026-01-23 Alternatif Bank diger None | Alternatifbank Yurtdışı Tahvil İhracı Kredi Derecelendirme N | []
+2026-01-19 Destek Yatirim Bankasi diger 15.0 | Yurt dışında ve yurt içinde halka arz edilmeksizin satılmak  | [('USD', 15.0, None, None)]
+2025-12-23 Şekerbank diger None | İtalyan Kalkınma Bankası (CDP) ile imzalanan kredi sözleşmes | []
+2025-12-23 Vakıfbank diger None | Asya Altyapı Yatırım Bankası (AIIB) ile yapılan kredi anlaşm | []
+2025-12-19 Denizbank dpr 401.6 | Seküritizasyon Kredisi Temini | [('USD', 298.33, None, None), ('EUR', 88.0, None, None)]
+2025-12-18 Türk Eximbank diger 585.8 | Asya Kalkınma Bankasından Kredi Temini | [('EUR', 500.0, 6935, None)]
+2025-12-12 Şekerbank diger None | Avrupa İmar ve Kalkınma Bankası (EBRD) ile imzalanan kredi s | []
+2025-12-12 TSKB diger 292.5 | KfW Kalkınma Bankası ile İmzalanan Kredi Sözleşmesi Hakkında | [('EUR', 250.0, None, None)]
+2025-12-12 QNB diger None | MTN programı kapsamında sürdürülebilir borçlanma araçlarının | []
+2025-12-08 QNB diger None | sürdürülebilir borçlanma araçlarının satış işlemine yönelik  | []
+2025-12-04 Garanti BBVA sendikasyon 433.4 | Sendikasyon kredisi hakkında | [('USD', 97.75, 367, 150), ('EUR', 61.0, 367, 125), ('USD', 157.0, 736, 190), ('EUR', 28.0, 736, 165), ('USD', 75.0, 1103, 215)]
