@@ -74,6 +74,12 @@ div.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--ac
 .botw .oz{font-family:inherit;font-size:12.5px;color:var(--ink-2);white-space:normal}
 .botw .tag{display:inline-block;font:600 10.5px var(--sans,inherit);letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:1px 7px;color:var(--ink-2)}
 .bosel{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.veri{margin-top:6px}
+.veri .vb{display:flex;justify-content:flex-end}
+.veri .tw{margin-top:8px}
+.veri .tbl td.l,.veri .tbl th.l{text-align:left;font-family:inherit}
+.veri .tbl td small{display:block;color:var(--muted);font:500 10.5px var(--sans,inherit)}
+.kpi .s2{font-size:12px;color:var(--ink-2);margin-top:2px}.kpi .s2 b{font-family:var(--mono);font-weight:500}
 .hdr2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .g2e{grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr))}
 .card.egri .ctl{align-items:flex-start}
@@ -394,6 +400,7 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
       <div class="cardhead"><div><h3 id="pTitle"></h3><div class="sub" id="pSub"></div></div><span class="chips" id="pRange"></span></div>
       <div class="legend" id="pLeg"></div>
       <div class="chart" id="pChart"></div>
+      <div class="veri" id="pVeri"></div>
     </div>
     <div id="bbgBox" class="hidden">
       <h2 class="sec">OIS oranları</h2>
@@ -401,6 +408,7 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
         <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
         <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
         <div class="chart ech"></div>
+        <div class="veri everi"></div>
       </div>
       <h2 class="sec">BIST VİOP</h2>
       <div class="card">
@@ -773,16 +781,33 @@ const impT = () => IMP.find(x => x[0] === S.impT) || IMP[0];
 const PSEL = {
   tlref: { ad: "TLREF", lines: ["tlref"], bars: ["tlref"], not: "Borsa İstanbul TLREF oranı ve hesaplamaya konu işlem hacmi (tarihsel dosya)" },
   tlrefk: { ad: "TLREFK", lines: ["tlrefk"], bars: ["tlrefk"], not: "Borsa İstanbul TLREFK oranı ve işlem hacmi (tarihsel dosya)" },
-  bistrepo: { ad: "BIST Repo O/N", lines: ["bistrepo"], bars: ["bistrepo"], not: "Borsa İstanbul Repo Pazarı gecelik ağırlıklı ortalama faiz ve işlem hacmi" },
+  takas: { ad: "Takasbank O/N", lines: ["takas"], bars: ["takas"], not: "Takasbank Para Piyasası gecelik oran (Bloomberg)" },
   imp: { ad: "TL Implied", lines: ["imp"], bars: [], not: "Bloomberg TRY forward implied yield (Londra swap piyasası)" },
-  all: { ad: "Tümü", lines: ["tlref", "tlrefk", "bistrepo", "imp"], bars: [], not: "Oranların karşılaştırması" } };
-const PCOL = { tlref: "--c1", tlrefk: "--c3", bistrepo: "--c6", imp: "--c4" };
-const PKAY = { tlref: "Borsa İstanbul", tlrefk: "Borsa İstanbul", bistrepo: "Borsa İstanbul (EVDS)", imp: "Bloomberg" };
-const PK = ["tlref", "tlrefk", "bistrepo", "imp"];
-const pSrc = k => k === "imp" ? bCol("TL LONDRA SWAP", impT()[1]) : D[k];
-const pAd = k => k === "imp" ? `TL Implied ${impT()[0]}` : { tlref: "TLREF", tlrefk: "TLREFK", bistrepo: "BIST Repo O/N" }[k];
+  all: { ad: "Tümü", lines: ["tlref", "tlrefk", "takas", "imp"], bars: [], not: "Oranların karşılaştırması" } };
+const PCOL = { tlref: "--c1", tlrefk: "--c3", takas: "--c6", imp: "--c4" };
+const PKAY = { tlref: "Borsa İstanbul", tlrefk: "Borsa İstanbul", takas: "Takasbank (Bloomberg)", imp: "Bloomberg" };
+const PK = ["tlref", "tlrefk", "takas", "imp"];
+// Takasbank O/N: Bloomberg BIST-REF sayfası; "Takasbank ON Hacim" kolonu varsa hacim de okunur (TL; milyon/milyar girilmişse ölçeklenir)
+const takasSrc = () => { const c = bCol("BIST-REF", "Takasbank ON"); if (!c) return null;
+  const t = B.tablolar["BIST-REF"], j = t.kolonlar.findIndex(k => /takasbank.*hac[iı]m/i.test(k.etiket || ""));
+  if (j >= 0) { const mx = Math.max(0, ...t.v[j].filter(ok)), k = mx < 1e5 ? 1e9 : mx < 1e8 ? 1e6 : 1; c.vol_tl = t.v[j].map(v => ok(v) ? v * k : null); }
+  return c; };
+const pSrc = k => k === "imp" ? bCol("TL LONDRA SWAP", impT()[1]) : k === "takas" ? takasSrc() : D[k];
+const pAd = k => k === "imp" ? `TL Implied ${impT()[0]}` : { tlref: "TLREF", tlrefk: "TLREFK", takas: "Takasbank O/N" }[k];
+const S_VERI = {};
+// grafiğin altındaki "Veri" düğmesi ve tablosu: satirlar = [[etiket, [hücre html…]]]
+function veriKutu(el, key, kolonlar, satirlar, yeniden) {
+  const ac = !!S_VERI[key];
+  el.innerHTML = `<div class="vb"><button class="chip" aria-pressed="${ac}">${ac ? "Veriyi gizle" : "Veri"}</button></div>`
+    + (ac ? `<div class="tw"><table class="tbl"><thead><tr><th class="l"></th>${kolonlar.map(k => `<th>${k}</th>`).join("")}</tr></thead><tbody>${satirlar.map(([l, h]) => `<tr><td class="l">${l}</td>${h.map(x => `<td>${x}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : "");
+  el.querySelector("button").onclick = () => { S_VERI[key] = !ac; yeniden(); };
+}
 const pDg = k => k === "tlref" || k === "tlrefk" ? 4 : 2;
 function renderPiyasa() {
+  // seçili tarih aralığı (grafikle aynı): kutulardaki ortalama hacim ve Veri tablosu bunu kullanır
+  const tumT = [...new Set(PK.filter(k => pSrc(k)?.dates?.length).flatMap(k => pSrc(k).dates))].sort();
+  const arl = tumT.length ? tarihKes(tumT, "p", S.pR) : { ix: [] }, aBas = tumT[arl.ix[0]], aSon = tumT[arl.ix[arl.ix.length - 1]], aEt = S.pR === "Tarih" ? "Seçili aralık" : S.pR;
+  const ortH = d => { if (!d?.vol_tl) return null; let t = 0, n = 0; d.dates.forEach((x, i) => { if (x >= aBas && x <= aSon && ok(d.vol_tl[i])) { t += d.vol_tl[i]; n++; } }); return n ? t / n : null; };
   const kp = [], son = d => { if (!d?.dates?.length) return null; const i = lastIdx(d.rate); if (i < 0) return null; const j = d.rate.slice(0, i).map(ok).lastIndexOf(true); return { v: d.rate[i], p: j >= 0 ? d.rate[j] : null, t: d.dates[i], i }; };
   const has = k => !!pSrc(k)?.dates?.length;
   for (const k of [...S.pOn]) if (!PK.includes(k) || !has(k)) S.pOn.delete(k);
@@ -792,14 +817,15 @@ function renderPiyasa() {
     const d = pSrc(k), x = son(d); if (!x) continue; const dg = pDg(k);
     if (k === "imp") {
       kp.push(`<div class="kpi" role="button" tabindex="0" data-p="imp" aria-pressed="${on("imp")}" style="--kc:var(${PCOL.imp})"><div class="t">TL Implied</div><div class="k2">${impT()[2]}</div><div class="v">${pct(x.v, dg)}</div>
-        <div class="s">Önceki güne göre <span class="${cls(x.v - x.p, 1e-6)}">${bp(ok(x.p) ? x.v - x.p : null)}</span></div>
+        <div class="s">1D değişim <span class="${cls(x.v - x.p, 1e-6)}">${bp(ok(x.p) ? x.v - x.p : null)}</span></div>
         <div class="tn" role="group" aria-label="Vade">${IMP.map(([a]) => `<button data-imp="${a}" aria-pressed="${S.impT === a}">${a}</button>`).join("")}</div>
         <div class="d">${gunAd(x.t)} · Bloomberg ${esc(d.ticker || "")}</div></div>`);
       continue;
     }
-    const hv = d.vol_tl ? d.vol_tl[lastIdx(d.vol_tl)] : null;
+    const hv = d.vol_tl ? d.vol_tl[lastIdx(d.vol_tl)] : null, oh = ortH(d);
     kp.push(`<button class="kpi" data-p="${k}" aria-pressed="${on(k)}" style="--kc:var(${PCOL[k]})"><div class="t">${pAd(k)} · gecelik</div><div class="v">${pct(x.v, dg)}</div>
-      <div class="s">Önceki güne göre <span class="${cls(x.v - x.p, 1e-6)}">${bp(ok(x.p) ? x.v - x.p : null)}</span>${ok(hv) ? ` · hacim <b>₺${nf(hv / 1e9, 0)} mr</b>` : ""}</div>
+      <div class="s">1D değişim <span class="${cls(x.v - x.p, 1e-6)}">${bp(ok(x.p) ? x.v - x.p : null)}</span>${ok(hv) ? ` · hacim <b>₺${nf(hv / 1e9, 0)} mr</b>` : ""}</div>
+      ${ok(oh) ? `<div class="s2">${aEt} ort. hacim: <b>₺${nf(oh / 1e9, 0)} mr</b></div>` : ""}
       <div class="d">${gunAd(x.t)} · ${PKAY[k]}</div></button>`);
   }
   $("#pKpi").innerHTML = kp.join("");
@@ -813,7 +839,7 @@ function renderPiyasa() {
   $("#pLeg").innerHTML = PK.filter(has).map(k => `<button class="chip" data-p="${k}" aria-pressed="${on(k)}"><i style="background:var(${PCOL[k]})"></i>${pAd(k)}</button>`).join("")
     + `<button class="chip" data-p="all" aria-pressed="${hepsi}">Tümünü karşılaştır</button>`;
   const all = [...new Set([...lines, ...bars].flatMap(k => pSrc(k).dates))].sort();
-  if (!all.length) { $("#pChart").innerHTML = '<div class="empty">Veri yok.</div>'; return; }
+  if (!all.length) { $("#pChart").innerHTML = '<div class="empty">Veri yok.</div>'; $("#pVeri").innerHTML = ""; return; }
   tarihChips($("#pRange"), "p", S.pR, all, k => { S.pR = k; renderPiyasa(); });
   const { ix: pix, gun } = tarihKes(all, "p", S.pR), xs = pix.map(i => all[i]);
   const map = (d, k) => { const o = {}; d.dates.forEach((t, i) => o[t] = d[k][i]); return xs.map(t => o[t] ?? null); };
@@ -821,6 +847,15 @@ function renderPiyasa() {
   for (const k of bars) series.push({ name: pAd(k) + " hacim", type: "bar", axis: "r", color: css("--vol"), vals: map(pSrc(k), "vol_tl").map(v => ok(v) ? v / 1e9 : null), fmt: v => "₺" + nf(v, 1) + " mr" });
   for (const k of lines) series.push({ name: pAd(k), color: css(PCOL[k]), span: true, vals: map(pSrc(k), "rate"), fmt: v => pct(v, pDg(k)) });
   chart($("#pChart"), { xs, series, height: 340, xFmt: gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd, yFmt: v => nf(v, v % 1 ? 1 : 0), y2Fmt: v => nf(v, 0), rScale: 2.2, label: $("#pTitle").textContent });
+  // Veri: grafikteki ilk tarih, son tarih ve aralığın hacim ağırlıklı ortalama oranı
+  const gor = k => { const d = pSrc(k), ii = d.dates.map((t, i) => t >= xs[0] && t <= xs[xs.length - 1] && ok(d.rate[i]) ? i : -1).filter(i => i >= 0);
+    if (!ii.length) return ["—", "—", "—"];
+    const a = ii[0], b = ii[ii.length - 1], hv = d.vol_tl && ii.some(i => ok(d.vol_tl[i]));
+    let pay = 0, payda = 0; for (const i of ii) { const w = hv ? (ok(d.vol_tl[i]) ? d.vol_tl[i] : 0) : 1; pay += d.rate[i] * w; payda += w; }
+    const h = i => pct(d.rate[i], pDg(k)) + `<small>${gunAd(d.dates[i])}${d.vol_tl && ok(d.vol_tl[i]) ? ` · ₺${nf(d.vol_tl[i] / 1e9, 0)} mr` : ""}</small>`;
+    return [h(a), h(b), payda ? pct(pay / payda, pDg(k)) + `<small>${hv ? "hacim ağırlıklı" : "basit ortalama (hacim yok)"}</small>` : "—"]; };
+  const hc = lines.map(gor);
+  veriKutu($("#pVeri"), "p", lines.map(pAd), [[`İlk tarih · ${gunAd(xs[0])}`, hc.map(x => x[0])], [`Son tarih · ${gunAd(xs[xs.length - 1])}`, hc.map(x => x[1])], [`AOF · ${gunAd(xs[0])} – ${gunAd(xs[xs.length - 1])}`, hc.map(x => x[2])]], renderPiyasa);
 }
 const pSec = k => {
   if (k === "all") { const hs = PK.filter(x => pSrc(x)?.dates?.length); S.pOn = hs.every(x => S.pOn.has(x)) ? new Set([hs[0]]) : new Set(hs); }
@@ -884,6 +919,7 @@ function egriKart(cfg) {
     chart(ch, { xs, height: cfg.height || 300, label: q(".et").textContent, yFmt: v => nf(v, Math.max(...all) - Math.min(...all) < 3 ? 2 : 1), maxX: 14,
       tipX: x => { const k = xs.indexOf(x), d = cv && ok(vals[k]) && ok(cv[k]) ? vals[k] - cv[k] : null; return x + (ok(d) ? ` · değişim ${bp(d)}` : ""); },
       series, onClick: k => { if (et[k]) { st.v = et[k]; egriKart(cfg); } } });
+    if (q(".everi")) veriKutu(q(".everi"), cfg.id, xs, (j != null ? [[`İlk tarih · ${gunAd(t.dates[j])}`, cv.map(v => ok(v) ? pct(v, 2) : "—")]] : i > 0 ? [[`Önceki gün · ${gunAd(t.dates[i - 1])}`, t.v.map(c => ok(c[i - 1]) ? pct(c[i - 1], 2) : "—")]] : []).concat([[`Son tarih · ${gunAd(son)}`, vals.map(v => ok(v) ? pct(v, 2) : "—")]]), () => egriKart(cfg));
   } else {
     tarihChips(q(".er"), "e" + cfg.id, st.r, t.dates, k => { st.r = k; egriKart(cfg); });
     const j = et.indexOf(st.v), { ix, gun } = tarihKes(t.dates, "e" + cfg.id, st.r);
@@ -892,6 +928,8 @@ function egriKart(cfg) {
     q(".es").textContent = `${t.kolonlar[j].ticker} · son ${li >= 0 ? pct(vals[li], 3) + " (" + gunAd(xs[li]) + ")" : "—"} · Bloomberg`;
     chart(ch, { xs, height: cfg.height || 300, label: q(".et").textContent, xFmt: gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd,
       yFmt: v => nf(v, v % 1 ? 1 : 0), series: [{ name: `${kod} ${VADE[st.v] || st.v}`, vals, color: col, width: 2.2, span: true, fmt: v => pct(v, 3) }] });
+    if (q(".everi") && ix.length) { const a = ix[0], b = ix[ix.length - 1];   // tüm vadeler: grafikteki ilk ve son tarih
+      veriKutu(q(".everi"), cfg.id, et.map(e => VADE[e] || e), [[`İlk tarih · ${gunAd(t.dates[a])}`, t.v.map(c => ok(c[a]) ? pct(c[a], 2) : "—")], [`Son tarih · ${gunAd(t.dates[b])}`, t.v.map(c => ok(c[b]) ? pct(c[b], 2) : "—")]], () => egriKart(cfg)); }
   }
   return true;
 }
@@ -1616,8 +1654,8 @@ $("#grpBox").addEventListener("toggle", e => { if (e.target.classList?.contains(
 let rz, lw = innerWidth; addEventListener("resize", () => { if (!D || Math.abs(innerWidth - lw) < 30 && !rz) { } lw = innerWidth; clearTimeout(rz); rz = setTimeout(() => { rz = null; render(); }, 150); });
 const hashUygula = h => {
   if (h === "piyasa-imp") { S.tab = "piyasa"; S.ps = "faiz"; S.impT = "O/N"; S.pOn = new Set(["imp"]); return true; }   // Özet: TRY Implied Yield kartı
-  const pm = /^piyasa-(tlref|endeks|gosterge|swap|faiz|borc)(?:-(\w+))?$/.exec(h);     // Özet kartlarından: alt sekme ve kalem
-  if (pm) { S.tab = "piyasa"; S.ps = pm[1] === "tlref" ? "faiz" : pm[1]; if (pm[1] === "tlref") S.pOn = new Set(["tlref"]); if (pm[1] === "endeks" && pm[2]) S.ee = pm[2]; if (pm[1] === "gosterge") S.gU = "tr"; return true; }
+  const pm = /^piyasa-(tlrefk|tlref|endeks|gosterge|swap|faiz|borc)(?:-(\w+))?$/.exec(h);     // Özet kartlarından: alt sekme ve kalem
+  if (pm) { S.tab = "piyasa"; S.ps = pm[1] === "tlref" || pm[1] === "tlrefk" ? "faiz" : pm[1]; if (pm[1] === "tlref" || pm[1] === "tlrefk") S.pOn = new Set([pm[1]]); if (pm[1] === "endeks" && pm[2]) S.ee = pm[2]; if (pm[1] === "gosterge") S.gU = "tr"; return true; }
   if (h === "piyasa" || h === "makro") S.tab = h; else if (["enf", "hazine", "buyume", "istihdam", "uretim", "dis", "butce"].includes(h)) { S.tab = "makro"; S.mk = h; } else return false; return true; };
 hashUygula(location.hash.slice(1));
 addEventListener("hashchange", () => { if (hashUygula(location.hash.slice(1)) && D) { render(); scrollTo(0, 0); } });   // Özet sekmesinden gelen bağlantılar
