@@ -1422,6 +1422,7 @@ window.alcoPdf = () => {
 };
 function hashGit() {
   const h = location.hash.slice(1);
+  if (h === "ppaof") { PPS.sel = "aof"; S.tSub = "pp"; $('#tabs button[data-tab="tcmb"]').click(); setTimeout(() => $(".ppchart")?.scrollIntoView({ behavior: "smooth", block: "center" }), 400); return true; }   // Özet: TCMB AOF kartı
   if (["pp", "rezerv", "zk", "haftalik"].includes(h)) { S.tSub = h; $('#tabs button[data-tab="tcmb"]').click(); return true; }
   if (h === "bddkw" || h === "bddkm") { S.bFreq = h === "bddkw" ? "w" : "m"; S.bA = S.bB = null; $('#tabs button[data-tab="bddk"]').click(); return true; }
   const b = h && $(`#tabs button[data-tab="${h}"]`); if (b) { b.click(); return true; }

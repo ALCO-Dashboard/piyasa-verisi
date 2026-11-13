@@ -184,10 +184,29 @@ def ekonomik(M, E, B):
         i = son_i(b["pk_12ay"])
         dy = b["pk_12ay"][i] - b["pk_12ay"][i - 1] if i > 0 and ok(b["pk_12ay"][i - 1]) else None
         ys = b.get("pk_yilsonu", [None] * (i + 1))[i]
-        K.append(kart("beklenti", "Enflasyon beklentisi (12 ay)", yuzde(b["pk_12ay"][i], 2), f"yıl sonu beklentisi <b>{yuzde(ys, 2)}</b>",
-                      f"Piyasa Katılımcıları · {ay_ad(b['months'][i])}", f"{sg(dy, 2)} puan" if ok(dy) else None, yon(dy, False),
-                      spark(b["pk_12ay"]), "enf", "TCMB"))
+        # kart: TCMB'nin (Enflasyon Raporu) yıl sonu tahmini; altında piyasa katılımcılarının yıl sonu beklentisi ve TCMB'nin gelecek yıl tahmini
+        rp = (M or {}).get("rapor") or {}
+        th = {int(k): v for k, v in (rp.get("tahmin") or {}).items() if str(k).isdigit() and ok(v)}
+        yil = int(b["months"][i][:4])
+        rm = re.search(r"\((\d{1,2}) (\w+) (\d{4})\)", rp.get("ad") or "")
+        rt = None
+        if rm and rm.group(2) in AYLAR:
+            rt = f"{rm.group(3)}-{AYLAR.index(rm.group(2)) + 1:02d}-{int(rm.group(1)):02d}"
+        rad = re.sub(r"\s*\(.*\)\s*$", "", rp.get("ad") or "")
+        if ok(th.get(yil)):
+            ysi = [x for x in b.get("pk_yilsonu", []) if ok(x)]
+            dys = ys - b["pk_yilsonu"][i - 1] if ok(ys) and i > 0 and ok(b["pk_yilsonu"][i - 1]) else None
+            alt = " · ".join(x for x in [f"PK yıl sonu <b>{yuzde(ys, 2)}</b>" if ok(ys) else "", f"TCMB {yil + 1} <b>{yuzde(th[yil + 1], 1)}</b>" if ok(th.get(yil + 1)) else ""] if x)
+            K.append(kart("beklenti", "Yıl sonu enflasyon beklentisi (TCMB)", yuzde(th[yil], 1), alt,
+                          (rad or "Enflasyon Raporu") + f" · PK {ay_ad(b['months'][i])}", f"PK {sg(dys, 2)} puan" if ok(dys) else None, yon(dys, False),
+                          spark(ysi), "enf", "TCMB"))
+        else:
+            K.append(kart("beklenti", "Enflasyon beklentisi (12 ay)", yuzde(b["pk_12ay"][i], 2), f"yıl sonu beklentisi <b>{yuzde(ys, 2)}</b>",
+                          f"Piyasa Katılımcıları · {ay_ad(b['months'][i])}", f"{sg(dy, 2)} puan" if ok(dy) else None, yon(dy, False),
+                          spark(b["pk_12ay"]), "enf", "TCMB"))
         N["beklenti"] = dict(v=b["pk_12ay"][i], ys=ys, ay=b["months"][i])
+        if th:
+            N["rapor"] = dict(ad=rad, tarih=rt, tahmin=th, yil=yil)
     if not E:
         return K, N
     Q = E.get("ceyrek") or {}
@@ -300,9 +319,20 @@ def piyasa(M, B, P, TC, Z, N):
             while k + 1 < len(fz) and fz[k + 1]["tarih"] <= g:
                 k += 1
             fs.append(fz[k]["oran"] if fz[k]["tarih"] <= g else None)
-        K.append(kart("faiz", "Politika faizi", yuzde(son["oran"], 2), alt, f"son karar {gun_ad(son['tarih'])} {son['tarih'][:4]}",
-                      f"{sg(dbp, 0)} bp" if ok(dbp) else None, yon(dbp, None), spark(fs, 30), "pp", "TCMB"))
         N["faiz"] = dict(v=son["oran"], dbp=dbp, tarih=son["tarih"], reel=reel, reel_b=reel_b)
+    dl = (P or {}).get("daily") or {}
+    sr = dl.get("series") or {}
+    # TCMB ağırlıklı ortalama fonlama maliyeti (AOF)
+    if dl.get("dates") and sr.get("aof"):
+        s = gunluk_seri(dl["dates"], sr["aof"])
+        if s:
+            w = once(s, 7)
+            dbp = (s[-1][1] - w) * 100 if ok(w) else None
+            pf = N.get("faiz", {}).get("v")
+            alt = (f"politika faizi <b>{yuzde(pf, 2)}</b> · fark <b>{sg((s[-1][1] - pf) * 100, 0)} bp</b>" if ok(pf) else "")
+            K.append(kart("aof", "TCMB AOF", yuzde(s[-1][1], 2), alt, gun_ad(s[-1][0]),
+                          f"{sg(dbp, 0)} bp/hafta" if ok(dbp) else None, "", spark([v for _, v in s], 60), "ppaof", "TCMB"))
+            N["aof"] = dict(v=s[-1][1], dbp=dbp)
     # TLREF
     tl = (M or {}).get("tlref") or {}
     if tl.get("dates"):
@@ -313,9 +343,18 @@ def piyasa(M, B, P, TC, Z, N):
             K.append(kart("tlref", "TLREF", yuzde(s[-1][1], 2), f"BIST repo-ters repo gecelik referans", gun_ad(s[-1][0]),
                           f"{sg(dbp, 0)} bp/hafta" if ok(dbp) else None, "", spark([v for _, v in s], 60), "piyasa-tlref", "Borsa İstanbul"))
             N["tlref"] = dict(v=s[-1][1], dbp=dbp)
-    # USD/TRY (EVDS döviz alış, günlük) + spot EUR/TRY (Bloomberg)
-    dl = (P or {}).get("daily") or {}
-    sr = dl.get("series") or {}
+    tk = (M or {}).get("tlrefk") or {}
+    if tk.get("dates"):
+        s = gunluk_seri(tk["dates"], tk["rate"])
+        if s:
+            w = once(s, 7)
+            dbp = (s[-1][1] - w) * 100 if ok(w) else None
+            fark = (s[-1][1] - N["tlref"]["v"]) * 100 if N.get("tlref") else None
+            K.append(kart("tlrefk", "TLREFK", yuzde(s[-1][1], 2), "katılım esaslı gecelik referans" + (f" · TLREF farkı <b>{sg(fark, 0)} bp</b>" if ok(fark) else ""), gun_ad(s[-1][0]),
+                          f"{sg(dbp, 0)} bp/hafta" if ok(dbp) else None, "", spark([v for _, v in s], 60), "piyasa-tlrefk", "Borsa İstanbul"))
+            N["tlrefk"] = dict(v=s[-1][1], dbp=dbp)
+    # USD/TRY (EVDS döviz alış, günlük): kart en sonda eklenir
+    usd_kart = None
     if dl.get("dates") and sr.get("usdtry"):
         s = gunluk_seri(dl["dates"], sr["usdtry"])
         w = once(s, 7)
@@ -325,6 +364,9 @@ def piyasa(M, B, P, TC, Z, N):
         usd_spot = (vi.get("USDTRY") or {}).get("spot")
         alt = (f"spot <b>{nf(usd_spot, 4)}</b>" if ok(usd_spot) else "") + (f" · EUR/TRY <b>{nf(eur, 4)}</b>" if ok(eur) else "")
         N["usd"] = dict(v=s[-1][1], dw=dw, d30=ch(s[-1][1], once(s, 30)), seri=s)
+        d1 = ch(s[-1][1], s[-2][1]) if len(s) > 1 else None
+        usd_kart = kart("usdtry", "USD/TRY", nf(s[-1][1], 4), f"günlük <b>{pyuzde(d1, 2)}</b> · 1 ay <b>{pyuzde(N['usd']['d30'], 1)}</b>", f"TCMB döviz alış · {gun_ad(s[-1][0])}",
+                        f"{pyuzde(dw, 2)}/hafta" if ok(dw) else None, yon(dw, False), spark([v for _, v in s], 60), None, "TCMB")
     # TRY implied yield (Bloomberg, TL Londra swap: O/N; 1 ay ve 3 ay alt satırda)
     im = bbg_seri(B, "TL LONDRA SWAP", etiket="O/N")
     if im:
@@ -355,10 +397,11 @@ def piyasa(M, B, P, TC, Z, N):
     # tahvil
     t2 = bbg_seri(B, "TRY TAHVİL GÖSTERGE", etiket="2Y")
     t10 = bbg_seri(B, "TRY TAHVİL GÖSTERGE", etiket="10Y")
+    t5 = bbg_seri(B, "TRY TAHVİL GÖSTERGE", etiket="5Y")
     if t2:
         w = once(t2, 7)
         dbp = (t2[-1][1] - w) * 100 if ok(w) else None
-        alt = f"10 yıl <b>{yuzde(t10[-1][1], 2)}</b>" if t10 else ""
+        alt = " · ".join(x for x in [f"5 yıl <b>{yuzde(t5[-1][1], 2)}</b>" if t5 else "", f"10 yıl <b>{yuzde(t10[-1][1], 2)}</b>" if t10 else ""] if x)
         K.append(kart("tahvil", "2 yıllık gösterge tahvil", yuzde(t2[-1][1], 2), alt, gun_ad(t2[-1][0]),
                       f"{sg(dbp, 0)} bp/hafta" if ok(dbp) else None, yon(dbp, False), spark([v for _, v in t2], 60), "piyasa-gosterge", "Bloomberg"))
         N["tahvil"] = dict(v2=t2[-1][1], v10=t10[-1][1] if t10 else None, dbp=dbp, seri=t2)
@@ -366,8 +409,6 @@ def piyasa(M, B, P, TC, Z, N):
     br = bbg_seri(B, "Borsa Ve Diğer", ticker="CO1 Comdty")
     if br:
         dw = ch(br[-1][1], once(br, 7))
-        K.append(kart("brent", "Brent petrol", f"{nf(br[-1][1], 2)} $", f"1 ay <b>{pyuzde(ch(br[-1][1], once(br, 30)))}</b>", gun_ad(br[-1][0]),
-                      f"{pyuzde(dw)}/hafta" if ok(dw) else None, yon(dw, False), spark([v for _, v in br], 60), "piyasa-endeks-brent", "Bloomberg"))
         N["brent"] = dict(v=br[-1][1], dw=dw, seri=br)
     au = bbg_seri(B, "Kıymetli Maden", ticker="XAUUSD Curncy")
     if au:
@@ -383,10 +424,14 @@ def piyasa(M, B, P, TC, Z, N):
         w = once(s, 7)
         dw = (s[-1][1] - w) / 1e3 if ok(w) else None
         bi_ = son_i(R["brut"])
-        K.append(kart("rezerv", "Swap hariç net rezerv", f"{nf(s[-1][1] / 1e3)} Mr $", f"brüt rezerv <b>{nf(R['brut'][bi_] / 1e3)} Mr $</b>",
-                      gun_ad(s[-1][0]) + " (tahmini)", f"{sg(dw)} Mr $/hafta" if ok(dw) else None, yon(dw, True),
-                      spark([v / 1e3 for _, v in s], 60), "rezerv", "TCMB / hesaplama"))
-        N["rezerv"] = dict(v=s[-1][1] / 1e3, dw=dw, brut=R["brut"][bi_] / 1e3, net=R["net"][son_i(R["net"])] / 1e3, seri=s)
+        sb = gunluk_seri(R["dates"], R["brut"])
+        wb = once(sb, 7)
+        dwb = (sb[-1][1] - wb) / 1e3 if ok(wb) else None
+        net = R["net"][son_i(R["net"])] / 1e3
+        K.append(kart("rezerv", "Brüt rezerv", f"{nf(sb[-1][1] / 1e3)} Mr $", f"net <b>{nf(net)}</b> · swap hariç net <b>{nf(s[-1][1] / 1e3)} Mr $</b>",
+                      gun_ad(sb[-1][0]) + " (tahmini)", f"{sg(dwb)} Mr $/hafta" if ok(dwb) else None, yon(dwb, True),
+                      spark([v / 1e3 for _, v in sb], 60), "rezerv", "TCMB / hesaplama"))
+        N["rezerv"] = dict(v=s[-1][1] / 1e3, dw=dw, brut=R["brut"][bi_] / 1e3, net=net, seri=s)
     # ZK likidite + net fonlama
     g = (Z or {}).get("gunluk") or {}
     if g.get("dates") and g.get("likidite"):
@@ -397,13 +442,26 @@ def piyasa(M, B, P, TC, Z, N):
             j = son_i(sr["net"])
             net = sr["net"][j] / 1e3
         v = g["likidite"][i]
-        alt = f"TCMB net fonlama <b>{nf(net, 0)} mr ₺</b>" if ok(net) else ""
-        K.append(kart("likidite", "Piyasa likidite durumu", f"{sg(v, 0)} mr ₺", alt,
-                      f"ZK dönemi {gun_ad(dn.get('bas', ''))}–{gun_ad(dn.get('bit', ''))}" if dn.get("bas") else gun_ad(g["dates"][i]),
-                      "fazla" if v > 0 else "açık", "iyi" if v > 0 else "kotu",
-                      spark([x for x in g["likidite"]], 60), "zk", "TCMB / hesaplama"))
+        if ok(net):                               # kart: TCMB net fonlama; altında fonlama, sterilizasyon ve piyasa likidite durumu
+            fon = sr["fon_top"][j] / 1e3 if sr.get("fon_top") and ok(sr["fon_top"][j]) else None
+            st = sr["st_top"][j] / 1e3 if sr.get("st_top") and ok(sr["st_top"][j]) else None
+            ns = gunluk_seri(dl["dates"], sr["net"])
+            wn = once(ns, 7)
+            dn_ = (ns[-1][1] - wn) / 1e3 if ok(wn) else None
+            alt = " · ".join(x for x in [f"fonlama <b>{nf(fon, 0)}</b>" if ok(fon) else "", f"sterilizasyon <b>{nf(st, 0)} mr ₺</b>" if ok(st) else ""] if x)
+            alt += f"<br>piyasa likidite durumu <b>{sg(v, 0)} mr ₺</b> ({'fazla' if v > 0 else 'açık'})"
+            K.append(kart("likidite", "TCMB net fonlama", f"{sg(net, 0)} mr ₺", alt, gun_ad(dl["dates"][j]),
+                          f"{sg(dn_, 0)} mr ₺/hafta" if ok(dn_) else None, "", spark([x / 1e3 for _, x in ns], 60), "pp", "TCMB"))
+        else:
+            K.append(kart("likidite", "Piyasa likidite durumu", f"{sg(v, 0)} mr ₺", "",
+                          f"ZK dönemi {gun_ad(dn.get('bas', ''))}–{gun_ad(dn.get('bit', ''))}" if dn.get("bas") else gun_ad(g["dates"][i]),
+                          "fazla" if v > 0 else "açık", "iyi" if v > 0 else "kotu",
+                          spark([x for x in g["likidite"]], 60), "zk", "TCMB / hesaplama"))
         N["likidite"] = dict(v=v, net=net, bas=dn.get("bas"), bit=dn.get("bit"))
-    return K
+    if usd_kart:
+        K.append(usd_kart)
+    sira = ["aof", "tlref", "tlrefk", "tryimp", "tahvil", "cds", "usdtry", "bist", "altin", "likidite", "rezerv"]
+    return sorted(K, key=lambda k: sira.index(k["k"]) if k["k"] in sira else 99)
 
 
 # ---------------------------------------------------------------- BDDK haftalık
@@ -482,6 +540,16 @@ def one_cikanlar(N, BD, takvim):
     def ekle(lst, metin, ton=""):
         lst.append({"m": metin, "t": ton})
 
+    rp = N.get("rapor")
+    if rp and rp.get("tarih"):
+        try:
+            yas = (dt.datetime.now(TR).date() - dt.date.fromisoformat(rp["tarih"])).days
+        except ValueError:
+            yas = 999
+        if 0 <= yas <= 31:
+            th = rp["tahmin"]
+            ekle(eko, f"TCMB {rp['ad']} yayımlandı ({gun_ad(rp['tarih'])}): yıl sonu enflasyon tahmini "
+                      + ", ".join(f"{y} <b>{yuzde(th[y], 1)}</b>" for y in sorted(th) if y >= rp["yil"]) + ".", "")
     t = N.get("tufe")
     if t:
         yonm = "geriledi" if (t["dy"] or 0) < 0 else "yükseldi" if (t["dy"] or 0) > 0 else "değişmedi"
@@ -589,7 +657,7 @@ KELIME = [  # (desen, puan, etiket, grup) — grup: p = Piyasa Verileri, e = Eko
     (r"enflasyon|TÜFE", 2, "Enflasyon", "p"),
     (r"Moody|Fitch|S&P|kredi not|\bCDS\b|risk prim", 6, "Kredi notu", "p"),
     (r"Moody|Fitch|S&P|kredi not", 3, "Kredi notu", "e"),
-    (r"\bTÜİK\b|büyüme|GSYH|işsizlik|istihdam|cari (açık|denge|işlem)|ödemeler denge|dış ticaret|ihracat|ithalat|sanayi üretim|PMI|kapasite kullanım|güven endeks|perakende|konut satış|turizm|asgari ücret|IMF|OECD|Dünya Bankası", 5, "Makro veri", "e"),
+    (r"\bTÜİK\b|büyüme|GSYH|işsizlik|istihdam|cari (açık|denge|işlem|fazla)|ödemeler denge|dış ticaret|ihracat|ithalat|sanayi üretim|PMI|kapasite kullanım|güven endeks|perakende|konut satış|turizm|asgari ücret|IMF|OECD|Dünya Bankası", 5, "Makro veri", "e"),
     (r"\bSPK\b|fon soruşturma|gözaltı|soruşturma", 3, "Düzenleme", "p"),
     (r"rezerv|swap|likidite|mevduat|kredi büyüme|kredi faiz|kur korumal|\bKKM\b|repo", 4, "Bankacılık", "p"),
     (r"\bdolar\b|\bkur\b|Türk liras|\bTL\b|USD/TRY|döviz", 3, "Kur", "p"),
@@ -602,9 +670,17 @@ KELIME = [  # (desen, puan, etiket, grup) — grup: p = Piyasa Verileri, e = Eko
 ]
 CEZA = [r"kar payı|kâr payı|temettü|bilanço|FAVÖK|net kar|zarardan|halka arz|bedelsiz|\bKAP\b|hisse(de|si|leri)? |sözleşme imzala|ihale kazan",
         r"Bitcoin|Ethereum|kripto|Binance|\bETF",
-        r"PİYASAYA BAKIŞ|^Borsa güne|^Borsa günü"]
+        r"PİYASAYA BAKIŞ|^Borsa güne|^Borsa günü|Güne Başlarken|Bilmeniz Gerekenler",
+        r"Nvidia|Apple|Tesla|Microsoft|Amazon|Alphabet|\bMeta\b|piyasa değeri|Gözaltı Pazarı|Varlık Yönetim|borçlanma arac|payın satışı|pay satış|SPK'ya başvur"]
 
 
+# Gündem yalnızca Türkiye ve ABD: başka ülke/bölge haberleri (Türkiye ya da ABD de geçmiyorsa) alınmaz
+ABD = r"\bABD\b|\bFed\b|Powell|Wall Street|Nasdaq|Dow Jones|S&P 500|Trump|Bessent|Beyaz Saray|Amerika|tarım dışı|\bFOMC\b"
+DIGER_ULKE = (r"Almanya|İtalya|Fransa|İspanya|İngiltere|Britanya|Japonya|\bÇin|Hindistan|Rusya|Ukrayna|Kanada|Avustralya|İsviçre|Güney Kore|Brezilya|Meksika|Arjantin|Yunanistan|"
+              r"Mısır|Suudi|Katar|\bBAE\b|Avrupa|Euro Bölgesi|\bAB\b|\bECB\b|Lagarde|\bBoJ\b|Ueda|\bBoE\b|Bundesbank|Polonya|Macaristan|Güney Afrika|Endonezya|Asya")
+VERI = r"PMI|enflasyon|TÜFE|ÜFE|büyü(me|dü)|GSYH|işsizlik|istihdam|sanayi üretim|cari (açık|denge|işlem|fazla)|dış ticaret|ihracat|ithalat|faiz(i| oranını)? .*(indir|artır|sabit)|bütçe|rezerv|kapasite|güven endeks|perakende|konut satış"
+SOZ = r"uyar(dı|ısı)|sinyal|değerlendir|konuş(tu|acak)|görüş|görünüm|öngör|bekleniyor|bekle(ntisi|ntiler)|izlenecek|mesaj|yorum|röportaj|çağrı|^[^:]{3,45}: "
+SIRKET = r"(Moody|Fitch|S&P|JCR).*(not|görünüm)"
 KURESEL = r"\bFed\b|ECB|Lagarde|\bBoJ\b|Ueda|Powell|Çin|\bABD\b|Japonya|İngiltere|Avrupa|Euro Bölgesi|Wall Street|Nasdaq|Dow Jones"
 YERLI = r"Türk|TCMB|BDDK|Hazine|TÜİK|\bTL\b|Borsa İstanbul|\bBIST\b|\bSPK\b|Karahan|Şimşek|Ankara|katılım"
 
@@ -630,9 +706,18 @@ def haber_puan(h, simdi, grup):
                 best, etiket = p, e
     if best == 0:
         return -99, ""
-    if re.search(KURESEL, b) and not re.search(YERLI, b, re.I):
-        puan -= 2                                    # yalnızca yurt dışını ilgilendiren başlık
-        etiket = "Küresel" if etiket not in ("Emtia / Jeopolitik", "Jeopolitik") else etiket
+    yerli, abd = re.search(YERLI, b, re.I), re.search(ABD, b)
+    if re.search(DIGER_ULKE, b) and not yerli and not abd:
+        return -99, ""                               # Türkiye ve ABD dışı gündem
+    if abd and not yerli:
+        etiket = "ABD"
+    if re.search(SIRKET, b) and not re.search(r"Türkiye|Türk bankalar|bankacılık sektör", b):
+        puan -= 5                                    # tek şirketin not haberi
+    sayi = re.search(r"\d+[,.]?\d*\s*(%|puan|baz puan|milyar|trilyon)|yüzde \d|\d+[,.]\d+", b, re.I)
+    if re.search(VERI, b, re.I) and sayi:
+        puan += 3                                    # açıklanan veri / karar: rakamlı makro başlık
+    if re.search(SOZ, b, re.I) and not sayi:
+        puan -= 3                                    # açıklama / yorum başlığı
     for desen in CEZA:
         if re.search(desen, b, re.I):
             puan -= 6
@@ -642,7 +727,7 @@ def haber_puan(h, simdi, grup):
         yas = (simdi - dt.datetime.strptime(h["t"], "%Y-%m-%d %H:%M").replace(tzinfo=TR)).total_seconds() / 3600
     except Exception:
         yas = 48
-    puan -= max(0.0, yas) / 12                       # 12 saatte bir puan eskime
+    puan -= max(0.0, yas) / 24                       # günde bir puan eskime
     return round(puan, 2), etiket
 
 
