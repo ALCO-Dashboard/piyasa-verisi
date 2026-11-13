@@ -64,6 +64,16 @@ div.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--ac
 .ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:6px 0 2px}
 .ctl input[type="date"],.ctl input.edt{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 10px;font:inherit;font-size:13px}
 .ctl input.edt.on{border-color:var(--accent);background:var(--accent-wash)}
+.botw{max-height:470px;overflow:auto}
+.botw th{position:sticky;top:0;background:var(--surface);z-index:1}
+.botw td{vertical-align:top;white-space:nowrap}
+.botw td.l{text-align:left;font-family:inherit}
+.botw td.dl{text-align:left;white-space:normal;min-width:280px}
+.botw .dlm{display:block;font-size:12.5px;line-height:1.55}
+.botw .dlm b{font-weight:600}
+.botw .oz{font-family:inherit;font-size:12.5px;color:var(--ink-2);white-space:normal}
+.botw .tag{display:inline-block;font:600 10.5px var(--sans,inherit);letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:1px 7px;color:var(--ink-2)}
+.bosel{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 .hdr2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .g2e{grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr))}
 .card.egri .ctl{align-items:flex-start}
@@ -376,7 +386,7 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
     </div>
   </section>
   <section id="pPiyasa" class="hidden">
-    <div class="subtabs" role="group" aria-label="Piyasa konu" id="psTabs"><button data-ps="faiz" aria-pressed="true">Kâr/Faiz/Swap Oranları</button><button data-ps="gosterge" aria-pressed="false">Gösterge Oranlar</button><button data-ps="endeks" aria-pressed="false">Endeks ve Emtia</button><button data-ps="swap" aria-pressed="false">Yabancı Stoğu</button></div>
+    <div class="subtabs" role="group" aria-label="Piyasa konu" id="psTabs"><button data-ps="faiz" aria-pressed="true">Kâr/Faiz/Swap Oranları</button><button data-ps="gosterge" aria-pressed="false">Gösterge Oranlar</button><button data-ps="endeks" aria-pressed="false">Endeks ve Emtia</button><button data-ps="swap" aria-pressed="false">Yabancı Stoğu</button><button data-ps="borc" aria-pressed="false">Banka Borçlanmaları</button></div>
     <div id="psFaiz">
     <h2 class="sec">Gecelik oranlar ve hacim</h2>
     <div class="kpis" id="pKpi"></div>
@@ -435,6 +445,48 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
       <div class="card">
         <div class="cardhead"><div><h3>Son haftalar (milyon USD)</h3></div></div>
         <div class="tw" id="mkTbl"></div>
+      </div>
+      </div>
+    </div>
+    <div id="psBorc" class="hidden">
+      <h2 class="sec">Banka borçlanmaları</h2>
+      <div class="empty hidden" id="boGate"></div>
+      <div id="boBody">
+      <div class="kpis" id="boKpi"></div>
+      <div class="card">
+        <div class="cardhead"><div><h3>Sendikasyon ve yurt dışı kredi işlemleri (KAP)</h3></div><div class="hdr2"><span class="chips" id="boTur"></span><select id="boBanka" class="bosel" aria-label="Banka"></select></div></div>
+        <div class="tw botw" id="boTbl"></div>
+        <details class="acik"><summary>Açıklama</summary><div class="sub" id="boKapSub"></div></details>
+      </div>
+      <div class="card">
+        <div class="cardhead"><div><h3>1 yıllık sendikasyon maliyeti (baz puan, referans faiz üzeri)</h3></div></div>
+        <div class="legend" id="boMLeg"></div>
+        <div class="chart" id="boMChart"></div>
+      </div>
+      <div class="card">
+        <div class="cardhead"><div><h3>Sendikasyon, seküritizasyon ve ihraç stoku (milyar USD)</h3></div><div class="hdr2"><span class="chips" id="boSR"></span></div></div>
+        <div class="chips" id="boGrp" style="margin:2px 0 6px"></div>
+        <div class="chips" id="boSSer" style="margin:2px 0 8px"></div>
+        <div class="chart" id="boSChart"></div>
+        <details class="acik"><summary>Açıklama</summary><div class="sub" id="boSSub"></div></details>
+      </div>
+      <div class="grid2 g2e">
+        <div class="card">
+          <div class="cardhead"><div><h3>Dış borç çevirme oranı (%)</h3></div><span class="chips" id="boRR"></span></div>
+          <div class="legend" id="boRLeg"></div>
+        <div class="chart" id="boRChart"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="boFT"></h3></div><div class="hdr2"><div class="seg" id="boFMod" role="group" aria-label="Araç"><button data-m="kredi">Kredi</button><button data-m="tahvil">Tahvil</button></div><span class="chips" id="boFR"></span></div></div>
+          <div class="legend" id="boFLeg"></div>
+        <div class="chart" id="boFChart"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cardhead"><div><h3>Bankaların dış borç stoku (milyar USD)</h3></div><span class="chips" id="boDR"></span></div>
+        <div class="chips" id="boDSer" style="margin:2px 0 8px"></div>
+        <div class="chart" id="boDChart"></div>
+        <details class="acik"><summary>Açıklama</summary><div class="sub" id="boDSub"></div></details>
       </div>
       </div>
     </div>
@@ -879,8 +931,8 @@ $("#gUlke").onclick = e => { const b = e.target.closest("button[data-u]"); if (b
 $("#psTabs").onclick = e => { const b = e.target.closest("button[data-ps]"); if (b) { S.ps = b.dataset.ps; renderPs(); } };
 function renderPs() {
   $$("#psTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.ps === S.ps));
-  $("#psFaiz").classList.toggle("hidden", S.ps !== "faiz"); $("#psGosterge").classList.toggle("hidden", S.ps !== "gosterge"); $("#psEndeks").classList.toggle("hidden", S.ps !== "endeks"); $("#psSwap").classList.toggle("hidden", S.ps !== "swap");
-  if (S.ps === "faiz") { renderPiyasa(); renderBbg(); } else if (S.ps === "gosterge") renderGosterge(); else if (S.ps === "swap") { renderSwap(); renderMk(); } else renderEndeks();
+  $("#psFaiz").classList.toggle("hidden", S.ps !== "faiz"); $("#psGosterge").classList.toggle("hidden", S.ps !== "gosterge"); $("#psEndeks").classList.toggle("hidden", S.ps !== "endeks"); $("#psSwap").classList.toggle("hidden", S.ps !== "swap"); $("#psBorc").classList.toggle("hidden", S.ps !== "borc");
+  if (S.ps === "faiz") { renderPiyasa(); renderBbg(); } else if (S.ps === "gosterge") renderGosterge(); else if (S.ps === "swap") { renderSwap(); renderMk(); } else if (S.ps === "borc") renderBorc(); else renderEndeks();
 }
 
 // ---------------------------------------------------------------- Endeks ve emtia (Bloomberg + LBMA)
@@ -1564,7 +1616,7 @@ $("#grpBox").addEventListener("toggle", e => { if (e.target.classList?.contains(
 let rz, lw = innerWidth; addEventListener("resize", () => { if (!D || Math.abs(innerWidth - lw) < 30 && !rz) { } lw = innerWidth; clearTimeout(rz); rz = setTimeout(() => { rz = null; render(); }, 150); });
 const hashUygula = h => {
   if (h === "piyasa-imp") { S.tab = "piyasa"; S.ps = "faiz"; S.impT = "O/N"; S.pOn = new Set(["imp"]); return true; }   // Özet: TRY Implied Yield kartı
-  const pm = /^piyasa-(tlref|endeks|gosterge|swap|faiz)(?:-(\w+))?$/.exec(h);     // Özet kartlarından: alt sekme ve kalem
+  const pm = /^piyasa-(tlref|endeks|gosterge|swap|faiz|borc)(?:-(\w+))?$/.exec(h);     // Özet kartlarından: alt sekme ve kalem
   if (pm) { S.tab = "piyasa"; S.ps = pm[1] === "tlref" ? "faiz" : pm[1]; if (pm[1] === "tlref") S.pOn = new Set(["tlref"]); if (pm[1] === "endeks" && pm[2]) S.ee = pm[2]; if (pm[1] === "gosterge") S.gU = "tr"; return true; }
   if (h === "piyasa" || h === "makro") S.tab = h; else if (["enf", "hazine", "buyume", "istihdam", "uretim", "dis", "butce"].includes(h)) { S.tab = "makro"; S.mk = h; } else return false; return true; };
 hashUygula(location.hash.slice(1));
@@ -1640,6 +1692,108 @@ function renderMk() {
     + `<b>Stok</b> piyasa değeriyle ölçülür; fiyat ve kur hareketleriyle de değişir. <b>Haftalık net alım</b> yalnızca alım-satım işlemlerini gösterir (fiyat/kur etkisi arındırılmış); pozitif = yabancı girişi. `
     + `Toplam = yurt içi menkul kıymetler (hisse senedi, DİBS, ÖSBA ve diğer) + yurt dışı ihraçlar (eurobond vb.); geri alım/ters repo gibi geçici işlemler hariçtir. Veriler TCMB tarafından genellikle Perşembe günleri bir önceki haftanın Cuma'sı için yayımlanır.`;
 }
+// ---------------------------------------------------------------- Banka borçlanmaları (BDDK aylık bülten + TCMB EVDS + KAP)
+let BO;
+const BO_R = [["1Y", 366], ["2Y", 731], ["3Y", 1096], ["5Y", 1827], ["Tümü", 1e5]];
+const BO_S = [["send", "Sendikasyon", "--c1"], ["sek", "Seküritizasyon", "--c3"], ["ihrac", "İhraç edilen menkul kıymet (YP)", "--c4"], ["sbk", "Sermaye benzeri borçlanma (YP)", "--c6"], ["bank", "Bankalara borçlar (YP)", "--c2"]];
+const BO_D = [["kv", "Kısa vadeli dış borç", "--c1"], ["kv_kredi", "KV: krediler", "--c3"], ["kv_mev", "KV: banka mevduatı", "--c4"], ["kv_dth", "KV: döviz tevdiat", "--c6"], ["kal", "Kalan vadesi ≤ 1 yıl", "--c2"], ["eb", "Yurt dışı tahvil stoku (haftalık)", "--c5"]];
+const BO_T = { sendikasyon: "Sendikasyon", murabaha: "Murabaha", dpr: "DPR / seküritizasyon", diger: "Diğer kredi" };
+S.boR = S.boR || "3Y"; S.boG = S.boG || "sektor"; S.boS = S.boS || new Set(["send", "sek"]); S.boD = S.boD || new Set(["kv", "kal", "eb"]); S.boF = S.boF || "kredi"; S.boT = S.boT || "send"; S.boB = S.boB || "";
+function renderBorc() {
+  const g = $("#boGate"), body = $("#boBody");
+  if (!BO || !(BO.aylik?.dates?.length || BO.bddk?.dates?.length || BO.kap?.length)) { g.classList.remove("hidden"); body.classList.add("hidden"); g.textContent = BO === undefined ? "Yükleniyor…" : "Banka borçlanma verisi henüz derlenmedi (bir sonraki güncellemede çekilir)."; return; }
+  g.classList.add("hidden"); body.classList.remove("hidden");
+  const Bd = BO.bddk || { dates: [], g: {}, usd: [] }, Ay = BO.aylik || { dates: [], s: {} }, Hf = BO.haftalik || { dates: [], s: {} };
+  const bdT = Bd.dates.map(d => d + "-01"), ayT = Ay.dates.map(d => d + "-01");
+  // BDDK kalemi → milyar USD (ay sonu TCMB alış kuru)
+  const bdV = (grp, k, i) => { const G = Bd.g[grp]; if (!G) return null; const u = Bd.usd[i]; if (!ok(u)) return null;
+    const tl = k === "send" ? (ok(G.send[i]) || ok(G.send_dt[i]) ? (G.send[i] || 0) + (G.send_dt[i] || 0) : null) : k === "ihrac" ? G.ihrac_yp[i] : k === "sbk" ? G.sbk_yp[i] : k === "bank" ? G.bank_yp[i] : G[k]?.[i];
+    return ok(tl) ? tl / u / 1e3 : null; };
+  const sonOk = (arr) => { for (let i = arr.length - 1; i >= 0; i--) if (ok(arr[i])) return i; return -1; };
+  const sg = (x, d = 1, ek = "") => ok(x) ? `<span class="${cls(x, .005)}">${x > 0 ? "+" : x < 0 ? "−" : ""}${nf(Math.abs(x), d)}${ek}</span>` : "—";
+  const leg = (id, l) => { $(id).innerHTML = l.map(([ad, c, dash]) => `<span class="chip" style="cursor:default"><i style="background:${css(c)}"></i>${ad}${dash ? " (kesikli)" : ""}</span>`).join(""); };
+  leg("#boMLeg", [["USD dilimi (SOFR + baz puan)", "--c1"], ["EUR dilimi (Euribor + baz puan)", "--c3"]]);
+  leg("#boRLeg", [["Bankalar (kredi)", "--c1"], ["Bankalar (tahvil dahil)", "--c3"], ["Diğer sektörler (kredi)", "--c4", 1]]);
+  leg("#boFLeg", S.boF === "tahvil" ? [["İhraç", "--up"], ["İtfa", "--down"], ["Net", "--ink"]] : [["Kullanım", "--up"], ["Anapara geri ödemesi", "--down"], ["Net", "--ink"]]);
+  // ---- kartlar
+  const K = [];
+  { const n = Bd.dates.length - 1; if (n >= 0) for (const [k, l, c] of [["send", "Sendikasyon stoku", "--c1"], ["sek", "Seküritizasyon stoku", "--c3"]]) {
+      const v = bdV("sektor", k, n), a1 = bdV("sektor", k, n - 1), y1 = bdV("sektor", k, n - 12);
+      K.push(`<div class="kpi" style="--kc:var(${c})"><div class="t">${l}</div><div class="v">${ok(v) ? nf(v, 1) : "—"} Mr $</div><div class="s">Aylık ${sg(ok(v) && ok(a1) ? v - a1 : null, 2)} · yıllık ${sg(ok(v) && ok(y1) ? v - y1 : null, 1)} Mr $</div><div class="d">${ayAd(Bd.dates[n])} · BDDK, sektör</div></div>`); } }
+  { const a = Hf.s.eb || [], n = sonOk(a); if (n >= 0) { const y = a[n - 52];
+      K.push(`<div class="kpi" style="--kc:var(--c5)"><div class="t">Yurt dışı tahvil stoku</div><div class="v">${nf(a[n] / 1e3, 1)} Mr $</div><div class="s">Haftalık ${sg(ok(a[n - 1]) ? a[n] - a[n - 1] : null, 0)} mn · yıllık ${sg(ok(y) ? (a[n] - y) / 1e3 : null, 1)} Mr $</div><div class="d">${gunAd(Hf.dates[n])} · TCMB, banka ihraçları</div></div>`); } }
+  { const a = Ay.s.roll_b || [], n = sonOk(a); if (n >= 0) { const t = Ay.s.roll_bt?.[n];
+      K.push(`<div class="kpi" style="--kc:var(--c4)"><div class="t">Borç çevirme oranı · bankalar</div><div class="v">%${nf(a[n], 0)}</div><div class="s">Tahvil dahil <b>%${ok(t) ? nf(t, 0) : "—"}</b> · önceki ay %${ok(a[n - 1]) ? nf(a[n - 1], 0) : "—"}</div><div class="d">${ayAd(Ay.dates[n])} · TCMB</div></div>`); } }
+  { const a = Ay.s.kv || [], n = sonOk(a); if (n >= 0) { const kl = Ay.s.kal?.[n];
+      K.push(`<div class="kpi" style="--kc:var(--c2)"><div class="t">Kısa vadeli dış borç · bankalar</div><div class="v">${nf(a[n] / 1e3, 1)} Mr $</div><div class="s">Aylık ${sg(ok(a[n - 1]) ? (a[n] - a[n - 1]) / 1e3 : null, 1)} Mr $ · kalan vadeye göre <b>${ok(kl) ? nf(kl / 1e3, 1) : "—"}</b></div><div class="d">${ayAd(Ay.dates[n])} · TCMB</div></div>`); } }
+  const sen = (BO.kap || []).filter(x => (x.tur === "sendikasyon" || x.tur === "murabaha") && x.dilim.length);
+  if (sen.length) { const x = sen[0], d1 = x.dilim.filter(d => d.pb === "USD" && d.maliyet).sort((a, b) => (a.gun || 0) - (b.gun || 0))[0];
+    K.push(`<div class="kpi" style="--kc:var(--accent)"><div class="t">Son sendikasyon</div><div class="v">${ok(x.top) ? nf(x.top, 0) : "—"} mn $</div><div class="s"><b>${esc(x.banka)}</b>${d1 ? ` · ${d1.maliyet.baz}+${d1.maliyet.bp} bp` : ""}</div><div class="d">${gunAd(x.t)} · KAP</div></div>`); }
+  $("#boKpi").innerHTML = K.join("");
+  // ---- KAP tablosu
+  const tum = BO.kap || [], bankalar = [...new Set(tum.map(x => x.banka))].sort((a, b) => a.localeCompare(b, "tr"));
+  $("#boTur").innerHTML = [["send", "Sendikasyon"], ["tum", "Tüm yurt dışı krediler"]].map(([k, l]) => `<button class="chip" data-k="${k}" aria-pressed="${S.boT === k}">${l}</button>`).join("");
+  $("#boTur").onclick = e => { const b = e.target.closest("button[data-k]"); if (b) { S.boT = b.dataset.k; renderBorc(); } };
+  $("#boBanka").innerHTML = `<option value="">Tüm bankalar</option>` + bankalar.map(b => `<option${b === S.boB ? " selected" : ""}>${esc(b)}</option>`).join("");
+  $("#boBanka").onchange = e => { S.boB = e.target.value; renderBorc(); };
+  const vade = g_ => !g_ ? "" : g_ < 420 ? `${g_} gün` : `${Math.round(g_ / 365)} yıl`;
+  const sat = tum.filter(x => (S.boT === "tum" || x.tur === "sendikasyon" || x.tur === "murabaha") && (!S.boB || x.banka === S.boB));
+  $("#boTbl").innerHTML = sat.length ? `<table class="tbl"><thead><tr><th class="l">Tarih</th><th class="l">Banka</th><th class="l">Tür</th><th>Toplam (mn $)</th><th class="l">Dilimler · vade · maliyet</th><th>Katılım</th><th>Kaynak</th></tr></thead><tbody>`
+    + sat.map(x => `<tr><td class="l">${gunAd(x.t)}</td><td class="l"><b>${esc(x.banka)}</b></td><td class="l"><span class="tag">${BO_T[x.tur]}</span>${x.surd ? ` <span class="tag" title="Sürdürülebilirlik temalı / bağlantılı">ESG</span>` : ""}</td><td>${ok(x.top) && x.top ? nf(x.top, 0) : "—"}</td>`
+      + `<td class="dl">${x.dilim.length ? x.dilim.map(d => `<span class="dlm"><b>${d.pb} ${nf(d.tutar, d.tutar % 1 ? 1 : 0)} mn</b>${d.gun ? " · " + vade(d.gun) : ""}${d.maliyet ? ` · ${d.maliyet.baz}+${d.maliyet.bp} bp` : ""}</span>`).join("") : `<span class="oz">${esc(x.ozet)}</span>`}</td>`
+      + `<td>${x.kurum ? `${x.kurum} kurum${x.ulke ? `<br>${x.ulke} ülke` : ""}` : "—"}${x.yenileme ? `<br>yenileme %${x.yenileme}${x.yenileme % 10 === 0 ? "+" : ""}` : ""}</td><td><a href="https://www.kap.org.tr/tr/Bildirim/${x.id}" target="_blank" rel="noopener" title="${esc(x.ozet)}">KAP ↗</a></td></tr>`).join("") + "</tbody></table>"
+    : '<div class="empty">Seçime uyan işlem yok.</div>';
+  const kt = BO.kap_tarama || {};
+  $("#boKapSub").innerHTML = `Kaynak: <a href="https://www.kap.org.tr" target="_blank" rel="noopener">KAP</a> — bankaların özel durum açıklamaları. Tutar, vade ve maliyet açıklama metninden otomatik ayrıştırılır; ayrıntı için "KAP ↗" bağlantısındaki özgün metne bakın. `
+    + `<b>Toplam</b>: ABD doları dilimleri + avro dilimleri (işlem günü TCMB çapraz kuruyla). <b>Maliyet</b>: açıklanan toplam maliyet, referans faizin (SOFR / Euribor) üzerine baz puan. `
+    + `"Tüm yurt dışı krediler" seçeneği kalkınma kuruluşlarından sağlanan kredileri, DPR / seküritizasyon ve benzeri duyuruları da gösterir. `
+    + (kt.bas ? `Tarama aralığı: ${gunAd(kt.bas)} → ${gunAd(kt.son)}; geçmiş her güncellemede biraz daha geriye tamamlanır${kt.bekleyen ? ` (${kt.bekleyen} bildirimin metni sırada)` : ""}.` : "");
+  // ---- 1 yıllık sendikasyon maliyeti
+  { const p = [...sen].reverse().map(x => { const f = pb => x.dilim.filter(d => d.pb === pb && d.maliyet && d.gun && d.gun < 420)[0]; return { x, u: f("USD"), e: f("EUR") }; }).filter(r => r.u || r.e);
+    chart($("#boMChart"), { xs: p.map(r => r.x.t + "|" + r.x.banka), height: 260, label: "1 yıllık sendikasyon maliyeti", maxX: 10, min0: true,
+      xFmt: t => { const [d, b] = t.split("|"); return `${b.split(" ")[0]} ${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`; }, tipX: t => { const [d, b] = t.split("|"); return `${b} · ${gunAd(d)}`; }, yFmt: v => nf(v, 0),
+      series: [{ name: "USD dilimi (SOFR + bp)", vals: p.map(r => r.u ? r.u.maliyet.bp : null), color: css("--c1"), width: 2, fmt: v => "SOFR+" + nf(v, 0) + " bp" },
+               { name: "EUR dilimi (Euribor + bp)", vals: p.map(r => r.e ? r.e.maliyet.bp : null), color: css("--c3"), width: 2, fmt: v => "Euribor+" + nf(v, 0) + " bp" }] }); }
+  // ---- BDDK stok
+  const chips = (el, list, set, cb) => { el.innerHTML = list.map(([k, l, c]) => `<button class="chip" data-k="${k}" aria-pressed="${set.has(k)}"><i style="background:${css(c)}"></i>${l}</button>`).join("");
+    el.onclick = e => { const b = e.target.closest("button[data-k]"); if (!b) return; const k = b.dataset.k; if (set.has(k)) { if (set.size > 1) set.delete(k); } else set.add(k); cb(); }; };
+  $("#boGrp").innerHTML = (Bd.gruplar || []).map(x => `<button class="chip" data-k="${x.key}" aria-pressed="${S.boG === x.key}">${esc(x.name)}</button>`).join("");
+  $("#boGrp").onclick = e => { const b = e.target.closest("button[data-k]"); if (b) { S.boG = b.dataset.k; renderBorc(); } };
+  chips($("#boSSer"), BO_S, S.boS, renderBorc);
+  const rng = (el, dates) => tarihChips(el, "bo", S.boR, dates, k => { S.boR = k; renderBorc(); }, BO_R);
+  if (bdT.length) { rng($("#boSR"), bdT); const { ix } = tarihKes(bdT, "bo", S.boR, BO_R);
+    const ss = BO_S.filter(([k]) => S.boS.has(k)).map(([k, l, c]) => ({ name: l, vals: ix.map(i => bdV(S.boG, k, i)), color: css(c), width: 2, fmt: v => nf(v, 2) + " Mr $" }));
+    const mx = Math.max(0, ...ss.flatMap(x => x.vals.filter(ok)));
+    chart($("#boSChart"), { xs: ix.map(i => Bd.dates[i]), height: 320, label: "Sendikasyon, seküritizasyon ve ihraç stoku", xFmt: ayKisa, tipX: ayAd, maxX: 12, yFmt: v => nf(v, mx < 3 ? 2 : mx < 15 ? 1 : 0), series: ss }); }
+  else $("#boSChart").innerHTML = '<div class="empty">BDDK aylık bülten verisi yok.</div>';
+  $("#boSSub").innerHTML = `Kaynak: <a href="https://www.bddk.org.tr/BultenAylik" target="_blank" rel="noopener">BDDK Aylık Bülten</a> › Sendikasyon ve Seküritizasyon Kredileri tablosu ile Bilanço. Tutarlar milyon TL yayımlanır; ay sonu TCMB döviz alış kuruyla ABD dolarına çevrilmiştir. `
+    + `<b>Sendikasyon</b> = dış ticaret finansmanı amaçlı olan + olmayan sendikasyon kredileri. <b>İhraç edilen menkul kıymet</b>, <b>sermaye benzeri borçlanma</b> ve <b>bankalara borçlar</b> bilançonun yabancı para (YP) kolonudur. Banka grubunu yukarıdan değiştirebilirsiniz.`;
+  // ---- çevirme oranı
+  if (ayT.length) { rng($("#boRR"), ayT); const { ix } = tarihKes(ayT, "bo", S.boR, BO_R);
+    chart($("#boRChart"), { xs: ix.map(i => Ay.dates[i]), height: 300, label: "Dış borç çevirme oranı", xFmt: ayKisa, tipX: ayAd, maxX: 8, yFmt: v => nf(v, 0),
+      series: [["roll_b", "Bankalar (kredi)", "--c1", false], ["roll_bt", "Bankalar (tahvil dahil)", "--c3", false], ["roll_d", "Diğer sektörler (kredi)", "--c4", "5 4"]].map(([k, l, c, dash]) => ({ name: l, vals: ix.map(i => Ay.s[k]?.[i] ?? null), color: css(c), width: 2, dash, fmt: v => "%" + nf(v, 0) }))
+        .concat([{ name: "%100", vals: ix.map(() => 100), color: css("--muted"), width: 1, dash: "2 3", fmt: () => "tam çevirme" }]) });
+    // ---- kullanım / geri ödeme
+    const th = S.boF === "tahvil", ku = th ? "tah_kul" : "kul", od = th ? "tah_ode" : "ode";
+    $("#boFMod").querySelectorAll("button").forEach(b => { b.setAttribute("aria-pressed", b.dataset.m === S.boF); b.onclick = () => { S.boF = b.dataset.m; renderBorc(); }; });
+    $("#boFT").textContent = th ? "Bankaların yurt dışı tahvil ihracı ve itfası (milyar USD, aylık)" : "Bankaların uzun vadeli kredi kullanımı ve geri ödemesi (milyar USD, aylık)";
+    rng($("#boFR"), ayT);
+    chart($("#boFChart"), { xs: ix.map(i => Ay.dates[i]), height: 300, label: $("#boFT").textContent, xFmt: ayKisa, tipX: ayAd, maxX: 8, yFmt: v => nf(v, 0),
+      series: [{ name: th ? "İhraç" : "Kullanım", vals: ix.map(i => ok(Ay.s[ku]?.[i]) ? Ay.s[ku][i] / 1e3 : null), color: css("--up"), type: "bar", fmt: v => nf(v, 2) + " Mr $" },
+               { name: th ? "İtfa" : "Anapara geri ödemesi", vals: ix.map(i => ok(Ay.s[od]?.[i]) ? -Ay.s[od][i] / 1e3 : null), color: css("--down"), type: "bar", fmt: v => nf(-v, 2) + " Mr $" },
+               { name: "Net", vals: ix.map(i => ok(Ay.s[ku]?.[i]) || ok(Ay.s[od]?.[i]) ? ((Ay.s[ku]?.[i] || 0) - (Ay.s[od]?.[i] || 0)) / 1e3 : null), color: css("--ink"), width: 2, fmt: v => (v > 0 ? "+" : "") + nf(v, 2) + " Mr $" }], stack: true });
+    // ---- dış borç stoku (aylık seriler + haftalık tahvil stoku ay sonuna indirgenir)
+    chips($("#boDSer"), BO_D, S.boD, renderBorc); rng($("#boDR"), ayT);
+    const ebAy = {}; Hf.dates.forEach((d, i) => { if (ok(Hf.s.eb?.[i])) ebAy[d.slice(0, 7)] = Hf.s.eb[i]; });
+    chart($("#boDChart"), { xs: ix.map(i => Ay.dates[i]), height: 320, label: "Bankaların dış borç stoku", xFmt: ayKisa, tipX: ayAd, maxX: 12, yFmt: v => nf(v, 0), min0: true,
+      series: BO_D.filter(([k]) => S.boD.has(k)).map(([k, l, c]) => ({ name: l, vals: ix.map(i => { const v = k === "eb" ? ebAy[Ay.dates[i]] : Ay.s[k]?.[i]; return ok(v) ? v / 1e3 : null; }), color: css(c), width: 2, fmt: v => nf(v, 1) + " Mr $" })) });
+  } else for (const id of ["#boRChart", "#boFChart", "#boDChart"]) $(id).innerHTML = '<div class="empty">TCMB EVDS verisi henüz çekilmedi.</div>';
+  $("#boDSub").innerHTML = `Kaynak: <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> › Ödemeler Dengesi ve Dış İstatistikler. `
+    + `<b>Dış borç çevirme oranı</b>: bankaların yurt dışından kullandığı kredilerin aynı dönemdeki anapara geri ödemelerine oranı (TCMB'nin yayımladığı seri; %100'ün üzeri borcun fazlasıyla yenilendiğini gösterir). `
+    + `<b>Kısa vadeli dış borç</b>: orijinal vadesi 1 yıl ve altı olan borç stoku. <b>Kalan vadesi ≤ 1 yıl</b>: orijinal vadesine bakılmaksızın önümüzdeki 12 ayda ödenecek borç. `
+    + `<b>Yurt dışı tahvil stoku</b>: bankaların yurt dışında ihraç ettiği borçlanma senetlerinin yazılı değeri (haftalık seri, grafikte ay sonu). Aylık seriler yaklaşık iki ay gecikmeyle yayımlanır.`;
+}
+fetch("data/borclanma.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { BO = j; if (S.tab === "piyasa" && S.ps === "borc") renderBorc(); });
 fetch("data/swap.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { SW = j; if (S.tab === "piyasa" && S.ps === "swap") { renderSwap(); renderMk(); } });
 fetch("data/hazine.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { H = j; if (D && S.tab === "makro" && S.mk === "hazine") { renderHazine(); renderSrc(); } });
 fetch("data/ekonomi.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { E = j; if (D && S.tab === "makro" && S.mk in EKT) { renderEko(); renderSrc(); } });

@@ -533,6 +533,12 @@ def main():
             swap.guncelle(sys.modules[__name__], a.site, os.environ.get("EVDS_API_KEY", ""), log)
         except Exception as e:
             log(f"HATA yabancı swap: {type(e).__name__}: {e}")
+        try:                                                         # banka borçlanmaları (Makro ve Piyasa › Piyasa)
+            log("== banka borçlanmaları")
+            import borclanma
+            borclanma.guncelle(sys.modules[__name__], a.site, os.environ.get("EVDS_API_KEY", ""), log, D["bddk_aylik"])
+        except Exception as e:
+            log(f"HATA banka borçlanmaları: {type(e).__name__}: {e}")
 
     for f in DOSYALAR:
         json.dump(D[f], open(os.path.join(veri_dizin, f + ".json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
