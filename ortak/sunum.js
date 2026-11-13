@@ -49,15 +49,18 @@
   addEventListener("storage", e => { if (e.key === K) dinleyici.forEach(f => { try { f(oku()); } catch (x) {} }); if (e.key === KM) modDegisti(); });
   const ogeler = d => d.slaytlar.flatMap(s => s.ogeler);
 
-  // otomatik düzen: küçük göstergeler (Özet kartları gibi) aynı sayfadan geliyorsa tek slaytta toplanır (en çok 6)
+  // Her ekleme yeni slayt açar; Ctrl (Mac'te Cmd) basılıyken eklenen alan, bir önceki eklemenin yapıldığı slayta girer
+  // (birbiriyle bağlantılı kutucuk ve grafikleri aynı slaytta toplamak için).
   const kucukMu = o => o.w * o.h < 70000 || (o.w < 330 && o.h < 260);
-  function ekle(o) {
+  const sonHedef = d => d.slaytlar.find(s => s.id === d.sonSlayt) || d.slaytlar[d.slaytlar.length - 1] || null;
+  function ekle(o, ayni) {
     const d = oku(); o.kucuk = kucukMu(o);
-    const son = d.slaytlar[d.slaytlar.length - 1];
-    if (o.kucuk && son && son.ogeler.length < 6 && son.ogeler.every(x => x.kucuk && x.sayfa === o.sayfa && x.yolAd === o.yolAd) && !son.kilit) son.ogeler.push(o);
-    else d.slaytlar.push({ id: uid(), baslik: o.kucuk ? (o.yolAd.split(" › ").pop() || o.ad) : o.ad, not: "", oc: null, kaynak: null, duzen: "oto", ogeler: [o] });
+    const h = ayni ? sonHedef(d) : null;
+    if (h) { h.ogeler.push(o); h.kilit = true; d.sonSlayt = h.id; }
+    else { const s = { id: uid(), baslik: o.kucuk ? (o.yolAd.split(" › ").pop() || o.ad) : o.ad, not: "", oc: null, kaynak: null, duzen: "oto", ogeler: [o] }; d.slaytlar.push(s); d.sonSlayt = s.id; }
     yaz(d); return d;
   }
+  const slaytNo = (d, id) => d.slaytlar.findIndex(s => s.id === id) + 1;
   function cikar(id) {
     const d = oku();
     d.slaytlar.forEach(s => { s.ogeler = s.ogeler.filter(x => x.id !== id); });
@@ -171,6 +174,8 @@
 .ss-hl.ekli{border-style:solid;background:rgba(11,122,11,.05);border-color:#0b7a0b;box-shadow:0 0 0 4px rgba(11,122,11,.12)}
 .ss-et{position:fixed;z-index:2147483001;display:none;align-items:stretch;gap:0;background:#c8102e;color:#fff;border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.22);font-size:12.5px;font-weight:700;overflow:hidden;white-space:nowrap}
 .ss-et.ekli{background:#0b7a0b}
+.ss-hl.grup{border-color:#1d4ed8;background:rgba(29,78,216,.06);box-shadow:0 0 0 4px rgba(29,78,216,.14)}
+.ss-et.grup{background:#1d4ed8}
 .ss-et button{all:unset;cursor:pointer;padding:6px 10px;display:inline-flex;align-items:center;gap:5px;font:inherit}
 .ss-et button:hover{background:rgba(255,255,255,.16)}
 .ss-et button+button{border-left:1px solid rgba(255,255,255,.28)}
@@ -199,7 +204,8 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
 @media print{.ss-ui,.ss-hl,.ss-et,.ss-rozet,.ss-cerceve,.ss-bar{display:none!important}}`;
   function stilEkle() { if (document.getElementById("ssCss")) return; const s = document.createElement("style"); s.id = "ssCss"; s.textContent = CSS_UI; document.head.appendChild(s); }
 
-  let hl, et, aday = [], seviye = 0, kilit = false, isaretler = [];
+  let hl, et, aday = [], seviye = 0, kilit = false, isaretler = [], ctrl = false;
+  const ctrlAyarla = v => { v = !!v; if (v === ctrl) return; ctrl = v; if (hl && aday[0] && !kilit) ciz(); else if (et && kilit) ciz(); };
   function uiKur() {
     if (hl) return; stilEkle();
     hl = Object.assign(document.createElement("div"), { className: "ss-hl ss-ui" });
@@ -212,18 +218,20 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
       const b = e.target.closest("button"); if (!b) return; const el = aday[seviye]; if (!el) return;
       if (b.dataset.a === "buyut") { seviye = Math.min(aday.length - 1, seviye + 1); ciz(); return; }
       if (b.dataset.a === "kucult") { seviye = Math.max(0, seviye - 1); ciz(); return; }
-      const var_ = ekliMi(el);
+      const var_ = ekliMi(el), ayni = e.ctrlKey || e.metaKey;
       if (var_) { cikar(var_.id); toast("Sunumdan çıkarıldı"); }
-      else { const d = ekle(ogeYap(el)); toast(`Eklendi · ${d.slaytlar.length}. slayt`); }
+      else { const d = ekle(ogeYap(el), ayni), n = slaytNo(d, d.sonSlayt); toast(ayni && d.slaytlar[n - 1].ogeler.length > 1 ? `Aynı slayta eklendi · Slayt ${n}: ${d.slaytlar[n - 1].ogeler.length} alan` : `Eklendi · Slayt ${n}`); }
       ciz(); isaretle();
     });
   }
   function ciz() {
     const el = aday[seviye]; if (!el || !el.isConnected) { hl.style.display = et.style.display = "none"; return; }
-    const r = el.getBoundingClientRect(), ek = !!ekliMi(el);
+    const r = el.getBoundingClientRect(), ek = !!ekliMi(el), d = oku(), h = sonHedef(d), grup = ctrl && !ek && h;
     Object.assign(hl.style, { display: "block", left: r.left - 3 + "px", top: r.top - 3 + "px", width: r.width + 6 + "px", height: r.height + 6 + "px" });
-    hl.classList.toggle("ekli", ek); et.classList.toggle("ekli", ek);
-    et.innerHTML = `<button data-a="ekle">${ek ? "✓ Sunumda · çıkar" : "＋ Sunuma ekle"} <span class="ad">${esc(baslik(el))}</span></button>` +
+    hl.classList.toggle("ekli", ek); et.classList.toggle("ekli", ek); hl.classList.toggle("grup", !!grup); et.classList.toggle("grup", !!grup);
+    const etiket = ek ? "✓ Sunumda · çıkar" : grup ? `＋ Aynı slayta ekle (Slayt ${slaytNo(d, h.id)})` : "＋ Sunuma ekle";
+    et.title = ek ? "" : grup ? `Ctrl basılı: önceki eklemenin slaytına (${h.baslik}) eklenir` : "Yeni slayt olarak eklenir · Ctrl'e basılı tutarak tıklarsanız önceki slayta eklenir";
+    et.innerHTML = `<button data-a="ekle">${etiket} <span class="ad">${esc(baslik(el))}</span></button>` +
       (seviye < aday.length - 1 ? `<button data-a="buyut" title="Daha geniş alanı seç">⤢</button>` : "") + (seviye > 0 ? `<button data-a="kucult" title="Daha dar alanı seç">⤡</button>` : "");
     et.style.display = "flex";
     const ew = et.offsetWidth, eh = et.offsetHeight;
@@ -232,7 +240,9 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
     et.style.left = x + "px"; et.style.top = y + "px";
   }
   function hareket(e) {
-    if (!modAcik() || kilit || PAGE === "sunum") return;
+    if (!modAcik() || PAGE === "sunum") return;
+    ctrlAyarla(e.ctrlKey || e.metaKey);
+    if (kilit) return;
     if (e.target.closest && e.target.closest(".ss-ui")) return;
     const a = bloklar(e.target);
     if (a[0] !== aday[0]) { aday = a; seviye = 0; }
@@ -248,7 +258,7 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
       const r = el.getBoundingClientRect(), sx = scrollX, sy = scrollY;
       const c = Object.assign(document.createElement("div"), { className: "ss-cerceve ss-ui" });
       Object.assign(c.style, { left: r.left + sx - 3 + "px", top: r.top + sy - 3 + "px", width: r.width + 6 + "px", height: r.height + 6 + "px" });
-      const z = Object.assign(document.createElement("div"), { className: "ss-rozet ss-ui", textContent: `✓ Slayt ${si + 1}` });
+      const z = Object.assign(document.createElement("div"), { className: "ss-rozet ss-ui", textContent: `✓ Slayt ${si + 1}${s.ogeler.length > 1 ? ` · ${s.ogeler.indexOf(o) + 1}/${s.ogeler.length}` : ""}` });
       Object.assign(z.style, { left: r.right + sx + 3 - 70 + "px", top: r.top + sy - 3 + "px" });
       document.body.append(c, z); isaretler.push(c, z);
       requestAnimationFrame(() => { z.style.left = r.right + sx + 3 - z.offsetWidth + "px"; });
@@ -270,7 +280,7 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
       bar.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return;
         if (b.dataset.a === "bitti") api.bitir(); else if (b.dataset.a === "ac") api.ac(); else if (b.dataset.a === "geri") { const d = oku(), o = ogeler(d).sort((a, b) => b.t - a.t)[0]; if (o) { cikar(o.id); toast("Son eklenen çıkarıldı"); } } }); }
     const d = oku(), n = ogeler(d).length;
-    bar.innerHTML = `<span class="nokta"></span><span class="ip"><b style="color:#fff">Seçim modu</b> · Alanın üzerine gelip <b style="color:#fff">＋ Sunuma ekle</b>'ye tıklayın. Grafiği istediğiniz görünüme getirip ekleyebilir, sekmeler arasında gezebilirsiniz.</span>
+    bar.innerHTML = `<span class="nokta"></span><span class="ip"><b style="color:#fff">Seçim modu</b> · Alanın üzerine gelip <b style="color:#fff">＋ Sunuma ekle</b>'ye tıklayın; her ekleme yeni slayt olur. <b style="color:#fff">Ctrl</b>'e basılı tutarak eklediğiniz alan önceki slayta girer.</span>
       <span class="say">${n} alan · ${d.slaytlar.length} slayt</span><button data-a="geri" ${n ? "" : "disabled"} title="Son ekleneni çıkar">↶</button><button class="ana" data-a="ac">Sunumu hazırla →</button><button data-a="bitti">Bitti</button>`;
   }
 
@@ -429,6 +439,9 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
   const kur = () => {
     if (UST && PAGE !== "sunum") ustDugme();
     document.addEventListener("mousemove", hareket, { passive: true });
+    addEventListener("keydown", e => { if (e.key === "Control" || e.key === "Meta") ctrlAyarla(true); });
+    addEventListener("keyup", e => { if (e.key === "Control" || e.key === "Meta") ctrlAyarla(false); });
+    addEventListener("blur", () => ctrlAyarla(false));
     addEventListener("scroll", () => { if (modAcik()) { if (aday[0] && hl) ciz(); } }, { passive: true, capture: true });
     addEventListener("resize", isaretleSonra);
     document.addEventListener("click", e => { if (modAcik() && !e.target.closest(".ss-ui")) isaretleSonra(); }, true);
