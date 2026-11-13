@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TCMB · ALCO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --page:#f4f5f7; --surface:#ffffff; --surface-2:#f8f8f6; --ink:#1a1d26; --ink-2:#4f4e4a; --muted:#85837d;
+  --grid:#e7e6e0; --axis:#c3c2b7; --line:rgba(11,11,11,.10); --accent:#c8102e; --accent-wash:#fdecee;
+  --up:#0b7a0b; --down:#c62828; --bar:#9aa3b5; --bar-hi:#c8102e; --vol:rgba(110,120,140,.28);
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#eda100; --c5:#e87ba4; --c6:#6250d6; --c7:#008300;
+  --mono:"DM Mono","SF Mono",ui-monospace,Menlo,monospace; --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark; --page:#0f1012; --surface:#1a1a19; --surface-2:#222220; --ink:#f0efec; --ink-2:#c3c2b7; --muted:#8f8d86;
+  --grid:#2c2c2a; --axis:#3d3d3a; --line:rgba(255,255,255,.10); --accent:#f0525f; --accent-wash:#3a171b;
+  --up:#3fbf3f; --down:#ef6b6b; --bar:#5d6577; --bar-hi:#f0525f; --vol:rgba(160,170,190,.25);
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#9085e9; --c7:#1f9a1f;}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --page:#0f1012; --surface:#1a1a19; --surface-2:#222220; --ink:#f0efec; --ink-2:#c3c2b7; --muted:#8f8d86;
+  --grid:#2c2c2a; --axis:#3d3d3a; --line:rgba(255,255,255,.10); --accent:#f0525f; --accent-wash:#3a171b;
+  --up:#3fbf3f; --down:#ef6b6b; --bar:#5d6577; --bar-hi:#f0525f; --vol:rgba(160,170,190,.25);
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#9085e9; --c7:#1f9a1f;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:15px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+button,select{font:inherit;color:inherit}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.wrap{max-width:1500px;margin:0 auto;padding-inline:16px}
+.top .wrap{padding-block:20px 0}
+.brandtitle{margin:0;font-family:Archivo,var(--sans);font-size:26px;font-weight:800;letter-spacing:.03em;line-height:1.15;text-transform:uppercase;border-bottom:2px solid var(--ink);padding-bottom:10px}
+nav.tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+nav.tabs button{font-family:Archivo,var(--sans);font-weight:700;font-size:15px;letter-spacing:.02em;text-transform:uppercase;padding:13px 10px;border:1px solid var(--line);border-bottom:3px solid var(--line);border-radius:10px;background:var(--surface);color:var(--muted);cursor:pointer}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-color:var(--accent);background:var(--accent-wash)}
+main.wrap{padding-block:16px 48px}
+.subtabs{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface);margin-bottom:14px}
+.subtabs button{border:0;background:none;padding:9px 18px;font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer}
+.subtabs button+button{border-left:1px solid var(--line)}
+.subtabs button[aria-pressed="true"]{background:var(--accent);color:#fff}
+h2.sec{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px;display:flex;align-items:center;gap:10px}
+h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--kc,var(--line));border-radius:12px;padding:12px 14px;text-align:left;min-width:0}
+button.kpi{cursor:pointer;width:100%}
+button.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent);border-top-color:var(--accent)}
+.kpi .t{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-family:var(--mono);font-size:26px;font-weight:500;line-height:1.2;margin-top:4px;color:var(--ink)}
+.kpi .s{font-size:12.5px;color:var(--ink-2);margin-top:3px}
+.kpi .s b{font-family:var(--mono);font-weight:500}
+.kpi2 .kr{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:4px}
+.kpi2 .kl{font-size:12.5px;font-weight:600;color:var(--ink-2)}.kpi2 .kv{font-family:var(--mono);font-size:22px;color:var(--ink)}
+.kpi .d{font-size:11.5px;color:var(--muted);margin-top:2px}
+.up{color:var(--up)}.down{color:var(--down)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px;min-width:0}
+.cardhead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.cardhead h3{margin:0;font-size:15px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
+.cardhead .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13.5px;line-height:1.2;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-wash);font-weight:600}
+.chip i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.chip.off{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:6px 14px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.chart{position:relative;margin-top:6px}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.axis text{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:8px 10px;font-size:12.5px;min-width:170px;z-index:5;display:none}
+.tip b{display:block;font-size:12px;margin-bottom:4px}
+.tip .r{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:12px}
+.tip .r span:first-child{font-family:var(--sans);color:var(--ink-2)}
+.tip .r i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
+.note{font-size:12.5px;color:var(--muted)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:14px;align-items:start}
+@media (max-width:1000px){.grid2{grid-template-columns:minmax(0,1fr)}}
+/* TÜFE ana harcama grupları */
+details.grpd{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+details.grpd>summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+details.grpd>summary::-webkit-details-marker{display:none}
+details.grpd>summary::before{content:"▸";color:var(--muted)}details.grpd[open]>summary::before{content:"▾"}
+details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:.02em}details.grpd>summary span{font-size:12.5px;color:var(--muted)}
+.grph{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.grph select{border:1px solid var(--line);border-radius:9px;padding:6px 10px;background:var(--surface)}
+.grp{width:100%;border-collapse:collapse;font-size:13.5px}
+.grp th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+.grp th:first-child{text-align:left}
+.grp td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono);white-space:nowrap}
+.grp td:first-child{text-align:left;font-family:var(--sans);white-space:normal}
+.grp tr.tot td{font-weight:700;background:var(--surface-2)}
+.hb{display:inline-block;width:110px;height:10px;position:relative;vertical-align:middle;margin-right:8px;background:var(--surface-2);border-radius:3px}
+.hb i{position:absolute;top:0;bottom:0;border-radius:3px}
+.hb::after{content:"";position:absolute;top:-2px;bottom:-2px;left:50%;width:1px;background:var(--axis)}
+.hb.p::after{left:0}
+/* hedef tablosu */
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono)}
+.tbl tr.cur td{background:var(--accent-wash)}
+.tbl td.na{color:var(--muted)}
+.src{font-size:12px;color:var(--muted);margin-top:18px;line-height:1.6}
+#gate{padding:60px 16px;text-align:center;color:var(--muted)}
+.hidden{display:none!important}
+@media (max-width:640px){.kpi .v{font-size:22px}.brandtitle{font-size:21px}.hb{width:60px}}
+@media print{.tip{display:none!important}}
+/* TCMB sayfası ek stiller */
+.alco-ic header.top,.alco-ic #pRez>.subtabs{display:none}
+.alco-ic main.wrap{padding-left:0;padding-right:0}
+.wf{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin-bottom:12px}
+.wf .kpi{flex:1 1 150px}
+.wf .op{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:20px;color:var(--muted);flex:0 0 14px}
+.kpi .v.sm{font-size:22px}
+.dtin{font:inherit;font-size:12.5px;padding:3px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}.chips .arrow{color:var(--muted);font-size:12px}
+.wf .kpi[role=button]{cursor:pointer;transition:border-color .15s,background .15s}.wf .kpi[role=button]:hover{border-color:var(--lc)}
+.wf .kpi[aria-pressed="true"]{background:color-mix(in srgb,var(--lc) 9%,var(--surface));border-color:var(--lc);box-shadow:0 0 0 1px var(--lc) inset}
+.wf .kpi .t .ln{float:right;width:16px;height:3px;border-radius:2px;background:var(--lc);margin-top:6px;opacity:.25}.wf .kpi[aria-pressed="true"] .t .ln{opacity:1}
+.kpi.res{--kc:var(--c6)}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:1px 6px;border-radius:5px;background:var(--surface-2);color:var(--muted);vertical-align:2px;margin-left:4px}
+.tag.w{background:#fff3dc;color:#8a5a00}
+:root[data-theme="dark"] .tag.w{background:#3a2a10;color:#f0c070}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tag.w{background:#3a2a10;color:#f0c070}}
+.tblwrap{max-height:460px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.tblwrap .tbl th{position:sticky;top:0;background:var(--surface);z-index:1}
+.tbl td.pos{color:var(--up)}.tbl td.neg{color:var(--down)}
+.tbl td.b{font-weight:600}
+.tbl td small{color:var(--muted);font-family:var(--sans);font-size:10.5px;margin-left:3px}
+details.meth{margin-top:4px}
+details.meth summary{cursor:pointer;font-weight:600;font-size:13.5px;color:var(--ink-2)}
+details.meth p,details.meth li{font-size:13px;color:var(--ink-2);line-height:1.6;margin:6px 0}
+details.meth code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+.wf .op{}
+@media (max-width:640px){.wf .op{display:none}.wf .kpi{flex-basis:calc(50% - 4px)}}
+.periods{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div id="alcoTop"></div><script src="../ortak/ust.js" data-page="tcmb" data-root="../"></script>
+<header class="top"><div class="wrap">
+  <h1 class="brandtitle">TCMB</h1>
+</div></header>
+<main class="wrap">
+  <div id="gate">Veriler yükleniyor…</div>
+  <section id="pRez" class="hidden">
+    <div class="subtabs" role="group" aria-label="TCMB konu" style="margin-top:16px"><button aria-pressed="true">Rezervler</button></div>
+    <h2 class="sec" id="wfHead">Net rezerv hesabı</h2>
+    <div class="wf" id="wf"></div>
+    <div class="card" id="lvCard">
+      <div class="cardhead"><div><h3>Rezerv seviyeleri (mr $)</h3><div class="sub" id="lvSub"></div></div><span class="chips" id="lvRng"></span></div>
+      <div class="legend" id="lvLeg"></div>
+      <div class="chart" id="lvChart"></div>
+      <div class="note" id="lvNote">Çizgileri yukarıdaki kutucuklara tıklayarak ekleyip çıkarın (birden çok seçilebilir); altın, döviz ve LBMA AM fiyatı grafiğin altındaki düğmelerden. Altın = rezerv altını (ons) × LBMA AM · döviz = dış varlıklar − altın.</div>
+    </div>
+    <h2 class="sec">Tahmini net müdahale</h2>
+    <div class="periods" id="mdKpi"></div>
+    <div class="card">
+      <div class="cardhead"><div><h3>Rezerv değişiminin ayrıştırılması (mn $)</h3><div class="sub" id="dcSub"></div></div>
+        <span class="chips" id="rng"></span></div>
+      <div class="legend" id="dcLeg"></div>
+      <div class="chart" id="dcChart"></div>
+      <div class="note" id="dcNote"></div>
+    </div>
+    <div class="card">
+      <div class="cardhead"><div><h3>Günlük detay (mn $)</h3><div class="sub" id="tbSub"></div></div></div>
+      <div class="tblwrap" id="tbBox"></div>
+    </div>
+    <div class="card">
+      <div class="cardhead"><div><h3>Haftalık resmi rezerv ile karşılaştırma</h3><div class="sub">TCMB haftalık rezerv verisi (Cuma) · altın miktarları haftalık vaziyetten</div></div></div>
+      <div class="tblwrap" id="wkBox" style="max-height:340px"></div>
+    </div>
+    <div class="card">
+      <details class="meth" id="meth"><summary>Hesaplama yöntemi</summary>
+        <ul>
+          <li><b>Net rezerv</b> = Dış varlıklar (A02) − Dış yükümlülükler (A11) − Kamu ve diğer döviz mevduatı (A13) − Bankalar döviz mevduatı (A14). Analitik bilanço bin TL; günün TCMB döviz alış kuruyla dolara çevrilir.</li>
+          <li><b>Swap hariç net rezerv</b> = Net rezerv + son açıklanan ay sonu yurt içi para karşılığı forward/swap net pozisyonu (Uluslararası Rezervler ve Döviz Likiditesi tablosu, K14) − ay sonundan bu yana TCMB taraflı alım yönlü swap stokundaki artış + satım yönlü (ters) swap stokundaki artış.</li>
+          <li><b>Altın fiyat etkisi</b> = TCMB'nin net altın pozisyonu (rezerv altını − bankaların teminat, mevduat ve zorunlu karşılık altını − Hazine altın mevduatı − yurt dışı bankalar altın mevduatı; önceki günün haftalık miktarı, ons) × LBMA AM fiyatındaki günlük değişim. TCMB rezerv altınını LBMA AM fiyatıyla değerler; Cuma günleri haftalık rezervden çıkan fiyat LBMA AM ile birebir aynıdır.</li>
+          <li><b>Swap etkisi</b> = alım yönlü swap stokundaki değişim − satım yönlü swap stokundaki değişim (swap girişi/vadesi rezervi değiştirir, müdahale değildir).</li>
+          <li><b>Net müdahale</b> = Net rezerv değişimi − altın fiyat etkisi − swap etkisi. Kamu kurumlarının (ör. enerji KİT'leri) TCMB'den döviz alımı ve ihracat bedeli dönüşümü de bu kalemde görünür. Euro ve diğer para birimlerinin dolara karşı değer değişimi (parite etkisi) ayrıştırılmaz.</li>
+          <li><b>Altın fiyatı kaynağı:</b> <span class="tag">L</span> LBMA AM (goldsilver.com London Fix tablosu) · <span class="tag">=</span> Londra tatili, son LBMA fiyatı · <span class="tag">C</span> Cuma, haftalık rezervden çıkan kesin fiyat · <span class="tag w">B</span> Borsa İstanbul USD/ons ağırlıklı ortalaması (tahmini; LBMA'dan günde onlarca dolar sapabilir, o günün müdahale tahmini daha belirsizdir).</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+  <div class="src" id="src"></div>
+</main>
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s);
+const AY = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+const AYU = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+const NF = {}; const nf = (v, d = 1) => (NF[d] ||= new Intl.NumberFormat("tr-TR", { minimumFractionDigits: d, maximumFractionDigits: d })).format(v);
+const ok = v => v != null && isFinite(v);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const gunAd = d => d ? `${+d.slice(8, 10)} ${AY[+d.slice(5, 7) - 1]} ${d.slice(0, 4)}` : "—";
+const gunKisa = d => `${+d.slice(8, 10)} ${AY[+d.slice(5, 7) - 1]}${d.slice(2, 4) !== String(new Date().getFullYear()).slice(2) ? " " + d.slice(2, 4) : ""}`;
+const ayAd = m => m ? `${AYU[+m.slice(5, 7) - 1]} ${m.slice(0, 4)}` : "—";
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+const sg = v => !ok(v) ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "") + nf(Math.abs(v), 0);          // mn $, işaretli
+const mn = v => ok(v) ? (v < 0 ? "−" : "") + nf(Math.abs(v), 0) : "—";
+const mr = (v, d = 1) => ok(v) ? (v < 0 ? "−" : "") + nf(Math.abs(v) / 1000, d) : "—";            // mn → mr
+const mrSg = (v, d = 1) => !ok(v) ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "") + nf(Math.abs(v) / 1000, d);
+const cl = v => !ok(v) || Math.abs(v) < .5 ? "" : v > 0 ? "up" : "down";
+
+let D = null;
+const RNG = [["1H", 5], ["2H", 10], ["1A", 21], ["3A", 63], ["6A", 126], ["1Y", 252], ["YB", "ytd"], ["Tümü", 1e9]];
+const S = { r: store.get("tcmb.rng") || "1A", lr: store.get("tcmb.lrng") || "1Y", cum: store.get("tcmb.cum") !== "0", oz: { a: "", b: "" }, loz: { a: "", b: "" },
+  lv: (() => { try { const x = JSON.parse(store.get("tcmb.lv2") || "null"); if (x && typeof x === "object") return x; } catch {} return { a02: 1, net: 1, shn: 1, altin: 0, doviz: 0, lbma: 0 }; })() };
+// seviye grafiği çizgileri: anahtar → [ad, renk]; kutucuklar ilk yedisini, grafik altındaki düğmeler son üçünü açar/kapatır
+const LV = { a02: ["Brüt rezerv (A02)", "--c3"], a11: ["Dış yükümlülükler (A11)", "--c2"], a13: ["Kamu döviz mevduatı (A13)", "--c5"], a14: ["Banka döviz mevduatı (A14)", "#8a6d3b"],
+  net: ["Net rezerv", "--c1"], swap: ["Swap", "--c4"], shn: ["Swap hariç net rezerv", "--c6"], altin: ["Altın", "#a16207"], doviz: ["Döviz", "--c1"], lbma: ["LBMA AM (sağ eksen, $/ons)", "--muted"] };
+const lvRenk = k => LV[k][1].startsWith("--") ? css(LV[k][1]) : LV[k][1];
+
+// ---------------------------------------------------------------- grafik (çizgi + üst üste çubuk)
+function niceTicks(a, b, n) {
+  if (a === b) { a -= 1; b += 1; }
+  const step0 = (b - a) / n, mag = Math.pow(10, Math.floor(Math.log10(step0))), r = step0 / mag;
+  const step = (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * mag, out = [];
+  for (let v = Math.floor(a / step) * step; v <= b + step * 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+// series: [{name,color,vals,type:'line'|'bar',axis:'l'|'r',dash,stack:true,fmt}]
+function chart(el, o) {
+  el.innerHTML = "";
+  const xs = o.xs, n = xs.length, ser = o.series.filter(s => s.vals.some(ok));
+  if (!n || !ser.length) { el.innerHTML = '<div class="empty">Seçili dönemde veri yok.</div>'; return; }
+  const W = Math.max(320, el.clientWidth || 700), H = o.height || 320, hasR = ser.some(s => s.axis === "r");
+  const m = { t: 10, r: hasR ? 58 : 14, b: 26, l: 56 };
+  const bars = ser.filter(x => x.type === "bar"), stk = bars.filter(b => b.stack), solo = bars.filter(b => !b.stack);
+  const ext = ax => {
+    let v = ser.filter(s => (s.axis || "l") === ax && !s.stack).flatMap(s => s.vals.filter(ok));
+    if (ax === "l" && stk.length) for (let i = 0; i < n; i++) { let p = 0, q = 0; for (const b of stk) { const x = b.vals[i]; if (ok(x)) x > 0 ? p += x : q += x; } v.push(p, q); }
+    if (!v.length) return null; let lo = Math.min(...v), hi = Math.max(...v);
+    const z = bars.some(s => (s.axis || "l") === ax) || o.zero; if (z) { lo = Math.min(0, lo); hi = Math.max(0, hi); }
+    const pad = (hi - lo) * .08 || 1; return [z && lo >= 0 ? 0 : lo - pad, hi + pad];
+  };
+  const L = ext("l"), R = hasR ? ext("r") : null;
+  const tl = L ? niceTicks(L[0], L[1], 5) : [], tr = R ? niceTicks(R[0], R[1], 5) : [];
+  const yl0 = L ? Math.min(L[0], tl[0]) : 0, yl1 = L ? Math.max(L[1], tl[tl.length - 1]) : 1;
+  const yr0 = R ? Math.min(R[0], tr[0]) : 0, yr1 = R ? Math.max(R[1], tr[tr.length - 1]) : 1;
+  const iw = W - m.l - m.r, ih = H - m.t - m.b, bw = iw / n;
+  const X = i => m.l + bw * (i + .5), YL = v => m.t + (1 - (v - yl0) / (yl1 - yl0)) * ih, YR = v => m.t + (1 - (v - yr0) / (yr1 - yr0)) * ih;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label || "Grafik")}"><g class="axis">`;
+  for (const t of tl) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${YL(t)}" y2="${YL(t)}" stroke="var(--grid)"/><text x="${m.l - 7}" y="${YL(t) + 4}" text-anchor="end">${o.yFmt ? o.yFmt(t) : nf(t, 0)}</text>`;
+  if (R) for (const t of tr) s += `<text x="${W - m.r + 7}" y="${YR(t) + 4}" text-anchor="start">${o.y2Fmt ? o.y2Fmt(t) : nf(t, 0)}</text>`;
+  if (L && yl0 < 0 && yl1 > 0) s += `<line x1="${m.l}" x2="${W - m.r}" y1="${YL(0)}" y2="${YL(0)}" stroke="var(--axis)"/>`;
+  const nx = Math.max(2, Math.min(o.maxX || 8, Math.floor(iw / 80))), step = Math.max(1, Math.ceil(n / nx));
+  for (let i = n - 1; i >= 0; i -= step) s += `<text x="${X(i)}" y="${H - 6}" text-anchor="${i === n - 1 ? "end" : "middle"}">${o.xFmt ? o.xFmt(xs[i]) : xs[i]}</text>`;
+  s += `<line x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}" stroke="var(--axis)"/></g>`;
+  const w = Math.max(1, bw * (solo.length + (stk.length ? 1 : 0) > 1 ? .8 / (solo.length + (stk.length ? 1 : 0)) : .72)), rx = w > 6 ? 1.5 : 0;
+  if (stk.length) for (let i = 0; i < n; i++) {
+    let p = 0, q = 0; const x = X(i) - w / 2;
+    for (const b of stk) { const v = b.vals[i]; if (!ok(v) || v === 0) continue;
+      const a0 = v > 0 ? p : q, a1 = a0 + v; v > 0 ? p = a1 : q = a1;
+      const y0 = YL(a0), y1 = YL(a1); s += `<rect x="${x.toFixed(2)}" y="${Math.min(y0, y1).toFixed(2)}" width="${w.toFixed(2)}" height="${Math.max(.5, Math.abs(y1 - y0)).toFixed(2)}" rx="${rx}" fill="${b.color}"/>`; }
+  }
+  solo.forEach((b, k) => { const Y = b.axis === "r" ? YR : YL, base = Y(b.axis === "r" ? Math.max(yr0, 0) : Math.max(yl0, Math.min(0, yl1)));
+    b.vals.forEach((v, i) => { if (!ok(v)) return; const y = Y(v), x = X(i) - w / 2;
+      s += `<rect x="${x.toFixed(2)}" y="${Math.min(y, base).toFixed(2)}" width="${w.toFixed(2)}" height="${Math.max(.5, Math.abs(base - y)).toFixed(2)}" rx="${rx}" fill="${b.color}"/>`; }); });
+  for (const l of ser.filter(x => x.type !== "bar")) {
+    const Y = l.axis === "r" ? YR : YL; let d = "", pen = false;
+    l.vals.forEach((v, i) => { if (!ok(v)) { pen = false; return; } d += `${pen ? "L" : "M"}${X(i).toFixed(2)},${Y(v).toFixed(2)}`; pen = true; });
+    if (!l.noLine) s += `<path d="${d}" fill="none" stroke="${l.color}" stroke-width="${l.width || 2}" stroke-linejoin="round" ${l.dash ? `stroke-dasharray="${l.dash}"` : ""}/>`;
+    if (l.marks && n <= 130) l.vals.forEach((v, i) => { if (ok(v)) s += `<circle cx="${X(i).toFixed(2)}" cy="${Y(v).toFixed(2)}" r="${n > 70 ? 1.8 : 3}" fill="${l.color}" stroke="var(--surface)" stroke-width="1"/>`; });
+    const li = l.vals.map(ok).lastIndexOf(true); if (li >= 0 && !l.marks) s += `<circle cx="${X(li)}" cy="${Y(l.vals[li])}" r="3" fill="${l.color}"/>`;
+  }
+  s += `<line class="cur" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" stroke="var(--axis)" stroke-dasharray="3 3" visibility="hidden"/></svg>`;
+  el.insertAdjacentHTML("beforeend", s);
+  const svg = el.querySelector("svg"), tip = el.appendChild(Object.assign(document.createElement("div"), { className: "tip" })), cur = svg.querySelector(".cur");
+  const idx = ev => { const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width; return Math.max(0, Math.min(n - 1, Math.floor((px - m.l) / bw))); };
+  svg.addEventListener("mousemove", ev => {
+    const i = idx(ev), rows = ser.filter(x => ok(x.vals[i]));
+    if (!rows.length) { tip.style.display = "none"; cur.setAttribute("visibility", "hidden"); return; }
+    cur.setAttribute("x1", X(i)); cur.setAttribute("x2", X(i)); cur.setAttribute("visibility", "visible");
+    tip.innerHTML = `<b>${esc(o.tipX ? o.tipX(xs[i], i) : xs[i])}</b>` + rows.map(x => `<div class="r"><span><i style="background:${x.color}"></i>${esc(x.name)}</span><span>${x.fmt ? x.fmt(x.vals[i]) : nf(x.vals[i])}</span></div>`).join("") + (o.tipNote ? `<div class="note" style="margin-top:4px">${o.tipNote(i)}</div>` : "");
+    tip.style.display = "block";
+    const r = el.getBoundingClientRect(), tw = tip.offsetWidth, x = ev.clientX - r.left;
+    tip.style.left = Math.min(Math.max(0, x + 14), r.width - tw) + "px"; tip.style.top = Math.max(0, ev.clientY - r.top - tip.offsetHeight - 10) + "px";
+  });
+  svg.addEventListener("mouseleave", () => { tip.style.display = "none"; cur.setAttribute("visibility", "hidden"); });
+}
+const $$ = s => [...document.querySelectorAll(s)];
+const legend = (el, items, cb) => {
+  el.innerHTML = items.map(it => `<button class="chip${it.on === false ? " off" : ""}" ${it.k ? `data-k="${it.k}" aria-pressed="${it.on !== false}"` : "disabled"} style="${it.k ? "" : "cursor:default"}"><i style="background:${it.color}"></i>${esc(it.name)}</button>`).join("");
+  el.onclick = e => { const b = e.target.closest("button[data-k]"); if (b && cb) cb(b.dataset.k); };
+};
+
+// ---------------------------------------------------------------- dönem
+function aralik(key = S.r, oz = S.oz) {
+  const g = D.rezerv, n = g.dates.length;
+  if (key === "Tarih") {      // özel tarih aralığı: [başlangıç, bitiş] iş günlerine yuvarlanır
+    const a = Math.max(1, g.dates.findIndex(d => d >= (oz.a || g.dates[0]))), bi = g.dates.map(d => d <= (oz.b || g.dates[n - 1])).lastIndexOf(true);
+    return [Math.min(a, Math.max(1, bi)), Math.max(Math.min(a, Math.max(1, bi)) + 1, bi + 1)];
+  }
+  const r = RNG.find(x => x[0] === key) || RNG[2];
+  let a;
+  if (r[1] === "ytd") { const y = g.dates[n - 1].slice(0, 4); a = g.dates.findIndex(d => d.slice(0, 4) === y); }
+  else a = Math.max(0, n - r[1]);
+  return [Math.max(a, 1), n];      // ilk günün değişimi yok
+}
+function rngCiz(el, key, oz, sec) {
+  const g = D.rezerv, n = g.dates.length, [a, b] = aralik(key, oz);
+  el.innerHTML = `<button class="chip" data-k="Tarih" aria-pressed="${key === "Tarih"}">Tarih</button>` + (key === "Tarih"
+    ? `<input type="date" class="dtin" data-o="a" value="${oz.a || g.dates[a]}" min="${g.dates[0]}" max="${g.dates[n - 1]}" aria-label="Başlangıç tarihi"><span class="arrow">→</span><input type="date" class="dtin" data-o="b" value="${oz.b || g.dates[b - 1]}" min="${g.dates[0]}" max="${g.dates[n - 1]}" aria-label="Bitiş tarihi">` : "")
+    + RNG.map(([k]) => `<button class="chip" data-k="${k}" aria-pressed="${k === key}">${k}</button>`).join("");
+  el.onclick = e => { const x = e.target.closest("button[data-k]"); if (!x) return;
+    if (x.dataset.k === "Tarih" && !oz.a) { const [a0, b0] = aralik(key, oz); oz.a = g.dates[a0]; oz.b = g.dates[b0 - 1]; } sec(x.dataset.k); };
+  el.onchange = e => { const x = e.target.closest("input[data-o]"); if (!x || !x.value) return; oz[x.dataset.o] = x.value; if (oz.a && oz.b && oz.a > oz.b) [oz.a, oz.b] = [oz.b, oz.a]; sec("Tarih"); };
+}
+const topla = (arr, a, b) => { let s = 0, k = 0; for (let i = a; i < b; i++) if (ok(arr[i])) { s += arr[i]; k++; } return k ? s : null; };
+
+// ---------------------------------------------------------------- çizim
+function renderWf() {
+  const g = D.rezerv, n = g.dates.length, i = n - 1, j = n - 2, t = g.dates[i];
+  const k14 = g.k14_ay[i], swap = ok(g.shn[i]) ? g.shn[i] - g.net[i] : null, swapP = ok(g.shn[j]) ? g.shn[j] - g.net[j] : null;
+  const card = (ad, v, onc, alt, c, inv, k) => { const d = ok(v) && ok(onc) ? v - onc : null;
+    return `<div class="kpi" role="button" tabindex="0" data-lv="${k}" aria-pressed="${!!S.lv[k]}" title="Rezerv seviyeleri grafiğinde göster" style="--kc:var(${c});--lc:${lvRenk(k)}"><div class="t">${ad}<i class="ln"></i></div><div class="v sm">${mr(v)} <span style="font-size:13px;color:var(--muted)">mr $</span></div>
+      <div class="s">Günlük <b class="${cl(inv ? -d : d)}">${sg(d)}</b> mn $</div><div class="d">${alt}</div></div>`; };
+  const op = x => `<div class="op" aria-hidden="true">${x}</div>`;
+  $("#wfHead").textContent = `Net rezerv hesabı · ${gunAd(t)}`;
+  $("#wf").innerHTML = card("Brüt (A02)", g.a02[i], g.a02[j], "Dış varlıklar", "--c3", 0, "a02") + op("−") +
+    card("Dış yük. (A11)", g.a11[i], g.a11[j], "Dış yükümlülükler", "--c2", 1, "a11") + op("−") +
+    card("Kamu dvz (A13)", g.a13[i], g.a13[j], "Kamu ve diğer döviz mevduatı", "--c2", 1, "a13") + op("−") +
+    card("Banka dvz (A14)", g.a14[i], g.a14[j], "Bankalar döviz mevduatı", "--c2", 1, "a14") + op("=") +
+    card("Net rezerv", g.net[i], g.net[j], "A02 − A11 − A13 − A14", "--c1", 0, "net") + op("+") +
+    card("Swap", swap, swapP, k14 ? `${ayAd(k14)} sonu K14 + günlük TCMB swap stoku` : "K14 yok", "--c4", 0, "swap") + op("=") +
+    card("Swap hariç net", g.shn[i], g.shn[j], "Net rezerv + swap", "--c6", 0, "shn");
+}
+function renderMd() {
+  const g = D.rezerv, n = g.dates.length, t = g.dates[n - 1], [a] = aralik();
+  const hafta = (() => { const d = new Date(t), dow = (d.getDay() + 6) % 7; const mon = new Date(d - dow * 864e5).toISOString().slice(0, 10); return g.dates.findIndex(x => x >= mon); })();
+  const ay = g.dates.findIndex(x => x.slice(0, 7) === t.slice(0, 7)), yb = g.dates.findIndex(x => x.slice(0, 4) === t.slice(0, 4));
+  const fkSon = g.fk[n - 1];
+  const kart = (ad, s, alt) => `<div class="kpi" style="--kc:var(${ok(s) && s < 0 ? "--down" : "--up"})"><div class="t">${ad}</div><div class="v sm ${cl(s)}">${mrSg(s, 2)} <span style="font-size:13px;color:var(--muted)">mr $</span></div><div class="d">${alt}</div></div>`;
+  const r = RNG.find(x => x[0] === S.r) || ["özel"];
+  $("#mdKpi").innerHTML =
+    kart("Son iş günü", g.mudahale[n - 1], `${gunAd(t)}${fkSon === "B" ? ' <span class="tag w">B</span>' : ""}`) +
+    kart("Bu hafta", topla(g.mudahale, Math.max(1, hafta), n), `${gunKisa(g.dates[Math.max(1, hafta)])} – ${gunKisa(t)}`) +
+    kart("Bu ay", topla(g.mudahale, Math.max(1, ay), n), ayAd(t.slice(0, 7))) +
+    kart("Yılbaşından", topla(g.mudahale, Math.max(1, yb), n), `${t.slice(0, 4)} · ${n - Math.max(1, yb)} iş günü`) +
+    kart(`Seçili dönem (${r[0]})`, topla(g.mudahale, a, aralik()[1]), `${gunKisa(g.dates[a])} – ${gunKisa(g.dates[aralik()[1] - 1])}`);
+}
+function renderDc() {
+  const g = D.rezerv, [a, b] = aralik(), xs = g.dates.slice(a, b), sl = k => g[k].slice(a, b);
+  const C = { md: css("--c1"), ae: css("--c4"), se: css("--c5"), dn: css("--ink"), cum: css("--c6") };
+  let cum = 0; const cumV = sl("mudahale").map(v => ok(v) ? (cum += v) : null);
+  const series = [
+    { name: "Net müdahale", vals: sl("mudahale"), color: C.md, type: "bar", stack: true, fmt: v => sg(v) + " mn $" },
+    { name: "Altın fiyat etkisi", vals: sl("altin_etki"), color: C.ae, type: "bar", stack: true, fmt: v => sg(v) + " mn $" },
+    { name: "Swap etkisi", vals: sl("swap_etki"), color: C.se, type: "bar", stack: true, fmt: v => sg(v) + " mn $" },
+    { name: "Net rezerv değişimi", vals: sl("degisim"), color: C.dn, type: "line", noLine: true, marks: true, fmt: v => sg(v) + " mn $" },
+  ];
+  if (S.cum) series.push({ name: "Kümülatif müdahale", vals: cumV, color: C.cum, type: "line", axis: "r", width: 2, fmt: v => mrSg(v, 2) + " mr $" });
+  const tot = k => topla(g[k], a, b);
+  $("#dcSub").innerHTML = `${gunAd(xs[0])} – ${gunAd(xs[xs.length - 1])} · net müdahale <b class="${cl(tot("mudahale"))}">${mrSg(tot("mudahale"), 2)} mr $</b> · altın etkisi <b>${mrSg(tot("altin_etki"), 2)}</b> · swap etkisi <b>${mrSg(tot("swap_etki"), 2)}</b> · net rezerv değişimi <b>${mrSg(tot("degisim"), 2)} mr $</b>`;
+  legend($("#dcLeg"), [{ name: "Net müdahale", color: C.md }, { name: "Altın fiyat etkisi", color: C.ae }, { name: "Swap etkisi", color: C.se },
+    { name: "Net rezerv değişimi (nokta)", color: C.dn }, { k: "cum", name: "Kümülatif müdahale (sağ eksen, mr $)", color: C.cum, on: S.cum }],
+    () => { S.cum = !S.cum; store.set("tcmb.cum", S.cum ? "1" : "0"); renderDc(); });
+  const fk = sl("fk");
+  chart($("#dcChart"), { xs, series, height: 340, label: "Rezerv değişiminin ayrıştırılması", xFmt: gunKisa, tipX: gunAd, yFmt: v => nf(v, 0), y2Fmt: v => nf(v / 1000, 1),
+    tipNote: i => `Altın fiyatı ${nf(g.fiyat[a + i], 2)} $/ons · ${{ L: "LBMA AM", C: "Cuma, haftalık rezervden", B: "BIST (tahmini)", "=": "önceki gün" }[fk[i]] || ""}` });
+  const nB = fk.filter(x => x === "B").length;
+  $("#dcNote").innerHTML = `Çubuklar üst üste: net müdahale + altın fiyat etkisi + swap etkisi = net rezerv değişimi (nokta).${nB ? ` Seçili dönemde ${nB} günün altın fiyatı LBMA yerine BIST ortalamasıyla tahmin edildi; bu günlerde müdahale ile altın etkisi arasındaki ayrım daha belirsizdir.` : ""}`;
+}
+function renderLv() {
+  const g = D.rezerv, [a, b] = aralik(S.lr, S.loz), xs = g.dates.slice(a - 1, b), n = g.dates.length;
+  const seri = k => k === "swap" ? g.shn.map((v, i) => ok(v) && ok(g.net[i]) ? v - g.net[i] : null) : g[k];
+  const sl = k => seri(k).slice(a - 1, b).map(v => ok(v) ? v / 1000 : null);
+  rngCiz($("#lvRng"), S.lr, S.loz, k => { S.lr = k; if (k !== "Tarih") store.set("tcmb.lrng", S.lr); renderLv(); });
+  const ekstra = ["altin", "doviz", "lbma"];
+  legend($("#lvLeg"), ekstra.map(k => ({ k, name: LV[k][0], color: lvRenk(k), on: !!S.lv[k] })), k => { S.lv[k] = S.lv[k] ? 0 : 1; store.set("tcmb.lv2", JSON.stringify(S.lv)); renderLv(); });
+  const sec = Object.keys(LV).filter(k => S.lv[k]);
+  const series = sec.map(k => k === "lbma" ? { name: "LBMA AM", vals: g.fiyat.slice(a - 1, b), color: lvRenk(k), axis: "r", width: 1.4, dash: "4 3", fmt: v => nf(v, 2) + " $/ons" }
+    : { name: LV[k][0], vals: sl(k), color: lvRenk(k), width: 2.2, dash: k === "altin" || k === "doviz" ? "6 3" : "", fmt: v => nf(v, 1) + " mr $" });
+  $("#lvSub").textContent = `Günlük analitik bilanço · ${gunAd(xs[0])} – ${gunAd(xs[xs.length - 1])}`;
+  chart($("#lvChart"), { xs, height: 320, label: "Rezerv seviyeleri", xFmt: gunKisa, tipX: gunAd, yFmt: v => nf(v, 0), y2Fmt: v => nf(v, 0),
+    zero: series.some(x => x.axis !== "r" && x.vals.some(v => ok(v) && v < 0)), series });
+  $$("#wf [data-lv]").forEach(x => x.setAttribute("aria-pressed", !!S.lv[x.dataset.lv]));
+}
+function renderTb() {
+  const g = D.rezerv, [a, b] = aralik(), rows = [];
+  const td = (v, b2) => `<td class="${ok(v) && Math.abs(v) >= .5 ? (v > 0 ? "pos" : "neg") : ""}${b2 ? " b" : ""}">${sg(v)}</td>`;
+  for (let i = b - 1; i >= a; i--) rows.push(`<tr><td>${gunAd(g.dates[i])}</td>${td(g.degisim[i])}${td(g.altin_etki[i])}${td(g.swap_etki[i])}${td(g.mudahale[i], 1)}<td>${mn(g.net[i])}</td><td>${mn(g.shn[i])}</td><td>${nf(g.fiyat[i], 2)}<small>${g.fk[i] === "B" ? '<span class="tag w">B</span>' : g.fk[i]}</small></td><td>${nf(g.kur[i], 4)}</td></tr>`);
+  $("#tbSub").textContent = `${b - a} iş günü · en yeni üstte · dönem üstteki grafikle ortak`;
+  $("#tbBox").innerHTML = `<table class="tbl"><thead><tr><th>Tarih</th><th>Net rez. değişimi</th><th>Altın etkisi</th><th>Swap etkisi</th><th>Net müdahale</th><th>Net rezerv</th><th>Swap hariç net</th><th>Altın $/ons</th><th>USD/TRY</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+}
+function renderWk() {
+  const h = D.haftalik, g = D.rezerv, ix = Object.fromEntries(g.dates.map((d, i) => [d, i])), rows = [];
+  for (let k = h.dates.length - 1; k >= Math.max(0, h.dates.length - 26); k--) {
+    const t = h.dates[k], i = ix[t], br = ok(i) ? g.a02[i] : null, fark = ok(br) && ok(h.toplam[k]) ? br - h.toplam[k] : null;
+    rows.push(`<tr><td>${gunAd(t)}</td><td>${mn(h.toplam[k])}</td><td>${mn(h.altin[k])}</td><td>${mn(h.doviz[k])}</td><td>${mn(br)}</td><td>${sg(fark)}</td><td>${ok(h.q_res[k]) ? nf(h.q_res[k], 2) : "—"}</td><td>${ok(h.q_yuk[k]) ? nf(h.q_yuk[k], 2) : "—"}</td><td>${ok(h.fiyat[k]) ? nf(h.fiyat[k], 2) : "—"}</td></tr>`);
+  }
+  $("#wkBox").innerHTML = `<table class="tbl"><thead><tr><th>Cuma</th><th>Resmi brüt rezerv</th><th>Altın</th><th>Döviz</th><th>Dış varlıklar (A02)</th><th>Fark</th><th>Rezerv altını (mn ons)</th><th>Altın yükümlülüğü (mn ons)</th><th>Değerleme fiyatı $/ons</th></tr></thead><tbody>${rows.join("")}</tbody></table>
+    <div class="note" style="padding:8px 10px">Dış varlıklar resmi brüt rezervden biraz fazladır (rezerv tanımına girmeyen dış varlıklar). Değerleme fiyatı = altın rezervi / rezerv altını; LBMA AM fiyatıyla aynıdır.</div>`;
+}
+function render() {
+  if (!D?.rezerv?.dates?.length) { $("#gate") && ($("#gate").textContent = "Rezerv verisi henüz yok."); return; }
+  $("#pRez").classList.remove("hidden");
+  rngCiz($("#rng"), S.r, S.oz, k => { S.r = k; if (k !== "Tarih") store.set("tcmb.rng", S.r); render(); });
+  renderWf(); renderMd(); renderDc(); renderLv(); renderTb(); renderWk();
+  const f = D.failed?.length ? ` · <span style="color:var(--down)">güncellenemeyen: ${D.failed.join(", ")} (önceki veri gösteriliyor)</span>` : "";
+  $("#src").innerHTML = `Kaynak: <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> (analitik bilanço, haftalık vaziyet, merkez bankası rezervleri, TCMB taraflı swap işlemleri, uluslararası rezervler ve döviz likiditesi tablosu, döviz kurları, Borsa İstanbul altın piyasası) · <a href="https://www.lbma.org.uk/prices-and-data/lbma-precious-metal-prices" target="_blank" rel="noopener">LBMA</a> (altın AM fiyatı, <a href="https://goldsilver.com/price-charts/historical-london-fix/" target="_blank" rel="noopener">goldsilver.com</a> London Fix tablosu üzerinden). Net müdahale tahminidir. Son güncelleme ${D.updated ? new Date(D.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${f}.`;
+}
+// kutucuklar: seviye grafiğinde çizgi aç/kapat
+{ const t = e => { const k = e.target.closest("[data-lv]"); if (!k) return; const x = k.dataset.lv; S.lv[x] = S.lv[x] ? 0 : 1; store.set("tcmb.lv2", JSON.stringify(S.lv)); renderLv(); };
+  document.addEventListener("click", e => { if (e.target.closest("#wf")) t(e); });
+  document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.closest("#wf [data-lv]")) { e.preventDefault(); t(e); } }); }
+let rz, lw = innerWidth;
+addEventListener("resize", () => { lw = innerWidth; clearTimeout(rz); rz = setTimeout(() => { rz = null; D && render(); }, 150); });
+fetch("data/tcmb.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(j => { D = j; $("#gate").remove(); render(); })
+  .catch(e => { $("#gate").textContent = "Veriler yüklenemedi (" + e.message + "). Sayfa henüz güncellenmemiş olabilir."; });
+})();
+</script>
+</body>
+</html>

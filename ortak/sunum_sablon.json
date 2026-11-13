@@ -1,0 +1,5158 @@
+{
+ "sablonlar": [
+  {
+   "ad": "APKO Haftalık",
+   "aciklama": "Piyasa, para politikası, rezerv, likidite, BDDK, katılım ve makro görünüm",
+   "sunum": {
+    "v": 1,
+    "ad": "APKO – Haftalık Piyasa Değerlendirmesi",
+    "tema": "light",
+    "kapak": {
+     "goster": true,
+     "baslik": "Haftalık Piyasa Değerlendirmesi",
+     "alt": "Aktif Pasif Yönetimi",
+     "not": "APKO · Piyasa, likidite ve bankacılık görünümü"
+    },
+    "gundem": {
+     "goster": true
+    },
+    "kapanis": {
+     "goster": true,
+     "baslik": "Teşekkürler",
+     "alt": ""
+    },
+    "slaytlar": [
+     {
+      "id": "kakreoxug",
+      "baslik": "Piyasa göstergeleri",
+      "not": "",
+      "oc": null,
+      "kaynak": null,
+      "duzen": "oto",
+      "ogeler": [
+       {
+        "sayfa": "ozet/",
+        "ad": "Politika faizi",
+        "yolAd": "Özet › Piyasa Verileri",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "politika faizi",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(1)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": ""
+        },
+        "ic": [],
+        "kk": "TCMB",
+        "w": 258,
+        "h": 153,
+        "id": "ods26zt4y0",
+        "t": 0,
+        "kucuk": true
+       },
+       {
+        "sayfa": "ozet/",
+        "ad": "TLREF",
+        "yolAd": "Özet › Piyasa Verileri",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "tlref",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(2)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": ""
+        },
+        "ic": [],
+        "kk": "Borsa İstanbul",
+        "w": 258,
+        "h": 153,
+        "id": "i619enx5ov",
+        "t": 0,
+        "kucuk": true
+       },
+       {
+        "sayfa": "ozet/",
+        "ad": "USD/TRY",
+        "yolAd": "Özet › Piyasa Verileri",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "usd try",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(3)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": ""
+        },
+        "ic": [],
+        "kk": "TCMB / Bloomberg",
+        "w": 258,
+        "h": 153,
+        "id": "ura85iyei9",
+        "t": 0,
+        "kucuk": true
+       },
+       {
+        "sayfa": "ozet/",
+        "ad": "BIST 100",
+        "yolAd": "Özet › Piyasa Verileri",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "bıst",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(4)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": ""
+        },
+        "ic": [],
+        "kk": "Bloomberg",
+        "w": 258,
+        "h": 146,
+        "id": "h0rpzxwalj",
+        "t": 0,
+        "kucuk": true
+       },
+       {
+        "sayfa": "ozet/",
+        "ad": "Türkiye 5Y CDS",
+        "yolAd": "Özet › Piyasa Verileri",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "türkiye y cds",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(5)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": ""
+        },
+        "ic": [],
+        "kk": "Bloomberg",
+        "w": 258,
+        "h": 146,
+        "id": "2s0ud7jdlv",
+        "t": 0,
+        "kucuk": true
+       },
+       {
+        "sayfa": "ozet/",
+        "ad": "2 yıllık gösterge tahvil",
+        "yolAd": "Özet › Piyasa Verileri",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "yıllık gösterge tahvil",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(6)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": ""
+        },
+        "ic": [],
+        "kk": "Bloomberg",
+        "w": 258,
+        "h": 146,
+        "id": "s508xpqjlz",
+        "t": 0,
+        "kucuk": true
+       }
+      ],
+      "kilit": true
+     },
+     {
+      "id": "cggrpvcna",
+      "baslik": "Emtia, rezerv ve likidite",
+      "not": "",
+      "oc": null,
+      "kaynak": null,
+      "duzen": "oto",
+      "ogeler": [
+       {
+        "sayfa": "ozet/",
+        "ad": "Brent petrol",
+        "yolAd": "Özet › Piyasa Verileri",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "brent petrol",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(7)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": ""
+        },
+        "ic": [],
+        "kk": "Bloomberg",
+        "w": 258,
+        "h": 158,
+        "id": "tp2lz601h2",
+        "t": 0,
+        "kucuk": true
+       },
+       {
+        "sayfa": "ozet/",
+        "ad": "Ons altın",
+        "yolAd": "Özet › Piyasa Verileri",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "ons altın",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(8)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": ""
+        },
+        "ic": [],
+        "kk": "Bloomberg",
+        "w": 258,
+        "h": 158,
+        "id": "8q7zdzn0y2",
+        "t": 0,
+        "kucuk": true
+       },
+       {
+        "sayfa": "ozet/",
+        "ad": "Swap hariç net rezerv",
+        "yolAd": "Özet › Piyasa Verileri",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "swap hariç net rezerv",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(9)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": ""
+        },
+        "ic": [],
+        "kk": "TCMB / hesaplama",
+        "w": 258,
+        "h": 158,
+        "id": "2btljmbdbu",
+        "t": 0,
+        "kucuk": true
+       },
+       {
+        "sayfa": "ozet/",
+        "ad": "Piyasa likidite durumu",
+        "yolAd": "Özet › Piyasa Verileri",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "piyasa likidite durumu",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(10)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": ""
+        },
+        "ic": [],
+        "kk": "TCMB / hesaplama",
+        "w": 258,
+        "h": 135,
+        "id": "jy3f1zze2z",
+        "t": 0,
+        "kucuk": true
+       }
+      ],
+      "kilit": true
+     },
+     {
+      "id": "jzykpsivg",
+      "baslik": "Para politikası ve TCMB fonlaması",
+      "not": "",
+      "oc": null,
+      "kaynak": null,
+      "duzen": "oto",
+      "ogeler": [
+       {
+        "sayfa": "bankacilik/",
+        "ad": "2025–2026 TCMB Politika Faizi Süreci",
+        "yolAd": "Bankacılık Verileri › TCMB › Para Politikası",
+        "konum": {
+         "id": "",
+         "tag": "article",
+         "cls": "card",
+         "n": "tcmb politika faizi süreci",
+         "i": 0,
+         "yol": "#ppPane > div:nth-of-type(3) > article:nth-of-type(1)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "tabs",
+           "k": "d:tab=bddk",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "tabs",
+           "k": "d:tab=tcmb",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "tabs",
+           "k": "d:tab=katilim",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bFreq",
+           "k": "d:f=w",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bFreq",
+           "k": "d:f=m",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "bQuick",
+           "k": "d:i=35",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bQuick",
+           "k": "d:i=33",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bQuick",
+           "k": "d:i=27",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bQuick",
+           "k": "d:i=24",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bGroups",
+           "k": "d:g=sektor",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bGroups",
+           "k": "d:g=katilim",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bGroups",
+           "k": "d:g=kamu",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bGroups",
+           "k": "d:g=ozel",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bGroups",
+           "k": "d:g=yabanci",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bGroups",
+           "k": "d:g=mevduat",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bGroups",
+           "k": "d:g=kalkinma",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bCur",
+           "k": "d:c=TP",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bCur",
+           "k": "d:c=YP",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bCur",
+           "k": "d:c=Toplam",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "tSub",
+           "k": "d:p=pp",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "tSub",
+           "k": "d:p=rezerv",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "tSub",
+           "k": "d:p=zk",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "tSub",
+           "k": "d:p=faiz",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "tSub",
+           "k": "d:p=aylik",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "tSub",
+           "k": "d:p=haftalik",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "ppPane",
+           "k": "d:pp=fon",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppPane",
+           "k": "d:pp=st",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppPane",
+           "k": "d:pp=net",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppPane",
+           "k": "d:pp=swap",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppPane",
+           "k": "d:pp=nets",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppPane",
+           "k": "d:pp=aof",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppDRange",
+           "k": "d:k=1Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ppDRange",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppDRange",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppDRange",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppDRange",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [
+          {
+           "s": "bA",
+           "v": "35"
+          },
+          {
+           "s": "bB",
+           "v": "36"
+          },
+          {
+           "s": "ppYear",
+           "v": "2026"
+          }
+         ],
+         "h": "#tcmb"
+        },
+        "ic": [],
+        "kk": "",
+        "w": 996,
+        "h": 721,
+        "id": "jif6jvki6l",
+        "t": 0,
+        "kucuk": false
+       },
+       {
+        "sayfa": "bankacilik/",
+        "ad": "Net Fonlama (₺ mr) — Günlük",
+        "yolAd": "Bankacılık Verileri › TCMB › Para Politikası",
+        "konum": {
+         "id": "",
+         "tag": "article",
+         "cls": "card",
+         "n": "net fonlama mr günlük",
+         "i": 0,
+         "yol": "#ppPane > div:nth-of-type(2) > div:nth-of-type(2) > article:nth-of-type(2)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "tabs",
+           "k": "d:tab=bddk",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "tabs",
+           "k": "d:tab=tcmb",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "tabs",
+           "k": "d:tab=katilim",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bFreq",
+           "k": "d:f=w",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bFreq",
+           "k": "d:f=m",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "bQuick",
+           "k": "d:i=35",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bQuick",
+           "k": "d:i=33",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bQuick",
+           "k": "d:i=27",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bQuick",
+           "k": "d:i=24",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bGroups",
+           "k": "d:g=sektor",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bGroups",
+           "k": "d:g=katilim",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bGroups",
+           "k": "d:g=kamu",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bGroups",
+           "k": "d:g=ozel",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bGroups",
+           "k": "d:g=yabanci",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bGroups",
+           "k": "d:g=mevduat",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bGroups",
+           "k": "d:g=kalkinma",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bCur",
+           "k": "d:c=TP",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bCur",
+           "k": "d:c=YP",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bCur",
+           "k": "d:c=Toplam",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "tSub",
+           "k": "d:p=pp",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "tSub",
+           "k": "d:p=rezerv",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "tSub",
+           "k": "d:p=zk",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "tSub",
+           "k": "d:p=faiz",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "tSub",
+           "k": "d:p=aylik",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "tSub",
+           "k": "d:p=haftalik",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "ppPane",
+           "k": "d:pp=fon",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppPane",
+           "k": "d:pp=st",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppPane",
+           "k": "d:pp=net",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppPane",
+           "k": "d:pp=swap",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppPane",
+           "k": "d:pp=nets",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppPane",
+           "k": "d:pp=aof",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppDRange",
+           "k": "d:k=1Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ppDRange",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppDRange",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppDRange",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ppDRange",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [
+          {
+           "s": "bA",
+           "v": "35"
+          },
+          {
+           "s": "bB",
+           "v": "36"
+          },
+          {
+           "s": "ppYear",
+           "v": "2026"
+          }
+         ],
+         "h": "#tcmb"
+        },
+        "ic": [],
+        "kk": "",
+        "w": 697,
+        "h": 371,
+        "id": "0gny1t8edz",
+        "t": 0,
+        "kucuk": false
+       }
+      ],
+      "kilit": true
+     },
+     {
+      "id": "nivxelzqe",
+      "baslik": "TLREF: oran ve işlem hacmi",
+      "not": "",
+      "oc": null,
+      "kaynak": null,
+      "duzen": "oto",
+      "ogeler": [
+       {
+        "sayfa": "makro/",
+        "ad": "TLREF · oran ve işlem hacmi",
+        "yolAd": "Makro ve Piyasa › Piyasa Verileri › Kâr/Faiz/Swap Oranları",
+        "konum": {
+         "id": "",
+         "tag": "div",
+         "cls": "card",
+         "n": "tlref oran ve işlem hacmi",
+         "i": 0,
+         "yol": "#psFaiz > div:nth-of-type(2)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "tabs",
+           "k": "d:tab=makro",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "tabs",
+           "k": "d:tab=piyasa",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=enf",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=buyume",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=istihdam",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=uretim",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=dis",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=butce",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=hazine",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=tufe:yoy",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=tufe:mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=ufe:yoy",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=ufe:mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=web:yoy",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=web:mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=2Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "gMode",
+           "k": "d:m=yoy",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "gMode",
+           "k": "d:m=mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=pk_yilsonu",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=pk_12ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=reel_12ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=hh_12ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=tufe",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "by1R",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "by1R",
+           "k": "d:k=5Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "by1R",
+           "k": "d:k=10Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "by1R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "by2Y",
+           "k": "d:k=harcama",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "by2Y",
+           "k": "d:k=uretim",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "by2Y",
+           "k": "d:k=gelir",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "by2R",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "by2R",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "by2R",
+           "k": "d:k=10Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "by2R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is1R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is1R",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is1R",
+           "k": "d:k=5Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "is1R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is1L",
+           "k": "d:t=issizlik",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "is1L",
+           "k": "d:t=genc",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "is1L",
+           "k": "d:t=atil",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "is1L",
+           "k": "d:t=zaman_eksik",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is1L",
+           "k": "d:t=potansiyel",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is2R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is2R",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is2R",
+           "k": "d:k=5Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "is2R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur1M",
+           "k": "d:k=mea",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur1M",
+           "k": "d:k=yoy",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur1M",
+           "k": "d:k=mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur1R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur1R",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur1R",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur1R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur1L",
+           "k": "d:t=sanayi",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur1L",
+           "k": "d:t=hizmet",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur1L",
+           "k": "d:t=ticaret",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur1L",
+           "k": "d:t=insaat",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur1L",
+           "k": "d:t=pmi",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur2Y",
+           "k": "d:k=sanayi",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur2Y",
+           "k": "d:k=hizmet",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur2Y",
+           "k": "d:k=ticaret",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur2Y",
+           "k": "d:k=insaat",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur2R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur2R",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur2R",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur2R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur3R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur3R",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur3R",
+           "k": "d:k=5Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur3R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "dt1M",
+           "k": "d:k=ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "dt1M",
+           "k": "d:k=12",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "dt1R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "dt1R",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "dt1R",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "dt1R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "dt2Y",
+           "k": "d:k=ihr",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "dt2Y",
+           "k": "d:k=ith",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "dt3Y",
+           "k": "d:k=ihr",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "dt3Y",
+           "k": "d:k=ith",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "od1M",
+           "k": "d:k=ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "od1M",
+           "k": "d:k=12",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "od1R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "od1R",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "od1R",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "od1R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "od2R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "od2R",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "od2R",
+           "k": "d:k=5Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "od2R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bc1M",
+           "k": "d:k=tl",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bc1M",
+           "k": "d:k=gsyh",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bc1R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bc1R",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bc1R",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bc1R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hzPara",
+           "k": "d:pb=",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "hzPara",
+           "k": "d:pb=TL",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hzPara",
+           "k": "d:pb=USD",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hzPara",
+           "k": "d:pb=EUR",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hzPara",
+           "k": "d:pb=Altın",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hpYer",
+           "k": "d:y=ic",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "hpYer",
+           "k": "d:y=dis",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hiYer",
+           "k": "d:y=ic",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "hiYer",
+           "k": "d:y=dis",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hiUf",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hiUf",
+           "k": "d:k=2Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "hiUf",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hiUf",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hsYer",
+           "k": "d:y=ic",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "hsYer",
+           "k": "d:y=dis",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hyYer",
+           "k": "d:y=ic",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "hyYer",
+           "k": "d:y=dis",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "heRange",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "heRange",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "heRange",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "psTabs",
+           "k": "d:ps=faiz",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "psTabs",
+           "k": "d:ps=gosterge",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "psTabs",
+           "k": "d:ps=endeks",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "pKpi",
+           "k": "d:p=tlref",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "pKpi",
+           "k": "d:p=tlrefk",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pKpi",
+           "k": "d:p=bistrepo",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pKpi",
+           "k": "d:imp=O/N",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "pKpi",
+           "k": "d:imp=1A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pKpi",
+           "k": "d:imp=3A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pKpi",
+           "k": "d:imp=6A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pKpi",
+           "k": "d:imp=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pRange",
+           "k": "d:k=1A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pRange",
+           "k": "d:k=3A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pRange",
+           "k": "d:k=6A",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "pRange",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pRange",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pLeg",
+           "k": "d:p=tlref",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "pLeg",
+           "k": "d:p=tlrefk",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pLeg",
+           "k": "d:p=bistrepo",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pLeg",
+           "k": "d:p=imp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pLeg",
+           "k": "d:p=all",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:c=TRY",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:c=USD",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:c=EUR",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=egri",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=ON",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=1W",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=2W",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=1M",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=3M",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=6M",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:cmp=YB",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:cmp=1A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:cmp=3A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:cmp=6A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:cmp=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "vpMod",
+           "k": "d:m=oran",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "vpMod",
+           "k": "d:m=kur",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "vpSeg",
+           "k": "d:k=USDTRY",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "vpSeg",
+           "k": "d:k=EURTRY",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "vpSeg",
+           "k": "d:k=XAUTRY",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "vpSeg",
+           "k": "d:k=XAUUSD",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "gUlke",
+           "k": "d:u=tr",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "gUlke",
+           "k": "d:u=abd",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "gUlke",
+           "k": "d:u=de",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [
+          {
+           "s": "gAy",
+           "v": "2026-10"
+          }
+         ],
+         "h": "#piyasa"
+        },
+        "ic": [
+         "pRange",
+         "pLeg"
+        ],
+        "kk": "",
+        "w": 1408,
+        "h": 460,
+        "id": "eawsrrl5l9",
+        "t": 0,
+        "kucuk": false
+       }
+      ],
+      "kilit": true
+     },
+     {
+      "id": "tyhmwjbjt",
+      "baslik": "TRY OIS getiri eğrisi",
+      "not": "",
+      "oc": null,
+      "kaynak": null,
+      "duzen": "oto",
+      "ogeler": [
+       {
+        "sayfa": "makro/",
+        "ad": "TRY OIS getiri eğrisi (%)",
+        "yolAd": "Makro ve Piyasa › Piyasa Verileri › Kâr/Faiz/Swap Oranları",
+        "konum": {
+         "id": "E_ois",
+         "tag": "div",
+         "cls": "card",
+         "n": "try oıs getiri eğrisi",
+         "i": 0,
+         "yol": "#E_ois"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "tabs",
+           "k": "d:tab=makro",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "tabs",
+           "k": "d:tab=piyasa",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=enf",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=buyume",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=istihdam",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=uretim",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=dis",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=butce",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=hazine",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=tufe:yoy",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=tufe:mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=ufe:yoy",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=ufe:mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=web:yoy",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=web:mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=2Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "gMode",
+           "k": "d:m=yoy",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "gMode",
+           "k": "d:m=mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=pk_yilsonu",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=pk_12ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=reel_12ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=hh_12ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=tufe",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "by1R",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "by1R",
+           "k": "d:k=5Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "by1R",
+           "k": "d:k=10Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "by1R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "by2Y",
+           "k": "d:k=harcama",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "by2Y",
+           "k": "d:k=uretim",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "by2Y",
+           "k": "d:k=gelir",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "by2R",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "by2R",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "by2R",
+           "k": "d:k=10Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "by2R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is1R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is1R",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is1R",
+           "k": "d:k=5Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "is1R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is1L",
+           "k": "d:t=issizlik",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "is1L",
+           "k": "d:t=genc",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "is1L",
+           "k": "d:t=atil",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "is1L",
+           "k": "d:t=zaman_eksik",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is1L",
+           "k": "d:t=potansiyel",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is2R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is2R",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "is2R",
+           "k": "d:k=5Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "is2R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur1M",
+           "k": "d:k=mea",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur1M",
+           "k": "d:k=yoy",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur1M",
+           "k": "d:k=mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur1R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur1R",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur1R",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur1R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur1L",
+           "k": "d:t=sanayi",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur1L",
+           "k": "d:t=hizmet",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur1L",
+           "k": "d:t=ticaret",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur1L",
+           "k": "d:t=insaat",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur1L",
+           "k": "d:t=pmi",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur2Y",
+           "k": "d:k=sanayi",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur2Y",
+           "k": "d:k=hizmet",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur2Y",
+           "k": "d:k=ticaret",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur2Y",
+           "k": "d:k=insaat",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur2R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur2R",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur2R",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur2R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur3R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur3R",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "ur3R",
+           "k": "d:k=5Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "ur3R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "dt1M",
+           "k": "d:k=ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "dt1M",
+           "k": "d:k=12",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "dt1R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "dt1R",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "dt1R",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "dt1R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "dt2Y",
+           "k": "d:k=ihr",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "dt2Y",
+           "k": "d:k=ith",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "dt3Y",
+           "k": "d:k=ihr",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "dt3Y",
+           "k": "d:k=ith",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "od1M",
+           "k": "d:k=ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "od1M",
+           "k": "d:k=12",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "od1R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "od1R",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "od1R",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "od1R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "od2R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "od2R",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "od2R",
+           "k": "d:k=5Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "od2R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bc1M",
+           "k": "d:k=tl",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bc1M",
+           "k": "d:k=gsyh",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bc1R",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bc1R",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bc1R",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bc1R",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hzPara",
+           "k": "d:pb=",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "hzPara",
+           "k": "d:pb=TL",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hzPara",
+           "k": "d:pb=USD",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hzPara",
+           "k": "d:pb=EUR",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hzPara",
+           "k": "d:pb=Altın",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hpYer",
+           "k": "d:y=ic",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "hpYer",
+           "k": "d:y=dis",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hiYer",
+           "k": "d:y=ic",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "hiYer",
+           "k": "d:y=dis",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hiUf",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hiUf",
+           "k": "d:k=2Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "hiUf",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hiUf",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hsYer",
+           "k": "d:y=ic",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "hsYer",
+           "k": "d:y=dis",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "hyYer",
+           "k": "d:y=ic",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "hyYer",
+           "k": "d:y=dis",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "heRange",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "heRange",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "heRange",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "psTabs",
+           "k": "d:ps=faiz",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "psTabs",
+           "k": "d:ps=gosterge",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "psTabs",
+           "k": "d:ps=endeks",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "pKpi",
+           "k": "d:p=tlref",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "pKpi",
+           "k": "d:p=tlrefk",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pKpi",
+           "k": "d:p=bistrepo",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pKpi",
+           "k": "d:imp=O/N",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "pKpi",
+           "k": "d:imp=1A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pKpi",
+           "k": "d:imp=3A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pKpi",
+           "k": "d:imp=6A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pKpi",
+           "k": "d:imp=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pRange",
+           "k": "d:k=1A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pRange",
+           "k": "d:k=3A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pRange",
+           "k": "d:k=6A",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "pRange",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pRange",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pLeg",
+           "k": "d:p=tlref",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "pLeg",
+           "k": "d:p=tlrefk",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pLeg",
+           "k": "d:p=bistrepo",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pLeg",
+           "k": "d:p=imp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "pLeg",
+           "k": "d:p=all",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:c=TRY",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:c=USD",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:c=EUR",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=egri",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=ON",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=1W",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=2W",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=1M",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=3M",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=6M",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:v=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:cmp=YB",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:cmp=1A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:cmp=3A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:cmp=6A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "E_ois",
+           "k": "d:cmp=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "vpMod",
+           "k": "d:m=oran",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "vpMod",
+           "k": "d:m=kur",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "vpSeg",
+           "k": "d:k=USDTRY",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "vpSeg",
+           "k": "d:k=EURTRY",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "vpSeg",
+           "k": "d:k=XAUTRY",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "vpSeg",
+           "k": "d:k=XAUUSD",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "gUlke",
+           "k": "d:u=tr",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "gUlke",
+           "k": "d:u=abd",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "gUlke",
+           "k": "d:u=de",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [
+          {
+           "s": "gAy",
+           "v": "2026-10"
+          }
+         ],
+         "h": "#piyasa"
+        },
+        "ic": [
+         "E_ois"
+        ],
+        "kk": "",
+        "w": 1408,
+        "h": 428,
+        "id": "8rswbt43wp",
+        "t": 0,
+        "kucuk": false
+       }
+      ],
+      "kilit": true
+     },
+     {
+      "id": "vtkngqhyj",
+      "baslik": "TCMB rezervleri",
+      "not": "",
+      "oc": null,
+      "kaynak": null,
+      "duzen": "oto",
+      "ogeler": [
+       {
+        "sayfa": "tcmb/",
+        "ad": "Rezerv seviyeleri (mr $)",
+        "yolAd": "Bankacılık Verileri › TCMB › Rezervler",
+        "konum": {
+         "id": "",
+         "tag": "div",
+         "cls": "card",
+         "n": "rezerv seviyeleri mr",
+         "i": 0,
+         "yol": "#pRez > div:nth-of-type(5) > div:nth-of-type(1)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "pRez",
+           "k": "t:rezervler",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=1H",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=2H",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=1A",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=3A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=6A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=YB",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "dcLeg",
+           "k": "d:k=cum",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "lvLeg",
+           "k": "d:k=brut",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "lvLeg",
+           "k": "d:k=net",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "lvLeg",
+           "k": "d:k=shn",
+           "v": true,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": ""
+        },
+        "ic": [
+         "lvLeg"
+        ],
+        "kk": "",
+        "w": 836,
+        "h": 400,
+        "id": "feg10jt2z7",
+        "t": 0,
+        "kucuk": false
+       },
+       {
+        "sayfa": "tcmb/",
+        "ad": "Brüt rezerv: altın ve döviz (mr $)",
+        "yolAd": "Bankacılık Verileri › TCMB › Rezervler",
+        "konum": {
+         "id": "",
+         "tag": "div",
+         "cls": "card",
+         "n": "brüt rezerv altın ve döviz mr",
+         "i": 0,
+         "yol": "#pRez > div:nth-of-type(5) > div:nth-of-type(2)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "pRez",
+           "k": "t:rezervler",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=1H",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=2H",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=1A",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=3A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=6A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=YB",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "dcLeg",
+           "k": "d:k=cum",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "lvLeg",
+           "k": "d:k=brut",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "lvLeg",
+           "k": "d:k=net",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "lvLeg",
+           "k": "d:k=shn",
+           "v": true,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": ""
+        },
+        "ic": [],
+        "kk": "",
+        "w": 558,
+        "h": 400,
+        "id": "sv36ca03l5",
+        "t": 0,
+        "kucuk": false
+       }
+      ],
+      "kilit": true
+     },
+     {
+      "id": "dqrymlfbd",
+      "baslik": "Zorunlu karşılık ve piyasa likiditesi",
+      "not": "",
+      "oc": null,
+      "kaynak": null,
+      "duzen": "oto",
+      "ogeler": [
+       {
+        "sayfa": "zk/",
+        "ad": "Zorunlu karşılık ve piyasa likiditesi (mr ₺)",
+        "yolAd": "Bankacılık Verileri › TCMB › Zorunlu Karşılık › ZK oranları",
+        "konum": {
+         "id": "",
+         "tag": "div",
+         "cls": "card",
+         "n": "zorunlu karşılık ve piyasa likiditesi mr",
+         "i": 0,
+         "yol": "#pZk > div:nth-of-type(2)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "zkKpi",
+           "k": "d:s=tesis",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "zkKpi",
+           "k": "d:s=ortalama",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "zkKpi",
+           "k": "d:s=gereken",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "zkKpi",
+           "k": "d:s=serbest",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "zkKpi",
+           "k": "d:s=likidite",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=1A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=3A",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=6A",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rng",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "zkLeg",
+           "k": "d:k=tesis",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "zkLeg",
+           "k": "d:k=ortalama",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "zkLeg",
+           "k": "d:k=gereken",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "zkLeg",
+           "k": "d:k=serbest",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "zkLeg",
+           "k": "d:k=likidite",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "zkLeg",
+           "k": "d:k=gunbasi",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "sekme",
+           "k": "d:k=oran",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "sekme",
+           "k": "d:k=nema",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "sekme",
+           "k": "d:k=depo",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "orPb",
+           "k": "d:k=tl",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "orPb",
+           "k": "d:k=yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "agR",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "agR",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "agR",
+           "k": "d:k=10Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "agR",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": ""
+        },
+        "ic": [
+         "rng",
+         "zkLeg"
+        ],
+        "kk": "",
+        "w": 1408,
+        "h": 534,
+        "id": "dzf5jt14ts",
+        "t": 0,
+        "kucuk": false
+       }
+      ],
+      "kilit": true
+     },
+     {
+      "id": "tqsuaejvj",
+      "baslik": "BDDK haftalık: kredi ve mevduat",
+      "not": "",
+      "oc": null,
+      "kaynak": null,
+      "duzen": "oto",
+      "ogeler": [
+       {
+        "sayfa": "ozet/",
+        "ad": "BDDK haftalık kredi ve mevduat",
+        "yolAd": "Özet › Piyasa Verileri",
+        "konum": {
+         "id": "bdCard",
+         "tag": "div",
+         "cls": "card",
+         "n": "bddk haftalık kredi ve mevduat",
+         "i": 0,
+         "yol": "#bdCard"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": ""
+        },
+        "ic": [
+         "bdSeg"
+        ],
+        "kk": "",
+        "w": 1408,
+        "h": 468,
+        "id": "u0h7lk5rdp",
+        "t": 0,
+        "kucuk": false
+       }
+      ],
+      "kilit": true
+     },
+     {
+      "id": "syvlhfwqy",
+      "baslik": "Katılım bankaları: temel rasyolar",
+      "not": "",
+      "oc": null,
+      "kaynak": null,
+      "duzen": "oto",
+      "ogeler": [
+       {
+        "sayfa": "katilim/",
+        "ad": "Temel Rasyolar",
+        "yolAd": "Bankacılık Verileri › Katılım Bülteni › BİLANÇO",
+        "konum": {
+         "id": "vAll",
+         "tag": "section",
+         "cls": "panel",
+         "n": "temel rasyolar",
+         "i": 0,
+         "yol": "#vAll"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "menu",
+           "k": "d:scope=all",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "menu",
+           "k": "d:scope=a",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "menu",
+           "k": "d:scope=p",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bsCur",
+           "k": "d:c=all",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bsCur",
+           "k": "d:c=tl",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bsCur",
+           "k": "d:c=yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [
+          {
+           "s": "repSel",
+           "v": "2026-11-05"
+          },
+          {
+           "s": "navSel",
+           "v": "all"
+          }
+         ],
+         "h": ""
+        },
+        "ic": [
+         "bsCur"
+        ],
+        "kk": "",
+        "w": 826,
+        "h": 828,
+        "id": "rwp925933q",
+        "t": 0,
+        "kucuk": false
+       },
+       {
+        "sayfa": "katilim/",
+        "ad": "Öne çıkan değişimler",
+        "yolAd": "Bankacılık Verileri › Katılım Bülteni › BİLANÇO",
+        "konum": {
+         "id": "",
+         "tag": "aside",
+         "cls": "side",
+         "n": "öne çıkan değişimler",
+         "i": 0,
+         "yol": "#app > div:nth-of-type(2) > aside:nth-of-type(1)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "menu",
+           "k": "d:scope=all",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "menu",
+           "k": "d:scope=a",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "menu",
+           "k": "d:scope=p",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "bsCur",
+           "k": "d:c=all",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bsCur",
+           "k": "d:c=tl",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bsCur",
+           "k": "d:c=yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [
+          {
+           "s": "repSel",
+           "v": "2026-11-05"
+          },
+          {
+           "s": "navSel",
+           "v": "all"
+          }
+         ],
+         "h": ""
+        },
+        "ic": [],
+        "kk": "",
+        "w": 300,
+        "h": 763,
+        "id": "xz44qbnt1w",
+        "t": 0,
+        "kucuk": false
+       }
+      ],
+      "kilit": true
+     },
+     {
+      "id": "fzqixydmb",
+      "baslik": "Banka bilançoları: kredi / mevduat",
+      "not": "",
+      "oc": null,
+      "kaynak": null,
+      "duzen": "oto",
+      "ogeler": [
+       {
+        "sayfa": "bilanco/",
+        "ad": "Kredi / Mevduat · Toplam",
+        "yolAd": "Banka Bilanço Verileri › Analiz",
+        "konum": {
+         "id": "",
+         "tag": "div",
+         "cls": "card",
+         "n": "kredi mevduat toplam",
+         "i": 0,
+         "yol": "#pAnaliz > div:nth-of-type(3)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "sTabs",
+           "k": "d:s=analiz",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "sTabs",
+           "k": "d:s=pasif",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "sTabs",
+           "k": "d:s=aktif",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "sTabs",
+           "k": "d:s=fon",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "sTabs",
+           "k": "d:s=krd",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "sTabs",
+           "k": "d:s=vade",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "sTabs",
+           "k": "d:s=gelir",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "grp",
+           "k": "d:g=ALL",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "grp",
+           "k": "d:g=TOP10",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "grp",
+           "k": "d:g=TOP10_OZEL",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "grp",
+           "k": "d:g=PEER",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "grp",
+           "k": "d:g=MEV",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "grp",
+           "k": "d:g=KAT",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "grp",
+           "k": "d:g=KAMU",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "grp",
+           "k": "d:g=OZEL",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rSel",
+           "k": "d:r=km",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "rSel",
+           "k": "d:r=ka",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rSel",
+           "k": "d:r=mka",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rSel",
+           "k": "d:r=lik",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rSel",
+           "k": "d:r=kasa",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rSel",
+           "k": "d:r=top",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rSel",
+           "k": "d:r=ypa",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rSel",
+           "k": "d:r=oza",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rSel",
+           "k": "d:r=roe",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rSel",
+           "k": "d:r=roa",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rSel",
+           "k": "d:r=nim",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rSel",
+           "k": "d:r=rm",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "rSel",
+           "k": "d:r=gg",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "curSeg",
+           "k": "d:c=2",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "curSeg",
+           "k": "d:c=0",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "curSeg",
+           "k": "d:c=1",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [
+          {
+           "s": "dSel",
+           "v": "2026Q3"
+          }
+         ],
+         "h": ""
+        },
+        "ic": [
+         "curSeg"
+        ],
+        "kk": "",
+        "w": 1408,
+        "h": 507,
+        "id": "xpvi4zdhdf",
+        "t": 0,
+        "kucuk": false
+       }
+      ],
+      "kilit": true
+     },
+     {
+      "id": "dgalegbfe",
+      "baslik": "Enflasyon: yıllık TÜFE",
+      "not": "",
+      "oc": null,
+      "kaynak": null,
+      "duzen": "oto",
+      "ogeler": [
+       {
+        "sayfa": "makro/",
+        "ad": "TÜFE yıllık (%)",
+        "yolAd": "Makro ve Piyasa › Makro Veriler › Enflasyon",
+        "konum": {
+         "id": "",
+         "tag": "div",
+         "cls": "card",
+         "n": "tüfe yıllık",
+         "i": 0,
+         "yol": "#mkEnf > div:nth-of-type(2)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "tabs",
+           "k": "d:tab=makro",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "tabs",
+           "k": "d:tab=piyasa",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=enf",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=buyume",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=istihdam",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=uretim",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=dis",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=butce",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=hazine",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=tufe:yoy",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=tufe:mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=ufe:yoy",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=ufe:mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=web:yoy",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=web:mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=2Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "gMode",
+           "k": "d:m=yoy",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "gMode",
+           "k": "d:m=mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=pk_yilsonu",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=pk_12ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=reel_12ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=hh_12ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=tufe",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "psTabs",
+           "k": "d:ps=faiz",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "psTabs",
+           "k": "d:ps=gosterge",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "psTabs",
+           "k": "d:ps=endeks",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "gUlke",
+           "k": "d:u=tr",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "gUlke",
+           "k": "d:u=abd",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "gUlke",
+           "k": "d:u=de",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [
+          {
+           "s": "gAy",
+           "v": "2026-10"
+          }
+         ],
+         "h": ""
+        },
+        "ic": [
+         "infRange",
+         "gMode",
+         "gAy"
+        ],
+        "kk": "",
+        "w": 1408,
+        "h": 435,
+        "id": "2cvr9860b0",
+        "t": 0,
+        "kucuk": false
+       }
+      ],
+      "kilit": true
+     },
+     {
+      "id": "txtzyiryk",
+      "baslik": "Enflasyon beklentileri",
+      "not": "",
+      "oc": null,
+      "kaynak": null,
+      "duzen": "oto",
+      "ogeler": [
+       {
+        "sayfa": "makro/",
+        "ad": "Enflasyon beklentileri",
+        "yolAd": "Makro ve Piyasa › Makro Veriler › Enflasyon",
+        "konum": {
+         "id": "",
+         "tag": "div",
+         "cls": "card",
+         "n": "enflasyon beklentileri",
+         "i": 0,
+         "yol": "#mkEnf > div:nth-of-type(4) > div:nth-of-type(1)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "tabs",
+           "k": "d:tab=makro",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "tabs",
+           "k": "d:tab=piyasa",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=enf",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=buyume",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=istihdam",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=uretim",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=dis",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=butce",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "mkTabs",
+           "k": "d:mk=hazine",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=tufe:yoy",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=tufe:mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=ufe:yoy",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=ufe:mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=web:yoy",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infKpi",
+           "k": "d:s=web:mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=2Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=3Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "infRange",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "gMode",
+           "k": "d:m=yoy",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "gMode",
+           "k": "d:m=mom",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=1Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=2Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=3Y",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=5Y",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkRange",
+           "k": "d:k=Tümü",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=pk_yilsonu",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=pk_12ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=reel_12ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=hh_12ay",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bkLeg",
+           "k": "d:k=tufe",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "psTabs",
+           "k": "d:ps=faiz",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "psTabs",
+           "k": "d:ps=gosterge",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "psTabs",
+           "k": "d:ps=endeks",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "gUlke",
+           "k": "d:u=tr",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "gUlke",
+           "k": "d:u=abd",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "gUlke",
+           "k": "d:u=de",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [
+          {
+           "s": "gAy",
+           "v": "2026-10"
+          }
+         ],
+         "h": ""
+        },
+        "ic": [
+         "bkRange",
+         "bkLeg"
+        ],
+        "kk": "",
+        "w": 836,
+        "h": 456,
+        "id": "x4cn8kjz30",
+        "t": 0,
+        "kucuk": false
+       }
+      ],
+      "kilit": true
+     },
+     {
+      "id": "hdpybmhyj",
+      "baslik": "Ekonomik göstergeler",
+      "not": "",
+      "oc": null,
+      "kaynak": null,
+      "duzen": "oto",
+      "ogeler": [
+       {
+        "sayfa": "ozet/",
+        "ad": "TÜFE (yıllık)",
+        "yolAd": "Özet › Ekonomik Göstergeler",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "tüfe yıllık",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(1)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": "#eko"
+        },
+        "ic": [],
+        "kk": "TÜİK",
+        "w": 258,
+        "h": 152,
+        "id": "qqfe03fbeg",
+        "t": 0,
+        "kucuk": true
+       },
+       {
+        "sayfa": "ozet/",
+        "ad": "Enflasyon beklentisi (12 ay)",
+        "yolAd": "Özet › Ekonomik Göstergeler",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "enflasyon beklentisi ay",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(3)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": "#eko"
+        },
+        "ic": [],
+        "kk": "TCMB",
+        "w": 258,
+        "h": 152,
+        "id": "coi6h0dmqp",
+        "t": 0,
+        "kucuk": true
+       },
+       {
+        "sayfa": "ozet/",
+        "ad": "GSYH büyümesi (yıllık)",
+        "yolAd": "Özet › Ekonomik Göstergeler",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "gsyh büyümesi yıllık",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(4)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": "#eko"
+        },
+        "ic": [],
+        "kk": "TÜİK",
+        "w": 258,
+        "h": 130,
+        "id": "jg19s8svaw",
+        "t": 0,
+        "kucuk": true
+       },
+       {
+        "sayfa": "ozet/",
+        "ad": "İşsizlik oranı",
+        "yolAd": "Özet › Ekonomik Göstergeler",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "işsizlik oranı",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(5)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": "#eko"
+        },
+        "ic": [],
+        "kk": "TÜİK",
+        "w": 258,
+        "h": 130,
+        "id": "p9en995bse",
+        "t": 0,
+        "kucuk": true
+       },
+       {
+        "sayfa": "ozet/",
+        "ad": "Cari denge (12 ay)",
+        "yolAd": "Özet › Ekonomik Göstergeler",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "cari denge ay",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(8)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": "#eko"
+        },
+        "ic": [],
+        "kk": "TCMB",
+        "w": 258,
+        "h": 158,
+        "id": "in9ywa813k",
+        "t": 0,
+        "kucuk": true
+       },
+       {
+        "sayfa": "ozet/",
+        "ad": "Bütçe dengesi / GSYH (12 ay)",
+        "yolAd": "Özet › Ekonomik Göstergeler",
+        "konum": {
+         "id": "",
+         "tag": "button",
+         "cls": "kc",
+         "n": "bütçe dengesi gsyh ay",
+         "i": 0,
+         "yol": "#kart > button:nth-of-type(10)"
+        },
+        "durum": {
+         "b": [
+          {
+           "g": "gTabs",
+           "k": "d:g=piyasa",
+           "v": false,
+           "sek": true
+          },
+          {
+           "g": "gTabs",
+           "k": "d:g=eko",
+           "v": true,
+           "sek": true
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_tp",
+           "v": true,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_tp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=kr_yp",
+           "v": false,
+           "sek": false
+          },
+          {
+           "g": "bdSeg",
+           "k": "d:v=mv_yp",
+           "v": false,
+           "sek": false
+          }
+         ],
+         "s": [],
+         "h": "#eko"
+        },
+        "ic": [],
+        "kk": "HMB / EVDS",
+        "w": 258,
+        "h": 146,
+        "id": "1ftd0grcf9",
+        "t": 0,
+        "kucuk": true
+       }
+      ],
+      "kilit": true
+     }
+    ]
+   }
+  }
+ ]
+}
