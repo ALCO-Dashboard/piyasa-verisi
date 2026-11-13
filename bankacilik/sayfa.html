@@ -152,6 +152,13 @@ svg text.yunit{font-family:var(--sans,inherit);font-size:10.5px;fill:var(--muted
 .prng .period select{font:inherit;font-size:12px;padding:3px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 .trng .tdt{font:inherit;font-size:12px;padding:2px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 .trng .arrow{color:var(--muted);font-size:12px}
+.fcmp table{font-size:12.5px}
+.fcmp td,.fcmp th{padding-top:5px;padding-bottom:5px}
+.fcmp td.nm,.fcmp th.chk+th{text-align:right;padding-left:8px!important;font-size:12.5px;white-space:normal}
+.fcmp td.nm small{color:var(--muted);font-size:11px}
+.fcmp td:not(.nm):not(.chk){white-space:nowrap;width:1%}
+.fcmp .gb{border-left:1px solid var(--line)}
+.fcmp tr.gh th{text-align:center;font-size:11.5px;color:var(--ink-2)}.fcmp tr.gh .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
 .tbl-wrap tr.grp td{background:var(--surface-2);font-weight:700;font-size:12.5px;color:var(--ink-2)}.tbl-wrap tr.grp .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
 .tflt{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:2px 0 10px}
 .tflt .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
@@ -464,7 +471,7 @@ const S = {
   aSel: [], aIndex: false, aRange: "2Y", aSrc: "all",
 };
 let D = null;
-const T_RANGES_K = ["1 Ay", "3 Ay", "6 Ay", "Yılbaşı", "1 Yıl", "3 Yıl", "Tümü"];
+const T_RANGES_K = ["1 Hafta", "2 Hafta", "1 Ay", "3 Ay", "6 Ay", "Yılbaşı", "1 Yıl", "3 Yıl", "Tümü"];
 const GROUPS = [
   { key: "sektor", name: "Sektör" }, { key: "katilim", name: "Katılım" }, { key: "kamu", name: "Kamu" }, { key: "ozel", name: "Yerli Özel" },
   { key: "yabanci", name: "Yabancı" }, { key: "mevduat", name: "Mevduat" }, { key: "kalkinma", name: "Kalkınma ve Yatırım" }];
@@ -601,7 +608,7 @@ function axisScale(kind, maxAbs) {
   return { k: 1, lab: "değer", d: 2 };
 }
 const RANGES = [["1Y", 366], ["2Y", 731], ["3Y", 1096], ["5Y", 1827], ["Tümü", 1e7]];
-const T_RANGES = [["1 Ay", 31], ["3 Ay", 92], ["6 Ay", 183], ["Yılbaşı", "ytd"], ["1 Yıl", 366], ["3 Yıl", 1096], ["Tümü", 1e7]]; // TCMB panelleri; "Tarih": elle aralık
+const T_RANGES = [["1 Hafta", 8], ["2 Hafta", 15], ["1 Ay", 31], ["3 Ay", 92], ["6 Ay", 183], ["Yılbaşı", "ytd"], ["1 Yıl", 366], ["3 Yıl", 1096], ["Tümü", 1e7]]; // TCMB panelleri; "Tarih": elle aralık
 function clipT(data, key, fa = S.tFrom, fb = S.tTo) {
   const v = data.filter(p => ok(p[1])); if (!v.length) return data;
   if (key === "Tarih") { const a = fa ? toTime(fa) : -Infinity, b = fb ? toTime(fb) + 864e5 - 1 : Infinity; return data.filter(p => p[2] >= a && p[2] <= b); }
@@ -1153,11 +1160,14 @@ const F_EK = { mevduat: "faiz", katilim: "kâr payı", finansman: "finansman şi
 const F_DASH = [false, "6 4", "2 3"];
 const F_GAD = { sektor: "Sektör", mevduat: "Mevduat", katilim: "Katılım", kalkinma: "Kalkınma ve Yatırım", finansman: "Finansman" };
 const fNorm = n => trLower(n || "").replace(/^[\d.\s]+/, "").replace(/\(.*?\)/g, "").replace(/[^a-zçğıöşü0-9]/g, "");
-// kalem türleri (sekmeler): ana seriler; KMH / ÖCH dahil ve "hariç" varyantları yalnız seri tablosundan seçilir
+// kalem türleri (sekmeler)
 const F_TUR = {
-  kredi: [["ihtiyac", "İhtiyaç", /^İhtiyaç Kredisi \(/], ["tasit", "Taşıt", /^Taşıt Kredisi \(/], ["konut", "Konut", /^Konut Kredisi/], ["ticari", "Ticari", /^Ticari Krediler \((TL|Euro|ABD)/], ["tuketici", "Tüketici (İhtiyaç+Taşıt+Konut)", /^Tüketici Kredisi \((TL|İhtiyaç\+Taşıt\+Konut\)+ \(TL)/]],
+  kredi: [["ihtiyac", "İhtiyaç", /^İhtiyaç Kredisi \(/], ["ihtiyac_k", "İhtiyaç (KMH Dahil)", /^İhtiyaç Kredisi \(/, 1], ["tasit", "Taşıt", /^Taşıt Kredisi \(/], ["konut", "Konut", /^Konut Kredisi/],
+    ["ticari", "Ticari", /^Ticari Krediler \((TL|Euro|ABD)/], ["ticari_h", "Ticari (KMH ve KK Hariç)", /^Ticari Krediler \(Tüzel/, 1],
+    ["tuketici", "Tüketici (İhtiyaç+Taşıt+Konut)", /^Tüketici Kredisi \((TL|İhtiyaç\+Taşıt\+Konut\)+ \(TL)/], ["tuketici_k", "Tüketici (KMH Dahil)", /^Tüketici Kredisi \((KMH|ÖCH)/, 1]],
   mevduat: [["a1", "1 Aya Kadar", /^1 Aya Kadar/], ["a3", "3 Aya Kadar", /^3 Aya Kadar/], ["a6", "6 Aya Kadar", /^6 Aya Kadar/], ["y1", "1 Yıla Kadar", /^1 Yıla Kadar/], ["y1p", "1 Yıl ve Üzeri", /^1 Yıl ve Daha Uzun/], ["top", "Toplam", /^Toplam/]] };
-const fTur = (it, g, c) => { const n = g.idx[c]?.name || ""; if (/KMH|ÖCH|Tüzel Kişi/.test(n)) return null; return (F_TUR[it.id] || []).find(t => t[2].test(n)) || null; };
+// 4. öğe: KMH / ÖCH (katılımda KMH karşılığı) dahil ya da hariç varyant
+const fTur = (it, g, c) => { const n = g.idx[c]?.name || "", v = /KMH|ÖCH|Tüzel Kişi/.test(n); return (F_TUR[it.id] || []).find(t => !!t[3] === v && t[2].test(n)) || null; };
 const fColor = b => b === "finansman" ? cssVar("--c7") : gColor(b);
 const fBase = (g, c) => trLower(tMeta(g)[c]?.base || g.idx[c]?.name || c).replace(/\(.*$/, "").replace(/[^a-z0-9çğıöşü]/g, "");
 function fState(it) {
@@ -1177,8 +1187,8 @@ function fState(it) {
     if (g.curs.length > 1) { const yeni = g.curs.includes(S.fCur[it.id]) ? S.fCur[it.id] : g.curs[0]; if (S.tCur[g.code] && S.tCur[g.code] !== yeni) S.tSel[g.code] = [...new Set((S.tSel[g.code] || []).map(c => tTwin(g, c, yeni, null)).filter(Boolean))]; S.tCur[g.code] = yeni; }
     if (g.typs.length > 1) { const t = (S.fTyp[it.id] || []).filter(x => g.typs.includes(x)); S.tTyp[g.code] = t.length ? t : g.typs.slice(0, 1); }
     if (!S.tSel[g.code]) {
-      const ref = gs.find(x => x.g !== g && (S.tSel[x.g.code] || []).length), ad = ref && new Set(S.tSel[ref.g.code].map(c => fNorm(ref.g.idx[c]?.name)));
-      const es = ad ? g.series.filter(x => ad.has(fNorm(x.name))).map(x => x.code) : [];
+      const ref = gs.find(x => x.g !== g && (S.tSel[x.g.code] || []).length), fk = (gg, c) => { const t = fTur(it, gg, c); return t ? "t:" + t[0] : fNorm(gg.idx[c]?.name); }, ad = ref && new Set(S.tSel[ref.g.code].map(c => fk(ref.g, c)));
+      const es = ad ? g.series.filter(x => ad.has(fk(g, x.code))).map(x => x.code) : [];
       S.tSel[g.code] = es.length ? es : defaultSel(g);
     }
     tFixSel(g);
@@ -1189,6 +1199,8 @@ function fState(it) {
 const fIdx = (g, d) => { let j = -1; for (let i = 0; i < g.dates.length; i++) if (g.dates[i] <= d) j = i; else break; return j; };
 function fPanel(it) {
   const st = fState(it), { gs, curs, typs } = st, g0 = gs[0].g, key = "f:" + it.id;
+  if (!rSt() && !S.tAB[g0.code]) {      // karşılaştırma dönemi grafikte seçili tarih aralığının ilk ve son verisi
+    const x = clipT(g0.dates.map((d, i) => [i, 1, toTime(d)]), S.tRange); if (x.length > 1) S.tAB[g0.code] = { A: x[0][0], B: x[x.length - 1][0] }; }
   const { A, B } = tAB(g0), n = g0.dates.length, kind = g0.kind;
   const bankCh = st.var_.map(b => `<button class="chip sm" data-fb="${b}" aria-pressed="${S.fBank[it.id].includes(b)}"><span class="dot" style="background:${fColor(b)}"></span>${esc(F_BANK[b] || gName(b))}</button>`).join("");
   const modCh = st.modlar.length > 1 ? `<div class="seg trate" role="group" aria-label="Akım / stok">${st.modlar.map(m => `<button data-fm="${m}" aria-pressed="${S.fMode[it.id] === m}" title="${m === "akim" ? "Dönem içinde kullandırılan / açılan yeni hesaplar" : "Dönem sonundaki tüm portföy (stok)"}">${m === "akim" ? "Akım" : "Stok"}</button>`).join("")}</div>` : S.fMode[it.id] === "tek" ? "" : `<span class="note">${S.fMode[it.id] === "stok" ? "Stok" : "Akım"}</span>`;
@@ -1197,8 +1209,24 @@ function fPanel(it) {
   const turCh = turV.length ? `<div class="ftur" role="group" aria-label="Tür">${turV.map(t => `<button class="chip sm" data-ftur="${t[0]}" aria-pressed="${turOn(t)}">${t[1]}</button>`).join("")}</div>` : "";
   const opt = sel => g0.dates.map((d, i) => `<option value="${i}"${i === sel ? " selected" : ""}>${dLabel(d)}</option>`).reverse().join("");
   const quick = (g0.weekly ? QUICK.w : QUICK.m).map(([l, k, q]) => { const i = idxBack(g0.dates, B, k, q); return `<button class="chip sm" data-q="${g0.code}" data-i="${i}" aria-pressed="${i === A}">${l}</button>`; }).join("");
-  let rows = "", nVis = 0;
-  for (const { bank, g } of gs) {
+  let rows = "", nVis = 0, thead = `<tr><th class="chk"></th><th>Seri</th><th>${dShort(g0.dates[A])}</th><th>${dShort(g0.dates[B])}</th><th>Değişim</th><th>%</th></tr>`;
+  if (gs.length > 1) {      // banka grupları yan yana: her kalem tek satır
+    const sat = new Map(), yuzde = kind !== "pct";
+    gs.forEach(({ g }, gi) => { const vis = tFilter(g), say = {}; for (const s_ of g.series) { if (!g.vals[s_.code] || !vis(s_.code)) continue;
+      const t = fTur(it, g, s_.code), k0 = (t ? "t:" + t[0] : "n:" + fNorm(s_.name)) + "|" + (tMeta(g)[s_.code]?.typ || ""), k = k0 + "#" + (say[k0] = (say[k0] || 0) + 1);
+      if (!sat.has(k)) sat.set(k, { ad: t ? t[1] : s_.name.replace(/\s*\((TL|ABD doları|Euro)[^)]*\)\s*$/i, "").replace(/^[\d.]+\s*/, "").trim(), typ: tMeta(g)[s_.code]?.typ, h: [] });
+      sat.get(k).h[gi] = s_.code; } });
+    for (const r of sat.values()) { nVis++;
+      const on = gs.some(({ g }, gi) => r.h[gi] && S.tSel[g.code].includes(r.h[gi]));
+      rows += `<tr class="row${on ? " sel" : ""}" data-m="${gs.map(({ g }, gi) => r.h[gi] ? g.code + ":" + r.h[gi] : "").filter(Boolean).join(",")}"><td class="chk"><input type="checkbox" ${on ? "checked" : ""} aria-label="Grafiğe ekle"></td><td class="nm">${esc(r.ad)}${typs.length > 1 && r.typ ? ` <small>${esc(r.typ)}</small>` : ""}</td>`
+        + gs.map(({ g }, gi) => { const c = r.h[gi], arr = c && g.vals[c]; if (!arr) return `<td class="gb">—</td><td>—</td><td>—</td>${yuzde ? "<td>—</td>" : ""}`;
+            const a_ = g === g0 ? A : fIdx(g, g0.dates[A]), b_ = g === g0 ? B : fIdx(g, g0.dates[B]);
+            const a = a_ >= 0 && ok(arr[a_]) ? tConv(g, c, arr[a_] * g.scale) : null, b = b_ >= 0 && ok(arr[b_]) ? tConv(g, c, arr[b_] * g.scale) : null, sk = g.usd?.has(c) ? "usd" : kind, [dc, pc] = deltaCells(a, b, sk);
+            return `<td class="gb">${fmtFull(a, sk)}</td><td>${fmtFull(b, sk)}</td>${dc}${yuzde ? pc : ""}`; }).join("") + "</tr>"; }
+    const nk = yuzde ? 4 : 3;
+    thead = `<tr class="gh"><th class="chk"></th><th></th>${gs.map(({ bank }) => `<th colspan="${nk}" class="gb"><span class="dot" style="background:${fColor(bank)}"></span>${esc(F_BANK[bank])}${F_EK[bank] ? " · " + esc(F_EK[bank]) : ""}</th>`).join("")}</tr>`
+      + `<tr><th class="chk"></th><th>Seri</th>${gs.map(() => `<th class="gb">${dShort(g0.dates[A])}</th><th>${dShort(g0.dates[B])}</th><th>Değişim</th>${yuzde ? "<th>%</th>" : ""}`).join("")}</tr>`;
+  } else for (const { bank, g } of gs) {
     const vis = tFilter(g), a_ = g === g0 ? A : fIdx(g, g0.dates[A]), b_ = g === g0 ? B : fIdx(g, g0.dates[B]);
     if (gs.length > 1) rows += `<tr class="grp"><td></td><td colspan="5"><span class="dot" style="background:${fColor(bank)}"></span>${esc(F_BANK[bank])} · ${esc(F_EK[bank])}</td></tr>`;
     for (const s_ of g.series) {
@@ -1218,7 +1246,7 @@ function fPanel(it) {
     <details class="tser" data-open="${key}"${S.tOpen.has(key) ? " open" : ""}><summary>Seri tablosu <span>${nVis} seri · grafiğe seri eklemek ve dönem karşılaştırmak için aç</span></summary>
     <div class="bar" style="margin-top:12px"><span class="period"><select data-ta="${g0.code}" aria-label="Başlangıç">${opt(A)}</select><span class="arrow">→</span><select data-tb="${g0.code}" aria-label="Bitiş">${opt(B)}</select></span><div class="chips">${quick}</div>
       <span class="sep"></span><button class="chip sm" data-fclear="${it.id}">Seçimi temizle</button></div>
-    <div class="tbl-wrap"><table><thead><tr><th class="chk"></th><th>Seri</th><th>${dShort(g0.dates[A])}</th><th>${dShort(g0.dates[B])}</th><th>Değişim</th><th>%</th></tr></thead><tbody>${rows}</tbody></table></div></details>
+    <div class="tbl-wrap fcmp"><table><thead>${thead}</thead><tbody>${rows}</tbody></table></div></details>
   </article>`;
 }
 function drawFChart(id) {
@@ -1320,7 +1348,7 @@ function bindTcmb() {
     const t = e.target;
     if (t.matches("select[data-rf], select[data-rt]") && rSt()) { const art = t.closest("article"), rs = rSt();
       rs.a = art.querySelector("select[data-rf]").value; rs.b = art.querySelector("select[data-rt]").value; if (rs.a > rs.b) [rs.a, rs.b] = [rs.b, rs.a]; rs.r = "Tarih"; renderTcmb(); return; }
-    if (t.matches("input[data-tfrom], input[data-tto]")) { if (t.dataset.tfrom !== undefined) S.tFrom = t.value; else S.tTo = t.value; tRedraw(); return; }
+    if (t.matches("input[data-tfrom], input[data-tto]")) { if (t.dataset.tfrom !== undefined) S.tFrom = t.value; else S.tTo = t.value; S.tAB = {}; renderTcmb(); return; }
     const code = t.dataset.ta || t.dataset.tb; if (!code) return; const ab = S.tAB[code];
     if (t.dataset.ta) { ab.A = +t.value; if (ab.A >= ab.B) ab.B = Math.min(D.e.groups[code].dates.length - 1, ab.A + 1); } else { ab.B = +t.value; if (ab.A >= ab.B) ab.A = Math.max(0, ab.B - 1); }
     renderTcmb();
@@ -1341,7 +1369,7 @@ function bindTcmb() {
       renderTcmb(); return; }
     const fc = e.target.closest("button[data-fcur]"); if (fc) { S.fCur[fid] = fc.dataset.fcur; renderTcmb(); return; }
     const ft = e.target.closest("button[data-ftyp]"); if (ft) { const t = ft.dataset.ftyp, cur = S.fTyp[fid] || []; S.fTyp[fid] = cur.includes(t) ? (cur.length > 1 ? cur.filter(x => x !== t) : cur) : cur.concat(t); renderTcmb(); return; }
-    const fcl = e.target.closest("button[data-fclear]"); if (fcl) { $$(`article[data-f="${fcl.dataset.fclear}"] tr.row[data-g]`).forEach(r => { S.tSel[r.dataset.g] = []; }); renderTcmb(); return; }
+    const fcl = e.target.closest("button[data-fclear]"); if (fcl) { $$(`article[data-f="${fcl.dataset.fclear}"] tr.row[data-g]`).forEach(r => { S.tSel[r.dataset.g] = []; }); $$(`article[data-f="${fcl.dataset.fclear}"] tr.row[data-m]`).forEach(r => r.dataset.m.split(",").forEach(x => { S.tSel[x.slice(0, x.indexOf(":"))] = []; })); renderTcmb(); return; }
     const cu = e.target.closest("button[data-cur]"); if (cu) {
       const code = cu.closest("article").dataset.g, g = D.e.groups[code], nc = cu.dataset.cur;
       S.tSel[code] = [...new Set((S.tSel[code] || []).map(c => tTwin(g, c, nc, null)).filter(Boolean))]; S.tCur[code] = nc; renderTcmb(); return; }
@@ -1351,10 +1379,14 @@ function bindTcmb() {
       else { S.tTyp[code] = cur.concat(t); const add = (S.tSel[code] || []).map(c => tTwin(g, c, null, t)).filter(Boolean); S.tSel[code] = [...new Set((S.tSel[code] || []).concat(add))]; }
       renderTcmb(); return; }
     const rk = e.target.closest("button[data-rk]"); if (rk && rSt()) { rSt().r = rk.dataset.rk; renderTcmb(); return; }
-    if (rk) { const once = S.tRange; S.tRange = rk.dataset.rk; store.set("bv.trange", S.tRange);
-      if ((once === "Tarih") !== (S.tRange === "Tarih")) { if (S.tRange === "Tarih" && !S.tFrom) { const d = new Date(); d.setFullYear(d.getFullYear() - 1); S.tFrom = d.toISOString().slice(0, 10); } renderTcmb(); return; }
-      $$("#tPanels button[data-rk]").forEach(x => x.setAttribute("aria-pressed", x.dataset.rk === S.tRange)); tRedraw(); return; }
+    if (rk) { S.tRange = rk.dataset.rk; store.set("bv.trange", S.tRange); S.tAB = {};      // seri tablosu da seçili aralığın ilk-son verisini karşılaştırır
+      if (S.tRange === "Tarih" && !S.tFrom) { const d = new Date(); d.setFullYear(d.getFullYear() - 1); S.tFrom = d.toISOString().slice(0, 10); }
+      renderTcmb(); return; }
     const cl = e.target.closest("button[data-clear]"); if (cl) { S.tSel[cl.dataset.clear] = []; renderTcmb(); return; }
+    const trm = e.target.closest("tr.row[data-m]"); if (trm) { const ps = trm.dataset.m.split(",").map(x => { const i = x.indexOf(":"); return [x.slice(0, i), x.slice(i + 1)]; });
+      const ekle = !ps.some(([k, c]) => (S.tSel[k] || []).includes(c));
+      for (const [k, c] of ps) { const s2 = S.tSel[k] || []; S.tSel[k] = ekle ? [...new Set(s2.concat(c))] : s2.filter(x => x !== c); }
+      renderTcmb(); return; }
     const tr = e.target.closest("tr.row[data-s]"); if (!tr) return;
     const code = tr.dataset.g || tr.closest("article").dataset.g, c = tr.dataset.s, sel = S.tSel[code] || [], ekle = !sel.includes(c);
     S.tSel[code] = ekle ? sel.concat(c) : sel.filter(x => x !== c);

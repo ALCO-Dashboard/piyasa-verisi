@@ -5,6 +5,9 @@ name: Katılım ve bankacılık sayfalarını güncelle
 on:
   schedule:
     - cron: "15 4 * * *"      # her gün 07:15 (Türkiye saati)
+    - cron: "40 6 * * 1-5"    # hafta içi 09:40: TCMB gün başı likidite / serbest mevduat (Zorunlu Karşılık) sabah yayımlanır
+    - cron: "10,40 7 * * 1-5" # hafta içi 10:10 ve 10:40: aynı veri gecikirse; GitHub zamanlamaları da gecikebiliyor
+    - cron: "10 8 * * 1-5"    # hafta içi 11:10
     - cron: "15 13 * * 4,5"   # perşembe ve cuma 16:15: haftalık bülten genelde bu günlerde çıkar
     - cron: "40 7 3-5 * *"    # ayın 3-5'i 10:40: TÜİK enflasyon bülteni
     - cron: "45 14 * * 1-5"   # hafta içi 17:45: TLREF / repo günlük verisi
