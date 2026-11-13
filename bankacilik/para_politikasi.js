@@ -1,7 +1,7 @@
 // =============================================================== para politikası (TCMB › Para Politikası)
 // Veri: data/politika.enc.json (bankacilik/guncelle.py › politika): EVDS bie_apifon + bie_swaptektarf + USD/TRY,
 // TÜFE endeksi (TP.FG.J0), TCMB 1 hafta repo tarihçesi ve PPK takvimi.
-const PPS = { sel: null, range: "2Y", drange: "1Y", ppkYear: null, ppkChart: false };
+const PPS = { sel: null, range: "2Y", drange: "1Y", t: {}, ppkYear: null, ppkChart: false };
 // TÜFE yıllık: Makro Veriler'deki TÜİK serisi (makro.json); yoksa EVDS TÜFE endeksinden hesaplanır
 let PP_TUFE = null;
 fetch("../makro/data/makro.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => {
@@ -133,10 +133,23 @@ function ppStackChart(el, { dates, stacks, line, height = 300 }) {
   });
   svgEl.addEventListener("pointerleave", () => { tip.style.opacity = 0; xh.setAttribute("opacity", 0); });
 }
-function ppClipIdx(m, key) { const days = (RANGES.find(r => r[0] === key) || [0, 1e7])[1]; const end = toTime(m.dt[m.last]), st = end - days * 864e5; return m.dt.map((d, i) => i).filter(i => i <= m.last && toTime(m.dt[i]) >= st); }
+const PP_RANGES = [["3A", 92], ["6A", 183], ["1Y", 366], ["2Y", 731], ["3Y", 1096], ["5Y", 1827], ["Tümü", 1e7]];   // + "Tarih": elle aralık
+function ppClipIdx(m, key, alan = "range") {
+  const all = m.dt.map((d, i) => i).filter(i => i <= m.last);
+  if (key === "Tarih") { const t = PPS.t[alan] || {}, a = t.a ? toTime(t.a) : -Infinity, b = t.b ? toTime(t.b) + 864e5 - 1 : Infinity; const r = all.filter(i => { const x = toTime(m.dt[i]); return x >= a && x <= b; }); return r.length ? r : all.slice(-2); }
+  const days = (PP_RANGES.find(r => r[0] === key) || [0, 1e7])[1]; const end = toTime(m.dt[m.last]), st = end - days * 864e5; return all.filter(i => toTime(m.dt[i]) >= st); }
+function ppChips(el, alan, m, ciz) {
+  const cur = PPS[alan], iso = i => { const d = new Date(toTime(m.dt[i])); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+  const t = PPS.t[alan] || (PPS.t[alan] = {});
+  if (cur === "Tarih" && !t.a) { const ix = ppClipIdx(m, PPS["_" + alan] || "1Y"); t.a = iso(ix[0]); t.b = iso(ix[ix.length - 1]); }
+  el.innerHTML = PP_RANGES.concat([["Tarih"]]).map(([k]) => `<button class="chip" aria-pressed="${cur === k}" data-k="${k}">${k}</button>`).join("")
+    + (cur === "Tarih" ? `<span class="pptar"><input type="date" data-t="a" value="${t.a || ""}" min="${iso(0)}" max="${iso(m.last)}" aria-label="Başlangıç tarihi"> – <input type="date" data-t="b" value="${t.b || ""}" min="${iso(0)}" max="${iso(m.last)}" aria-label="Bitiş tarihi"></span>` : "");
+  el.onclick = e => { const b = e.target.closest("button"); if (!b) return; if (b.dataset.k === "Tarih" && PPS[alan] !== "Tarih") { PPS["_" + alan] = PPS[alan]; t.a = t.b = ""; } PPS[alan] = b.dataset.k; ppChips(el, alan, m, ciz); ciz(); };
+  el.onchange = e => { const i = e.target.closest("input[data-t]"); if (!i) return; t[i.dataset.t] = i.value; ciz(); };
+}
 function ppDrawChart(m) {
   const host = $("#ppChart"); if (!host) return; const key = PPS.sel; if (!key) return;
-  const ids = ppClipIdx(m, PPS.range), dates = ids.map(i => m.dt[i]), pal = PAL(), col = c => pal[(c - 1) % pal.length], M = m.M;
+  const ids = ppClipIdx(m, PPS.range, "range"), dates = ids.map(i => m.dt[i]), pal = PAL(), col = c => pal[(c - 1) % pal.length], M = m.M;
   if (key === "aof") {
     lineChart(host, { series: [
       { name: "TCMB AOF (%)", color: col(4), data: ids.map(i => [m.dt[i], ok(M.aof[i]) ? M.aof[i] : null, toTime(m.dt[i])]) },
@@ -202,7 +215,7 @@ function ppkDrawChart(m) {
 }
 function ppStep(pts) { const o = []; for (let k = 0; k < pts.length; k++) { if (k && ok(pts[k][1]) && ok(o[o.length - 1]?.[1]) && pts[k][1] !== o[o.length - 1][1]) o.push([pts[k][0], o[o.length - 1][1], pts[k][2] - 1]); o.push(pts[k]); } return o; }
 function ppDefaultCharts(m) {
-  const ids = ppClipIdx(m, PPS.drange), M = m.M, pal = PAL(), col = c => pal[(c - 1) % pal.length];
+  const ids = ppClipIdx(m, PPS.drange, "drange"), M = m.M, pal = PAL(), col = c => pal[(c - 1) % pal.length];
   const a = $("#ppAof"), n = $("#ppNet"); if (!a || !n) return;
   lineChart(a, { series: [
     { name: "TCMB AOF (%)", color: col(4), data: ppStep(ids.map(i => [m.dt[i], ok(M.aof[i]) ? M.aof[i] : null, toTime(m.dt[i])])) },
@@ -225,8 +238,8 @@ function ppRender() {
     + `<div class="ppdef"><div class="ppdefh"><span class="lbl">Dönem</span><div class="chips" id="ppDRange"></div></div><div class="ppkgrid2"><article class="card"><h3>TCMB AOF (%) — Günlük</h3><div id="ppAof"></div><p class="ppnote">Ağırlıklı ortalama fonlama maliyeti · kesikli: politika faizi</p></article>
       <article class="card"><h3>Net Fonlama (₺ mr) — Günlük</h3><div id="ppNet"></div><p class="ppnote">Çizgi: net fonlama (para piyasaları ile fonlama − sterilizasyon) · çubuklar: fonlama, sterilizasyon ve ayrıca swap fonlaması</p></article></div></div>`
     + ppkSection(m);
-  if (sel) { rangeChips($("#ppRange"), PPS.range, k => { PPS.range = k; ppDrawChart(m); }); ppDrawChart(m); }
-  rangeChips($("#ppDRange"), PPS.drange, k => { PPS.drange = k; ppDefaultCharts(m); }); ppDefaultCharts(m);
+  if (sel) { ppChips($("#ppRange"), "range", m, () => ppDrawChart(m)); ppDrawChart(m); }
+  ppChips($("#ppDRange"), "drange", m, () => ppDefaultCharts(m)); ppDefaultCharts(m);
   ppkDrawChart(m);
 }
 function ppHide() { const pane = $("#ppPane"); if (pane) pane.classList.add("hidden"); $("#tBanks").closest(".bar").classList.remove("hidden"); $(".tlayout").classList.remove("hidden"); }
