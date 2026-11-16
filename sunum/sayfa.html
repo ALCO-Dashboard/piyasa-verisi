@@ -6,19 +6,22 @@
 <title>Sunum · ALCO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
+<style id="sunumCss">
 :root{
   color-scheme:light;
   --page:#f4f5f7; --surface:#ffffff; --surface-2:#f8f8f6; --ink:#1a1d26; --ink-2:#4f4e4a; --muted:#85837d;
   --line:rgba(11,11,11,.10); --accent:#c8102e; --accent-wash:#fdecee; --up:#0b7a0b; --up-wash:#e7f4e7;
   --mono:"DM Mono","SF Mono",ui-monospace,Menlo,monospace; --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --amber-bg:#fff6dd; --amber-ink:#6b4e00; --amber-line:#efd9a2;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   color-scheme:dark; --page:#0f1012; --surface:#1a1a19; --surface-2:#222220; --ink:#f0efec; --ink-2:#c3c2b7; --muted:#8f8d86;
-  --line:rgba(255,255,255,.10); --accent:#f0525f; --accent-wash:#3a171b; --up:#3fbf3f; --up-wash:#16301a;}}
+  --line:rgba(255,255,255,.10); --accent:#f0525f; --accent-wash:#3a171b; --up:#3fbf3f; --up-wash:#16301a;
+  --amber-bg:#2b2410; --amber-ink:#f0d48a; --amber-line:#4a3d18;}}
 :root[data-theme="dark"]{
   color-scheme:dark; --page:#0f1012; --surface:#1a1a19; --surface-2:#222220; --ink:#f0efec; --ink-2:#c3c2b7; --muted:#8f8d86;
-  --line:rgba(255,255,255,.10); --accent:#f0525f; --accent-wash:#3a171b; --up:#3fbf3f; --up-wash:#16301a;}
+  --line:rgba(255,255,255,.10); --accent:#f0525f; --accent-wash:#3a171b; --up:#3fbf3f; --up-wash:#16301a;
+  --amber-bg:#2b2410; --amber-ink:#f0d48a; --amber-line:#4a3d18;}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--page);color:var(--ink);font:14px/1.45 var(--sans);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
@@ -45,7 +48,34 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 /* ana düzen */
 .duz{flex:1;min-height:0;width:100%;max-width:1500px;margin:0 auto;padding:14px 16px 24px;display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
 @media (max-width:900px){.duz{grid-template-columns:minmax(0,1fr)}}
-.liste{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px;position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto}
+.sol{position:sticky;top:10px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 20px);min-height:0}
+@media (max-width:900px){.sol{position:static;max-height:none}}
+.liste{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px;overflow:auto;flex:1 1 auto;min-height:140px}
+.klasor{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px;overflow:auto;flex:0 1 auto;max-height:46vh;min-height:0}
+.klasor h3{margin:6px 8px 6px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.klasor .yol{display:flex;align-items:center;gap:8px;margin:2px 8px 8px;padding:8px 10px;border:1px dashed var(--line);border-radius:9px;font-size:13px;min-width:0}
+.klasor .yol b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.klasor .tam{width:calc(100% - 16px);margin:0 8px 6px;justify-content:center}
+.lnk{border:0;background:none;color:var(--accent);font:inherit;font-weight:700;cursor:pointer;padding:0;text-transform:none;letter-spacing:0;font-size:12px}
+.ky{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1px 8px;align-items:center;padding:8px;border-radius:10px;cursor:pointer;border:1px solid transparent}
+.ky:hover{background:var(--surface-2)}
+.ky.acik{border-color:var(--amber-line);background:var(--amber-bg)}
+.ky b{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ky small{grid-column:1;font-size:11.5px;color:var(--muted)}
+.ky .cip{grid-row:1/span 2;grid-column:2;display:flex;gap:4px;align-items:center}
+.cip span,.cip button{font:500 10.5px/1.2 var(--mono);border:1px solid var(--line);border-radius:6px;padding:3px 5px;background:var(--surface);color:var(--ink-2)}
+.cip button{cursor:pointer}.cip button:hover{border-color:var(--accent);color:var(--accent)}
+.kalt{display:flex;gap:6px;padding:8px 8px 4px}
+.arsivBant{background:var(--amber-bg);border-bottom:1px solid var(--amber-line);color:var(--amber-ink)}
+.arsivBant .in{max-width:1500px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;font-size:13.5px}
+.arsivBant .sp{flex:1}
+.arsivBant .btn{color:var(--ink)}
+.ksat{display:grid;grid-template-columns:120px minmax(0,1fr) 52px;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.ksat input[type=text]{width:100%;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);padding:7px 10px}
+.ksat input[type=text]:disabled{opacity:.45}
+.ksat .uz{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.ksat small{grid-column:2/-1;font-size:12px;color:var(--muted)}
+.ky-klasor{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:8px 10px;border:1px dashed var(--line);border-radius:9px;font-size:13.5px}
 .liste h3{margin:6px 8px 6px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between}
 .sl{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:2px 8px;align-items:center;padding:8px 8px;border-radius:10px;cursor:pointer;border:1px solid transparent;position:relative}
 .sl:hover{background:var(--surface-2)}
@@ -112,6 +142,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .slayt .s-alt span:last-child{font-family:var(--mono);white-space:nowrap}
 .slayt .hucre{position:absolute;overflow:hidden}
 .slayt .hucre .kes{position:absolute;overflow:hidden;border-radius:14px}
+.slayt .hucre img.gor{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+.slayt .hucre .yuk.bos::before{display:none}
 .slayt .hucre iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:transparent;color-scheme:normal}
 .slayt .hucre .yuk{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--s-mut);font-size:22px;gap:12px}
 .slayt .hucre .yuk::before{content:"";width:22px;height:22px;border:3px solid var(--s-line);border-top-color:var(--s-red);border-radius:50%;animation:don 1s linear infinite}
@@ -188,13 +220,16 @@ dialog::backdrop{background:rgba(10,8,9,.45)}
   <span class="ayr"></span>
   <div class="seg" id="tema" role="group" aria-label="Sunum teması"><button data-t="light" aria-pressed="true">☀ Açık</button><button data-t="dark" aria-pressed="false">☾ Koyu</button></div>
   <span class="ayr"></span>
-  <button class="btn" id="bPdf" title="16:9 PDF olarak kaydet">⤓ PDF</button>
-  <button class="btn" id="bPpt" title="PowerPoint (.pptx) olarak kaydet">⤓ PowerPoint</button>
+  <button class="btn" id="bKaydet" title="HTML, PDF ve PowerPoint olarak kayıt klasörüne kaydet (Ctrl+S)">⤓ Kaydet</button>
   <button class="btn ana" id="bBas">▶ Sunumu başlat</button>
 </div></div>
+<div class="arsivBant hidden" id="arsivBant"></div>
 
 <main class="duz">
-  <aside class="liste" id="liste" aria-label="Slaytlar"></aside>
+  <aside class="sol">
+    <section class="klasor" id="klasor" aria-label="Kayıt klasörü ve kayıtlı sunumlar"></section>
+    <section class="liste" id="liste" aria-label="Slaytlar"></section>
+  </aside>
   <section class="sag">
     <div class="sahneK">
       <div class="sahne" id="sahne">
@@ -207,7 +242,7 @@ dialog::backdrop{background:rgba(10,8,9,.45)}
 </main>
 
 <dialog id="dKat"><div class="dlg"><header><h2>Katalogdan ekle</h2><button class="btn" data-kapat>Kapat</button></header>
-  <div class="gov"><input class="ara" id="kAra" type="search" placeholder="Ara: enflasyon, rezerv, BDDK, katılım…"><div id="kListe"></div></div></div></dialog>
+  <div class="gov"><input class="ara" id="kAra" type="search" placeholder="Ara: enflasyon, rezerv, BDDK, katılım…"><p class="ipucu" style="margin:0 0 8px">Her “Ekle” yeni slayt açar. <b>Ctrl</b>'e basılı tutarak tıklarsanız alan bir önceki eklemenin slaytına girer.</p><div id="kListe"></div></div></div></dialog>
 <dialog id="dSab"><div class="dlg"><header><h2>Şablonlar</h2><button class="btn" data-kapat>Kapat</button></header>
   <div class="gov">
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
@@ -218,6 +253,17 @@ dialog::backdrop{background:rgba(10,8,9,.45)}
     <div id="sListe"></div>
     <p class="ipucu">Ortak şablonlar sitenin <b>ortak/sunum_sablon.json</b> dosyasından gelir ve siteyi açan herkes görür. Kendi şablonunuzu herkesle paylaşmak için "Dosyaya kaydet" ile indirip içeriğini bu dosyaya ekleyebilirsiniz. Şablon açıldığında slaytlar her zaman o günün güncel verisiyle gelir.</p>
   </div></div></dialog>
+<dialog id="dKay" style="width:min(640px,calc(100vw - 32px))"><div class="dlg"><header><h2>Sunumu kaydet</h2><button class="btn" data-kapat>Kapat</button></header>
+  <div class="gov">
+    <div class="alan" style="margin-bottom:12px"><div class="lb">Kayıt klasörü</div><div class="ky-klasor"><span id="kyKlasor"></span><button class="btn" id="kyDegis">Değiştir…</button></div></div>
+    <div class="alan" style="margin-bottom:6px"><label for="kyAd">Dosya adı <small>aşağıdaki üç dosyaya birden uygulanır; isterseniz tek tek değiştirin</small></label><input type="text" id="kyAd"></div>
+    <div class="ksat"><label class="kutucuk"><input type="checkbox" id="ky_html" checked> HTML</label><input type="text" id="ky_htmlAd" aria-label="HTML dosya adı"><span class="uz">.html</span><small>Tarayıcıda açılan sunum; sol listeden yeniden açılıp düzenlenebilir</small></div>
+    <div class="ksat"><label class="kutucuk"><input type="checkbox" id="ky_pdf" checked> PDF</label><input type="text" id="ky_pdfAd" aria-label="PDF dosya adı"><span class="uz">.pdf</span><small>16:9 sayfalar · WhatsApp ve e-posta için</small></div>
+    <div class="ksat"><label class="kutucuk"><input type="checkbox" id="ky_pptx" checked> PowerPoint</label><input type="text" id="ky_pptxAd" aria-label="PowerPoint dosya adı"><span class="uz">.pptx</span><small>Grafikler görsel, metinler düzenlenebilir · notlar konuşmacı notu</small></div>
+    <p class="ipucu" id="kyNot" style="margin:10px 0 14px"></p>
+    <div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" data-kapat>İptal</button><button class="btn ana" id="kyKaydet">⤓ Kaydet</button></div>
+  </div></div></dialog>
+<input type="file" id="arsivInp" accept=".html,.htm,text/html" hidden>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -225,7 +271,8 @@ dialog::backdrop{background:rgba(10,8,9,.45)}
 const $ = s => document.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const AY = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"], AYK = AY.map(a => a.slice(0, 3));
-const bugun = new Date(), BUGUN = `${bugun.getDate()} ${AY[bugun.getMonth()]} ${bugun.getFullYear()}`;
+const bugun = new Date(), BUGUN0 = `${bugun.getDate()} ${AY[bugun.getMonth()]} ${bugun.getFullYear()}`;
+let BUGUN = BUGUN0;            // slaytlarda yazan tarih (arşiv sunumunda kayıt tarihi)
 const bekle = ms => new Promise(r => setTimeout(r, ms));
 function toast(m, sure = 2200) { const t = $("#toast"); t.textContent = m; t.classList.add("on"); clearTimeout(t._z); t._z = setTimeout(() => t.classList.remove("on"), sure); }
 
@@ -239,6 +286,10 @@ let D = A.oku();
 let aktif = 0;                  // sıralı slayt listesindeki konum
 const olcu = {};                // öğe id → {w,h} (iframe'den gelen gerçek boyut)
 let DURUM = {}, OC = [], KATALOG = [], ORTAK = [];
+const CANLI = { OC: [], DURUM: {} };
+// Arşiv sunumu: kaydedilmiş bir sunum açıldığında grafikler kayıt günündeki görüntüleriyle, öne çıkanlar ve kaynak
+// tarihleri o günkü hâliyle gelir (veriler güncellenmez). ARSIV null ise taslak (canlı) moddayız.
+let ARSIV = null, GOR = {};     // GOR: öğe id → {u: görüntü (data URL), w, h}
 const kok = new URL("../", location.href).href;
 const surum = Math.floor(Date.now() / 6e4);
 Promise.all([
@@ -247,8 +298,9 @@ Promise.all([
   fetch("../ortak/sunum_katalog.json?v=" + surum).then(r => r.ok ? r.json() : {}).catch(() => ({})),
   fetch("../ortak/sunum_sablon.json?v=" + surum).then(r => r.ok ? r.json() : {}).catch(() => ({}))
 ]).then(([du, oz, kt, sb]) => {
-  DURUM = du || {};
-  OC = [...(oz?.one_cikan?.piyasa || []).map(x => ({ ...x, g: "Piyasa" })), ...(oz?.one_cikan?.eko || []).map(x => ({ ...x, g: "Ekonomi" }))];
+  CANLI.DURUM = du || {};
+  CANLI.OC = [...(oz?.one_cikan?.piyasa || []).map(x => ({ ...x, g: "Piyasa" })), ...(oz?.one_cikan?.eko || []).map(x => ({ ...x, g: "Ekonomi" }))];
+  if (!ARSIV) { DURUM = CANLI.DURUM; OC = CANLI.OC; }
   KATALOG = kt?.alanlar || []; ORTAK = sb?.sablonlar || [];
   ciz();
   if (location.hash === "#sablon") { history.replaceState(null, "", location.pathname); sablonAc(); }
@@ -313,7 +365,7 @@ const notSatir = t => String(t || "").split(/\n/).map(x => x.trim()).filter(Bool
 
 // ---------------------------------------------------------------- yerleşim (canlı slayt, PDF ve PowerPoint aynı ölçüleri kullanır)
 const W = 1920, H = 1080, C = { x: 80, y: 214, w: 1760, h: 774 }, ARA = 26;
-function ogeBoyut(o) { const m = olcu[o.id]; return { w: Math.max(200, o.w || 600), h: (m && m.h) || o.h || 400 }; }
+function ogeBoyut(o) { const g = GOR[o.id]; if (g && g.w) return { w: g.w, h: g.h }; const m = olcu[o.id]; return { w: Math.max(200, o.w || 600), h: (m && m.h) || o.h || 400 }; }
 function izgaraC(n, kutu, ogeler, c) {
   const r = Math.ceil(n / c), cw = (kutu.w - ARA * (c - 1)) / c, ch = (kutu.h - ARA * (r - 1)) / r;
   return ogeler.map((o, i) => ({ id: o.id, x: kutu.x + (i % c) * (cw + ARA), y: kutu.y + Math.floor(i / c) * (ch + ARA), w: cw, h: ch }));
@@ -398,8 +450,14 @@ function hucreleriGuncelle(el, s) {
 }
 function yukle(el) {      // slayttaki iframe'leri oluştur (tembel yükleme)
   $$(".hucre", el).forEach(c => {
-    if (c.querySelector("iframe")) return;
+    if (c.querySelector("iframe,img.gor")) return;
     const o = ogeBul(c.dataset.id); if (!o) return;
+    if (ARSIV) {
+      const kes = c.querySelector(".kes"), g = GOR[o.id];
+      if (!g) { kes.innerHTML = `<div class="yuk bos">Görüntü yok: ${esc(o.ad)}</div>`; return; }
+      kes.querySelector(".yuk")?.remove();
+      const im = document.createElement("img"); im.className = "gor"; im.alt = o.ad; im.dataset.id = o.id; im.src = g.u; kes.appendChild(im); return;
+    }
     const f = document.createElement("iframe");
     f.setAttribute("title", o.ad); f.setAttribute("loading", "eager"); f.dataset.id = o.id;
     f.style.width = Math.max(1400, Math.max(200, o.w) + 40) + "px"; f.style.height = ((olcu[o.id]?.h || o.h) + 30) + "px";
@@ -449,7 +507,7 @@ function goster(i, sessiz) {
   [aktif, aktif + 1, aktif - 1].forEach(j => { const x = L[j]; if (x && DOM[x.id]) yukle(DOM[x.id]); });
   $("#sayac").textContent = `${aktif + 1} / ${L.length}`;
   const x = L[aktif];
-  $("#sBilgi").textContent = x.tur === "icerik" ? `Slayt ${aktif + 1} / ${L.length} · ${x.s.ogeler.length} alan · grafikler canlıdır, üzerine gelince değerleri görürsünüz` : `Slayt ${aktif + 1} / ${L.length}`;
+  $("#sBilgi").textContent = x.tur === "icerik" ? `Slayt ${aktif + 1} / ${L.length} · ${x.s.ogeler.length} alan · ${ARSIV ? `arşiv: grafikler ${ARSIV.tarih} verileriyle sabit` : "grafikler canlıdır, üzerine gelince değerleri görürsünüz"}` : `Slayt ${aktif + 1} / ${L.length}`;
   if (!sessiz) { listeCiz(); ayarCiz(); }
 }
 
@@ -506,7 +564,7 @@ function ayarCiz() {
     A_.innerHTML = `<div class="alan"><label for="kB">Kapak başlığı</label><input type="text" id="kB" data-f="kapak.baslik" value="${esc(k.baslik || "")}" placeholder="Haftalık Piyasa Değerlendirmesi"></div>
       <div class="alan"><label for="kA">Birim</label><input type="text" id="kA" data-f="kapak.alt" value="${esc(k.alt || "")}" placeholder="Aktif Pasif Yönetimi"></div>
       <div class="alan tam"><label for="kN">Alt başlık <small>isteğe bağlı</small></label><input type="text" id="kN" data-f="kapak.not" value="${esc(k.not || "")}" placeholder="örn. ALCO toplantısı · Piyasa ve likidite görünümü"></div>
-      <div class="tam ipucu">Tarih her açılışta bugünün tarihiyle (${BUGUN}) yazılır.</div>`; return; }
+      <div class="tam ipucu">${ARSIV ? `Arşiv sunumu: tarih kayıt günü olarak (${BUGUN}) kalır.` : `Tarih bugünün tarihiyle (${BUGUN}) yazılır; sunumu kaydettiğinizde o günün tarihi ve verileriyle sabitlenir.`}</div>`; return; }
   if (x.tur === "kapanis") { const k = D.kapanis || {};
     A_.innerHTML = `<div class="alan"><label for="cB">Kapanış başlığı</label><input type="text" id="cB" data-f="kapanis.baslik" value="${esc(k.baslik || "")}" placeholder="Teşekkürler"></div>
       <div class="alan"><label for="cA">Alt metin <small>isteğe bağlı</small></label><input type="text" id="cA" data-f="kapanis.alt" value="${esc(k.alt || "")}" placeholder="Sorular ve görüşler"></div>`; return; }
@@ -520,14 +578,14 @@ function ayarCiz() {
     <div class="alan"><div class="lb">Düzen <small>${s.ogeler.length} alan</small></div>
       <div class="seg" data-g="duzen">${[["oto", "Otomatik"], ["yan", "Yan yana"], ["alt", "Alt alta"], ["izgara", "Izgara"]].map(([v, l]) => `<button data-v="${v}" aria-pressed="${D_ === v}">${l}</button>`).join("")}</div>
       <div class="seg" data-g="panel" style="margin-left:6px" title="Not ve öne çıkanlar kutusunun yeri">${[["oto", "Not: oto"], ["sag", "Sağda"], ["alt", "Altta"]].map(([v, l]) => `<button data-v="${v}" aria-pressed="${P_ === v}">${l}</button>`).join("")}</div></div>
-    <div class="alan"><div class="lb"><label class="kutucuk"><input type="checkbox" id="ocG" ${ocGoster(s) ? "checked" : ""}> Otomatik öne çıkanlar</label><small>Özet'teki yorumlar · her hafta güncel</small></div>
+    <div class="alan"><div class="lb"><label class="kutucuk"><input type="checkbox" id="ocG" ${ocGoster(s) ? "checked" : ""}> Otomatik öne çıkanlar</label><small>${ARSIV ? `Özet'teki yorumlar · ${esc(ARSIV.tarih)} itibarıyla` : "Özet'teki yorumlar · her hafta güncel"}</small></div>
       <div class="oclist" ${ocGoster(s) ? "" : 'style="opacity:.45;pointer-events:none"'}>${ilgili.length ? `<div class="grp">Bu slaytla ilgili</div>${ilgili.map(ocSatir).join("")}` : `<div class="grp">Bu slayt için eşleşen yorum yok</div>`}${diger.length ? `<div class="grp">Diğer</div>${diger.map(ocSatir).join("")}` : ""}</div></div>
     <div class="alan"><label for="sN">Değerlendirme notu <small>slayta yazılır, PowerPoint'te konuşmacı notu olur</small></label><textarea id="sN" data-f="s.not" placeholder="Bu hafta dikkat çeken nokta…">${esc(s.not || "")}</textarea></div>
     <div class="alan tam"><label for="sK">Kaynak satırı <small>boş bırakılırsa otomatik</small></label><input type="text" id="sK" data-f="s.kaynak" value="${esc(s.kaynak || "")}" placeholder="${esc(kaynakMetni({ ...s, kaynak: null }))}"></div>
     <div class="alan tam"><div class="lb">Slayttaki alanlar <small>alanı sitede açıp görünümünü değiştirerek yeniden ekleyebilirsiniz</small></div>
       ${s.ogeler.map((o, i) => `<div class="og"><b>${esc(o.ad)}</b><small>${esc(o.yolAd)}${olcu[o.id]?.hata ? " · <span style='color:var(--accent)'>alan bulunamadı</span>" : ""}</small><span class="ic">
         ${s.ogeler.length > 1 ? `<button data-o="ayir" data-id="${o.id}" title="Bu alanı ayrı bir slayta taşı">Ayrı slayt</button>` : ""}
-        <button data-o="yenile" data-id="${o.id}" title="Alanı yeniden yükle">↻</button><button data-o="sil" data-id="${o.id}" title="Alanı slayttan çıkar">✕</button></span></div>`).join("")}
+        ${ARSIV ? "" : `<button data-o="yenile" data-id="${o.id}" title="Alanı yeniden yükle">↻</button>`}<button data-o="sil" data-id="${o.id}" title="Alanı slayttan çıkar">✕</button></span></div>`).join("")}
       ${D.slaytlar.indexOf(s) < D.slaytlar.length - 1 ? `<button class="btn" data-o="birlestir">⇣ Sonraki slaytla birleştir</button>` : ""}</div>`;
 }
 let yazT;
@@ -560,15 +618,25 @@ $("#ayar").addEventListener("click", e => {
 
 // ---------------------------------------------------------------- kaydet / senkron
 function kaydet(sessiz) {
-  A.yaz(D);
+  if (ARSIV) { if (!ARSIV.degisti) { ARSIV.degisti = true; bantCiz(); } } else A.yaz(D);
   if (sessiz) { sahneCiz(); listeCiz(); return; }    // yazarken odak kaybolmasın
   ciz();
 }
-function ciz() { $("#ad").value = D.ad || ""; $$("#tema button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === tema())); sahneCiz(); listeCiz(); ayarCiz(); }
-A.dinle(d => { if (d.degisti === D.degisti) return; const eskiN = D.slaytlar.length; D = d; if (D.slaytlar.length > eskiN) aktif = sira().findIndex(x => x.id === D.slaytlar[D.slaytlar.length - 1].id); ciz(); });
+function ciz() {
+  $("#bSec").disabled = $("#bKat").disabled = !!ARSIV; $$("#tema button").forEach(b => b.disabled = !!ARSIV);
+  $("#bSec").title = ARSIV ? "Arşiv sunumuna yeni alan eklenmez; 'Güncel verilerle yeni taslak' ile devam edin" : "Siteye dönüp alanlara tıklayarak ekleyin";
+  $("#ad").value = D.ad || ""; $$("#tema button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === tema())); sahneCiz(); listeCiz(); ayarCiz(); }
+const ogeSay = d => d.slaytlar.reduce((a, s) => a + s.ogeler.length, 0);
+A.dinle(d => {
+  if (ARSIV || d.degisti === D.degisti) return;          // arşiv açıkken taslak arka planda güncellenir
+  const n0 = ogeSay(D); D = d;
+  if (ogeSay(D) > n0) { const i = sira().findIndex(x => x.id === D.sonSlayt); aktif = i >= 0 ? i : sira().length - 1; }
+  ciz();
+});
 $("#ad").addEventListener("input", e => { D.ad = e.target.value; clearTimeout(yazT); yazT = setTimeout(() => kaydet(true), 300); });
 $("#tema").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; temaDegis(b.dataset.t); });
 function temaDegis(t) {
+  if (ARSIV) { toast("Arşiv sunumunun teması kaydedildiği hâliyle kalır"); return; }
   if (tema() === t) return; D.tema = t; A.yaz(D);
   $$("#tema button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === t));
   $$(".hucre iframe").forEach(f => { const o = ogeBul(f.dataset.id); if (o) { f.src = iframeSrc(o); const k = f.closest(".kes"); if (k && !k.querySelector(".yuk")) k.insertAdjacentHTML("afterbegin", `<div class="yuk">Yükleniyor…</div>`); f.addEventListener("load", () => setTimeout(() => k.querySelector(".yuk")?.remove(), 1500), { once: true }); } });
@@ -578,10 +646,11 @@ $("#bOnc").onclick = () => goster(aktif - 1); $("#bSon").onclick = () => goster(
 
 // ---------------------------------------------------------------- sitede seç
 $("#bSec").onclick = () => {
+  if (ARSIV) return;
   A.basla();
   let w = null; try { if (opener && !opener.closed) { opener.alcoSunum?.basla(); opener.focus(); w = opener; } } catch (e) {}
   if (!w) window.open(kok + "#ozet", "_blank");
-  toast("Seçim modu açık · sitede alanların üzerine gelip ＋ Sunuma ekle'ye tıklayın; eklenenler burada anında görünür", 4200);
+  toast("Seçim modu açık · ＋ Sunuma ekle yeni slayt açar; Ctrl'e basılı tutarak eklediğiniz alan önceki slayta girer", 5000);
 };
 
 // ---------------------------------------------------------------- tam ekran sunum
@@ -595,6 +664,7 @@ $("#bBas").onclick = () => { aktif = 0; baslat(); };
 $("#kontrol").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; const k = b.dataset.k;
   if (k === "ilk") goster(0); if (k === "geri") goster(aktif - 1); if (k === "ileri") goster(aktif + 1); if (k === "cik") cik(); if (k === "tema") { temaDegis(tema() === "dark" ? "light" : "dark"); } });
 document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === "s") { e.preventDefault(); if (!document.querySelector("dialog[open]")) kaydetAc(); return; }
   const tam = document.fullscreenElement === sahne || sahne.classList.contains("tamEkran");
   if (!tam && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName)) return;
   if (!tam && !e.altKey && !["PageDown", "PageUp"].includes(e.key)) return;
@@ -617,11 +687,13 @@ function katalogCiz() {
     h += `<div class="kt ${e ? "ekli" : ""}"><b>${esc(k.ad)}</b><button class="btn ${e ? "" : "ana"}" data-k="${KATALOG.indexOf(k)}">${e ? "＋ Tekrar ekle" : "＋ Ekle"}</button><small>${esc(k.yolAd.split(" › ").slice(2).join(" › ") || k.tur || "")}</small></div>`; });
   $("#kListe").innerHTML = h || `<p class="ipucu">Sonuç yok.</p>`;
 }
-$("#bKat").onclick = () => { katalogCiz(); $("#dKat").showModal(); $("#kAra").focus(); };
+$("#bKat").onclick = () => { if (ARSIV) return; katalogCiz(); $("#dKat").showModal(); $("#kAra").focus(); };
 $("#kAra").addEventListener("input", katalogCiz);
 $("#kListe").addEventListener("click", e => { const b = e.target.closest("button[data-k]"); if (!b) return;
   const o = JSON.parse(JSON.stringify(KATALOG[+b.dataset.k])); o.id = A.uid(); o.t = Date.now(); delete o.tur;
-  D = A.ekle(o); aktif = sira().findIndex(x => x.id === D.slaytlar[D.slaytlar.length - 1].id); ciz(); katalogCiz(); toast(`Eklendi: ${o.ad}`); });
+  const ayni = e.ctrlKey || e.metaKey;
+  D = A.ekle(o, ayni); aktif = sira().findIndex(x => x.id === D.sonSlayt); ciz(); katalogCiz();
+  const n = D.slaytlar.findIndex(x => x.id === D.sonSlayt) + 1; toast(ayni ? `Aynı slayta eklendi (Slayt ${n}): ${o.ad}` : `Eklendi: ${o.ad} · Slayt ${n}`); });
 
 // ---------------------------------------------------------------- şablonlar
 const KS = "alco-sunum-sablonlar";
@@ -645,8 +717,12 @@ $("#sListe").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
   if (b.dataset.sil != null) { const k = kisisel(); if (confirm(`"${k[+b.dataset.sil].ad}" şablonu silinsin mi?`)) { k.splice(+b.dataset.sil, 1); kisiselYaz(k); sablonCiz(); } return; }
   const t = b.dataset.s[0], i = +b.dataset.s.slice(1), s = t === "o" ? ORTAK[i] : kisisel()[i];
-  if (D.slaytlar.length && !confirm(`Mevcut taslak (${D.slaytlar.length} slayt) "${s.ad}" şablonuyla değiştirilsin mi?`)) return;
-  D = { ...A.yeniSunum(), ...temizKopya(s.sunum) }; aktif = 0; kaydet(); $("#dSab").close(); toast(`"${s.ad}" açıldı · veriler güncel`);
+  const mevcut = ARSIV ? A.oku() : D;
+  if (mevcut.slaytlar.length && !confirm(`Mevcut taslak (${mevcut.slaytlar.length} slayt) "${s.ad}" şablonuyla değiştirilsin mi?`)) return;
+  if (ARSIV?.degisti && !confirm("Açık arşiv sunumundaki kaydedilmemiş değişiklikler kaybolacak. Devam edilsin mi?")) return;
+  const yeni = { ...A.yeniSunum(), ...temizKopya(s.sunum) };
+  if (ARSIV) { A.yaz(yeni); arsivKapat(yeni); } else { D = yeni; aktif = 0; kaydet(); }
+  $("#dSab").close(); toast(`"${s.ad}" açıldı · veriler güncel`);
 });
 $("#sKaydet").onclick = () => {
   if (!D.slaytlar.length) { toast("Önce slayt ekleyin"); return; }
@@ -713,22 +789,26 @@ async function iframeHazir(f, ms = 45000) {
   }
   throw new Error("zaman aşımı");
 }
-// tüm alanların görüntüsünü al (slayttaki canlı iframe'lerden)
-async function goruntuler(il) {
+// tüm alanların görüntüsü: canlı taslakta slayttaki iframe'lerden alınır, arşivde kayıtlı görüntüler kullanılır
+async function goruntuler(il, p1 = .85) {
   const L = sira(), isler = [], img = {};
+  if (ARSIV) {
+    for (const [id, g] of Object.entries(GOR)) { if (!g) continue; const im = new Image(); im.src = g.u; try { await im.decode(); img[id] = { url: g.u, u: g.u, w: g.w, h: g.h, im }; } catch (e) {} }
+    return img;
+  }
   L.forEach(x => { if (x.tur === "icerik") { const el = DOM[x.id]; if (el) x.s.ogeler.forEach(o => isler.push({ o, el })); } });
   const els = [...new Set(isler.map(x => x.el))];
   let n = 0;
   for (const { o, el } of isler) {
     const k = els.indexOf(el); els.slice(k, k + 3).forEach(yukle);      // sıradaki iki slayt önden yüklensin
 
-    il.yaz(`Grafikler alınıyor · ${++n} / ${isler.length} · ${o.ad}`, n / isler.length * .85);
+    il.yaz(`Grafikler alınıyor · ${++n} / ${isler.length} · ${o.ad}`, n / isler.length * p1);
     const f = el.querySelector(`.hucre[data-id="${CSS.escape(o.id)}"] iframe`);
     try {
       await iframeHazir(f);
       const r = await f.contentWindow.alcoSunum.yakala(2);
       const im = new Image(); im.src = r.url; await im.decode();
-      img[o.id] = { url: r.url, w: r.w, h: r.h, im };
+      img[o.id] = { url: r.url, u: r.url, w: r.w, h: r.h, im };
     } catch (e) { console.warn("yakalanamadı", o.ad, e); img[o.id] = null; }
   }
   return img;
@@ -827,32 +907,23 @@ function tuvalSlayt(x, no, top, img, olcek) {
   return cv;
 }
 
-async function pdfOlustur() {
-  const L = sira(); if (!D.slaytlar.length) { toast("Önce slayt ekleyin"); return; }
-  const il = ilerleme();
-  try {
-    await document.fonts.ready;
-    const [PL, img] = await Promise.all([libYukle("pdf-lib.min.js", "PDFLib"), goruntuler(il)]);
-    const pdf = await PL.PDFDocument.create();
-    pdf.setTitle(D.ad || "ALCO Sunum"); pdf.setAuthor("Dost Katılım · Aktif Pasif Yönetimi"); pdf.setCreator("ALCO Piyasa Verileri");
-    for (let i = 0; i < L.length; i++) {
-      il.yaz(`Sayfalar oluşturuluyor · ${i + 1} / ${L.length}`, .85 + .15 * (i + 1) / L.length);
-      const cv = tuvalSlayt(L[i], i + 1, L.length, img, 1.5);
-      const b = await new Promise(r => cv.toBlob(r, "image/jpeg", .92));
-      const j = await pdf.embedJpg(new Uint8Array(await b.arrayBuffer()));
-      pdf.addPage([960, 540]).drawImage(j, { x: 0, y: 0, width: 960, height: 540 });
-    }
-    const out = await pdf.save(); il.kapat();
-    await dosyaKaydet(new Blob([out], { type: "application/pdf" }), `${dosyaAdi(D.ad || "ALCO Sunum")} - ${tarihDosya}.pdf`, "PDF belgesi", { "application/pdf": [".pdf"] });
-  } catch (e) { il.kapat(); console.error(e); toast("PDF oluşturulamadı: " + e.message, 4000); }
+async function pdfBlob(img, il, p0 = .6, p1 = .8) {
+  const L = sira(), PL = await libYukle("pdf-lib.min.js", "PDFLib");
+  const pdf = await PL.PDFDocument.create();
+  pdf.setTitle(D.ad || "ALCO Sunum"); pdf.setAuthor("Dost Katılım · Aktif Pasif Yönetimi"); pdf.setCreator("ALCO Piyasa Verileri");
+  for (let i = 0; i < L.length; i++) {
+    il.yaz(`PDF sayfaları · ${i + 1} / ${L.length}`, p0 + (p1 - p0) * (i + 1) / L.length);
+    const cv = tuvalSlayt(L[i], i + 1, L.length, img, 1.5);
+    const b = await new Promise(r => cv.toBlob(r, "image/jpeg", .92));
+    const j = await pdf.embedJpg(new Uint8Array(await b.arrayBuffer()));
+    pdf.addPage([960, 540]).drawImage(j, { x: 0, y: 0, width: 960, height: 540 });
+  }
+  return new Blob([await pdf.save()], { type: "application/pdf" });
 }
 
-async function pptOlustur() {
-  const L = sira(); if (!D.slaytlar.length) { toast("Önce slayt ekleyin"); return; }
-  const il = ilerleme();
-  try {
-    const [PG, img] = await Promise.all([libYukle("pptxgen.bundle.js", "PptxGenJS"), goruntuler(il)]);
-    il.yaz("PowerPoint dosyası oluşturuluyor…", .92);
+async function pptBlob(img) {
+  const L = sira(), PG = await libYukle("pptxgen.bundle.js", "PptxGenJS");
+  {
     const P = PAL[tema()], hx = v => v.replace("#", ""), I = v => +(v / 144).toFixed(4), F = "Segoe UI", pt = px => Math.round(px * .5 * 10) / 10;
     const p = new PG(); p.layout = "LAYOUT_WIDE"; p.author = "Dost Katılım · Aktif Pasif Yönetimi"; p.company = "Dost Katılım"; p.title = D.ad || "ALCO Sunum";
     const serit = sl => sl.addShape(p.ShapeType.rect, { x: 0, y: 0, w: I(12), h: 7.5, fill: { color: hx(P.red) }, line: { color: hx(P.red), width: 0 } });
@@ -920,13 +991,272 @@ async function pptOlustur() {
       const notlar = [s.not ? s.not.trim() : "", ...Y.oc.map(o => "• " + o.m.replace(/<[^>]+>/g, ""))].filter(Boolean).join("\n");
       if (notlar) sl.addNotes(notlar);
     });
-    const blob = await p.write({ outputType: "blob", compression: true });
-    il.kapat();
-    await dosyaKaydet(blob, `${dosyaAdi(D.ad || "ALCO Sunum")} - ${tarihDosya}.pptx`, "PowerPoint sunusu", { "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"] });
-  } catch (e) { il.kapat(); console.error(e); toast("PowerPoint oluşturulamadı: " + e.message, 4000); }
+    return await p.write({ outputType: "blob", compression: true });
+  }
 }
-$("#bPdf").onclick = pdfOlustur;
-$("#bPpt").onclick = pptOlustur;
+// ---------------------------------------------------------------- HTML sunum dosyası (tek dosya, internetsiz de açılır)
+// Slaytlar sitenin slayt düzeniyle yazılır; grafik ve tablolar kayıt anındaki görüntüleridir. Dosyanın içinde sunumun
+// yapısı, notlar, öne çıkanlar ve görüntüler (alcoSunumArsiv) de durur; böylece sol listeden yeniden açılıp düzenlenebilir.
+function slaytCss() {
+  const out = [];
+  for (const r of document.getElementById("sunumCss").sheet.cssRules)
+    if (r.type === CSSRule.KEYFRAMES_RULE || /\.(slayt|sahne|kontrol)\b/.test(r.selectorText || "")) out.push(r.cssText);
+  return out.join("\n");
+}
+function statikSlayt(x, i, n) {
+  let h = "";
+  if (x.tur === "icerik") h = yerlesim(x.s).hucre.map(c => {
+    const o = x.s.ogeler.find(z => z.id === c.id), f = sigdir({ x: 0, y: 0, w: c.w, h: c.h }, o);
+    return `<div class="hucre" style="left:${c.x}px;top:${c.y}px;width:${c.w}px;height:${c.h}px"><div class="kes" style="left:${f.x}px;top:${f.y}px;width:${f.w}px;height:${f.h}px">` +
+      (GOR[o.id] ? `<img class="gor" data-g="${esc(o.id)}" alt="${esc(o.ad)}">` : `<div class="yuk bos">${esc(o.ad)}</div>`) + `</div></div>`;
+  }).join("");
+  return `<div class="slayt${i ? "" : " aktif"}" data-tema="${tema()}"><div class="metin">${slaytIcerik(x, i + 1, n)}</div><div class="hucreler">${h}</div></div>`;
+}
+// kaydedilen HTML dosyasının içindeki küçük sunum oynatıcısı (dosyaya kaynak kodu olarak yazılır)
+function gosterici() {
+  const V = JSON.parse(document.getElementById("alcoSunumArsiv").textContent);
+  document.querySelectorAll("img[data-g]").forEach(i => { const g = V.goruntu[i.dataset.g]; if (g) i.src = g.u; });
+  const S = document.getElementById("sahne"), L = [...S.querySelectorAll(".slayt")], say = document.getElementById("sayac"), K = document.getElementById("kontrol");
+  let a = 0, z;
+  const ol = () => { const r = S.getBoundingClientRect(), k = Math.min(r.width / 1920, r.height / 1080); S.style.setProperty("--k", k); S.style.setProperty("--ox", (r.width - 1920 * k) / 2 + "px"); S.style.setProperty("--oy", (r.height - 1080 * k) / 2 + "px"); };
+  const go = i => { a = Math.max(0, Math.min(L.length - 1, i)); L.forEach((s, j) => s.classList.toggle("aktif", j === a)); say.textContent = (a + 1) + " / " + L.length; try { history.replaceState(null, "", "#" + (a + 1)); } catch (e) {} };
+  const goster = () => { K.classList.add("goster"); clearTimeout(z); z = setTimeout(() => K.classList.remove("goster"), 2200); };
+  const tam = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {});
+  addEventListener("resize", ol); ol(); go((parseInt(location.hash.slice(1), 10) || 1) - 1); goster();
+  addEventListener("mousemove", goster);
+  addEventListener("keydown", e => {
+    if (["ArrowRight", "ArrowDown", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); go(a + 1); }
+    else if (["ArrowLeft", "ArrowUp", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); go(a - 1); }
+    else if (e.key === "Home") go(0); else if (e.key === "End") go(L.length - 1); else if (e.key === "f" || e.key === "F") tam();
+  });
+  K.addEventListener("click", e => { e.stopPropagation(); const b = e.target.closest("button"); if (!b) return; const k = b.dataset.k;
+    if (k === "ilk") go(0); if (k === "geri") go(a - 1); if (k === "ileri") go(a + 1); if (k === "tam") tam(); });
+  S.addEventListener("click", e => { if (!e.target.closest(".kontrol")) go(e.clientX < innerWidth / 4 ? a - 1 : a + 1); });
+}
+function htmlBlob(img, tb) {
+  const L = sira(), n = L.length, sunum = JSON.parse(JSON.stringify(D)); delete sunum.degisti;
+  const veri = { tur: "alco-sunum-arsiv", v: 1, kayit: tb.kayit, tarih: tb.tarih, sunum, oc: OC, durum: DURUM,
+    goruntu: Object.fromEntries(Object.entries(img).filter(([, g]) => g).map(([id, g]) => [id, { u: g.u, w: g.w, h: g.h }])) };
+  const meta = { ad: D.ad || "", tarih: tb.tarih, kayit: tb.kayit, n, tema: tema() };
+  const css = `:root{--sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"DM Mono","SF Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#000;overflow:hidden;-webkit-font-smoothing:antialiased}
+${slaytCss()}
+.sahne{cursor:pointer}.kontrol{cursor:default}`;
+  const html = `<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="alco-sunum" content="${esc(JSON.stringify(meta))}">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(D.ad || "Sunum")} · ${esc(tb.tarih)}</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+${css}
+</style>
+</head>
+<body>
+<div class="sahne tamEkran" id="sahne">
+${L.map((x, i) => statikSlayt(x, i, n)).join("\n")}
+<div class="kontrol" id="kontrol"><button data-k="ilk" title="İlk slayt (Home)">⏮</button><button data-k="geri" title="Önceki (←)">◀</button><span id="sayac"></span><button data-k="ileri" title="Sonraki (→)">▶</button><button data-k="tam" title="Tam ekran (F)">⛶</button></div>
+</div>
+<script type="application/json" id="alcoSunumArsiv">${JSON.stringify(veri).replace(/</g, "\\u003c")}<\/script>
+<script>(${gosterici.toString()})();<\/script>
+</body>
+</html>
+`;
+  return new Blob([html], { type: "text/html;charset=utf-8" });
+}
+function arsivCoz(t) {
+  const m = t.match(/<script type="application\/json" id="alcoSunumArsiv">([\s\S]*?)<\/script>/);
+  if (!m) throw new Error("bu dosya bir sunum kaydı değil");
+  const v = JSON.parse(m[1]); if (v.tur !== "alco-sunum-arsiv" || !v.sunum) throw new Error("bu dosya bir sunum kaydı değil");
+  return v;
+}
+const metaOku = t => {
+  const m = t.match(/<meta name="alco-sunum" content="([^"]*)"/); if (!m) return null;
+  try { return JSON.parse(m[1].replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")); } catch (e) { return null; }
+};
+function indir(blob, ad) {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = ad; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+}
+
+// ---------------------------------------------------------------- kayıt klasörü (Chrome / Edge: tarayıcının klasör erişimi)
+// Seçilen klasör tarayıcıda hatırlanır. Güvenlik gereği tarayıcı klasörün tam yolunu değil yalnızca adını gösterir;
+// her oturumda bir kez "izin ver" demek gerekebilir.
+const FS = !!window.showDirectoryPicker;
+const idb = (() => {
+  let p; const db = () => p || (p = new Promise((ok, no) => { const r = indexedDB.open("alco-sunum", 1); r.onupgradeneeded = () => r.result.createObjectStore("ayar"); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }));
+  const is = (mod, f) => db().then(d => new Promise((ok, no) => { const q = f(d.transaction("ayar", mod).objectStore("ayar")); q.onsuccess = () => ok(q.result); q.onerror = () => no(q.error); }));
+  return { get: k => is("readonly", st => st.get(k)), set: (k, v) => is("readwrite", st => st.put(v, k)) };
+})();
+let KLASOR = null, IZIN = "", KAYITLAR = [];
+async function klasorBaslat() {
+  if (FS) {
+    try { KLASOR = (await idb.get("klasor")) || null; } catch (e) {}
+    if (KLASOR) { try { IZIN = await KLASOR.queryPermission({ mode: "readwrite" }); } catch (e) { IZIN = ""; } }
+  }
+  klasorCiz(); if (IZIN === "granted") listele();
+}
+async function klasorSec() {
+  try {
+    const h = await showDirectoryPicker({ id: "alco-sunum", mode: "readwrite", ...(KLASOR ? { startIn: KLASOR } : { startIn: "documents" }) });
+    KLASOR = h; IZIN = "granted"; KAYITLAR = []; try { await idb.set("klasor", h); } catch (e) {}
+    klasorCiz(); await listele(); return true;
+  } catch (e) { if (e.name !== "AbortError") toast("Klasör seçilemedi: " + e.message, 4000); return false; }
+}
+async function izinAl() {
+  if (!KLASOR) return klasorSec();
+  if (IZIN === "granted") return true;
+  try { IZIN = await KLASOR.requestPermission({ mode: "readwrite" }); } catch (e) { IZIN = "denied"; }
+  klasorCiz(); if (IZIN === "granted") { listele(); return true; }
+  toast("Klasöre erişim izni verilmedi"); return false;
+}
+async function listele() {
+  if (!KLASOR || IZIN !== "granted") return;
+  const dos = new Map();
+  try { for await (const [ad, h] of KLASOR.entries()) if (h.kind === "file") dos.set(ad, h); }
+  catch (e) { IZIN = ""; klasorCiz(); toast("Klasör okunamadı: " + e.message, 4000); return; }
+  const L = [];
+  for (const [ad, h] of dos) {
+    if (!/\.html?$/i.test(ad)) continue;
+    try {
+      const f = await h.getFile(), m = metaOku(await f.slice(0, 6000).text()); if (!m) continue;
+      const kok = ad.replace(/\.html?$/i, "");
+      L.push({ ...m, dosya: ad, kok, h, son: f.lastModified, pdf: dos.get(kok + ".pdf"), pptx: dos.get(kok + ".pptx") });
+    } catch (e) {}
+  }
+  L.sort((a, b) => b.son - a.son);
+  KAYITLAR = L; klasorCiz();
+}
+function klasorCiz() {
+  const k = $("#klasor");
+  const liste = KAYITLAR.map((r, i) => `<div class="ky ${ARSIV && ARSIV.dosya === r.dosya ? "acik" : ""}" data-i="${i}" title="${esc(r.ad || r.kok)} · açmak için tıklayın">
+      <b>${esc(r.kok)}</b><span class="cip"><button data-k="html" data-i="${i}" title="HTML sunumu yeni sekmede aç">HTML</button>${r.pdf ? `<button data-k="pdf" data-i="${i}" title="PDF'i yeni sekmede aç">PDF</button>` : ""}${r.pptx ? `<span title="PowerPoint dosyası klasörde">PPTX</span>` : ""}</span>
+      <small>${esc(r.tarih || "")} verileri · ${r.n || "?"} slayt</small></div>`).join("");
+  if (!FS) {
+    k.innerHTML = `<h3><span>Kayıtlı sunumlar</span></h3><p class="ipucu" style="margin:0 8px 8px">Bu tarayıcı klasöre doğrudan kaydetmeyi desteklemiyor (Chrome ya da Edge gerekir). Kaydet'e bastığınızda dosyalar İndirilenler klasörüne iner; eski bir sunumu aşağıdan açabilirsiniz.</p>
+      <div class="kalt"><button class="btn" data-k="dosya">⤒ Dosyadan aç…</button></div>`; return;
+  }
+  k.innerHTML = `<h3><span>Kayıt klasörü</span>${KLASOR ? `<button class="lnk" data-k="sec">Değiştir</button>` : ""}</h3>
+    <div class="yol" title="Tarayıcı güvenlik gereği klasörün tam yolunu göstermez; yalnızca adını gösterir">📁 <b>${KLASOR ? esc(KLASOR.name) : "Seçilmedi"}</b></div>
+    ${!KLASOR ? `<button class="btn ana tam" data-k="sec">Klasör seç…</button>` : IZIN !== "granted" ? `<button class="btn ana tam" data-k="izin">Klasöre erişim izni ver</button>` : ""}
+    ${KLASOR && IZIN === "granted" ? `<h3><span>Kayıtlı sunumlar</span><span>${KAYITLAR.length}</span></h3>${liste || `<p class="ipucu" style="margin:0 8px 6px">Bu klasörde kayıtlı sunum yok. ⤓ Kaydet ile ilk sunumu kaydedin.</p>`}` : ""}
+    <div class="kalt">${KLASOR && IZIN === "granted" ? `<button class="btn" data-k="yenile" title="Listeyi yenile">↻</button>` : ""}<button class="btn" data-k="dosya" title="Başka bir yerdeki kayıtlı sunumu (.html) açın">⤒ Dosyadan aç…</button></div>`;
+}
+$("#klasor").addEventListener("click", async e => {
+  const b = e.target.closest("[data-k]"), it = e.target.closest(".ky");
+  try {
+    if (b) {
+      e.stopPropagation(); const k = b.dataset.k, r = KAYITLAR[+b.dataset.i];
+      if (k === "sec") await klasorSec();
+      else if (k === "izin") await izinAl();
+      else if (k === "yenile") { await listele(); toast("Liste yenilendi"); }
+      else if (k === "dosya") $("#arsivInp").click();
+      else if (k === "pdf" || k === "html") { const f = await (k === "pdf" ? r.pdf : r.h).getFile(); window.open(URL.createObjectURL(f), "_blank"); }
+      return;
+    }
+    if (it) { const r = KAYITLAR[+it.dataset.i]; const f = await r.h.getFile(); arsivAc(arsivCoz(await f.text()), r.dosya); }
+  } catch (x) { toast("Açılamadı: " + x.message, 4000); }
+});
+$("#arsivInp").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return; e.target.value = "";
+  try { arsivAc(arsivCoz(await f.text()), f.name); } catch (x) { toast("Açılamadı: " + x.message, 4000); }
+});
+
+// ---------------------------------------------------------------- arşiv sunumu (kayıt günündeki verilerle)
+function sahneSifirla() { Object.values(DOM).forEach(e => e.remove()); for (const k in DOM) delete DOM[k]; for (const k in olcu) delete olcu[k]; }
+function bantCiz() {
+  const b = $("#arsivBant"); b.classList.toggle("hidden", !ARSIV);
+  if (!ARSIV) { b.innerHTML = ""; return; }
+  b.innerHTML = `<div class="in"><span><b>Kayıtlı sunum</b> · ${esc(ARSIV.dosya || "")} · grafikler, tablolar ve öne çıkanlar <b>${esc(ARSIV.tarih)}</b> verileriyle sabit${ARSIV.degisti ? " · <i>kaydedilmemiş değişiklik var</i>" : ""}</span><span class="sp"></span>
+    <button class="btn" data-b="taslak" title="Aynı slaytlar, başlıklar, notlar ve düzen; grafikler bugünkü verilerle">⟳ Güncel verilerle yeni taslak</button><button class="btn" data-b="kapat" title="Kayıtlı sunumu kapatıp düzenlediğiniz taslağa dönün">✕ Kapat</button></div>`;
+}
+$("#arsivBant").addEventListener("click", e => {
+  const b = e.target.closest("button[data-b]"); if (!b || !ARSIV) return;
+  if (b.dataset.b === "kapat") { if (ARSIV.degisti && !confirm("Kaydedilmemiş değişiklikler kaybolacak. Kapatılsın mı?")) return; arsivKapat(); }
+  if (b.dataset.b === "taslak") {
+    const mevcut = A.oku();
+    if (mevcut.slaytlar.length && !confirm(`Mevcut taslak (${mevcut.slaytlar.length} slayt) bu sunumun slaytlarıyla değiştirilsin mi? Grafikler bugünkü verilerle yüklenecek.`)) return;
+    const d = { ...A.yeniSunum(), ...temizKopya(D) }; A.yaz(d); arsivKapat(d); toast("Güncel verilerle yeni taslak oluşturuldu");
+  }
+});
+function arsivAc(v, dosya) {
+  if (ARSIV?.degisti && !confirm("Açık kayıtlı sunumdaki kaydedilmemiş değişiklikler kaybolacak. Devam edilsin mi?")) return;
+  ARSIV = { kayit: v.kayit, tarih: v.tarih || "", dosya, degisti: false };
+  D = { ...A.yeniSunum(), ...v.sunum }; OC = v.oc || []; DURUM = v.durum || {}; BUGUN = v.tarih || BUGUN0; GOR = v.goruntu || {};
+  aktif = 0; sahneSifirla(); bantCiz(); klasorCiz(); ciz();
+  toast(`${dosya} açıldı · ${v.tarih} verileri`);
+}
+function arsivKapat(d) {
+  ARSIV = null; GOR = {}; OC = CANLI.OC; DURUM = CANLI.DURUM; BUGUN = BUGUN0; D = d || A.oku();
+  aktif = 0; sahneSifirla(); bantCiz(); klasorCiz(); ciz();
+}
+addEventListener("beforeunload", e => { if (ARSIV?.degisti) { e.preventDefault(); e.returnValue = ""; } });
+
+// ---------------------------------------------------------------- kaydet (HTML + PDF + PowerPoint → kayıt klasörü)
+const BICIM = ["html", "pdf", "pptx"];
+function kyKlasorCiz() {
+  $("#kyKlasor").innerHTML = !FS ? "Bu tarayıcıda dosyalar <b>İndirilenler</b> klasörüne iner" :
+    KLASOR ? `📁 <b>${esc(KLASOR.name)}</b>${IZIN !== "granted" ? " <small>(kaydederken izin istenir)</small>" : ""}` : "<i>Klasör seçilmedi · Kaydet'e bastığınızda seçmeniz istenir</i>";
+  $("#kyDegis").classList.toggle("hidden", !FS);
+}
+function kaydetAc() {
+  if (!D.slaytlar.length) { toast("Önce slayt ekleyin"); return; }
+  const taban = ARSIV?.dosya ? ARSIV.dosya.replace(/\.html?$/i, "") : `${dosyaAdi(D.ad || "Sunum")} - ${tarihDosya}`;
+  $("#kyAd").value = taban;
+  BICIM.forEach(t => { const i = $(`#ky_${t}Ad`); i.value = taban; i.dataset.elle = ""; i.disabled = !$(`#ky_${t}`).checked; });
+  kyKlasorCiz();
+  $("#kyNot").innerHTML = ARSIV ? `Bu kayıtlı sunum <b>${esc(ARSIV.tarih)}</b> verileriyle kaydedilir; yaptığınız başlık, not ve sıralama değişiklikleri dosyalara yazılır.`
+    : `Grafikler, tablolar ve öne çıkanlar bugünün (<b>${esc(BUGUN0)}</b>) verileriyle sabitlenir. Bu sunumu daha sonra açtığınızda veriler güncellenmez; güncel hâli için “Güncel verilerle yeni taslak” kullanılır.`;
+  $("#dKay").showModal();
+}
+$("#bKaydet").onclick = kaydetAc;
+$("#kyAd").addEventListener("input", e => BICIM.forEach(t => { const i = $(`#ky_${t}Ad`); if (!i.dataset.elle) i.value = e.target.value; }));
+BICIM.forEach(t => {
+  $(`#ky_${t}Ad`).addEventListener("input", e => { e.target.dataset.elle = "1"; });
+  $(`#ky_${t}`).addEventListener("change", e => { $(`#ky_${t}Ad`).disabled = !e.target.checked; });
+});
+$("#kyDegis").onclick = async () => { await klasorSec(); kyKlasorCiz(); };
+$("#kyKaydet").onclick = async () => {
+  const sec = BICIM.filter(t => $(`#ky_${t}`).checked).map(t => ({ t, ad: dosyaAdi($(`#ky_${t}Ad`).value || $("#kyAd").value) + "." + t }));
+  if (!sec.length) { toast("En az bir biçim seçin"); return; }
+  if (FS) {
+    // izin, uzun işlem başlamadan (tıklamanın hemen ardından) alınmalı
+    if (!KLASOR && !(await klasorSec())) return;
+    if (!(await izinAl())) return;
+    const var_ = [];
+    for (const x of sec) { try { await KLASOR.getFileHandle(x.ad); var_.push(x.ad); } catch (e) {} }
+    if (var_.length && !confirm(`Klasörde aynı adlı dosya var:\n\n${var_.join("\n")}\n\nÜzerine yazılsın mı?`)) return;
+  }
+  $("#dKay").close();
+  await kaydetCalistir(sec);
+};
+async function kaydetCalistir(sec) {
+  const il = ilerleme(), eski = GOR;
+  try {
+    await document.fonts.ready;
+    const img = await goruntuler(il, .6);
+    GOR = img;                                  // yerleşim, kaydedilen görüntülerin ölçüleriyle hesaplansın
+    const tb = ARSIV ? { kayit: ARSIV.kayit, tarih: ARSIV.tarih } : { kayit: new Date().toISOString(), tarih: BUGUN0 };
+    const out = [];
+    for (const x of sec) {
+      if (x.t === "pdf") out.push([x.ad, await pdfBlob(img, il, .62, .8)]);
+      if (x.t === "pptx") { il.yaz("PowerPoint oluşturuluyor…", .84); out.push([x.ad, await pptBlob(img)]); }
+      if (x.t === "html") { il.yaz("HTML sunum oluşturuluyor…", .93); out.push([x.ad, htmlBlob(img, tb)]); }
+    }
+    il.yaz("Klasöre yazılıyor…", .97);
+    if (FS && KLASOR) for (const [ad, b] of out) { const fh = await KLASOR.getFileHandle(ad, { create: true }), w = await fh.createWritable(); await w.write(b); await w.close(); }
+    else for (const [ad, b] of out) { indir(b, ad); await bekle(500); }
+    il.kapat();
+    const h = out.find(([ad]) => /\.html$/.test(ad));
+    if (ARSIV) { ARSIV.degisti = false; if (h) ARSIV.dosya = h[0]; bantCiz(); }
+    toast(FS && KLASOR ? `Kaydedildi · ${out.map(([ad]) => ad.split(".").pop().toUpperCase()).join(", ")} → ${KLASOR.name}` : `İndirildi · ${out.length} dosya`, 3800);
+    await listele();
+  } catch (e) { il.kapat(); console.error(e); toast("Kaydedilemedi: " + e.message, 5000); }
+  finally { GOR = eski; }
+}
+klasorBaslat();
 
 ciz();
 })();
