@@ -142,6 +142,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .slayt .s-alt span:last-child{font-family:var(--mono);white-space:nowrap}
 .slayt .hucre{position:absolute;overflow:hidden}
 .slayt .hucre .kes{position:absolute;overflow:hidden;border-radius:14px}
+.sahne.konumla .slayt .hucre iframe{pointer-events:none}
+.slayt .tutk{position:absolute;inset:0;z-index:4}
+.slayt .tut{position:absolute;border:3px dashed #1d4ed8;border-radius:12px;background:rgba(29,78,216,.05);cursor:move;touch-action:none}
+.slayt .tut:hover,.slayt .tut.tasi{background:rgba(29,78,216,.12);border-style:solid}
+.slayt .tut span{position:absolute;left:8px;top:8px;font:700 20px/1.2 var(--sans);color:#fff;background:#1d4ed8;border-radius:8px;padding:5px 11px;white-space:nowrap;max-width:calc(100% - 16px);overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.slayt .tut .boy{position:absolute;right:-16px;bottom:-16px;width:34px;height:34px;border-radius:50%;background:#1d4ed8;border:5px solid #fff;cursor:nwse-resize;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.slayt .tut.pnl{border-color:#b45309;background:rgba(180,83,9,.05)}
+.slayt .tut.pnl span,.slayt .tut.pnl .boy{background:#b45309}
+#bKonum[aria-pressed="true"]{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
 .slayt .hucre img.gor{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
 .slayt .hucre .yuk.bos::before{display:none}
 .slayt .hucre iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:transparent;color-scheme:normal}
@@ -235,7 +244,10 @@ dialog::backdrop{background:rgba(10,8,9,.45)}
       <div class="sahne" id="sahne">
         <div class="kontrol" id="kontrol"><button data-k="ilk" title="İlk slayt">⏮</button><button data-k="geri" title="Önceki (←)">◀</button><span id="sayac">1 / 1</span><button data-k="ileri" title="Sonraki (→)">▶</button><button data-k="tema" title="Açık / koyu tema">☾</button><button data-k="cik" title="Çık (Esc)">✕</button></div>
       </div>
-      <div class="sahneAlt"><span class="bilgi" id="sBilgi"></span><span style="display:flex;gap:6px"><button class="btn" id="bOnc">◀</button><button class="btn" id="bSon">▶</button></span></div>
+      <div class="sahneAlt"><span class="bilgi" id="sBilgi"></span><span style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn" id="bKonum" aria-pressed="false" title="Slayttaki alanları ve not kutusunu sürükleyip köşeden boyutlandırın">✥ Konumlandır</button>
+        <button class="btn hidden" id="bOto" title="Elle yapılan konumlandırmayı kaldır">⟲ Otomatik düzen</button>
+        <button class="btn" id="bOnc">◀</button><button class="btn" id="bSon">▶</button></span></div>
     </div>
     <div class="ayar" id="ayar"></div>
   </section>
@@ -317,7 +329,6 @@ function sira() {           // sunumda gösterilen slaytlar (kapak, gündem, iç
   return a;
 }
 const ogeBul = id => { for (const s of D.slaytlar) { const o = s.ogeler.find(x => x.id === id); if (o) return o; } return null; };
-window.alcoSunumOge = id => ogeBul(id);
 
 const SAYFA_AD = { "ozet/": "Özet", "bankacilik/": "Bankacılık Verileri", "tefas.html": "TEFAS Verileri", "makro/": "Makro ve Piyasa", "bilanco/": "Banka Bilanço Verileri", "tcmb/": "TCMB Rezervler", "zk/": "Zorunlu Karşılık", "katilim/": "Katılım Bülteni" };
 const bolum = s => { const y = s.ogeler[0]?.yolAd || ""; const p = y.split(" › "); return p.slice(0, 2).join(" › ") || SAYFA_AD[s.ogeler[0]?.sayfa] || ""; };
@@ -363,29 +374,64 @@ function ocListesi(s) {
 const ocGoster = s => s.oc !== false;
 const notSatir = t => String(t || "").split(/\n/).map(x => x.trim()).filter(Boolean);
 
-// ---------------------------------------------------------------- yerleşim (canlı slayt, PDF ve PowerPoint aynı ölçüleri kullanır)
-const W = 1920, H = 1080, C = { x: 80, y: 214, w: 1760, h: 774 }, ARA = 26;
-function ogeBoyut(o) { const g = GOR[o.id]; if (g && g.w) return { w: g.w, h: g.h }; const m = olcu[o.id]; return { w: Math.max(200, o.w || 600), h: (m && m.h) || o.h || 400 }; }
-function izgaraC(n, kutu, ogeler, c) {
-  const r = Math.ceil(n / c), cw = (kutu.w - ARA * (c - 1)) / c, ch = (kutu.h - ARA * (r - 1)) / r;
-  return ogeler.map((o, i) => ({ id: o.id, x: kutu.x + (i % c) * (cw + ARA), y: kutu.y + Math.floor(i / c) * (ch + ARA), w: cw, h: ch }));
+// ---------------------------------------------------------------- yerleşim (canlı slayt, PDF, PowerPoint ve HTML aynı ölçüleri kullanır)
+const W = 1920, H = 1080, C = { x: 80, y: 214, w: 1760, h: 774 }, ARA = 26, KMAKS = 2.2;
+// Hücre: slayttaki tek bir görünüm. Aynı sayfa ve sekmeden gelen alanlar tek hücrede, tek sayfa kopyasında gösterilir;
+// böylece sitedeki yerleşim ve oranlar korunur, kutucuğa tıklayınca grafik değişir.
+const sekImza = st => (st?.b || []).filter(x => x.v && x.sek).map(x => x.g + ":" + x.k).sort().join("|") + "#" + (st?.h || "");
+function hucreler(s) {
+  const map = new Map(), out = [];
+  for (const o of s.ogeler) {
+    const k = s.birlesik === false ? "t:" + o.id : o.sayfa + "|" + sekImza(o.durum);
+    let c = map.get(k); if (!c) { c = { id: o.id, ogeler: [] }; map.set(k, c); out.push(c); }
+    c.ogeler.push(o);
+  }
+  out.forEach(c => { if (c.ogeler.length > 1) c.id = "g-" + c.ogeler[0].id; });
+  // eski kayıtlı sunumlarda birleşik görüntü yoksa alanlar ayrı gösterilir
+  return ARSIV ? out.flatMap(c => c.ogeler.length > 1 && !GOR[c.id] ? c.ogeler.map(o => ({ id: o.id, ogeler: [o] })) : [c]) : out;
 }
-const kaplanan = (hucre, ogeler) => hucre.reduce((a, h, i) => { const f = sigdir(h, ogeler[i]); return a + f.w * f.h; }, 0);
-function izgara(n, kutu, ogeler, duzen) {
-  if (!n) return [];
-  if (duzen === "yan") return izgaraC(n, kutu, ogeler, n);
-  if (duzen === "alt") return izgaraC(n, kutu, ogeler, 1);
-  if (duzen === "izgara") return izgaraC(n, kutu, ogeler, Math.ceil(Math.sqrt(n)));
-  // otomatik: grafiklerin en büyük göründüğü sütun sayısı
-  let en = null, enA = -1;
-  for (let c = 1; c <= n; c++) { const h = izgaraC(n, kutu, ogeler, c), a = kaplanan(h, ogeler); if (a > enA * 1.02) { en = h; enA = a; } }
-  return en;
+function hucreBul(id) { for (const s of D.slaytlar) { const c = hucreler(s).find(x => x.id === id); if (c) return c; } return null; }
+const hucreAd = c => { if (c.ogeler.length === 1) return c.ogeler[0].ad; const b = c.ogeler.reduce((a, o) => (o.w || 0) * (o.h || 0) > (a.w || 0) * (a.h || 0) ? o : a); return `${b.ad} + ${c.ogeler.length - 1} alan`; };
+window.alcoSunumOge = id => { const c = hucreBul(id); if (!c) return null; return c.ogeler.length === 1 ? c.ogeler[0] : { ogeler: c.ogeler, durum: c.ogeler[0].durum }; };
+// hücrenin sitedeki (doğal) boyutu: kayıtlı görüntü > sayfanın bildirdiği ölçü > seçim anındaki ölçü
+function hucreBoyut(c) {
+  const g = GOR[c.id]; if (g && g.w) return { w: g.w, h: g.h };
+  const m = olcu[c.id]; if (m && m.w && !m.hata) return { w: m.w, h: m.h };
+  if (c.ogeler.length === 1) { const o = c.ogeler[0]; return { w: Math.max(200, o.w || 600), h: o.h || 400 }; }
+  const L = c.ogeler.filter(o => o.x != null);
+  if (L.length) { const x0 = Math.min(...L.map(o => o.x)), y0 = Math.min(...L.map(o => o.y)); return { w: Math.max(...L.map(o => o.x + o.w)) - x0, h: Math.max(...L.map(o => o.y + o.h)) - y0 }; }
+  return { w: Math.max(...c.ogeler.map(o => o.w || 600)), h: c.ogeler.reduce((a, o) => a + (o.h || 300), 0) };
 }
-function sigdir(h, o) {     // hücre içinde en-boy oranını koruyarak ortala
-  const b = ogeBoyut(o), maks = o.kucuk ? 2.6 : 2.0;
-  const k = Math.min(h.w / b.w, h.h / b.h, maks), w = b.w * k, hh = b.h * k;
-  return { x: h.x + (h.w - w) / 2, y: h.y + (h.h - hh) / 2, w, h: hh, k, bw: b.w, bh: b.h };
+const ifrGen = (c, bw) => Math.max(bw + 40, c.ogeler[0].vw || 1400);
+// tek ortak ölçekle satırlara dizme: sitede küçük olan kutucuk küçük, büyük grafik büyük kalır
+function rafla(B, kutu, kip) {
+  const dene = k => {
+    const satir = []; let r = [], rw = 0;
+    B.forEach((b, i) => { const w = b.w * k; if (r.length && (kip === "alt" || (kip !== "yan" && rw + ARA + w > kutu.w + .5))) { satir.push(r); r = []; rw = 0; } rw += (r.length ? ARA : 0) + w; r.push(i); });
+    if (r.length) satir.push(r);
+    const gen = satir.map(r => r.reduce((a, i) => a + B[i].w * k, 0) + ARA * (r.length - 1));
+    const yuk = satir.map(r => Math.max(...r.map(i => B[i].h * k)));
+    const top = yuk.reduce((a, h) => a + h, 0) + ARA * (satir.length - 1);
+    return { satir, gen, yuk, top, sigar: top <= kutu.h + .5 && gen.every(g => g <= kutu.w + .5) };
+  };
+  let lo = .02, hi = KMAKS;
+  if (dene(hi).sigar) lo = hi; else for (let i = 0; i < 28; i++) { const m = (lo + hi) / 2; if (dene(m).sigar) lo = m; else hi = m; }
+  const R = dene(lo), out = [];
+  let y = kutu.y + Math.max(0, (kutu.h - R.top) / 2);
+  R.satir.forEach((r, j) => {
+    let x = kutu.x + (kutu.w - R.gen[j]) / 2;
+    r.forEach(i => { const w = B[i].w * lo, h = B[i].h * lo; out[i] = { x, y: y + (R.yuk[j] - h) / 2, w, h }; x += w + ARA; });
+    y += R.yuk[j] + ARA;
+  });
+  return out;
 }
+function izgaraC(B, kutu) {      // eşit hücreli ızgara: her alan kendi hücresini doldurur
+  const n = B.length, c = Math.ceil(Math.sqrt(n)), r = Math.ceil(n / c), cw = (kutu.w - ARA * (c - 1)) / c, ch = (kutu.h - ARA * (r - 1)) / r;
+  return B.map((b, i) => { const k = Math.min(cw / b.w, ch / b.h, KMAKS), w = b.w * k, h = b.h * k, hx = kutu.x + (i % c) * (cw + ARA), hy = kutu.y + Math.floor(i / c) * (ch + ARA); return { x: hx + (cw - w) / 2, y: hy + (ch - h) / 2, w, h }; });
+}
+const diz = (B, kutu, duzen) => !B.length ? [] : duzen === "izgara" ? izgaraC(B, kutu) : rafla(B, kutu, duzen);
+const alanTop = K => K.reduce((a, b) => a + b.w * b.h, 0);
+function sigdir(kutu, bw, bh) { const k = Math.min(kutu.w / bw, kutu.h / bh), w = bw * k, h = bh * k; return { x: kutu.x + (kutu.w - w) / 2, y: kutu.y + (kutu.h - h) / 2, w, h, k }; }
 function panelYuk(oc, nt, w) {      // alttaki not kutusu: içerik kadar yükseklik (tahmini satır sayısıyla)
   const ikili = oc.length && nt.length, bw = ikili ? (w - 64 - 34) / 2 : w - 64;
   const sat = (t, px) => Math.max(1, Math.ceil(t.length * px * .5 / (bw - 24)));
@@ -394,25 +440,26 @@ function panelYuk(oc, nt, w) {      // alttaki not kutusu: içerik kadar yüksek
 }
 function yerlesim(s) {
   const oc = ocGoster(s) ? ocListesi(s) : [], nt = notSatir(s.not);
-  const panelVar = oc.length || nt.length;
+  const hc = hucreler(s), B = hc.map(hucreBoyut), duzen = s.duzen || "oto", yer = s.yer || null;
   let icerik = { ...C }, panel = null;
-  if (panelVar) {
+  if (oc.length || nt.length) {
     const ph = panelYuk(oc, nt, C.w), pw = 540;
     const alt = { panel: { x: C.x, y: C.y + C.h - ph, w: C.w, h: ph, yon: "alt" }, icerik: { x: C.x, y: C.y, w: C.w, h: C.h - ph - ARA } };
     const sag = { panel: { x: C.x + C.w - pw, y: C.y, w: pw, h: C.h, yon: "sag" }, icerik: { x: C.x, y: C.y, w: C.w - pw - 34, h: C.h } };
     let sec = s.panel === "alt" ? alt : s.panel === "sag" ? sag : null;
-    if (!sec) {     // otomatik: grafiklerin daha büyük kaldığı yerleşim (eşitse sağ)
-      const a = kaplanan(izgara(s.ogeler.length, alt.icerik, s.ogeler, s.duzen || "oto"), s.ogeler), b = kaplanan(izgara(s.ogeler.length, sag.icerik, s.ogeler, s.duzen || "oto"), s.ogeler);
-      sec = a > b * 1.08 ? alt : sag;
-    }
+    if (!sec) sec = alanTop(diz(B, alt.icerik, duzen)) > alanTop(diz(B, sag.icerik, duzen)) * 1.08 ? alt : sag;   // grafiklerin daha büyük kaldığı yer
     panel = sec.panel; icerik = sec.icerik;
+    if (yer && yer._panel) { const p = yer._panel; panel = { ...p, yon: p.w > p.h * 1.6 ? "alt" : "sag" }; }
   }
-  return { icerik, panel, oc, nt, hucre: izgara(s.ogeler.length, icerik, s.ogeler, s.duzen || "oto") };
+  const K = diz(B, icerik, duzen);
+  // elle konumlandırılmış slaytta kayıtlı kutular kullanılır (kutu, alanın görünen sınırıdır)
+  const hucre = hc.map((c, i) => ({ id: c.id, c, ogeler: c.ogeler, bw: B[i].w, bh: B[i].h, ...sigdir((yer && yer[c.id]) || K[i], B[i].w, B[i].h) }));
+  return { icerik, panel, oc, nt, hucre, elle: !!yer };
 }
 
 // ---------------------------------------------------------------- canlı slaytlar (iframe'li, kalıcı DOM)
 const sahne = $("#sahne"), DOM = {};
-function iframeSrc(o) { return `../${o.sayfa}?sunum=${encodeURIComponent(o.id)}&tema=${tema()}&v=${surum}${o.durum?.h || ""}`; }
+function iframeSrc(c) { const o = c.ogeler[0]; return `../${o.sayfa}?sunum=${encodeURIComponent(c.id)}&tema=${tema()}&v=${surum}${o.durum?.h || ""}`; }
 const ustSerit = () => `<div class="s-cizgi"></div><div class="s-ust"><span><b>DOST KATILIM</b> · Aktif Pasif Yönetimi</span><span>${esc(D.ad || "Piyasa Verileri (ALCO)")} · ${BUGUN}</span></div>`;
 function slaytIcerik(x, no, top) {
   if (x.tur === "kapak") { const k = D.kapak || {};
@@ -437,32 +484,31 @@ function hucreleriGuncelle(el, s) {
   const Y = yerlesim(s), kap = el.querySelector(".hucreler"); if (!kap) return;
   const var_ = new Map($$(".hucre", kap).map(h => [h.dataset.id, h]));
   Y.hucre.forEach(h => {
-    const o = s.ogeler.find(x => x.id === h.id); let c = var_.get(h.id); var_.delete(h.id);
+    let c = var_.get(h.id); var_.delete(h.id);
     if (!c) { c = document.createElement("div"); c.className = "hucre"; c.dataset.id = h.id; c.innerHTML = `<div class="kes"><div class="yuk">Yükleniyor…</div></div>`; kap.appendChild(c); }
     Object.assign(c.style, { left: h.x + "px", top: h.y + "px", width: h.w + "px", height: h.h + "px" });
-    const f = sigdir({ x: 0, y: 0, w: h.w, h: h.h }, o), kes = c.querySelector(".kes");
-    Object.assign(kes.style, { left: f.x + "px", top: f.y + "px", width: f.w + "px", height: f.h + "px" });
+    Object.assign(c.querySelector(".kes").style, { left: "0px", top: "0px", width: h.w + "px", height: h.h + "px" });
     const ifr = c.querySelector("iframe");
-    if (ifr) { ifr.style.transform = `scale(${f.k})`; ifr.style.width = Math.max(1400, f.bw + 40) + "px"; ifr.style.height = (f.bh + 30) + "px"; }
-    c._f = f;
+    if (ifr) { ifr.style.transform = `scale(${h.k})`; ifr.style.width = ifrGen(h.c, h.bw) + "px"; ifr.style.height = (h.bh + 30) + "px"; }
+    c._f = h;
   });
   var_.forEach(c => c.remove());
 }
 function yukle(el) {      // slayttaki iframe'leri oluştur (tembel yükleme)
   $$(".hucre", el).forEach(c => {
     if (c.querySelector("iframe,img.gor")) return;
-    const o = ogeBul(c.dataset.id); if (!o) return;
+    const h = hucreBul(c.dataset.id); if (!h) return;
     if (ARSIV) {
-      const kes = c.querySelector(".kes"), g = GOR[o.id];
-      if (!g) { kes.innerHTML = `<div class="yuk bos">Görüntü yok: ${esc(o.ad)}</div>`; return; }
+      const kes = c.querySelector(".kes"), g = GOR[h.id];
+      if (!g) { kes.innerHTML = `<div class="yuk bos">Görüntü yok: ${esc(hucreAd(h))}</div>`; return; }
       kes.querySelector(".yuk")?.remove();
-      const im = document.createElement("img"); im.className = "gor"; im.alt = o.ad; im.dataset.id = o.id; im.src = g.u; kes.appendChild(im); return;
+      const im = document.createElement("img"); im.className = "gor"; im.alt = hucreAd(h); im.dataset.id = h.id; im.src = g.u; kes.appendChild(im); return;
     }
-    const f = document.createElement("iframe");
-    f.setAttribute("title", o.ad); f.setAttribute("loading", "eager"); f.dataset.id = o.id;
-    f.style.width = Math.max(1400, Math.max(200, o.w) + 40) + "px"; f.style.height = ((olcu[o.id]?.h || o.h) + 30) + "px";
+    const f = document.createElement("iframe"), b = hucreBoyut(h);
+    f.setAttribute("title", hucreAd(h)); f.setAttribute("loading", "eager"); f.dataset.id = h.id;
+    f.style.width = ifrGen(h, b.w) + "px"; f.style.height = (b.h + 30) + "px";
     if (c._f) f.style.transform = `scale(${c._f.k})`;
-    f.src = iframeSrc(o);
+    f.src = iframeSrc(h);
     f.addEventListener("load", () => { const y = c.querySelector(".yuk"); try { f.contentWindow.alcoSunum?.hazir?.then(() => y && y.remove()); } catch (e) {} setTimeout(() => y && y.remove(), 15000); });
     c.querySelector(".kes").appendChild(f);
   });
@@ -509,7 +555,62 @@ function goster(i, sessiz) {
   const x = L[aktif];
   $("#sBilgi").textContent = x.tur === "icerik" ? `Slayt ${aktif + 1} / ${L.length} · ${x.s.ogeler.length} alan · ${ARSIV ? `arşiv: grafikler ${ARSIV.tarih} verileriyle sabit` : "grafikler canlıdır, üzerine gelince değerleri görürsünüz"}` : `Slayt ${aktif + 1} / ${L.length}`;
   if (!sessiz) { listeCiz(); ayarCiz(); }
+  tutamakCiz();
 }
+
+// ---------------------------------------------------------------- elle konumlandırma (sürükle / köşeden boyutlandır)
+let KONUM = false, anT = 0;
+function tutamakCiz() {
+  $$(".tutk").forEach(x => x.remove());
+  const x = sira()[aktif], icerik = !!(x && x.tur === "icerik"), kon = KONUM && icerik;
+  $("#bKonum").setAttribute("aria-pressed", kon); $("#bKonum").disabled = !icerik;
+  $("#bOto").classList.toggle("hidden", !(icerik && x.s.yer));
+  sahne.classList.toggle("konumla", kon);
+  if (!kon || !DOM[x.id]) return;
+  const Y = yerlesim(x.s), k = document.createElement("div"); k.className = "tutk";
+  Y.hucre.forEach(h => k.insertAdjacentHTML("beforeend", `<div class="tut" data-id="${esc(h.id)}" style="left:${h.x}px;top:${h.y}px;width:${h.w}px;height:${h.h}px"><span>${esc(hucreAd(h))}</span><i class="boy" title="Boyutlandır"></i></div>`));
+  if (Y.panel) k.insertAdjacentHTML("beforeend", `<div class="tut pnl" data-id="_panel" style="left:${Y.panel.x}px;top:${Y.panel.y}px;width:${Y.panel.w}px;height:${Y.panel.h}px"><span>Not ve öne çıkanlar</span><i class="boy" title="Boyutlandır"></i></div>`);
+  DOM[x.id].appendChild(k);
+}
+function anlikCiz() {
+  cancelAnimationFrame(anT);
+  anT = requestAnimationFrame(() => {
+    const L = sira(), x = L[aktif], el = x && DOM[x.id]; if (!el || x.tur !== "icerik") return;
+    el.querySelector(".metin").innerHTML = slaytIcerik(x, aktif + 1, L.length); hucreleriGuncelle(el, x.s);
+    const Y = yerlesim(x.s);
+    $$(".tut", el).forEach(t => { const r = t.dataset.id === "_panel" ? Y.panel : Y.hucre.find(h => h.id === t.dataset.id); if (r) Object.assign(t.style, { left: r.x + "px", top: r.y + "px", width: r.w + "px", height: r.h + "px" }); });
+  });
+}
+$("#bKonum").onclick = () => { KONUM = !KONUM; tutamakCiz(); if (KONUM) toast("Alanı sürükleyerek taşıyın, sağ alt köşeden boyutlandırın", 3200); };
+$("#bOto").onclick = () => { const x = sira()[aktif]; if (x?.tur === "icerik") { delete x.s.yer; kaydet(); } };
+sahne.addEventListener("pointerdown", e => {
+  const t = e.target.closest(".tut"); if (!t || !KONUM) return;
+  e.preventDefault();
+  const x = sira()[aktif], s = x.s, Y = yerlesim(s);
+  if (!s.yer) {      // ilk dokunuşta mevcut düzen sabitlenir; böylece diğer alanlar yerinden oynamaz
+    s.yer = {}; Y.hucre.forEach(h => { s.yer[h.id] = { x: h.x, y: h.y, w: h.w, h: h.h }; });
+    if (Y.panel) s.yer._panel = { x: Y.panel.x, y: Y.panel.y, w: Y.panel.w, h: Y.panel.h };
+  }
+  const id = t.dataset.id; if (!s.yer[id]) { const r = id === "_panel" ? Y.panel : Y.hucre.find(h => h.id === id); if (!r) return; s.yer[id] = { x: r.x, y: r.y, w: r.w, h: r.h }; }
+  const b0 = { ...s.yer[id] }, boy = e.target.classList.contains("boy"), oran = b0.w / b0.h, pnl = id === "_panel";
+  const kk = parseFloat(getComputedStyle(sahne).getPropertyValue("--k")) || .5, x0 = e.clientX, y0 = e.clientY;
+  const yuv = v => Math.round(v / 10) * 10, sin = (v, a, b) => Math.max(a, Math.min(b, v));
+  const X0 = 20, Y0 = 190, X1 = W - 20, Y1 = 1000;
+  t.setPointerCapture(e.pointerId); t.classList.add("tasi");
+  const tasi = ev => {
+    const dx = (ev.clientX - x0) / kk, dy = (ev.clientY - y0) / kk; let b;
+    if (boy) {
+      let w = Math.max(120, yuv(b0.w + dx)), h = pnl ? Math.max(100, yuv(b0.h + dy)) : w / oran;
+      if (b0.x + w > X1) { w = X1 - b0.x; if (!pnl) h = w / oran; }
+      if (b0.y + h > Y1) { h = Y1 - b0.y; if (!pnl) w = h * oran; }
+      b = { ...b0, w, h };
+    } else b = { ...b0, x: sin(yuv(b0.x + dx), X0, X1 - b0.w), y: sin(yuv(b0.y + dy), Y0, Y1 - b0.h) };
+    s.yer[id] = b; anlikCiz();
+  };
+  const birak = () => { t.removeEventListener("pointermove", tasi); t.classList.remove("tasi"); kaydet(true); ayarCiz(); };
+  t.addEventListener("pointermove", tasi);
+  t.addEventListener("pointerup", birak, { once: true }); t.addEventListener("pointercancel", birak, { once: true });
+});
 
 // ---------------------------------------------------------------- slayt listesi
 function listeCiz() {
@@ -575,17 +676,18 @@ function ayarCiz() {
   const ocSatir = o => `<label class="${anah.has(ocAnah(o.m)) ? "esl" : ""}"><input type="checkbox" data-oc="${esc(ocAnah(o.m))}" ${anah.has(ocAnah(o.m)) ? "checked" : ""}><span>${o.m}</span></label>`;
   const D_ = s.duzen || "oto", P_ = s.panel || "oto";
   A_.innerHTML = `<div class="alan"><label for="sB">Slayt başlığı</label><input type="text" id="sB" data-f="s.baslik" value="${esc(s.baslik)}"></div>
-    <div class="alan"><div class="lb">Düzen <small>${s.ogeler.length} alan</small></div>
-      <div class="seg" data-g="duzen">${[["oto", "Otomatik"], ["yan", "Yan yana"], ["alt", "Alt alta"], ["izgara", "Izgara"]].map(([v, l]) => `<button data-v="${v}" aria-pressed="${D_ === v}">${l}</button>`).join("")}</div>
+    <div class="alan"><div class="lb">Düzen <small>${s.ogeler.length} alan${s.yer ? " · elle konumlandırıldı" : ""}</small></div>
+      <div class="seg" data-g="duzen">${[["oto", "Otomatik"], ["yan", "Yan yana"], ["alt", "Alt alta"], ["izgara", "Izgara"]].map(([v, l]) => `<button data-v="${v}" aria-pressed="${!s.yer && D_ === v}">${l}</button>`).join("")}</div>
       <div class="seg" data-g="panel" style="margin-left:6px" title="Not ve öne çıkanlar kutusunun yeri">${[["oto", "Not: oto"], ["sag", "Sağda"], ["alt", "Altta"]].map(([v, l]) => `<button data-v="${v}" aria-pressed="${P_ === v}">${l}</button>`).join("")}</div></div>
     <div class="alan"><div class="lb"><label class="kutucuk"><input type="checkbox" id="ocG" ${ocGoster(s) ? "checked" : ""}> Otomatik öne çıkanlar</label><small>${ARSIV ? `Özet'teki yorumlar · ${esc(ARSIV.tarih)} itibarıyla` : "Özet'teki yorumlar · her hafta güncel"}</small></div>
       <div class="oclist" ${ocGoster(s) ? "" : 'style="opacity:.45;pointer-events:none"'}>${ilgili.length ? `<div class="grp">Bu slaytla ilgili</div>${ilgili.map(ocSatir).join("")}` : `<div class="grp">Bu slayt için eşleşen yorum yok</div>`}${diger.length ? `<div class="grp">Diğer</div>${diger.map(ocSatir).join("")}` : ""}</div></div>
     <div class="alan"><label for="sN">Değerlendirme notu <small>slayta yazılır, PowerPoint'te konuşmacı notu olur</small></label><textarea id="sN" data-f="s.not" placeholder="Bu hafta dikkat çeken nokta…">${esc(s.not || "")}</textarea></div>
     <div class="alan tam"><label for="sK">Kaynak satırı <small>boş bırakılırsa otomatik</small></label><input type="text" id="sK" data-f="s.kaynak" value="${esc(s.kaynak || "")}" placeholder="${esc(kaynakMetni({ ...s, kaynak: null }))}"></div>
-    <div class="alan tam"><div class="lb">Slayttaki alanlar <small>alanı sitede açıp görünümünü değiştirerek yeniden ekleyebilirsiniz</small></div>
-      ${s.ogeler.map((o, i) => `<div class="og"><b>${esc(o.ad)}</b><small>${esc(o.yolAd)}${olcu[o.id]?.hata ? " · <span style='color:var(--accent)'>alan bulunamadı</span>" : ""}</small><span class="ic">
+    <div class="alan tam"><div class="lb">Slayttaki alanlar <small>✥ Konumlandır ile slaytta sürükleyip boyutlandırabilirsiniz</small></div>
+      ${s.ogeler.length > 1 ? `<label class="kutucuk" style="margin:0 0 8px"><input type="checkbox" id="birG" ${s.birlesik !== false ? "checked" : ""}> Aynı sayfadan gelen alanları sitedeki yerleşimleriyle tek görünümde göster <small style="font-weight:400;color:var(--muted)">· kutucuğa tıklayınca grafik değişir</small></label>` : ""}
+      ${s.ogeler.map((o, i) => { const hc = hucreler(s).find(c => c.ogeler.includes(o)); return `<div class="og"><b>${esc(o.ad)}</b><small>${esc(o.yolAd)}${hc && hc.ogeler.length > 1 ? ` · <span style="color:#1d4ed8">birleşik görünüm (${hc.ogeler.length} alan)</span>` : ""}${hc && olcu[hc.id]?.hata ? " · <span style='color:var(--accent)'>alan bulunamadı</span>" : ""}</small><span class="ic">
         ${s.ogeler.length > 1 ? `<button data-o="ayir" data-id="${o.id}" title="Bu alanı ayrı bir slayta taşı">Ayrı slayt</button>` : ""}
-        ${ARSIV ? "" : `<button data-o="yenile" data-id="${o.id}" title="Alanı yeniden yükle">↻</button>`}<button data-o="sil" data-id="${o.id}" title="Alanı slayttan çıkar">✕</button></span></div>`).join("")}
+        ${ARSIV ? "" : `<button data-o="yenile" data-id="${o.id}" title="Alanı yeniden yükle">↻</button>`}<button data-o="sil" data-id="${o.id}" title="Alanı slayttan çıkar">✕</button></span></div>`; }).join("")}
       ${D.slaytlar.indexOf(s) < D.slaytlar.length - 1 ? `<button class="btn" data-o="birlestir">⇣ Sonraki slaytla birleştir</button>` : ""}</div>`;
 }
 let yazT;
@@ -598,6 +700,7 @@ $("#ayar").addEventListener("input", e => {
 $("#ayar").addEventListener("change", e => {
   const x = sira()[aktif]; if (!x || x.tur !== "icerik") return; const s = x.s;
   if (e.target.id === "ocG") { s.oc = e.target.checked ? null : false; kaydet(); return; }
+  if (e.target.id === "birG") { s.birlesik = e.target.checked ? undefined : false; delete s.yer; kaydet(); return; }
   if (e.target.dataset.oc != null) {
     const a = e.target.dataset.oc; s.ocHaric = (s.ocHaric || []).filter(k => k !== a); s.ocEk = (s.ocEk || []).filter(k => k !== a);
     if (!e.target.checked) s.ocHaric.push(a); else s.ocEk.push(a);
@@ -607,12 +710,12 @@ $("#ayar").addEventListener("change", e => {
 $("#ayar").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; const x = sira()[aktif]; if (!x || x.tur !== "icerik") return; const s = x.s;
   const g = b.closest(".seg")?.dataset.g;
-  if (g === "duzen") { s.duzen = b.dataset.v; kaydet(); return; }
-  if (g === "panel") { s.panel = b.dataset.v === "oto" ? undefined : b.dataset.v; kaydet(); return; }
+  if (g === "duzen") { s.duzen = b.dataset.v; delete s.yer; kaydet(); return; }
+  if (g === "panel") { s.panel = b.dataset.v === "oto" ? undefined : b.dataset.v; delete s.yer; kaydet(); return; }
   const o = b.dataset.o, id = b.dataset.id;
   if (o === "sil") { s.ogeler = s.ogeler.filter(z => z.id !== id); if (!s.ogeler.length) D.slaytlar = D.slaytlar.filter(z => z !== s); kaydet(); }
   if (o === "ayir") { const z = s.ogeler.find(q => q.id === id); s.ogeler = s.ogeler.filter(q => q !== z); D.slaytlar.splice(D.slaytlar.indexOf(s) + 1, 0, { id: A.uid(), baslik: z.ad, not: "", duzen: "oto", ogeler: [z], kilit: true }); kaydet(); }
-  if (o === "yenile") { $$(`.hucre[data-id="${CSS.escape(id)}"] iframe`).forEach(f => { f.src = iframeSrc(ogeBul(id)); }); }
+  if (o === "yenile") { const c = hucreler(s).find(c => c.ogeler.some(z => z.id === id)); if (c) $$(`.hucre[data-id="${CSS.escape(c.id)}"] iframe`).forEach(f => { f.src = iframeSrc(c); }); }
   if (o === "birlestir") { const k = D.slaytlar.indexOf(s), n = D.slaytlar[k + 1]; if (n) { s.ogeler.push(...n.ogeler); D.slaytlar.splice(k + 1, 1); s.kilit = true; kaydet(); } }
 });
 
@@ -639,7 +742,7 @@ function temaDegis(t) {
   if (ARSIV) { toast("Arşiv sunumunun teması kaydedildiği hâliyle kalır"); return; }
   if (tema() === t) return; D.tema = t; A.yaz(D);
   $$("#tema button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === t));
-  $$(".hucre iframe").forEach(f => { const o = ogeBul(f.dataset.id); if (o) { f.src = iframeSrc(o); const k = f.closest(".kes"); if (k && !k.querySelector(".yuk")) k.insertAdjacentHTML("afterbegin", `<div class="yuk">Yükleniyor…</div>`); f.addEventListener("load", () => setTimeout(() => k.querySelector(".yuk")?.remove(), 1500), { once: true }); } });
+  $$(".hucre iframe").forEach(f => { const o = hucreBul(f.dataset.id); if (o) { f.src = iframeSrc(o); const k = f.closest(".kes"); if (k && !k.querySelector(".yuk")) k.insertAdjacentHTML("afterbegin", `<div class="yuk">Yükleniyor…</div>`); f.addEventListener("load", () => setTimeout(() => k.querySelector(".yuk")?.remove(), 1500), { once: true }); } });
   sahneCiz();
 }
 $("#bOnc").onclick = () => goster(aktif - 1); $("#bSon").onclick = () => goster(aktif + 1);
@@ -655,6 +758,7 @@ $("#bSec").onclick = () => {
 
 // ---------------------------------------------------------------- tam ekran sunum
 async function baslat() {
+  if (KONUM) { KONUM = false; tutamakCiz(); }
   goster(D.kapak?.goster === false ? 0 : aktif);
   try { await sahne.requestFullscreen({ navigationUI: "hide" }); } catch (e) { sahne.classList.add("tamEkran"); }
   olcekle(); const k = $("#kontrol"); k.classList.add("goster"); setTimeout(() => k.classList.remove("goster"), 2500);
@@ -796,20 +900,20 @@ async function goruntuler(il, p1 = .85) {
     for (const [id, g] of Object.entries(GOR)) { if (!g) continue; const im = new Image(); im.src = g.u; try { await im.decode(); img[id] = { url: g.u, u: g.u, w: g.w, h: g.h, im }; } catch (e) {} }
     return img;
   }
-  L.forEach(x => { if (x.tur === "icerik") { const el = DOM[x.id]; if (el) x.s.ogeler.forEach(o => isler.push({ o, el })); } });
+  L.forEach(x => { if (x.tur === "icerik") { const el = DOM[x.id]; if (el) hucreler(x.s).forEach(o => isler.push({ o, el })); } });
   const els = [...new Set(isler.map(x => x.el))];
   let n = 0;
   for (const { o, el } of isler) {
     const k = els.indexOf(el); els.slice(k, k + 3).forEach(yukle);      // sıradaki iki slayt önden yüklensin
 
-    il.yaz(`Grafikler alınıyor · ${++n} / ${isler.length} · ${o.ad}`, n / isler.length * p1);
+    il.yaz(`Grafikler alınıyor · ${++n} / ${isler.length} · ${hucreAd(o)}`, n / isler.length * p1);
     const f = el.querySelector(`.hucre[data-id="${CSS.escape(o.id)}"] iframe`);
     try {
       await iframeHazir(f);
       const r = await f.contentWindow.alcoSunum.yakala(2);
       const im = new Image(); im.src = r.url; await im.decode();
       img[o.id] = { url: r.url, u: r.url, w: r.w, h: r.h, im };
-    } catch (e) { console.warn("yakalanamadı", o.ad, e); img[o.id] = null; }
+    } catch (e) { console.warn("yakalanamadı", hucreAd(o), e); img[o.id] = null; }
   }
   return img;
 }
@@ -879,10 +983,9 @@ function tuvalSlayt(x, no, top, img, olcek) {
   c.font = `700 19px ${SANS}`; c.fillStyle = P.mut; c.letterSpacing = "2px"; c.fillText(kisalt(c, bolum(s).toLocaleUpperCase("tr"), W - 160), 80, 162); c.letterSpacing = "0px";
   // alanlar
   Y.hucre.forEach(h => {
-    const o = s.ogeler.find(z => z.id === h.id), g = img[h.id];
-    if (!g) { c.strokeStyle = P.line; c.lineWidth = 2; yuvarlak(c, h.x, h.y, h.w, h.h, 14); c.stroke(); c.font = `400 22px ${SANS}`; c.fillStyle = P.mut; c.fillText("Alan alınamadı: " + (o?.ad || ""), h.x + 24, h.y + 24); return; }
-    const k = Math.min(h.w / g.w, h.h / g.h, o?.kucuk ? 2.6 : 2.0), w = g.w * k, hh = g.h * k;
-    c.drawImage(g.im, h.x + (h.w - w) / 2, h.y + (h.h - hh) / 2, w, hh);
+    const g = img[h.id];
+    if (!g) { c.strokeStyle = P.line; c.lineWidth = 2; yuvarlak(c, h.x, h.y, h.w, h.h, 14); c.stroke(); c.font = `400 22px ${SANS}`; c.fillStyle = P.mut; c.fillText("Alan alınamadı: " + hucreAd(h), h.x + 24, h.y + 24); return; }
+    const f = sigdir(h, g.w, g.h); c.drawImage(g.im, f.x, f.y, f.w, f.h);
   });
   // not ve öne çıkanlar
   if (Y.panel) {
@@ -967,10 +1070,10 @@ async function pptBlob(img) {
       sl.addText(s.baslik || "", { x: I(80), y: I(88), w: I(1760), h: I(70), fontFace: F, fontSize: pt(50), bold: true, color: hx(P.ink), margin: 0, fit: "shrink" });
       sl.addText(bolum(s).toLocaleUpperCase("tr"), { x: I(80), y: I(158), w: I(1760), h: I(30), fontFace: F, fontSize: pt(19), bold: true, color: hx(P.mut), charSpacing: 2, margin: 0 });
       Y.hucre.forEach(h => {
-        const o = s.ogeler.find(z => z.id === h.id), g = img[h.id];
-        if (!g) { sl.addText("Alan alınamadı: " + (o?.ad || ""), { x: I(h.x), y: I(h.y), w: I(h.w), h: I(80), fontFace: F, fontSize: 11, color: hx(P.mut) }); return; }
-        const k = Math.min(h.w / g.w, h.h / g.h, o?.kucuk ? 2.6 : 2.0), w = g.w * k, hh = g.h * k;
-        sl.addImage({ data: g.url, x: I(h.x + (h.w - w) / 2), y: I(h.y + (h.h - hh) / 2), w: I(w), h: I(hh), altText: o?.ad || "" });
+        const g = img[h.id];
+        if (!g) { sl.addText("Alan alınamadı: " + hucreAd(h), { x: I(h.x), y: I(h.y), w: I(h.w), h: I(80), fontFace: F, fontSize: 11, color: hx(P.mut) }); return; }
+        const f = sigdir(h, g.w, g.h);
+        sl.addImage({ data: g.url, x: I(f.x), y: I(f.y), w: I(f.w), h: I(f.h), altText: hucreAd(h) });
       });
       if (Y.panel) {
         const pn = Y.panel;
@@ -1005,11 +1108,9 @@ function slaytCss() {
 }
 function statikSlayt(x, i, n) {
   let h = "";
-  if (x.tur === "icerik") h = yerlesim(x.s).hucre.map(c => {
-    const o = x.s.ogeler.find(z => z.id === c.id), f = sigdir({ x: 0, y: 0, w: c.w, h: c.h }, o);
-    return `<div class="hucre" style="left:${c.x}px;top:${c.y}px;width:${c.w}px;height:${c.h}px"><div class="kes" style="left:${f.x}px;top:${f.y}px;width:${f.w}px;height:${f.h}px">` +
-      (GOR[o.id] ? `<img class="gor" data-g="${esc(o.id)}" alt="${esc(o.ad)}">` : `<div class="yuk bos">${esc(o.ad)}</div>`) + `</div></div>`;
-  }).join("");
+  if (x.tur === "icerik") h = yerlesim(x.s).hucre.map(c =>
+    `<div class="hucre" style="left:${c.x}px;top:${c.y}px;width:${c.w}px;height:${c.h}px"><div class="kes" style="left:0;top:0;width:${c.w}px;height:${c.h}px">` +
+      (GOR[c.id] ? `<img class="gor" data-g="${esc(c.id)}" alt="${esc(hucreAd(c))}">` : `<div class="yuk bos">${esc(hucreAd(c))}</div>`) + `</div></div>`).join("");
   return `<div class="slayt${i ? "" : " aktif"}" data-tema="${tema()}"><div class="metin">${slaytIcerik(x, i + 1, n)}</div><div class="hucreler">${h}</div></div>`;
 }
 // kaydedilen HTML dosyasının içindeki küçük sunum oynatıcısı (dosyaya kaynak kodu olarak yazılır)
