@@ -138,6 +138,14 @@ ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
     window.alcoPdf();
   };
 
+  if (!SHELL) {   // sayfa içi düğme/sekme tıklamalarında içerik yeniden çizilirken sayfa kısalıp başa atmasın: yükseklik kısa süre sabitlenir, konum geri alınır
+    const kilit = () => { const de = document.documentElement, y = window.scrollY; if (y < 4) return;
+      de.style.minHeight = de.scrollHeight + "px";
+      const geri = () => { if (window.scrollY < y - 2) window.scrollTo(0, y); };
+      requestAnimationFrame(() => { geri(); requestAnimationFrame(() => { geri(); setTimeout(() => { geri(); de.style.minHeight = ""; }, 80); }); }); };
+    addEventListener("click", e => { if (e.target.closest && e.target.closest("button, [role=button], summary, label, select, input[type=checkbox], tr")) kilit(); }, true);
+    addEventListener("change", kilit, true);
+  }
   if (SHELL) { // tek sayfa: sekmeler iframe; bir kez açılan sekme bellekte kalır, geçiş anında olur
     const box = document.getElementById("alcoFrames"), frames = {};
     const show = k => {
@@ -145,7 +153,11 @@ ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
       if (!TABS.some(t => t[0] === k)) k = TABS[0][0];
       if (ic && frames[k]) { try { const w = frames[k].contentWindow; if (w.location.hash === "#" + ic) w.dispatchEvent(new HashChangeEvent("hashchange")); else w.location.hash = ic; } catch (e) {} }
       host.querySelectorAll("nav.at-tabs a").forEach(a => { if (a.dataset.k === k) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
-      for (const [kk, f] of Object.entries(frames)) f.hidden = kk !== k;
+      for (const [kk, f] of Object.entries(frames)) {      // gizlenen sekmenin kaydırma konumu saklanır; geri dönünce aynı yerden devam eder
+        if (!f.hidden && kk !== k) { try { f._y = f.contentWindow.scrollY; } catch (e) {} }
+        const ac = f.hidden && kk === k; f.hidden = kk !== k;
+        if (ac && f._y && !ic) { const y = f._y, geri = () => { try { f.contentWindow.scrollTo(0, y); } catch (e) {} }; geri(); requestAnimationFrame(geri); setTimeout(geri, 60); }
+      }
       if (!frames[k]) {
         const t = TABS.find(x => x[0] === k), f = document.createElement("iframe");
         f.title = t[1]; f.src = t[3] + "?v=" + Math.floor(Date.now() / 6e4) + (ic ? "#" + ic : "");   // ?v: tarayıcı önbelleğindeki eski sayfa yerine güncelini aç

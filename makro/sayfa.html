@@ -45,6 +45,7 @@ main.wrap{padding-block:16px 48px}
 h2.sec{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px;display:flex;align-items:center;gap:10px}
 h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:12px}
+button.kpi[aria-pressed="true"]{box-shadow:0 0 0 2px var(--kc,var(--line)) inset}
 .kpi{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--kc,var(--line));border-radius:12px;padding:12px 14px;text-align:left;min-width:0}
 button.kpi{cursor:pointer;width:100%}
 button.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent);border-top-color:var(--accent)}
@@ -76,7 +77,12 @@ div.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--ac
 .bosel{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 .veri{margin-top:6px}
 .veri .vb{display:flex;justify-content:flex-end}
-.veri .tw{margin-top:8px}
+.veri .tw{margin-top:8px;overflow-x:auto}
+.veri .tbl{width:auto;min-width:min(100%,420px);margin-left:auto}
+.veri .tbl th,.veri .tbl td{padding:6px 14px;white-space:nowrap}
+.veri .tbl tr.dg td{font-weight:600;border-top:1px solid var(--line)}
+.veri .up{color:var(--up)}.veri .down{color:var(--down)}
+.eidx{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2);margin-right:8px;cursor:pointer}
 .veri .tbl td.l,.veri .tbl th.l{text-align:left;font-family:inherit}
 .veri .tbl td small{display:block;color:var(--muted);font:500 10.5px var(--sans,inherit)}
 .kpi .s2{font-size:12px;color:var(--ink-2);margin-top:2px}.kpi .s2 b{font-family:var(--mono);font-weight:500}
@@ -407,31 +413,25 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
       <div class="card egri" id="E_ois">
         <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
         <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
-        <div class="chart ech"></div>
-        <div class="veri everi"></div>
-      </div>
-      <h2 class="sec">BIST VİOP</h2>
-      <div class="card">
-        <div class="cardhead"><div><h3 id="vpTitle"></h3><div class="sub" id="vpSub"></div></div>
-          <div class="hdr2"><div class="seg" id="vpMod" role="group" aria-label="Gösterim"><button data-m="oran">Oran</button><button data-m="kur">Vadeli İşlem Kuru</button></div><div class="seg" id="vpSeg" role="group" aria-label="Kontrat"></div></div></div>
-        <div class="chart" id="vpChart"></div>
+        <div class="chart ech"></div><div class="veri everi"></div>
       </div>
     </div>
     </div>
     <div id="psSwap" class="hidden">
-      <h2 class="sec">Yabancı stoğu</h2>
+      <h2 class="sec">Yabancı Swap Stoğu</h2>
       <div class="empty hidden" id="swGate"></div>
       <div id="swBody">
       <div class="kpis" id="swKpi"></div>
       <div class="card">
         <div class="cardhead"><div><h3>Toplam yabancı swap stoku (milyar USD)</h3></div><span class="chips" id="swRange"></span></div>
-        <div class="legend" id="swLeg"></div>
+        <div class="chips" id="swLeg" style="margin:2px 0 8px"></div>
         <div class="chart" id="swChart"></div>
+        <div class="veri" id="swVeri"></div>
         <details class="acik"><summary>Açıklama</summary><div class="sub" id="swSub"></div></details>
       </div>
       <div class="grid2 g2e">
         <div class="card">
-          <div class="cardhead"><div><h3>Haftalık değişim (milyar USD)</h3></div></div>
+          <div class="cardhead"><div><h3>Haftalık değişim (milyar USD) <span id="swDTop" style="font-weight:600;margin-left:6px"></span></h3><div class="sub" id="swDSub"></div></div></div>
           <div class="chart" id="swDChart"></div>
         </div>
         <div class="card">
@@ -440,7 +440,7 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
         </div>
       </div>
       </div>
-      <h2 class="sec" style="margin-top:22px">Yabancıların menkul kıymet portföyü</h2>
+      <h2 class="sec" style="margin-top:22px">Yabancı Menkul Kıymet</h2>
       <div class="empty hidden" id="mkGate"></div>
       <div id="mkBody">
       <div class="kpis" id="mkKpi"></div>
@@ -448,6 +448,7 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
         <div class="cardhead"><div><h3 id="mkT"></h3></div><div class="hdr2"><div class="seg" id="mkMod" role="group" aria-label="Gösterim"><button data-m="net">Haftalık net alım</button><button data-m="stok">Stok</button></div><span class="chips" id="mkRange"></span></div></div>
         <div class="chips" id="mkSer" style="margin:2px 0 8px"></div>
         <div class="chart" id="mkChart"></div>
+        <div class="veri" id="mkVeri"></div>
         <details class="acik"><summary>Açıklama</summary><div class="sub" id="mkSub"></div></details>
       </div>
       <div class="card">
@@ -502,9 +503,10 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
       <h2 class="sec">Endeks ve emtia</h2>
       <div class="kpis" id="eeKpi"></div>
       <div class="card">
-        <div class="cardhead"><div><h3 id="eeTitle"></h3><div class="sub" id="eeSub"></div></div><span class="chips" id="eeRange"></span></div>
+        <div class="cardhead"><div><h3 id="eeTitle"></h3><div class="sub" id="eeSub"></div></div><div class="hdr2"><label class="eidx hidden" id="eeIdxL"><input type="checkbox" id="eeIdx"> Dönem başı = 100</label><span class="chips" id="eeRange"></span></div></div>
         <div class="legend" id="eeLeg"></div>
         <div class="chart" id="eeChart"></div>
+        <div class="veri" id="eeVeri"></div>
         <div class="note" id="eeNote"></div>
       </div>
     </div>
@@ -515,12 +517,12 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
       <div class="card egri" id="E_tahvil">
         <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
         <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
-        <div class="chart ech"></div>
+        <div class="chart ech"></div><div class="veri everi"></div>
       </div>
       <div class="card egri" id="E_basabas">
         <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
         <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
-        <div class="chart ech"></div>
+        <div class="chart ech"></div><div class="veri everi"></div>
       </div>
         </div>
       </div>
@@ -528,14 +530,14 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
       <div class="card egri" id="E_abd">
         <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
         <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
-        <div class="chart ech"></div>
+        <div class="chart ech"></div><div class="veri everi"></div>
       </div>
       </div>
       <div id="gDe" class="hidden">
       <div class="card egri" id="E_de">
         <div class="cardhead"><div><h3 class="et"></h3><div class="sub es"></div></div><div class="seg ec" role="group" aria-label="Para birimi"></div></div>
         <div class="ctl"><div class="legend ev"></div><span class="chips er"></span></div>
-        <div class="chart ech"></div>
+        <div class="chart ech"></div><div class="veri everi"></div>
       </div>
       </div>
       <div class="note" id="gNote"></div>
@@ -796,10 +798,15 @@ const pSrc = k => k === "imp" ? bCol("TL LONDRA SWAP", impT()[1]) : k === "takas
 const pAd = k => k === "imp" ? `TL Implied ${impT()[0]}` : { tlref: "TLREF", tlrefk: "TLREFK", takas: "Takasbank O/N" }[k];
 const S_VERI = {};
 // grafiğin altındaki "Veri" düğmesi ve tablosu: satirlar = [[etiket, [hücre html…]]]
+// ilk tarih / son tarih / Değişim satırları: fmt(v, k) hücre, fark(son, ilk, k) değişim metni, iyi(k) → artış olumlu mu (renk)
+function veriIS(el, key, kolonlar, ilkT, sonT, ilkV, sonV, fmt, fark, yeniden, ek = []) {
+  const dg = sonV.map((b, k) => { const a = ilkV[k]; if (!ok(a) || !ok(b)) return "—"; return `<span class="${b > a ? "up" : b < a ? "down" : ""}">${fark(b, a, k)}</span>`; });
+  veriKutu(el, key, kolonlar, [[ilkT ? gunAd(ilkT) : "—", ilkV.map((v, k) => ok(v) ? fmt(v, k) : "—")], [sonT ? gunAd(sonT) : "—", sonV.map((v, k) => ok(v) ? fmt(v, k) : "—")], ["Değişim", dg, "dg"], ...ek], yeniden);
+}
 function veriKutu(el, key, kolonlar, satirlar, yeniden) {
   const ac = !!S_VERI[key];
   el.innerHTML = `<div class="vb"><button class="chip" aria-pressed="${ac}">${ac ? "Veriyi gizle" : "Veri"}</button></div>`
-    + (ac ? `<div class="tw"><table class="tbl"><thead><tr><th class="l"></th>${kolonlar.map(k => `<th>${k}</th>`).join("")}</tr></thead><tbody>${satirlar.map(([l, h]) => `<tr><td class="l">${l}</td>${h.map(x => `<td>${x}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : "");
+    + (ac ? `<div class="tw"><table class="tbl"><thead><tr><th class="l"></th>${kolonlar.map(k => `<th>${k}</th>`).join("")}</tr></thead><tbody>${satirlar.map(([l, h, c]) => `<tr${c ? ` class="${c}"` : ""}><td class="l">${l}</td>${h.map(x => `<td>${x}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : "");
   el.querySelector("button").onclick = () => { S_VERI[key] = !ac; yeniden(); };
 }
 const pDg = k => k === "tlref" || k === "tlrefk" ? 4 : 2;
@@ -849,13 +856,12 @@ function renderPiyasa() {
   chart($("#pChart"), { xs, series, height: 340, xFmt: gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd, yFmt: v => nf(v, v % 1 ? 1 : 0), y2Fmt: v => nf(v, 0), rScale: 2.2, label: $("#pTitle").textContent });
   // Veri: grafikteki ilk tarih, son tarih ve aralığın hacim ağırlıklı ortalama oranı
   const gor = k => { const d = pSrc(k), ii = d.dates.map((t, i) => t >= xs[0] && t <= xs[xs.length - 1] && ok(d.rate[i]) ? i : -1).filter(i => i >= 0);
-    if (!ii.length) return ["—", "—", "—"];
-    const a = ii[0], b = ii[ii.length - 1], hv = d.vol_tl && ii.some(i => ok(d.vol_tl[i]));
+    if (!ii.length) return [null, null, "—"];
+    const hv = d.vol_tl && ii.some(i => ok(d.vol_tl[i]));
     let pay = 0, payda = 0; for (const i of ii) { const w = hv ? (ok(d.vol_tl[i]) ? d.vol_tl[i] : 0) : 1; pay += d.rate[i] * w; payda += w; }
-    const h = i => pct(d.rate[i], pDg(k)) + `<small>${gunAd(d.dates[i])}${d.vol_tl && ok(d.vol_tl[i]) ? ` · ₺${nf(d.vol_tl[i] / 1e9, 0)} mr` : ""}</small>`;
-    return [h(a), h(b), payda ? pct(pay / payda, pDg(k)) + `<small>${hv ? "hacim ağırlıklı" : "basit ortalama (hacim yok)"}</small>` : "—"]; };
+    return [d.rate[ii[0]], d.rate[ii[ii.length - 1]], payda ? pct(pay / payda, pDg(k)) + (hv ? "" : ` <small title="Hacim verisi yok: basit ortalama" style="display:inline">*</small>`) : "—"]; };
   const hc = lines.map(gor);
-  veriKutu($("#pVeri"), "p", lines.map(pAd), [[`İlk tarih · ${gunAd(xs[0])}`, hc.map(x => x[0])], [`Son tarih · ${gunAd(xs[xs.length - 1])}`, hc.map(x => x[1])], [`AOF · ${gunAd(xs[0])} – ${gunAd(xs[xs.length - 1])}`, hc.map(x => x[2])]], renderPiyasa);
+  veriIS($("#pVeri"), "p", lines.map(pAd), xs[0], xs[xs.length - 1], hc.map(x => x[0]), hc.map(x => x[1]), (v, k) => pct(v, pDg(lines[k])), (b, a) => bp(b - a), renderPiyasa, [["AOF", hc.map(x => x[2])]]);
 }
 const pSec = k => {
   if (k === "all") { const hs = PK.filter(x => pSrc(x)?.dates?.length); S.pOn = hs.every(x => S.pOn.has(x)) ? new Set([hs[0]]) : new Set(hs); }
@@ -919,7 +925,8 @@ function egriKart(cfg) {
     chart(ch, { xs, height: cfg.height || 300, label: q(".et").textContent, yFmt: v => nf(v, Math.max(...all) - Math.min(...all) < 3 ? 2 : 1), maxX: 14,
       tipX: x => { const k = xs.indexOf(x), d = cv && ok(vals[k]) && ok(cv[k]) ? vals[k] - cv[k] : null; return x + (ok(d) ? ` · değişim ${bp(d)}` : ""); },
       series, onClick: k => { if (et[k]) { st.v = et[k]; egriKart(cfg); } } });
-    if (q(".everi")) veriKutu(q(".everi"), cfg.id, xs, (j != null ? [[`İlk tarih · ${gunAd(t.dates[j])}`, cv.map(v => ok(v) ? pct(v, 2) : "—")]] : i > 0 ? [[`Önceki gün · ${gunAd(t.dates[i - 1])}`, t.v.map(c => ok(c[i - 1]) ? pct(c[i - 1], 2) : "—")]] : []).concat([[`Son tarih · ${gunAd(son)}`, vals.map(v => ok(v) ? pct(v, 2) : "—")]]), () => egriKart(cfg));
+    if (q(".everi")) { const a = j != null ? j : Math.max(0, i - 1);   // karşılaştırma tarihi seçili değilse bir önceki gün
+      veriIS(q(".everi"), cfg.id, xs, t.dates[a], son, t.v.map(c => c[a]), vals, v => pct(v, 2), (b, a_) => bp(b - a_), () => egriKart(cfg)); }
   } else {
     tarihChips(q(".er"), "e" + cfg.id, st.r, t.dates, k => { st.r = k; egriKart(cfg); });
     const j = et.indexOf(st.v), { ix, gun } = tarihKes(t.dates, "e" + cfg.id, st.r);
@@ -929,7 +936,7 @@ function egriKart(cfg) {
     chart(ch, { xs, height: cfg.height || 300, label: q(".et").textContent, xFmt: gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd,
       yFmt: v => nf(v, v % 1 ? 1 : 0), series: [{ name: `${kod} ${VADE[st.v] || st.v}`, vals, color: col, width: 2.2, span: true, fmt: v => pct(v, 3) }] });
     if (q(".everi") && ix.length) { const a = ix[0], b = ix[ix.length - 1];   // tüm vadeler: grafikteki ilk ve son tarih
-      veriKutu(q(".everi"), cfg.id, et.map(e => VADE[e] || e), [[`İlk tarih · ${gunAd(t.dates[a])}`, t.v.map(c => ok(c[a]) ? pct(c[a], 2) : "—")], [`Son tarih · ${gunAd(t.dates[b])}`, t.v.map(c => ok(c[b]) ? pct(c[b], 2) : "—")]], () => egriKart(cfg)); }
+      veriIS(q(".everi"), cfg.id, et.map(e => VADE[e] || e), t.dates[a], t.dates[b], t.v.map(c => c[a]), t.v.map(c => c[b]), v => pct(v, 2), (y, x) => bp(y - x), () => egriKart(cfg)); }
   }
   return true;
 }
@@ -1022,23 +1029,30 @@ function renderEndeks() {
     const sec = var_.filter(([t]) => S.eeIdx.has(t)), tek = sec.length === 1, ana = bSeri(BORSA, sec[0][0]), ix = kes(ana), xs = ix.map(i => ana.dates[i]);
     const series = [];
     if (tek) { const h = bSeri(BORSA, sec[0][0], "PX_VOLUME"); if (h) series.push({ name: "İşlem hacmi", type: "bar", axis: "r", color: css("--vol"), vals: ix.map(i => ok(h.vals[i]) ? h.vals[i] / 1e9 : null), fmt: v => "₺" + nf(v, 1) + " mr" }); }
-    sec.forEach(([t, ad]) => { const s = bSeri(BORSA, t), v = ix.map(i => s.vals[i]), b0 = v.find(ok);
-      series.push({ name: ad, color: css(ECOL[ENDEKS.findIndex(x => x[0] === t) % ECOL.length]), width: 2.2, span: true, vals: tek ? v : v.map(x => ok(x) && b0 ? x / b0 * 100 : null), fmt: x => tek ? nf(x, 2) : nf(x, 1) }); });
+    const e100 = !!S.ee100, ilkV = [], sonV = [];
+    $("#eeIdxL").classList.remove("hidden"); $("#eeIdx").checked = e100;
+    sec.forEach(([t, ad]) => { const s = bSeri(BORSA, t), v = ix.map(i => s.vals[i]), b0 = v.find(ok), vv = v.filter(ok);
+      ilkV.push(vv[0]); sonV.push(vv[vv.length - 1]);
+      series.push({ name: ad, color: css(ECOL[ENDEKS.findIndex(x => x[0] === t) % ECOL.length]), width: 2.2, span: true, vals: !e100 ? v : v.map(x => ok(x) && b0 ? x / b0 * 100 : null), fmt: x => !e100 ? nf(x, 2) : nf(x, 1) }); });
     $("#eeTitle").textContent = tek ? `${sec[0][1]} endeksi` + (series[0]?.type === "bar" ? " ve işlem hacmi" : "") : "Borsa İstanbul endeksleri · karşılaştırma";
-    $("#eeSub").textContent = tek ? "Endeks sol eksen, işlem hacmi sağ eksen (milyar TL) · Bloomberg" : `Dönem başı = 100 · ${gunAd(xs[0])} – ${gunAd(xs[xs.length - 1])} · Bloomberg`;
+    $("#eeSub").textContent = (tek ? "Endeks sol eksen, işlem hacmi sağ eksen (milyar TL)" : e100 ? `Dönem başı = 100 · ${gunAd(xs[0])} – ${gunAd(xs[xs.length - 1])}` : "Endeks değerleri") + " · Bloomberg";
     chart($("#eeChart"), { xs, series, height: 340, xFmt, tipX: gunAd, yFmt: v => nf(v, 0), y2Fmt: v => nf(v, 0), rScale: 2.2, label: $("#eeTitle").textContent });
+    veriIS($("#eeVeri"), "ee", sec.map(x => x[1]), xs[0], xs[xs.length - 1], ilkV, sonV, v => nf(v, 2), (b, a) => (b >= a ? "+" : "−") + nf(Math.abs(b / a - 1) * 100, 2) + "%", renderEndeks);
   } else {
-    $("#eeLeg").innerHTML = "";
+    $("#eeLeg").innerHTML = ""; $("#eeIdxL").classList.add("hidden");
     const s = e.seri(), ix = kes(s), xs = ix.map(i => s.dates[i]);
     $("#eeTitle").textContent = `${e.ad}${e.birim ? " (" + e.birim.trim() + ")" : ""}`;
     $("#eeSub").textContent = `${s.kol.ticker || ""} · ${e.kay}`;
     chart($("#eeChart"), { xs, height: 340, xFmt, tipX: gunAd, yFmt: v => nf(v, Math.abs(v) < 10 ? 2 : 0), label: $("#eeTitle").textContent,
       series: [{ name: e.ad, vals: ix.map(i => s.vals[i]), color: css("--c1"), width: 2.2, span: true, fmt: v => nf(v, e.dg) + e.birim }] });
+    const vv = ix.map(i => s.vals[i]).filter(ok);
+    veriIS($("#eeVeri"), "ee", [e.ad + (e.birim ? " (" + e.birim.trim() + ")" : "")], xs[0], xs[xs.length - 1], [vv[0]], [vv[vv.length - 1]], v => nf(v, e.dg), (b, a) => degis(e, b, a), renderEndeks);
   }
   const pu = uyari.filter(u => u[1] === "para").map(u => u[0].ad), du = uyari.filter(u => u[1] === "deger").map(u => u[0].ad);
   $("#eeNote").innerHTML = [pu.length ? `${pu.join(" ve ")} gösterilmiyor: Excel'de "Currency" satırı TRY seçili, değerler TL'ye çevrilmiş geliyor.` : "",
     du.length ? `${du.join(" ve ")} gösterilmiyor: Excel'deki değer beklenen aralıkta değil (Kıymetli Maden sayfasında XAUUSD sütunu gümüş fiyatını gösteriyor).` : ""].filter(Boolean).join(" ");
 }
+$("#eeIdx").onchange = e => { S.ee100 = e.target.checked; renderEndeks(); };
 $("#eeKpi").onclick = e => { const b = e.target.closest("button[data-e]"); if (b) { S.ee = b.dataset.e; renderEndeks(); } };
 $("#eeLeg").onclick = e => { const b = e.target.closest("button[data-x]"); if (!b) return; const t = b.dataset.x;
   if (S.eeIdx.has(t)) { if (S.eeIdx.size > 1) S.eeIdx.delete(t); } else S.eeIdx.add(t); renderEndeks(); };
@@ -1050,35 +1064,7 @@ function enYakinOis(ccy, gun) {
   let best = null; t.kolonlar.forEach((k, j) => { const g = VGUN[k.etiket], v = t.v[j][i]; if (!g || !ok(v)) return; if (!best || Math.abs(g - gun) < Math.abs(best.g - gun)) best = { g, v, et: k.etiket }; });
   return best && { ...best, tarih: t.dates[i] };
 }
-function renderViop() {
-  const V = B?.viop, ks = VP.filter(k => V?.kontratlar?.[k]);
-  if (!ks.length) return false;
-  if (!ks.includes(S.vpK)) S.vpK = ks[0];
-  $("#vpSeg").innerHTML = ks.map(k => `<button data-k="${k}" aria-pressed="${S.vpK === k}">${k}</button>`).join("");
-  $$("#vpMod button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === S.vpM));
-  const K = V.kontratlar[S.vpK], oc = VP_OIS[S.vpK], kur = S.vpM === "kur";
-  const eg = Object.fromEntries(K.egri.map(p => [p.vade, p])), is = Object.fromEntries(K.islem.map(p => [p.vade, p]));
-  const xs = (kur ? K.islem.map(p => p.vade) : [...new Set([...K.egri.map(p => p.vade), ...K.islem.map(p => p.vade)])]).sort();
-  const hac = xs.map(d => is[d]?.hacim ?? null), series = [];
-  if (hac.some(ok)) series.push({ name: "Hacim", type: "bar", axis: "r", color: css("--vol"), vals: hac, fmt: v => nf(v, 0) + " kontrat" });
-  const dg = ok(K.spot) && K.spot > 1000 ? 1 : 4;
-  if (kur) series.push({ name: "Vadeli işlem kuru", vals: xs.map(d => is[d]?.son ?? is[d]?.kapanis ?? null), color: css("--c1"), width: 2.4, span: true, dots: true, fmt: v => nf(v, dg) });
-  else {
-    const fark = xs.map(d => eg[d]?.oran ?? null);
-    const vals = oc ? fark.map((f, i) => { const o = ok(f) && eg[xs[i]] ? enYakinOis(oc, eg[xs[i]].gun) : null; return o ? f + o.v : null; }) : fark;
-    series.push({ name: { USDTRY: "TL oranı (SOFR dahil)", EURTRY: "TL oranı (€STR dahil)" }[S.vpK] || "Oran", vals, color: css("--c1"), width: 2.4, span: true, dots: true, fmt: v => pct(v, 2) });
-  }
-  $("#vpTitle").textContent = `${S.vpK} vadeli işlem eğrisi`;
-  $("#vpSub").textContent = `${V.tarih ? gunAd(V.tarih) : ""} · spot kur ${ok(K.spot) ? nf(K.spot, dg) : "—"}`;
-  const lv = series[series.length - 1].vals.filter(ok);
-  chart($("#vpChart"), { xs, series, height: 320, label: $("#vpTitle").textContent, xFmt: d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`, maxX: 14,
-    tipX: d => `${gunAd(d)}${eg[d] ? ` · ${eg[d].gun} gün` : ""}${is[d] ? ` · ${is[d].ticker}` : ""}`,
-    yFmt: v => kur ? nf(v, Math.max(...lv) - Math.min(...lv) < 20 ? 1 : 0) : nf(v, 0), y2Fmt: v => v >= 1000 ? nf(v / 1000, v % 1000 ? 1 : 0) + " bin" : nf(v, 0), rScale: 2.2 });
-  return true;
-}
-$("#vpMod").onclick = e => { const b = e.target.closest("button[data-m]"); if (b) { S.vpM = b.dataset.m; renderViop(); } };
-$("#vpSeg").onclick = e => { const b = e.target.closest("button[data-k]"); if (b) { S.vpK = b.dataset.k; renderViop(); } };
-function renderBbg() { const bx = $("#bbgBox"); bx.classList.remove("hidden"); const a = renderOis(), b = renderViop(); bx.classList.toggle("hidden", !a && !b); }
+function renderBbg() { const bx = $("#bbgBox"); bx.classList.remove("hidden"); const a = renderOis(); bx.classList.toggle("hidden", !a); }
 
 // ---------------------------------------------------------------- Hazine borçlanma (HMB Kamu Finansmanı İstatistikleri)
 let H = null;
@@ -1679,14 +1665,24 @@ function renderSwap() {
   const xd = x.map(r => r.t);
   tarihChips($("#swRange"), "sw", S.swR, xd, k => { S.swR = k; renderSwap(); }, SW_R);
   const { ix: swIx, gun: swGun } = tarihKes(xd, "sw", S.swR, SW_R), y = swIx.map(i => x[i]), xs = y.map(r => r.t), uzun = swGun > 400;
-  const ser = [{ name: "BDDK bilanço dışı YP pozisyonu", vals: y.map(r => r.disi / 1e3), color: css("--c3"), type: "bar", fmt: v => nf(v, 1) + " Mr USD" },
-    { name: "TCMB ters swap", vals: y.map(r => ok(r.ters) ? r.ters / 1e3 : null), color: css("--c4"), type: "bar", fmt: v => nf(v, 2) + " Mr USD" }];
-  $("#swLeg").innerHTML = ser.map(s_ => `<span class="chip" style="cursor:default"><i style="background:${s_.color}"></i>${s_.name}</span>`).join("");
+  const SWK = [["top", "Toplam", "--c1", 1], ["disi", "BDDK bilanço dışı YP pozisyonu", "--c3", 1], ["ters", "TCMB ters swap", "--c4", 2]];
+  S.swS = S.swS || new Set(["top", "disi", "ters"]);
+  const sec = SWK.filter(([k]) => S.swS.has(k));
+  const ser = sec.map(([k, l, c, dg]) => ({ name: l, vals: y.map(r => ok(r[k]) ? r[k] / 1e3 : null), color: css(c), width: k === "top" ? 2.6 : 2, span: true, fmt: v => nf(v, dg) + " Mr USD" }));
+  $("#swLeg").innerHTML = SWK.map(([k, l, c]) => `<button class="chip" data-k="${k}" aria-pressed="${S.swS.has(k)}"><i style="background:${css(c)}"></i>${l}</button>`).join("");
+  $("#swLeg").onclick = e => { const b = e.target.closest("button[data-k]"); if (!b) return; const k = b.dataset.k;
+    if (S.swS.has(k)) { if (S.swS.size > 1) S.swS.delete(k); } else S.swS.add(k); renderSwap(); };
   const xFmt = uzun ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa;
-  chart($("#swChart"), { xs, series: ser, stack: true, height: 320, label: "Toplam yabancı swap stoku", xFmt, tipX: gunAd, maxX: 12, totFmt: v => nf(v, 1) + " Mr USD", yFmt: v => nf(v, 0) });
-  const z = x.slice(-27), dz = z.slice(1).map((r, i) => fark(r.top, z[i].top));
-  chart($("#swDChart"), { xs: z.slice(1).map(r => r.t), height: 240, label: "Haftalık değişim", xFmt: gunKisa, tipX: gunAd, maxX: 9, yFmt: v => nf(v, 0),
-    series: [{ name: "Toplam swap stokunda haftalık değişim", vals: dz.map(v => ok(v) ? v / 1e3 : null), color: css("--c1"), type: "bar", barColors: dz.map(v => css(v < 0 ? "--down" : "--up")), fmt: v => (v > 0 ? "+" : "") + nf(v, 2) + " Mr USD" }] });
+  chart($("#swChart"), { xs, series: ser, height: 320, label: "Toplam yabancı swap stoku", xFmt, tipX: gunAd, maxX: 12, yFmt: v => nf(v, 0) });
+  const isr = v => (v > 0 ? "+" : v < 0 ? "−" : "") + nf(Math.abs(v), 1) + " Mr";
+  veriIS($("#swVeri"), "sw", sec.map(x_ => x_[1]), xs[0], xs[xs.length - 1], sec.map(([k]) => ok(y[0][k]) ? y[0][k] / 1e3 : null), sec.map(([k]) => ok(y[y.length - 1][k]) ? y[y.length - 1][k] / 1e3 : null),
+    (v, k) => nf(v, sec[k][3]), (b, a, k) => (b > a ? "+" : b < a ? "−" : "") + nf(Math.abs(b - a), sec[k][3]) + (a ? ` (${b >= a ? "+" : "−"}%${nf(Math.abs(b / a - 1) * 100, 1)})` : ""), renderSwap);
+  // haftalık değişim: ana grafikle aynı tarih aralığı
+  const dz = y.map(r => fark(r.top, x[x.indexOf(r) - 1]?.top)), tf = fark(y[y.length - 1].top, y[0].top);
+  $("#swDTop").innerHTML = ok(tf) ? `<span class="${cls(tf, 50)}">${isr(tf / 1e3)} USD</span>` : "";
+  $("#swDSub").textContent = `${gunAd(xs[0])} – ${gunAd(xs[xs.length - 1])} toplam değişim`;
+  chart($("#swDChart"), { xs, height: 240, label: "Haftalık değişim", xFmt, tipX: gunAd, maxX: 9, yFmt: v => nf(v, 0), zero: true,
+    series: [{ name: "Toplam swap stokunda haftalık değişim", vals: dz.map(v => ok(v) ? v / 1e3 : null), color: css("--c1"), width: 2, span: true, dots: true, fmt: v => (v > 0 ? "+" : "") + nf(v, 2) + " Mr USD" }] });
   const t = x.slice(-8).reverse();
   $("#swTbl").innerHTML = `<table class="tbl"><thead><tr><th class="l">Hafta</th><th>BDYPP</th><th>TCMB ters swap</th><th>Toplam</th><th>Haftalık Δ</th><th>Bilanço içi</th><th>Net genel</th></tr></thead><tbody>`
     + t.map(r => { const i = x.indexOf(r), d = fark(r.top, x[i - 1]?.top);
@@ -1707,8 +1703,9 @@ function renderMk() {
   const v = (k, i) => M.s[k]?.[i], n = d.length - 1, yb = d.findLastIndex(t => t < d[n].slice(0, 4) + "-01-01");
   const ytd = k => { let t = 0, ok_ = false; for (let i = yb + 1; i <= n; i++) if (ok(v(k, i))) { t += v(k, i); ok_ = true; } return ok_ ? t : null; };
   const sg = (x, b = 1e3, dd = 2) => ok(x) ? `<span class="${cls(x, .05)}">${x > 0 ? "+" : x < 0 ? "−" : ""}${nf(Math.abs(x) / b, dd)}</span>` : "—";
-  $("#mkKpi").innerHTML = MK_K.filter(([k]) => k !== "_osba").map(([k, l, c]) => `<div class="kpi" style="--kc:var(${c})"><div class="t">${k ? l + " stoku" : "Toplam menkul kıymet stoku"}</div><div class="v">${ok(v("stok" + k, n)) ? nf(v("stok" + k, n) / 1e3, 1) : "—"} Mr USD</div>`
-    + `<div class="s">Haftalık net ${sg(v("net" + k, n), 1, 0)} mn · yılbaşından ${sg(ytd("net" + k))} Mr</div><div class="d">${gunAd(d[n])} · TCMB EVDS</div></div>`).join("");
+  $("#mkKpi").innerHTML = MK_K.filter(([k]) => k !== "_osba").map(([k, l, c]) => `<button class="kpi" data-k="${k}" aria-pressed="${S.mkS.size === 1 && S.mkS.has(k)}" title="Grafikte yalnızca bunu göster" style="--kc:var(${c})"><div class="t">${k ? l + " stoku" : "Toplam menkul kıymet stoku"}</div><div class="v">${ok(v("stok" + k, n)) ? nf(v("stok" + k, n) / 1e3, 1) : "—"} Mr USD</div>`
+    + `<div class="s">Haftalık net ${sg(v("net" + k, n), 1, 0)} mn · yılbaşından ${sg(ytd("net" + k))} Mr</div><div class="d">${gunAd(d[n])} · TCMB EVDS</div></button>`).join("");
+  $("#mkKpi").onclick = e => { const b = e.target.closest("button[data-k]"); if (!b) return; S.mkS = new Set([b.dataset.k]); renderMk(); };
   $("#mkMod").querySelectorAll("button").forEach(b => { b.setAttribute("aria-pressed", b.dataset.m === S.mkM); b.onclick = () => { S.mkM = b.dataset.m; renderMk(); }; });
   $("#mkSer").innerHTML = MK_K.map(([k, l, c]) => `<button class="chip" data-k="${k}" aria-pressed="${S.mkS.has(k)}"><i style="background:${css(c)}"></i>${l}</button>`).join("");
   $("#mkSer").onclick = e => { const b = e.target.closest("button[data-k]"); if (!b) return; const k = b.dataset.k;
@@ -1718,11 +1715,15 @@ function renderMk() {
   $("#mkT").textContent = net ? "Yabancıların haftalık net menkul kıymet alımı (milyon USD)" : "Yabancıların menkul kıymet stoku (milyar USD)";
   const sec = MK_K.filter(([k]) => S.mkS.has(k));
   const ser = sec.map(([k, l, c]) => net
-    ? { name: l, vals: ix.map(i => v("net" + k, i) ?? null), color: css(c), type: "bar", fmt: x => (x > 0 ? "+" : "") + nf(x, 1) + " mn USD",
-        barColors: sec.length === 1 ? ix.map(i => css((v("net" + k, i) ?? 0) < 0 ? "--down" : "--up")) : undefined }
+    ? { name: l, vals: ix.map(i => v("net" + k, i) ?? null), color: css(c), width: 2, span: true, fmt: x => (x > 0 ? "+" : "") + nf(x, 1) + " mn USD" }
     : { name: l, vals: ix.map(i => ok(v("stok" + k, i)) ? v("stok" + k, i) / 1e3 : null), color: css(c), width: 2, fmt: x => nf(x, 2) + " Mr USD" });
   const xFmt = gun > 400 ? (t => `${AY[+t.slice(5, 7) - 1]} ${t.slice(2, 4)}`) : gunKisa;
-  chart($("#mkChart"), { xs, series: ser, height: 320, label: $("#mkT").textContent, xFmt, tipX: gunAd, maxX: 12, yFmt: x => nf(x, net ? 0 : 0) });
+  chart($("#mkChart"), { xs, series: ser, height: 320, label: $("#mkT").textContent, xFmt, tipX: gunAd, maxX: 12, yFmt: x => nf(x, 0), zero: net });
+  { const pre = net ? "net" : "stok", bol = net ? 1 : 1e3, dg = net ? 0 : 1, a = ix[0], b = ix[ix.length - 1], g_ = (k, i) => ok(v(pre + k, i)) ? v(pre + k, i) / bol : null;
+    const top = k => { let t = 0; for (const i of ix) if (ok(v("net" + k, i))) t += v("net" + k, i); return t; };
+    veriIS($("#mkVeri"), "mk", sec.map(x => x[1]), d[a], d[b], sec.map(([k]) => g_(k, a)), sec.map(([k]) => g_(k, b)), x => nf(x, dg),
+      (y, x) => (y > x ? "+" : y < x ? "−" : "") + nf(Math.abs(y - x), dg) + (!net && x ? ` (${y >= x ? "+" : "−"}%${nf(Math.abs(y / x - 1) * 100, 1)})` : ""), renderMk,
+      net ? [["Dönem toplamı", sec.map(([k]) => { const t = top(k); return `<span class="${t > 0 ? "up" : t < 0 ? "down" : ""}">${t > 0 ? "+" : t < 0 ? "−" : ""}${nf(Math.abs(t), 0)}</span>`; })]] : []); }
   const son = [...Array(Math.min(8, d.length)).keys()].map(j => n - j);
   $("#mkTbl").innerHTML = `<table class="tbl"><thead><tr><th class="l">Hafta</th><th>Toplam stok</th><th>Toplam net</th><th>Hisse stok</th><th>Hisse net</th><th>DİBS stok</th><th>DİBS net</th><th>Eurobond stok</th><th>Eurobond net</th></tr></thead><tbody>`
     + son.map(i => `<tr><td class="l">${gunAd(d[i])}</td>` + ["", "_hisse", "_dibs", "_eb"].map(k => `<td>${ok(v("stok" + k, i)) ? nf(v("stok" + k, i), 0) : "—"}</td><td>${sg(v("net" + k, i), 1, 1)}</td>`).join("") + "</tr>").join("") + "</tbody></table>";

@@ -78,6 +78,15 @@ button.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(-
 .tip .r i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
 .legend{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
 .note{font-size:12.5px;color:var(--muted)}
+.veri{margin-top:6px}.veri .vb{display:flex;justify-content:flex-end}
+.veri .tw{margin-top:8px;overflow-x:auto}
+.veri .tbl{width:auto;min-width:min(100%,420px);margin-left:auto}
+.veri .tbl th,.veri .tbl td{padding:6px 14px;white-space:nowrap}
+.veri .tbl tr.dg td{font-weight:600}
+details.acik{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+details.acik>summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:600}
+details.acik .note{margin-top:6px}
+
 .empty{padding:28px;text-align:center;color:var(--muted)}
 .grid2{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:14px;align-items:start}
 @media (max-width:1000px){.grid2{grid-template-columns:minmax(0,1fr)}}
@@ -156,7 +165,8 @@ details.meth code{font-family:var(--mono);font-size:12px;background:var(--surfac
       <div class="cardhead"><div><h3>Rezerv seviyeleri (mr $)</h3><div class="sub" id="lvSub"></div></div><span class="chips" id="lvRng"></span></div>
       <div class="legend" id="lvLeg"></div>
       <div class="chart" id="lvChart"></div>
-      <div class="note" id="lvNote">Çizgileri yukarıdaki kutucuklara tıklayarak ekleyip çıkarın (birden çok seçilebilir); altın, döviz ve LBMA AM fiyatı grafiğin altındaki düğmelerden. Altın = rezerv altını (ons) × LBMA AM · döviz = dış varlıklar − altın.</div>
+      <div class="veri" id="lvVeri"></div>
+      <details class="acik"><summary>Açıklama</summary><div class="note" id="lvNote">Çizgileri yukarıdaki kutucuklara tıklayarak ekleyip çıkarın (birden çok seçilebilir); altın, döviz ve LBMA AM fiyatı grafiğin altındaki düğmelerden. Altın = rezerv altını (ons) × LBMA AM · döviz = dış varlıklar − altın.</div></details>
     </div>
     <h2 class="sec">Tahmini net müdahale</h2>
     <div class="periods" id="mdKpi"></div>
@@ -306,6 +316,17 @@ function aralik(key = S.r, oz = S.oz) {
   else a = Math.max(0, n - r[1]);
   return [Math.max(a, 1), n];      // ilk günün değişimi yok
 }
+// Veri kutusu: ilk tarih / son tarih / Değişim (kolonlar = seçili seriler)
+const S_VERI = {};
+function veriIS(el, key, kolonlar, ilkT, sonT, ilkV, sonV, fmt, fark, yeniden) {
+  const ac = !!S_VERI[key], h = v => v.map((x, k) => `<td>${ok(x) ? fmt(x, k) : "—"}</td>`).join("");
+  const dg = sonV.map((b, k) => { const a = ilkV[k]; return `<td>${ok(a) && ok(b) ? `<span class="${b > a ? "up" : b < a ? "down" : ""}">${fark(b, a, k)}</span>` : "—"}</td>`; }).join("");
+  el.innerHTML = `<div class="vb"><button class="chip" aria-pressed="${ac}">${ac ? "Veriyi gizle" : "Veri"}</button></div>`
+    + (ac ? `<div class="tw"><table class="tbl"><thead><tr><th></th>${kolonlar.map(k => `<th>${k}</th>`).join("")}</tr></thead><tbody><tr><td>${gunAd(sonT)}</td>${h(sonV)}</tr><tr><td>${gunAd(ilkT)}</td>${h(ilkV)}</tr><tr class="dg"><td>Fark</td>${dg}</tr></tbody></table></div>` : "");
+  el.querySelector("button").onclick = () => { S_VERI[key] = !ac; yeniden(); };
+}
+const ilkSon = v => { const w = v.filter(ok); return [w[0], w[w.length - 1]]; };
+const sgn = (d, dg) => (d > 0 ? "+" : d < 0 ? "−" : "") + nf(Math.abs(d), dg);
 function rngCiz(el, key, oz, sec) {
   const g = D.rezerv, n = g.dates.length, [a, b] = aralik(key, oz);
   el.innerHTML = `<button class="chip" data-k="Tarih" aria-pressed="${key === "Tarih"}">Tarih</button>` + (key === "Tarih"
@@ -383,6 +404,8 @@ function renderLv() {
   $("#lvSub").textContent = `Günlük analitik bilanço · ${gunAd(xs[0])} – ${gunAd(xs[xs.length - 1])}`;
   chart($("#lvChart"), { xs, height: 320, label: "Rezerv seviyeleri", xFmt: gunKisa, tipX: gunAd, yFmt: v => nf(v, 0), y2Fmt: v => nf(v, 0),
     zero: series.some(x => x.axis !== "r" && x.vals.some(v => ok(v) && v < 0)), series });
+  { const is = series.map(x => ilkSon(x.vals)), dg = k => sec[k] === "lbma" ? 2 : 1;
+    veriIS($("#lvVeri"), "lv", series.map(x => x.name + (x.axis === "r" ? " ($/ons)" : "")), xs[0], xs[xs.length - 1], is.map(x => x[0]), is.map(x => x[1]), (v, k) => nf(v, dg(k)), (b, a, k) => sgn(b - a, dg(k)), renderLv); }
   $$("#wf [data-lv]").forEach(x => x.setAttribute("aria-pressed", !!S.lv[x.dataset.lv]));
 }
 function renderTb() {

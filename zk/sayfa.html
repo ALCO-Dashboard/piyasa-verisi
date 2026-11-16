@@ -78,6 +78,14 @@ button.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(-
 .tip .r i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
 .legend{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
 .note{font-size:12.5px;color:var(--muted)}
+.veri{margin-top:6px}.veri .vb{display:flex;justify-content:flex-end}
+.veri .tw{margin-top:8px;overflow-x:auto}
+.veri .tbl{width:auto;min-width:min(100%,420px);margin-left:auto}
+.veri .tbl th,.veri .tbl td{padding:6px 14px;white-space:nowrap}
+.veri .tbl tr.dg td{font-weight:600}
+details.acik{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+details.acik>summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-weight:600}
+details.acik .note{margin-top:6px}
 .empty{padding:28px;text-align:center;color:var(--muted)}
 .grid2{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:14px;align-items:start}
 @media (max-width:1000px){.grid2{grid-template-columns:minmax(0,1fr)}}
@@ -145,10 +153,11 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
     <h2 class="sec" id="zkHead">Zorunlu karşılık</h2>
     <div class="kpis zk" id="zkKpi"></div>
     <div class="card">
-      <div class="cardhead"><div><h3>Zorunlu karşılık ve piyasa likiditesi (mr ₺)</h3><div class="sub" id="zkSub"></div></div><span class="chips" id="rng"></span></div>
+      <div class="cardhead"><div><h3>Zorunlu karşılık ve piyasa likiditesi (mr ₺)</h3></div><span class="chips" id="rng"></span></div>
       <div class="legend" id="zkLeg"></div>
       <div class="chart" id="zkChart"></div>
-      <div class="note" id="zkNote"></div>
+      <div class="veri" id="zkVeri"></div>
+      <details class="acik"><summary>Açıklama</summary><div class="note" id="zkNote"></div></details>
     </div>
     <div class="card">
       <div class="cardhead"><div><h3>Tesis dönemleri (mr ₺)</h3><div class="sub">En yeni üstte · tesis tutarı = ortalama + önceki dönemden devreden · fark = ortalama tutulan − tesis tutarı</div></div></div>
@@ -308,6 +317,17 @@ const seg = (el, list, cur, cb) => { el.innerHTML = list.map(([k, l]) => `<butto
 const chips = (el, list, cur, cb) => { el.innerHTML = list.map(([k]) => `<button class="chip" data-k="${k}" aria-pressed="${k === cur}">${k}</button>`).join(""); el.onclick = e => { const b = e.target.closest("button[data-k]"); if (b) cb(b.dataset.k); }; };
 
 // ---------------------------------------------------------------- anlık durum
+// Veri kutusu: ilk tarih / son tarih / Değişim (kolonlar = seçili seriler)
+const S_VERI = {};
+function veriIS(el, key, kolonlar, ilkT, sonT, ilkV, sonV, fmt, fark, yeniden) {
+  const ac = !!S_VERI[key], h = v => v.map((x, k) => `<td>${ok(x) ? fmt(x, k) : "—"}</td>`).join("");
+  const dg = sonV.map((b, k) => { const a = ilkV[k]; return `<td>${ok(a) && ok(b) ? `<span class="${b > a ? "up" : b < a ? "down" : ""}">${fark(b, a, k)}</span>` : "—"}</td>`; }).join("");
+  el.innerHTML = `<div class="vb"><button class="chip" aria-pressed="${ac}">${ac ? "Veriyi gizle" : "Veri"}</button></div>`
+    + (ac ? `<div class="tw"><table class="tbl"><thead><tr><th></th>${kolonlar.map(k => `<th>${k}</th>`).join("")}</tr></thead><tbody><tr><td>${gunAd(sonT)}</td>${h(sonV)}</tr><tr><td>${gunAd(ilkT)}</td>${h(ilkV)}</tr><tr class="dg"><td>Fark</td>${dg}</tr></tbody></table></div>` : "");
+  el.querySelector("button").onclick = () => { S_VERI[key] = !ac; yeniden(); };
+}
+const ilkSon = v => { const w = v.filter(ok); return [w[0], w[w.length - 1]]; };
+const sgn = (d, dg) => (d > 0 ? "+" : d < 0 ? "−" : "") + nf(Math.abs(d), dg);
 function renderKpi() {
   const g = D.gunluk, i = g.dates.length - 1, t = g.dates[i], p = D.donemler[g.donem[i]], n = gunFark(p.bas, t), kalan = 14 - n;
   const j = i > 0 ? i - 1 : i;
@@ -327,7 +347,8 @@ function renderChart() {
   chips($("#rng"), RNG, S.r, k => { S.r = k; kaydet(); renderChart(); });
   legend($("#zkLeg"), SER.map(([k, l, c]) => ({ k, name: l, color: css(c), on: S.on.has(k) })), k => { S.on.has(k) ? S.on.size > 1 && S.on.delete(k) : S.on.add(k); kaydet(); renderKpi(); renderChart(); });
   const series = SER.filter(([k]) => S.on.has(k)).map(([k, l, c]) => ({ name: l, vals: g[k].slice(a), color: css(c), type: k === "likidite" ? "bar" : "line", width: k === "tesis" ? 2.4 : 2, dash: k === "gunbasi" ? "4 3" : null, fmt: v => mr(v) + " mr ₺" }));
-  $("#zkSub").textContent = `${gunAd(xs[0])} – ${gunAd(xs[xs.length - 1])} · kutulara ya da aşağıdaki etiketlere tıklayarak seri ekleyip çıkarabilirsiniz`;
+  { const is = series.map(x => ilkSon(x.vals));
+    veriIS($("#zkVeri"), "zk", series.map(x => x.name), xs[0], xs[xs.length - 1], is.map(x => x[0]), is.map(x => x[1]), v => mr(v), (b, a) => sgn(b - a, 1), renderChart); }
   chart($("#zkChart"), { xs, series, height: 360, label: "Zorunlu karşılık", xFmt: r[1] > 300 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd, yFmt: v => nf(v, 0),
     tipNote: k => { const p = D.donemler[g.donem[a + k]]; return p ? `Tesis dönemi ${gunKisa(p.bas)} – ${gunKisa(p.bit)} · ${gunFark(p.bas, xs[k]) + 1}. gün${p.kaynak === "tahmin" ? " · tesis tutarı tahmini" : ""}` : ""; } });
   $("#zkNote").innerHTML = "Ortalama tutulan: dönemin geçen günlerinde bankaların TCMB'deki serbest mevduatının gün sonu ortalaması (bir günün gün sonu bakiyesi, sonraki iş gününün gün başı değeridir; hafta sonu ve tatiller önceki iş gününün bakiyesini taşır). Piyasa likidite durumu çubuk olarak gösterilir: + fazla, − eksik. Tesis tutarı PDF'i olmayan geçmiş dönemlerde arşivdeki toplam gereken tutardan bloke kısım (TL tesis edilen − dönemin ortalama serbest mevduatı) düşülerek tahmin edilir; döviz/altınla tesis (ROM) dönemlerinde hesaplanmaz.";
