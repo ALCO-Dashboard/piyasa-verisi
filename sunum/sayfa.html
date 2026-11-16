@@ -140,7 +140,17 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .slayt .s-alt{position:absolute;left:80px;right:80px;top:1012px;border-top:2px solid var(--s-line);padding-top:16px;display:flex;justify-content:space-between;gap:30px;font-size:18px;color:var(--s-mut)}
 .slayt .s-alt span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .slayt .s-alt span:last-child{font-family:var(--mono);white-space:nowrap}
-.slayt .hucre{position:absolute;overflow:hidden}
+.slayt .hucre{position:absolute;overflow:visible}
+.slayt .el-tasi,.slayt .el-boy{position:absolute;z-index:6;opacity:0;transition:opacity .15s;font-style:normal;touch-action:none}
+.slayt .hucre:hover>.el-tasi,.slayt .hucre:hover>.el-boy,.slayt .panel:hover>.el-tasi,.slayt .panel:hover>.el-boy,.sahne.suruk .el-tasi,.sahne.suruk .el-boy{opacity:1}
+.slayt .el-tasi{left:50%;top:-24px;transform:translateX(-50%);height:46px;padding:0 24px;border-radius:23px;background:#1d4ed8;color:#fff;font:700 22px/46px var(--sans);cursor:move;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.slayt .el-boy{right:-18px;bottom:-18px;width:38px;height:38px;border-radius:50%;background:#1d4ed8;border:5px solid #fff;cursor:nwse-resize;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.slayt .panel>.el-tasi{top:12px;left:auto;right:18px;transform:none;background:#b45309}
+.slayt .panel>.el-boy{right:8px;bottom:8px;background:#b45309}
+.slayt .hucre:hover>.kes{outline:3px dashed rgba(29,78,216,.55);outline-offset:6px}
+.sahne.suruk iframe{pointer-events:none}
+.sahne:fullscreen .el-tasi,.sahne:fullscreen .el-boy,.sahne.tamEkran .el-tasi,.sahne.tamEkran .el-boy{display:none}
+.sahne:fullscreen .hucre:hover>.kes,.sahne.tamEkran .hucre:hover>.kes{outline:none}
 .slayt .hucre .kes{position:absolute;overflow:hidden;border-radius:14px}
 .sahne.konumla .slayt .hucre iframe{pointer-events:none}
 .slayt .tutk{position:absolute;inset:0;z-index:4}
@@ -302,6 +312,14 @@ const CANLI = { OC: [], DURUM: {} };
 // Arşiv sunumu: kaydedilmiş bir sunum açıldığında grafikler kayıt günündeki görüntüleriyle, öne çıkanlar ve kaynak
 // tarihleri o günkü hâliyle gelir (veriler güncellenmez). ARSIV null ise taslak (canlı) moddayız.
 let ARSIV = null, GOR = {};     // GOR: öğe id → {u: görüntü (data URL), w, h}
+// RESIM: "📷 ekran görüntüsü" olarak eklenen alanların sabit resimleri (tarayıcı veritabanında durur)
+const RESIM = {}, foto = o => o && o.tur === "goruntu";
+async function resimYukle(ids) {
+  const eksik = ids.filter(id => !(id in RESIM)); if (!eksik.length) return false;
+  await Promise.all(eksik.map(id => A.idb.get("resim", id).then(u => { RESIM[id] = u || null; }).catch(() => { RESIM[id] = null; })));
+  return true;
+}
+const fotoIdler = d => d.slaytlar.flatMap(s => s.ogeler.filter(foto).map(o => o.id));
 const kok = new URL("../", location.href).href;
 const surum = Math.floor(Date.now() / 6e4);
 Promise.all([
@@ -378,11 +396,12 @@ const notSatir = t => String(t || "").split(/\n/).map(x => x.trim()).filter(Bool
 const W = 1920, H = 1080, C = { x: 80, y: 214, w: 1760, h: 774 }, ARA = 26, KMAKS = 2.2;
 // Hücre: slayttaki tek bir görünüm. Aynı sayfa ve sekmeden gelen alanlar tek hücrede, tek sayfa kopyasında gösterilir;
 // böylece sitedeki yerleşim ve oranlar korunur, kutucuğa tıklayınca grafik değişir.
-const sekImza = st => (st?.b || []).filter(x => x.v && x.sek).map(x => x.g + ":" + x.k).sort().join("|") + "#" + (st?.h || "");
+const sekImza = st => (st?.b || []).filter(x => x.v && x.sek).map(x => x.g + ":" + x.k).sort().join("|") + "#" + (st?.h || "")
+  + "#" + (st?.c || []).filter(x => x.v).map(x => x.g + ":" + x.k).sort().join("|");      // onay kutuları (ör. soldaki konu listesi) hangi panellerin görüneceğini belirler
 function hucreler(s) {
   const map = new Map(), out = [];
   for (const o of s.ogeler) {
-    const k = s.birlesik === false ? "t:" + o.id : o.sayfa + "|" + sekImza(o.durum);
+    const k = s.birlesik === false || foto(o) ? "t:" + o.id : o.sayfa + "|" + sekImza(o.durum);
     let c = map.get(k); if (!c) { c = { id: o.id, ogeler: [] }; map.set(k, c); out.push(c); }
     c.ogeler.push(o);
   }
@@ -485,7 +504,7 @@ function hucreleriGuncelle(el, s) {
   const var_ = new Map($$(".hucre", kap).map(h => [h.dataset.id, h]));
   Y.hucre.forEach(h => {
     let c = var_.get(h.id); var_.delete(h.id);
-    if (!c) { c = document.createElement("div"); c.className = "hucre"; c.dataset.id = h.id; c.innerHTML = `<div class="kes"><div class="yuk">Yükleniyor…</div></div>`; kap.appendChild(c); }
+    if (!c) { c = document.createElement("div"); c.className = "hucre"; c.dataset.id = h.id; c.innerHTML = `<div class="kes"><div class="yuk">Yükleniyor…</div></div><i class="el-tasi" title="Sürükleyerek taşıyın">✥ Taşı</i><i class="el-boy" title="Köşeden sürükleyerek büyütün / küçültün"></i>`; kap.appendChild(c); }
     Object.assign(c.style, { left: h.x + "px", top: h.y + "px", width: h.w + "px", height: h.h + "px" });
     Object.assign(c.querySelector(".kes").style, { left: "0px", top: "0px", width: h.w + "px", height: h.h + "px" });
     const ifr = c.querySelector("iframe");
@@ -498,6 +517,13 @@ function yukle(el) {      // slayttaki iframe'leri oluştur (tembel yükleme)
   $$(".hucre", el).forEach(c => {
     if (c.querySelector("iframe,img.gor")) return;
     const h = hucreBul(c.dataset.id); if (!h) return;
+    if (!ARSIV && foto(h.ogeler[0])) {
+      const kes = c.querySelector(".kes"), u = RESIM[h.id];
+      if (u === undefined) { resimYukle([h.id]).then(() => yukle(el)); return; }
+      if (!u) { kes.innerHTML = `<div class="yuk bos">Görüntü bu tarayıcıda yok: ${esc(hucreAd(h))}</div>`; return; }
+      kes.querySelector(".yuk")?.remove();
+      const im = document.createElement("img"); im.className = "gor"; im.alt = hucreAd(h); im.dataset.id = h.id; im.src = u; kes.appendChild(im); return;
+    }
     if (ARSIV) {
       const kes = c.querySelector(".kes"), g = GOR[h.id];
       if (!g) { kes.innerHTML = `<div class="yuk bos">Görüntü yok: ${esc(hucreAd(h))}</div>`; return; }
@@ -531,7 +557,7 @@ function sahneCiz() {
     // çünkü iframe DOM'dan çıkarılırsa sayfa baştan yüklenir
     if (!el) { el = DOM[x.id] = document.createElement("div"); el.className = "slayt"; el.dataset.id = x.id; el.innerHTML = `<div class="metin"></div><div class="hucreler"></div>`; sahne.appendChild(el); }
     el.dataset.tema = tema();
-    el.querySelector(".metin").innerHTML = slaytIcerik(x, i + 1, L.length);
+    el.querySelector(".metin").innerHTML = slaytIcerik(x, i + 1, L.length); panelTut(el);
     if (x.tur === "icerik") hucreleriGuncelle(el, x.s);
   });
   if (aktif >= L.length) aktif = Math.max(0, L.length - 1);
@@ -553,7 +579,7 @@ function goster(i, sessiz) {
   [aktif, aktif + 1, aktif - 1].forEach(j => { const x = L[j]; if (x && DOM[x.id]) yukle(DOM[x.id]); });
   $("#sayac").textContent = `${aktif + 1} / ${L.length}`;
   const x = L[aktif];
-  $("#sBilgi").textContent = x.tur === "icerik" ? `Slayt ${aktif + 1} / ${L.length} · ${x.s.ogeler.length} alan · ${ARSIV ? `arşiv: grafikler ${ARSIV.tarih} verileriyle sabit` : "grafikler canlıdır, üzerine gelince değerleri görürsünüz"}` : `Slayt ${aktif + 1} / ${L.length}`;
+  $("#sBilgi").textContent = x.tur === "icerik" ? `Slayt ${aktif + 1} / ${L.length} · ${x.s.ogeler.length} alan · ${ARSIV ? `arşiv: grafikler ${ARSIV.tarih} verileriyle sabit` : "grafikler canlı · alanın üzerine gelince ✥ Taşı ve köşeden boyutlandırma çıkar"}` : `Slayt ${aktif + 1} / ${L.length}`;
   if (!sessiz) { listeCiz(); ayarCiz(); }
   tutamakCiz();
 }
@@ -572,31 +598,36 @@ function tutamakCiz() {
   if (Y.panel) k.insertAdjacentHTML("beforeend", `<div class="tut pnl" data-id="_panel" style="left:${Y.panel.x}px;top:${Y.panel.y}px;width:${Y.panel.w}px;height:${Y.panel.h}px"><span>Not ve öne çıkanlar</span><i class="boy" title="Boyutlandır"></i></div>`);
   DOM[x.id].appendChild(k);
 }
+function panelTut(el) { const p = el.querySelector(".metin .panel"); if (p) p.insertAdjacentHTML("beforeend", `<i class="el-tasi" data-pid="_panel" title="Not kutusunu taşıyın">✥ Taşı</i><i class="el-boy" data-pid="_panel" title="Not kutusunu boyutlandırın"></i>`); }
 function anlikCiz() {
   cancelAnimationFrame(anT);
   anT = requestAnimationFrame(() => {
     const L = sira(), x = L[aktif], el = x && DOM[x.id]; if (!el || x.tur !== "icerik") return;
-    el.querySelector(".metin").innerHTML = slaytIcerik(x, aktif + 1, L.length); hucreleriGuncelle(el, x.s);
+    el.querySelector(".metin").innerHTML = slaytIcerik(x, aktif + 1, L.length); panelTut(el); hucreleriGuncelle(el, x.s);
     const Y = yerlesim(x.s);
     $$(".tut", el).forEach(t => { const r = t.dataset.id === "_panel" ? Y.panel : Y.hucre.find(h => h.id === t.dataset.id); if (r) Object.assign(t.style, { left: r.x + "px", top: r.y + "px", width: r.w + "px", height: r.h + "px" }); });
   });
 }
-$("#bKonum").onclick = () => { KONUM = !KONUM; tutamakCiz(); if (KONUM) toast("Alanı sürükleyerek taşıyın, sağ alt köşeden boyutlandırın", 3200); };
+$("#bKonum").onclick = () => { KONUM = !KONUM; tutamakCiz(); if (KONUM) toast("Tüm alanlar çerçevelendi: sürükleyerek taşıyın, sağ alt köşeden boyutlandırın", 3200); };
 $("#bOto").onclick = () => { const x = sira()[aktif]; if (x?.tur === "icerik") { delete x.s.yer; kaydet(); } };
 sahne.addEventListener("pointerdown", e => {
-  const t = e.target.closest(".tut"); if (!t || !KONUM) return;
-  e.preventDefault();
-  const x = sira()[aktif], s = x.s, Y = yerlesim(s);
+  const tut = e.target.closest(".tut"), el_ = e.target.closest(".el-tasi,.el-boy");
+  const t = tut && KONUM ? tut : el_; if (!t) return;
+  if (document.fullscreenElement === sahne || sahne.classList.contains("tamEkran")) return;
+  const x = sira()[aktif]; if (!x || x.tur !== "icerik" || !t.closest(".slayt.aktif")) return;
+  e.preventDefault(); e.stopPropagation();
+  const s = x.s, Y = yerlesim(s);
   if (!s.yer) {      // ilk dokunuşta mevcut düzen sabitlenir; böylece diğer alanlar yerinden oynamaz
     s.yer = {}; Y.hucre.forEach(h => { s.yer[h.id] = { x: h.x, y: h.y, w: h.w, h: h.h }; });
     if (Y.panel) s.yer._panel = { x: Y.panel.x, y: Y.panel.y, w: Y.panel.w, h: Y.panel.h };
   }
-  const id = t.dataset.id; if (!s.yer[id]) { const r = id === "_panel" ? Y.panel : Y.hucre.find(h => h.id === id); if (!r) return; s.yer[id] = { x: r.x, y: r.y, w: r.w, h: r.h }; }
-  const b0 = { ...s.yer[id] }, boy = e.target.classList.contains("boy"), oran = b0.w / b0.h, pnl = id === "_panel";
+  const id = t === tut ? t.dataset.id : (t.dataset.pid || t.closest(".hucre")?.dataset.id); if (!id) return;
+  if (!s.yer[id]) { const r = id === "_panel" ? Y.panel : Y.hucre.find(h => h.id === id); if (!r) return; s.yer[id] = { x: r.x, y: r.y, w: r.w, h: r.h }; }
+  const b0 = { ...s.yer[id] }, boy = e.target.classList.contains("boy") || e.target.classList.contains("el-boy"), oran = b0.w / b0.h, pnl = id === "_panel";
   const kk = parseFloat(getComputedStyle(sahne).getPropertyValue("--k")) || .5, x0 = e.clientX, y0 = e.clientY;
   const yuv = v => Math.round(v / 10) * 10, sin = (v, a, b) => Math.max(a, Math.min(b, v));
   const X0 = 20, Y0 = 190, X1 = W - 20, Y1 = 1000;
-  t.setPointerCapture(e.pointerId); t.classList.add("tasi");
+  t.classList.add("tasi"); sahne.classList.add("suruk");
   const tasi = ev => {
     const dx = (ev.clientX - x0) / kk, dy = (ev.clientY - y0) / kk; let b;
     if (boy) {
@@ -607,9 +638,9 @@ sahne.addEventListener("pointerdown", e => {
     } else b = { ...b0, x: sin(yuv(b0.x + dx), X0, X1 - b0.w), y: sin(yuv(b0.y + dy), Y0, Y1 - b0.h) };
     s.yer[id] = b; anlikCiz();
   };
-  const birak = () => { t.removeEventListener("pointermove", tasi); t.classList.remove("tasi"); kaydet(true); ayarCiz(); };
-  t.addEventListener("pointermove", tasi);
-  t.addEventListener("pointerup", birak, { once: true }); t.addEventListener("pointercancel", birak, { once: true });
+  // pencere düzeyinde izlenir: tutamak yeniden çizilse ya da fare bir grafiğin üzerinden geçse de sürükleme kopmaz
+  const birak = () => { removeEventListener("pointermove", tasi); removeEventListener("pointerup", birak); removeEventListener("pointercancel", birak); t.classList.remove("tasi"); sahne.classList.remove("suruk"); kaydet(true); ayarCiz(); };
+  addEventListener("pointermove", tasi); addEventListener("pointerup", birak); addEventListener("pointercancel", birak);
 });
 
 // ---------------------------------------------------------------- slayt listesi
@@ -685,9 +716,9 @@ function ayarCiz() {
     <div class="alan tam"><label for="sK">Kaynak satırı <small>boş bırakılırsa otomatik</small></label><input type="text" id="sK" data-f="s.kaynak" value="${esc(s.kaynak || "")}" placeholder="${esc(kaynakMetni({ ...s, kaynak: null }))}"></div>
     <div class="alan tam"><div class="lb">Slayttaki alanlar <small>✥ Konumlandır ile slaytta sürükleyip boyutlandırabilirsiniz</small></div>
       ${s.ogeler.length > 1 ? `<label class="kutucuk" style="margin:0 0 8px"><input type="checkbox" id="birG" ${s.birlesik !== false ? "checked" : ""}> Aynı sayfadan gelen alanları sitedeki yerleşimleriyle tek görünümde göster <small style="font-weight:400;color:var(--muted)">· kutucuğa tıklayınca grafik değişir</small></label>` : ""}
-      ${s.ogeler.map((o, i) => { const hc = hucreler(s).find(c => c.ogeler.includes(o)); return `<div class="og"><b>${esc(o.ad)}</b><small>${esc(o.yolAd)}${hc && hc.ogeler.length > 1 ? ` · <span style="color:#1d4ed8">birleşik görünüm (${hc.ogeler.length} alan)</span>` : ""}${hc && olcu[hc.id]?.hata ? " · <span style='color:var(--accent)'>alan bulunamadı</span>" : ""}</small><span class="ic">
+      ${s.ogeler.map((o, i) => { const hc = hucreler(s).find(c => c.ogeler.includes(o)); return `<div class="og"><b>${esc(o.ad)}</b><small>${foto(o) ? `<span style="color:#b45309">ekran görüntüsü · ${new Date(o.cekim || o.t).toLocaleString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · sabit</span> · ` : ""}${esc(o.yolAd)}${hc && hc.ogeler.length > 1 ? ` · <span style="color:#1d4ed8">birleşik görünüm (${hc.ogeler.length} alan)</span>` : ""}${hc && olcu[hc.id]?.hata ? " · <span style='color:var(--accent)'>alan bulunamadı</span>" : ""}</small><span class="ic">
         ${s.ogeler.length > 1 ? `<button data-o="ayir" data-id="${o.id}" title="Bu alanı ayrı bir slayta taşı">Ayrı slayt</button>` : ""}
-        ${ARSIV ? "" : `<button data-o="yenile" data-id="${o.id}" title="Alanı yeniden yükle">↻</button>`}<button data-o="sil" data-id="${o.id}" title="Alanı slayttan çıkar">✕</button></span></div>`; }).join("")}
+        ${ARSIV || foto(o) ? "" : `<button data-o="yenile" data-id="${o.id}" title="Alanı yeniden yükle">↻</button>`}<button data-o="sil" data-id="${o.id}" title="Alanı slayttan çıkar">✕</button></span></div>`; }).join("")}
       ${D.slaytlar.indexOf(s) < D.slaytlar.length - 1 ? `<button class="btn" data-o="birlestir">⇣ Sonraki slaytla birleştir</button>` : ""}</div>`;
 }
 let yazT;
@@ -805,7 +836,7 @@ const kisisel = () => { try { return JSON.parse(localStorage.getItem(KS)) || [];
 const kisiselYaz = a => { try { localStorage.setItem(KS, JSON.stringify(a)); } catch (e) { toast("Tarayıcı depolaması dolu"); } };
 function temizKopya(d) {     // şablon: güncel ölçüler ve seçim zamanı olmadan, yeni kimliklerle
   const c = JSON.parse(JSON.stringify(d)); delete c.degisti;
-  c.slaytlar.forEach(s => { s.id = A.uid(); s.ogeler.forEach(o => { o.id = A.uid(); }); });
+  c.slaytlar.forEach(s => { s.id = A.uid(); s.ogeler.forEach(o => { if (!foto(o)) o.id = A.uid(); }); delete s.yer; });
   return c;
 }
 function sablonCiz() {
@@ -903,7 +934,14 @@ async function goruntuler(il, p1 = .85) {
   L.forEach(x => { if (x.tur === "icerik") { const el = DOM[x.id]; if (el) hucreler(x.s).forEach(o => isler.push({ o, el })); } });
   const els = [...new Set(isler.map(x => x.el))];
   let n = 0;
+  await resimYukle(isler.filter(x => foto(x.o.ogeler[0])).map(x => x.o.id));
   for (const { o, el } of isler) {
+    if (foto(o.ogeler[0])) {
+      il.yaz(`Görüntüler hazırlanıyor · ${++n} / ${isler.length}`, n / isler.length * p1);
+      const u = RESIM[o.id]; if (!u) { img[o.id] = null; continue; }
+      try { const im = new Image(); im.src = u; await im.decode(); img[o.id] = { url: u, u, w: o.ogeler[0].w, h: o.ogeler[0].h, im }; } catch (e) { img[o.id] = null; }
+      continue;
+    }
     const k = els.indexOf(el); els.slice(k, k + 3).forEach(yukle);      // sıradaki iki slayt önden yüklensin
 
     il.yaz(`Grafikler alınıyor · ${++n} / ${isler.length} · ${hucreAd(o)}`, n / isler.length * p1);
@@ -1186,11 +1224,7 @@ function indir(blob, ad) {
 // Seçilen klasör tarayıcıda hatırlanır. Güvenlik gereği tarayıcı klasörün tam yolunu değil yalnızca adını gösterir;
 // her oturumda bir kez "izin ver" demek gerekebilir.
 const FS = !!window.showDirectoryPicker;
-const idb = (() => {
-  let p; const db = () => p || (p = new Promise((ok, no) => { const r = indexedDB.open("alco-sunum", 1); r.onupgradeneeded = () => r.result.createObjectStore("ayar"); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }));
-  const is = (mod, f) => db().then(d => new Promise((ok, no) => { const q = f(d.transaction("ayar", mod).objectStore("ayar")); q.onsuccess = () => ok(q.result); q.onerror = () => no(q.error); }));
-  return { get: k => is("readonly", st => st.get(k)), set: (k, v) => is("readwrite", st => st.put(v, k)) };
-})();
+const idb = { get: k => A.idb.get("ayar", k), set: (k, v) => A.idb.set("ayar", k, v) };
 let KLASOR = null, IZIN = "", KAYITLAR = [];
 async function klasorBaslat() {
   if (FS) {
@@ -1279,7 +1313,9 @@ $("#arsivBant").addEventListener("click", e => {
   if (b.dataset.b === "taslak") {
     const mevcut = A.oku();
     if (mevcut.slaytlar.length && !confirm(`Mevcut taslak (${mevcut.slaytlar.length} slayt) bu sunumun slaytlarıyla değiştirilsin mi? Grafikler bugünkü verilerle yüklenecek.`)) return;
-    const d = { ...A.yeniSunum(), ...temizKopya(D) }; A.yaz(d); arsivKapat(d); toast("Güncel verilerle yeni taslak oluşturuldu");
+    const d = { ...A.yeniSunum(), ...temizKopya(D) };
+    for (const id of fotoIdler(d)) if (GOR[id]?.u) { RESIM[id] = GOR[id].u; A.idb.set("resim", id, GOR[id].u).catch(() => {}); }   // ekran görüntüleri taslağa taşınır
+    A.yaz(d); arsivKapat(d); toast("Güncel verilerle yeni taslak oluşturuldu (ekran görüntüleri sabit kalır)");
   }
 });
 function arsivAc(v, dosya) {
@@ -1358,6 +1394,8 @@ async function kaydetCalistir(sec) {
   finally { GOR = eski; }
 }
 klasorBaslat();
+resimYukle(fotoIdler(D)).then(y => { if (y) { sahneCiz(); } });
+A.dinle(d => { if (!ARSIV) resimYukle(fotoIdler(d)).then(y => { if (y) sahneCiz(); }); });
 
 ciz();
 })();

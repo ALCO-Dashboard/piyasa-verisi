@@ -99,6 +99,8 @@
 .alco-top nav.at-tabs a .b{font-size:10.5px;min-width:18px;height:18px;border-radius:9px;background:var(--at-ok);color:#fff;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
 .alco-top nav.at-tabs a .b.w{background:var(--at-warn)}
 .alco-top nav.at-tabs a .b[hidden]{display:none}
+.alco-top nav.at-tabs a[data-sunum]{margin-left:auto;color:var(--at-red)}
+.alco-top nav.at-tabs a[data-sunum] .b{background:var(--at-red)}
 @media (max-width:640px){.alco-top .at-brand b{font-size:16px}.alco-top .at-date{padding:4px 10px}}
 ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
   document.head.appendChild(Object.assign(document.createElement("style"), { textContent: css }));
@@ -122,7 +124,7 @@ ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
     <button type="button" class="at-btn" id="atPdf" title="Bu sayfayı PDF olarak kaydet (yazdır → PDF olarak kaydet)">⤓ PDF</button>
     <button type="button" class="at-btn" id="atTheme"></button>
     <div class="at-fr" id="atFr"><button type="button" class="at-btn" id="atFrBtn" aria-expanded="false"><span class="dot"></span>Veri durumu</button></div>
-  </div><nav class="at-tabs" aria-label="Bölümler">${TABS.map(([k, n, p]) => `<a href="${SHELL ? "#" + k : ROOT + "#" + k}" data-k="${k}"${k === (ALIAS[PAGE] ? ALIAS[PAGE][0] : PAGE) ? ' aria-current="page"' : ""}>${n}<span class="b" hidden></span></a>`).join("")}</nav></div></header>`;
+  </div><nav class="at-tabs" aria-label="Bölümler">${TABS.map(([k, n, p]) => `<a href="${SHELL ? "#" + k : ROOT + "#" + k}" data-k="${k}"${k === (ALIAS[PAGE] ? ALIAS[PAGE][0] : PAGE) ? ' aria-current="page"' : ""}>${n}<span class="b" hidden></span></a>`).join("")}<a href="${ROOT}sunum/" data-sunum title="Sunum: seçtiğiniz alanlardan slaytlar"${PAGE === "sunum" ? ' aria-current="page"' : ""}>▣ Sunum<span class="b" hidden></span></a></nav></div></header>`;
 
   const tb = document.getElementById("atTheme");
   const lab = () => { tb.textContent = isDark() ? "☀ Açık" : "☾ Koyu"; };
