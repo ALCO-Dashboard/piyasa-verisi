@@ -40,6 +40,19 @@
     return t.replace(/\s*(Detay →|↗)\s*$/, "").slice(0, 90);
   }
 
+  // ---- tarayıcı veritabanı: kayıt klasörü ve ekran görüntüleri (taslak localStorage'a sığmayacak kadar büyük olabilir)
+  const idb = (() => {
+    let p;
+    const ac = () => p || (p = new Promise((ok, no) => {
+      const r = indexedDB.open("alco-sunum", 2);
+      r.onupgradeneeded = () => { const d = r.result; ["ayar", "resim"].forEach(n => { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n); }); };
+      r.onsuccess = () => { r.result.onversionchange = () => { r.result.close(); p = null; }; ok(r.result); };
+      r.onerror = () => { p = null; no(r.error); };
+    }));
+    const is = (st, mod, f) => ac().then(d => new Promise((ok, no) => { const q = f(d.transaction(st, mod).objectStore(st)); q.onsuccess = () => ok(q.result); q.onerror = () => no(q.error); }));
+    return { get: (st, k) => is(st, "readonly", x => x.get(k)), set: (st, k, v) => is(st, "readwrite", x => x.put(v, k)), sil: (st, k) => is(st, "readwrite", x => x.delete(k)) };
+  })();
+
   // ---- sunum taslağı (localStorage)
   const yeniSunum = () => ({ v: 1, ad: "", tema: "light", kapak: { goster: true, baslik: "Haftalık Piyasa Değerlendirmesi", alt: "Aktif Pasif Yönetimi" },
     gundem: { goster: true }, kapanis: { goster: true, baslik: "Teşekkürler", alt: "" }, slaytlar: [] });
@@ -76,15 +89,34 @@
     return ds.length ? "d:" + ds.map(([k, v]) => k + "=" + v).join("&") : "t:" + norm(metin(b));
   }
   const grupOf = b => b.parentElement && b.parentElement.closest("[id]");
+  // onay kutuları ve seçenekler (ör. TCMB › Faiz, Kâr Payı: soldaki konu listesi; BDDK tablolarında grafiğe eklenen satırlar)
+  const KUTU = "input[type=checkbox],input[type=radio]", TARIH = "input[type=date],input[type=month]";
+  const dsMetin = e => Object.entries(e.dataset || {}).filter(([k]) => !/^ss/.test(k)).sort().map(([k, v]) => k + "=" + v).join("&");
+  function girdiAnah(x) {
+    const d = dsMetin(x); if (d) return "d:" + d;
+    const r = x.parentElement && x.parentElement.closest("[data-s],[data-n],[data-m],[data-t],[data-g],[data-k],[data-id]"), g = grupOf(x);
+    if (r && (!g || g.contains(r))) { const rd = dsMetin(r); if (rd) return "r:" + rd; }
+    const l = x.closest("label"); if (l && metin(l)) return "l:" + norm(metin(l));
+    return "n:" + (x.name || "") + "=" + (x.type === "radio" ? x.value : "");
+  }
+  function girdiler(sec) {       // [{g, k, el}] — aynı anahtar tekrar ederse sıra numarası eklenir
+    const say = {}, out = [];
+    $$(sec).forEach(x => { if (x.closest("#alcoTop,.ss-ui")) return; const g = grupOf(x); if (!g || g === document.body) return;
+      let k = girdiAnah(x); const a = g.id + "|" + k; say[a] = (say[a] || 0) + 1; if (say[a] > 1) k += "#" + say[a]; out.push({ g: g.id, k, el: x }); });
+    return out;
+  }
   function durumAl() {
     const b = [];
     $$(DUGME).forEach(x => { if (x.closest("#alcoTop,.ss-ui")) return; const g = grupOf(x); if (!g || g === document.body) return;
       b.push({ g: g.id, k: anahtar(x), v: durumu(x), sek: x.getAttribute("role") === "tab" || x.hasAttribute("aria-selected") || SEKME_GRUP.test(g.id) }); });
     const s = $$("select[id]").filter(x => !x.closest(".ss-ui")).map(x => ({ s: x.id, v: x.value }));
-    return { b, s, h: location.hash };
+    const c = girdiler(KUTU).map(x => ({ g: x.g, k: x.k, v: x.el.checked }));
+    const t = girdiler(TARIH).filter(x => x.el.value).map(x => ({ g: x.g, k: x.k, v: x.el.value }));
+    return { b, s, c, t, h: location.hash };
   }
-  // durum imzası: alt sekmeler + alanın kendi içindeki düğmeler (ör. BDDK kartında TL kredi / TL mevduat)
-  const imza = (st, ic) => (st.b || []).filter(x => x.v && (x.sek || !ic || ic.includes(x.g))).map(x => x.g + ":" + x.k).sort().join("|") + "#" + (st.s || []).filter(x => !ic || ic.includes(x.s)).map(x => x.s + "=" + x.v).sort().join("|");
+  // durum imzası: alt sekmeler + alanın kendi içindeki düğme, kutu ve listeler (ör. BDDK kartında TL kredi / TL mevduat)
+  const imza = (st, ic) => (st.b || []).filter(x => x.v && (x.sek || !ic || ic.includes(x.g))).map(x => x.g + ":" + x.k).sort().join("|") + "#" + (st.s || []).filter(x => !ic || ic.includes(x.s)).map(x => x.s + "=" + x.v).sort().join("|")
+    + "#" + (st.c || []).filter(x => x.v && (!ic || ic.includes(x.g))).map(x => x.g + ":" + x.k).sort().join("|");
   function yolAd() {     // "Bankacılık Verileri › TCMB › Para Politikası"
     let ust = null; try { if (!UST && parent.alcoSunum && !parent.document.getElementById("alcoFrames")) ust = parent.alcoSunum._yolAd(); } catch (e) {}
     const p = ust ? ust.split(" › ") : [SAYFA_AD[SAYFA] || document.title.replace(/\s*·.*$/, "")];
@@ -95,7 +127,7 @@
     if (!st) return 0;
     let top = 0;
     if (st.h && location.hash !== st.h) { try { location.hash = st.h; } catch (e) {} await bekle(250); top++; }
-    for (let tur = 0; tur < 4; tur++) {
+    for (let tur = 0; tur < 6; tur++) {
       let deg = 0;
       const sira = [...(st.b || [])].sort((a, b) => (b.sek - a.sek) || (b.v - a.v));
       for (const x of sira) {
@@ -113,6 +145,16 @@
         const e = document.getElementById(s.s);
         if (e && e.value !== s.v && [...(e.options || [])].some(o => o.value === s.v)) { e.value = s.v; e.dispatchEvent(new Event("input", { bubbles: true })); e.dispatchEvent(new Event("change", { bubbles: true })); deg++; await bekle(70); }
       }
+      if (st.c && st.c.length) {            // onay kutuları: sayfa her tıklamada yeniden çizilebilir; her seferinde taze bulunur
+        for (const x of st.c) {
+          const e = girdiler(KUTU).find(y => y.g === x.g && y.k === x.k); if (!e || e.el.checked === x.v || (e.el.type === "radio" && !x.v)) continue;
+          try { e.el.click(); } catch (er) {} deg++; await bekle(90);
+        }
+      }
+      for (const x of st.t || []) {
+        const e = girdiler(TARIH).find(y => y.g === x.g && y.k === x.k); if (!e || e.el.value === x.v) continue;
+        e.el.value = x.v; e.el.dispatchEvent(new Event("input", { bubbles: true })); e.el.dispatchEvent(new Event("change", { bubbles: true })); deg++; await bekle(90);
+      }
       top += deg; if (!deg) break; await bekle(220);
     }
     return top;
@@ -120,7 +162,7 @@
 
   // ---- alan (blok) bulma
   const BLOK = ".card,.kc,.tkp,.yan,.box,.panel,aside,article,.chartbox,.kpi,.tile,figure,table,.tw";
-  const UIDISI = "#alcoTop,.ss-ui,html,body,main,header,nav,.wrap,#app,iframe";
+  const UIDISI = "#alcoTop,.ss-ui,html,body,main,header,nav.at-tabs,.wrap,#app,iframe";
   function blokMu(el) {
     if (!el || el.nodeType !== 1 || el.matches(UIDISI)) return false;
     const r = el.getBoundingClientRect(); if (r.width < 120 || r.height < 50) return false;
@@ -153,12 +195,12 @@
     if (L.ds) { try { const e = document.querySelector(`${L.tag}${L.cls ? "." + CSS.escape(L.cls) : ""}[data-${L.ds[0].replace(/[A-Z]/g, m => "-" + m.toLowerCase())}="${CSS.escape(L.ds[1])}"]`); if (e) return e; } catch (e) {} }
     const ayni = $$(L.tag + (L.cls ? "." + CSS.escape(L.cls) : "")).filter(x => norm(baslik(x)) === L.n && !x.closest(".ss-ui"));
     if (ayni.length) return ayni[Math.min(L.i, ayni.length - 1)];
-    try { const e = document.querySelector(L.yol); if (e) return e; } catch (e) {}
+    try { const e = document.querySelector(L.yol); if (e && e.tagName.toLowerCase() === L.tag && (!L.cls || e.classList.contains(L.cls))) return e; } catch (e) {}
     return null;
   }
   function ogeYap(el) {
     const r = el.getBoundingClientRect();
-    const ic = [...new Set([...$$(DUGME, el).map(b => grupOf(b)?.id), ...$$("select[id]", el).map(x => x.id)].filter(Boolean))];
+    const ic = [...new Set([...$$(DUGME, el).map(b => grupOf(b)?.id), ...$$("select[id]", el).map(x => x.id), ...$$(KUTU, el).map(x => grupOf(x)?.id)].filter(Boolean))];
     const kk = /^Kaynak:/.test(el.getAttribute("title") || "") ? el.getAttribute("title").replace(/^Kaynak:\s*/, "") : "";
     return { id: uid(), sayfa: SAYFA, ad: baslik(el) || "Alan", yolAd: yolAd(), konum: konum(el), durum: durumAl(), ic, kk,
       w: Math.round(r.width), h: Math.round(r.height), x: Math.round(r.left + scrollX), y: Math.round(r.top + scrollY), vw: innerWidth, t: Date.now() };
@@ -166,7 +208,7 @@
   const buDurumda = (o, st) => imza(o.durum, o.ic) === imza(st || durumAl(), o.ic);
   function ekliMi(el, st) {
     const L = konum(el);
-    return ogeler(oku()).find(o => o.sayfa === SAYFA && o.konum.tag === L.tag && o.konum.cls === L.cls && o.konum.n === L.n && o.konum.i === L.i && buDurumda(o, st));
+    return ogeler(oku()).find(o => o.sayfa === SAYFA && o.konum && o.konum.tag === L.tag && o.konum.cls === L.cls && o.konum.n === L.n && o.konum.i === L.i && buDurumda(o, st));
   }
 
   // ---- bağlı alanlar: bir grafik ve onu yöneten tıklanır kutucuklar (ör. TCMB › Para Politikası kutuları ve kırılım grafiği)
@@ -208,7 +250,14 @@
 .ss-ui{font-family:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
 .ss-hl{position:fixed;pointer-events:none;z-index:2147483000;border:2px solid #c8102e;border-radius:12px;background:rgba(200,16,46,.05);box-shadow:0 0 0 4px rgba(200,16,46,.12);transition:all .08s ease-out;display:none}
 .ss-hl.ekli{border-style:solid;background:rgba(11,122,11,.05);border-color:#0b7a0b;box-shadow:0 0 0 4px rgba(11,122,11,.12)}
-.ss-et{position:fixed;z-index:2147483001;display:none;align-items:stretch;gap:0;background:#c8102e;color:#fff;border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.22);font-size:12.5px;font-weight:700;overflow:hidden;white-space:nowrap}
+.ss-et{position:fixed;z-index:2147483001;display:none;flex-direction:column;align-items:stretch;gap:0;background:#c8102e;color:#fff;border-radius:9px;box-shadow:0 6px 18px rgba(0,0,0,.22);font-size:12.5px;font-weight:700;overflow:hidden;white-space:nowrap}
+.ss-et .sat{display:flex;align-items:stretch}
+.ss-et .sat.alt{background:#1c1416}
+.ss-et .sat.alt button{font-weight:600}
+.ss-et .sat+.sat{border-top:1px solid rgba(255,255,255,.22)}
+.ss-kirp{position:fixed;inset:0;z-index:2147483004;cursor:crosshair;background:rgba(20,16,17,.18)}
+.ss-kirp .ip{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:#1c1416;color:#fff;border-radius:10px;padding:9px 14px;font:600 13px "DM Sans",system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3);pointer-events:none}
+.ss-kirp .kutu{position:fixed;border:2px solid #fff;box-shadow:0 0 0 2px #1d4ed8,0 0 0 9999px rgba(20,16,17,.35);border-radius:4px;display:none}
 .ss-et.ekli{background:#0b7a0b}
 .ss-hl.grup{border-color:#1d4ed8;background:rgba(29,78,216,.06);box-shadow:0 0 0 4px rgba(29,78,216,.14)}
 .ss-et.grup{background:#1d4ed8}
@@ -257,6 +306,8 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
       const b = e.target.closest("button"); if (!b) return; const el = aday[seviye]; if (!el) return;
       if (b.dataset.a === "buyut") { seviye = Math.min(aday.length - 1, seviye + 1); ciz(); return; }
       if (b.dataset.a === "kucult") { seviye = Math.max(0, seviye - 1); ciz(); return; }
+      if (b.dataset.a === "foto") { fotoAlan(el, e.ctrlKey || e.metaKey); return; }
+      if (b.dataset.a === "kirp") { kirp(e.ctrlKey || e.metaKey); return; }
       if (b.dataset.a === "grup") {
         const grp = baglilar(el); if (!grp) return;
         bagGoster(null);
@@ -279,9 +330,10 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
     const etiket = ek ? "✓ Sunumda · çıkar" : grup ? `＋ Aynı slayta ekle (Slayt ${slaytNo(d, h.id)})` : "＋ Sunuma ekle";
     et.title = ek ? "" : grup ? `Ctrl basılı: önceki eklemenin slaytına (${h.baslik}) eklenir` : "Yeni slayt olarak eklenir · Ctrl'e basılı tutarak tıklarsanız önceki slayta eklenir";
     const grp = !ek ? baglilar(el) : null;
-    et.innerHTML = `<button data-a="ekle">${etiket} <span class="ad">${esc(baslik(el))}</span></button>` +
+    et.innerHTML = `<div class="sat"><button data-a="ekle">${etiket} <span class="ad">${esc(baslik(el))}</span></button>` +
       (grp ? `<button data-a="grup" class="bag" title="Grafik ve onu yöneten ${grp.length - 1} kutucuk aynı slayta, sitedeki yerleşimleriyle eklenir; slaytta kutucuğa tıklayınca grafik değişir">⧉ Bağlı alanlarla (${grp.length})</button>` : "") +
-      (seviye < aday.length - 1 ? `<button data-a="buyut" title="Daha geniş alanı seç">⤢</button>` : "") + (seviye > 0 ? `<button data-a="kucult" title="Daha dar alanı seç">⤡</button>` : "");
+      (seviye < aday.length - 1 ? `<button data-a="buyut" title="Daha geniş alanı seç">⤢</button>` : "") + (seviye > 0 ? `<button data-a="kucult" title="Daha dar alanı seç">⤡</button>` : "") + `</div>` +
+      `<div class="sat alt"><button data-a="foto" title="Bu alanın şu anki görüntüsü sabit resim olarak eklenir (veriler güncellenmez)">📷 Ekran görüntüsü olarak ekle</button><button data-a="kirp" title="Sayfada istediğiniz bölgeyi fareyle çizerek görüntüsünü alın">✂ Bölge çiz</button></div>`;
     et.style.display = "flex";
     const ew = et.offsetWidth, eh = et.offsetHeight;
     let x = Math.min(innerWidth - ew - 6, Math.max(6, r.right - ew - 8)), y = r.top + 8;
@@ -296,7 +348,7 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
       Object.assign(c.style, { left: r.left - 3 + "px", top: r.top - 3 + "px", width: r.width + 6 + "px", height: r.height + 6 + "px" }); document.body.appendChild(c); bagCer.push(c); });
   }
   function hareket(e) {
-    if (!modAcik() || PAGE === "sunum") return;
+    if (!modAcik() || PAGE === "sunum" || kirpAcik) return;
     ctrlAyarla(e.ctrlKey || e.metaKey);
     if (kilit) return;
     if (e.target.closest && e.target.closest(".ss-ui")) return;
@@ -309,7 +361,7 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
     if (!modAcik() || IZOLE || PAGE === "sunum") return;
     const st = durumAl();
     oku().slaytlar.forEach((s, si) => s.ogeler.forEach(o => {
-      if (o.sayfa !== SAYFA || !buDurumda(o, st)) return;
+      if (o.sayfa !== SAYFA || !o.konum || !buDurumda(o, st)) return;
       const el = bul(o.konum); if (!el || !el.offsetParent) return;
       const r = el.getBoundingClientRect(), sx = scrollX, sy = scrollY;
       const c = Object.assign(document.createElement("div"), { className: "ss-cerceve ss-ui" });
@@ -326,6 +378,89 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
     t.textContent = m; t.classList.add("on"); clearTimeout(t._z); t._z = setTimeout(() => t.classList.remove("on"), 1600);
   }
 
+  // ---- ekran görüntüsü: sabit resim olarak eklenir (sayfa güncellense de değişmez)
+  let kirpAcik = false;
+  const sayfaZemin = () => { for (const e of [document.body, document.documentElement]) { const c = getComputedStyle(e).backgroundColor; if (c && !/rgba\(0, 0, 0, 0\)|transparent/.test(c)) return c; } return "#ffffff"; };
+  function svgSabitle(kok) {   // SVG çizimlerindeki sınıf stilleri görüntüye geçsin
+    $$("svg *", kok).forEach(n => {
+      if (!(n instanceof SVGElement) || /^(defs|clipPath|linearGradient|radialGradient|stop|title|desc)$/i.test(n.tagName)) return;
+      const cs = getComputedStyle(n);
+      ["fill", "stroke", "stroke-width", "stroke-dasharray", "stroke-linecap", "stroke-linejoin", "opacity", "fill-opacity", "stroke-opacity", "font-family", "font-size", "font-weight", "text-anchor", "dominant-baseline"].forEach(k => {
+        const v = cs.getPropertyValue(k); if (v && !n.style.getPropertyValue(k)) n.style.setProperty(k, v);
+      });
+      if (cs.display === "none" || cs.visibility === "hidden") n.style.setProperty("display", "none");
+    });
+  }
+  async function fotoEkle(url, w, h, ad, ayni) {
+    const o = { id: uid(), tur: "goruntu", sayfa: SAYFA, ad, yolAd: yolAd(), w: Math.round(w), h: Math.round(h), cekim: Date.now(), t: Date.now() };
+    await idb.set("resim", o.id, url);
+    const d = ekle(o, ayni); toast(`📷 Ekran görüntüsü eklendi · Slayt ${slaytNo(d, d.sonSlayt)}`); isaretle();
+  }
+  async function fotoAlan(el, ayni) {
+    toast("Görüntü alınıyor…");
+    try {
+      const H = await libYukle("html-to-image.js", "htmlToImage"); svgSabitle(el);
+      const r = el.getBoundingClientRect(), w = Math.ceil(r.width), h = Math.ceil(r.height);
+      const op = { pixelRatio: 2, width: w, height: h, backgroundColor: sayfaZemin(), cacheBust: false, filter: n => !(n.classList && (n.classList.contains("tip") || n.classList.contains("ss-ui"))) };
+      let url; try { url = await H.toPng(el, op); } catch (e) { url = await H.toPng(el, { ...op, skipFonts: true }); }
+      await fotoEkle(url, w, h, "📷 " + (baslik(el) || "Ekran görüntüsü"), ayni);
+    } catch (e) { toast("Görüntü alınamadı: " + e.message); }
+  }
+  // kaydırılmış sayfada ekrana yapışık duran öğeler (ör. soldaki konu listesi) görüntüde de o anki yerinde çizilsin
+  function yapiskanSabitle() {
+    const geri = [];
+    $$("body *").forEach(e => {
+      if (e.closest(".ss-ui") || getComputedStyle(e).position !== "sticky") return;
+      const r1 = e.getBoundingClientRect(), es = { p: e.style.position, t: e.style.top, l: e.style.left, b: e.style.bottom };
+      e.style.position = "relative"; e.style.top = "0px"; e.style.left = "0px"; e.style.bottom = "auto";
+      const r0 = e.getBoundingClientRect();
+      e.style.top = (r1.top - r0.top) + "px"; e.style.left = (r1.left - r0.left) + "px";
+      geri.push(() => { e.style.position = es.p; e.style.top = es.t; e.style.left = es.l; e.style.bottom = es.b; });
+    });
+    return () => geri.forEach(f => f());
+  }
+  async function bolgeAl(r, ayni) {
+    toast("Görüntü alınıyor…");
+    let coz = () => {};
+    try {
+      coz = yapiskanSabitle();
+      const H = await libYukle("html-to-image.js", "htmlToImage"), B = document.body, br = B.getBoundingClientRect(); svgSabitle(B);
+      const x = r.left - br.left, y = r.top - br.top;
+      const op = { pixelRatio: 2, width: Math.round(r.width), height: Math.round(r.height), backgroundColor: sayfaZemin(), cacheBust: false,
+        style: { width: B.scrollWidth + "px", height: B.scrollHeight + "px", margin: "0", transform: `translate(${-x}px, ${-y}px)`, transformOrigin: "0 0" },
+        filter: n => !(n.classList && (n.classList.contains("tip") || n.classList.contains("ss-ui"))) };
+      let url; try { url = await H.toPng(B, op); } catch (e) { url = await H.toPng(B, { ...op, skipFonts: true }); }
+      coz(); coz = () => {};
+      const yol = yolAd().split(" › ");
+      await fotoEkle(url, r.width, r.height, "📷 " + (yol[yol.length - 1] || "Ekran görüntüsü"), ayni);
+    } catch (e) { toast("Görüntü alınamadı: " + e.message); }
+    finally { coz(); }
+  }
+  function kirp(ayni) {
+    if (kirpAcik) return; stilEkle(); kirpAcik = true;
+    if (hl) { hl.style.display = et.style.display = "none"; kilit = false; }
+    const ov = Object.assign(document.createElement("div"), { className: "ss-kirp ss-ui" });
+    ov.innerHTML = `<div class="ip">✂ Görüntüsünü almak istediğiniz bölgeyi fareyle çizin · Esc: vazgeç</div><div class="kutu"></div>`;
+    document.body.appendChild(ov);
+    const k = ov.querySelector(".kutu"); let x0, y0, r = null;
+    const bitir = () => { kirpAcik = false; ov.remove(); removeEventListener("keydown", esc_, true); };
+    const esc_ = e => { if (e.key === "Escape") { e.preventDefault(); bitir(); } };
+    addEventListener("keydown", esc_, true);
+    ov.addEventListener("pointerdown", e => { e.preventDefault(); x0 = e.clientX; y0 = e.clientY; ov.setPointerCapture(e.pointerId); k.style.display = "block"; r = null; });
+    ov.addEventListener("pointermove", e => { if (x0 == null) return; r = { left: Math.min(x0, e.clientX), top: Math.min(y0, e.clientY), width: Math.abs(e.clientX - x0), height: Math.abs(e.clientY - y0) };
+      Object.assign(k.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px" }); });
+    ov.addEventListener("pointerup", () => { const rr = r; bitir(); if (rr && rr.width > 20 && rr.height > 20) bolgeAl(rr, ayni || ctrl); else toast("Bölge çok küçük"); });
+  }
+  // en içteki görünür sayfa (ör. Bankacılık › TCMB › Rezervler iç sayfası) — çubuktaki düğme oradan görüntü alır
+  function icSayfa() {
+    let w = window;
+    for (let i = 0; i < 4; i++) {
+      let f = null; try { f = [...w.document.querySelectorAll("iframe")].filter(x => { const r = x.getBoundingClientRect(); return !x.hidden && r.width > 300 && r.height > 200; }).sort((a, b) => b.clientWidth * b.clientHeight - a.clientWidth * a.clientHeight)[0]; } catch (e) {}
+      if (!f) break; try { if (!f.contentWindow.alcoSunum) break; w = f.contentWindow; } catch (e) { break; }
+    }
+    return w;
+  }
+
   // alt çubuk (en üst pencerede)
   let bar;
   function barCiz() {
@@ -334,10 +469,11 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
     stilEkle();
     if (!bar) { bar = Object.assign(document.createElement("div"), { className: "ss-bar ss-ui" }); document.body.appendChild(bar);
       bar.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return;
+        if (b.dataset.a === "kirp") { const w = icSayfa(); try { (w.alcoSunum || api).kirp(); } catch (er) { kirp(); } return; }
         if (b.dataset.a === "bitti") api.bitir(); else if (b.dataset.a === "ac") api.ac(); else if (b.dataset.a === "geri") { const d = oku(), o = ogeler(d).sort((a, b) => b.t - a.t)[0]; if (o) { cikar(o.id); toast("Son eklenen çıkarıldı"); } } }); }
     const d = oku(), n = ogeler(d).length;
-    bar.innerHTML = `<span class="nokta"></span><span class="ip"><b style="color:#fff">Seçim modu</b> · Alanın üzerine gelip <b style="color:#fff">＋ Sunuma ekle</b>'ye tıklayın; her ekleme yeni slayt olur. <b style="color:#fff">Ctrl</b>'e basılı tutarak eklediğiniz alan önceki slayta girer.</span>
-      <span class="say">${n} alan · ${d.slaytlar.length} slayt</span><button data-a="geri" ${n ? "" : "disabled"} title="Son ekleneni çıkar">↶</button><button class="ana" data-a="ac">Sunumu hazırla →</button><button data-a="bitti">Bitti</button>`;
+    bar.innerHTML = `<span class="nokta"></span><span class="ip"><b style="color:#fff">Seçim modu</b> · Alanın üzerine gelip <b style="color:#fff">＋ Sunuma ekle</b> ya da <b style="color:#fff">📷 Ekran görüntüsü</b>; her ekleme yeni slayt olur. <b style="color:#fff">Ctrl</b> basılıyken eklenen önceki slayta girer.</span>
+      <span class="say">${n} alan · ${d.slaytlar.length} slayt</span><button data-a="kirp" title="Sayfada istediğiniz bölgeyi çizerek ekran görüntüsü alın">✂ Ekran görüntüsü</button><button data-a="geri" ${n ? "" : "disabled"} title="Son ekleneni çıkar">↶</button><button class="ana" data-a="ac">Sunumu hazırla →</button><button data-a="bitti">Bitti</button>`;
   }
 
   function modDegisti() {
@@ -348,8 +484,9 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
 
   // ---- üst başlıktaki "Sunum" düğmesi ve menü
   function dugmeGuncelle() {
+    const n = ogeler(oku()).length, sb = document.querySelector(".alco-top a[data-sunum] .b");
+    if (sb) { sb.textContent = n; sb.hidden = !n; }
     const b = document.getElementById("atSunum"); if (!b) return;
-    const n = ogeler(oku()).length;
     b.innerHTML = `▣ Sunum${n ? ` <span style="font-family:'DM Mono',ui-monospace,monospace;background:var(--at-red,#c8102e);color:#fff;border-radius:8px;padding:1px 6px;font-size:11px;margin-left:3px">${n}</span>` : ""}`;
     b.setAttribute("aria-pressed", modAcik() ? "true" : "false");
   }
@@ -495,7 +632,7 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
       let w = null; try { w = (top || window).open(u, "alco-sunum"); } catch (e) {}
       if (!w) location.href = u; else try { w.focus(); } catch (e) {}
     },
-    menu, modAcik, _yenile: modDegisti, _yolAd: () => yolAd(),
+    menu, modAcik, _yenile: modDegisti, _yolAd: () => yolAd(), idb, kirp, fotoAlan,
     yakala, hazir: null
   };
 
@@ -511,6 +648,9 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
   }
   const kur = () => {
     if (UST && PAGE !== "sunum") ustDugme();
+    dugmeGuncelle();
+    const sn = document.querySelector(".alco-top a[data-sunum]");      // üst menüdeki "Sunum" sekmesi: sunum sayfasını aynı sekmede (varsa) öne getirir
+    if (sn && PAGE !== "sunum") sn.addEventListener("click", e => { if (e.ctrlKey || e.metaKey || e.shiftKey || e.button) return; e.preventDefault(); api.ac(); });
     document.addEventListener("mousemove", hareket, { passive: true });
     addEventListener("keydown", e => { if (e.key === "Control" || e.key === "Meta") ctrlAyarla(true); });
     addEventListener("keyup", e => { if (e.key === "Control" || e.key === "Meta") ctrlAyarla(false); });
