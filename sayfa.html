@@ -40,6 +40,16 @@ button.b{cursor:pointer}
 .right{margin-left:auto}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .fx{font-family:var(--mono);font-size:12px;color:var(--mut)}.fx b{color:var(--fg)}
+.fon{position:relative;display:inline-flex;align-items:center;color:var(--mut)}.fon>svg{position:absolute;left:9px;pointer-events:none}
+.fon input{width:220px;padding-left:28px;padding-right:28px}.fon.on input{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset;color:var(--fg);font-weight:600}
+.fon #fon-x{position:absolute;right:4px;border:0;background:none;color:var(--mut);cursor:pointer;font-size:12px;padding:4px 6px;border-radius:6px}.fon #fon-x:hover{color:var(--fg);background:var(--line)}
+.fonl{position:absolute;left:0;top:calc(100% + 4px);z-index:30;width:min(460px,86vw);max-height:340px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:4px;color:var(--fg)}
+.fonl [role=option]{display:grid;grid-template-columns:52px 1fr auto;gap:8px;align-items:baseline;padding:6px 8px;border-radius:7px;cursor:pointer;font-size:13px}
+.fonl [role=option] b{font-family:var(--mono)}.fonl [role=option] span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fonl [role=option] small{color:var(--mut);font-family:var(--mono);font-size:11.5px}
+.fonl [role=option][aria-selected=true]{background:color-mix(in srgb,var(--acc) 14%,var(--card))}.fonl .e{padding:8px;color:var(--mut);font-size:12.5px}
+select:disabled{opacity:.45}
+.fb{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;font-size:13px;border-left:3px solid var(--acc)}.fb .k{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--acc)}.fb .a{font-weight:600;flex:1 1 280px;min-width:0}
+.fb .i{color:var(--mut);white-space:nowrap}.fb .i b{color:var(--fg);font-weight:600}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .kpi{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--kc,var(--acc));border-radius:12px;padding:12px 14px}
 .kpi .v{font-family:var(--mono);font-weight:700;font-size:22px;margin:6px 0 2px}
@@ -130,8 +140,10 @@ details.note summary{cursor:pointer;font-weight:600;color:var(--acc);list-style-
 <select id="f-cur" aria-label="Döviz"><option value="">Tüm Döviz</option><option value="TL">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="GBP">Pound</option><option value="XAU">Altın</option><option value="XAG">Gümüş</option></select>
 <select id="f-pys" aria-label="PYŞ"></select>
 <select id="f-tf" aria-label="TEFAS"><option value="">TEFAS'ta işlem: hepsi</option><option value="1">İşlem görüyor</option><option value="0">Görmüyor</option></select>
+<span class="fon" id="fon"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="f-fon-q" type="text" placeholder="Fon seç: kod veya ad" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="fon-l" aria-label="Fon bazlı filtre"><button type="button" id="fon-x" aria-label="Fon filtresini kaldır" title="Fon filtresini kaldır" hidden>✕</button><div class="fonl" id="fon-l" role="listbox" aria-label="Fonlar" hidden></div><select id="f-fon" aria-label="Fon" hidden></select></span>
 <div class="seg right" role="group" aria-label="Görünüm"><button id="m-tl" aria-pressed="true">TL</button><button id="m-own" aria-pressed="false">Kendi Para Cinsinden</button></div>
 </div>
+<div class="box fb" id="fb" hidden></div>
 <div class="kpis" id="kpis"></div>
 <div id="v-tl" style="display:contents">
 <div class="g2">
@@ -191,6 +203,13 @@ const sgn=(s,v)=>(v>0?'+':'')+s;
 const pct=(v,d=1)=>v==null?'—':`<span class="${v>0?'pos':v<0?'neg':''}">%${nf(v,d)}</span>`;
 const cls=v=>v>0?'pos':v<0?'neg':'';
 const m1=()=>back1m(i1),pa=()=>cmp?i0:Math.max(m1(),0);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+let FON='',FI={};const FILT=['f-cat','f-kat','f-oz','f-oks','f-cur','f-pys','f-tf'],fonAd=f=>f==null?'':META[f][0]+' — '+META[f][1];
+function fonSec(k,sessiz){FON=k&&FI[k]!=null?k:'';const sel=$('f-fon');if(sel.value!==FON)sel.value=FON;$('f-fon-q').value=FON?fonAd(FI[FON]):'';$('fon-x').hidden=!FON;$('fon').classList.toggle('on',!!FON);
+ FILT.forEach(i=>{$(i).disabled=!!FON;$(i).title=FON?'Fon seçiliyken devre dışı — fon filtresini kaldırın':''});if(FON){COFF.clear();DOFF.clear()}if(!sessiz){page=0;draw()}}
+function fonKart(f){const b=$('fb');b.hidden=f==null;if(f==null){b.innerHTML='';return}const r=META[f],i=(l,v)=>v==null||v===''?'':`<span class="i">${l} <b>${v}</b></span>`;
+ b.innerHTML=`<span class="k">${esc(r[0])}</span><span class="a">${esc(r[1])}</span>`+i('Kategori',esc(r[2]))+i(TAB=='EMK'?'Şirket':'PYŞ',esc(r[4]))+i('Birim',UN[r[3]])+i('Tür',r[5]?'Katılım':'Konvansiyonel')
+  +(TAB=='YAT'?i('TEFAS',r[7]?'İşlem görüyor':'Görmüyor'):'')+i('Risk',r[8])+i('Ücret',r[9]==null?null:'%'+nf(r[9],2))+i('Pay fiyatı',P[f][i1]?nf(P[f][i1],P[f][i1]<10?6:4)+' ₺':null)}
 const G={kod:f=>META[f][0],ad:f=>META[f][1],kat:f=>META[f][2],cur:f=>UN[U(f)],
  v0:f=>aum(f,i0,own),v1:f=>aum(f,i1,own),vd:f=>{const a=aum(f,i0,own),b=aum(f,i1,own);return a&&b?(b/a-1)*100:null},
  p0:f=>pay(f,i0),p1:f=>pay(f,i1),pd:f=>{const a=pay(f,i0),b=pay(f,i1);return a&&b?(b/a-1)*100:null},
@@ -202,7 +221,7 @@ const colsTek=()=>[['Kod','kod','t','l'],['Fon adı','ad','t','l'],['Kategori','
 const colsKar=()=>[['Kod','kod','t','l'],['Fon adı','ad','t','l'],['Kategori','kat','t','l'],['Döviz','cur','t','l'],['Değer '+tr(DATES[i0]),'v0','m','g'],['Değer '+tr(DATES[i1]),'v1','m'],['Değ. %','vd','n'],['Yatırımcı','yat','n'],['Pay '+tr(DATES[i0]),'p0','m','g'],['Pay '+tr(DATES[i1]),'p1','m'],['Değ. %','pd','n'],['Dönem getiri','gp','n','g'],['Dönem yıllık','gpa','n'],['1A yıllık','g1a','n'],['Dönem akım','ak','m','g'],['Yön. ücreti','fee','n'],['Risk','risk','n']];
 let COLS=colsTek();
 function fill(sel,first,vals){sel.innerHTML=`<option value="">${first}</option>`+vals.map(v=>`<option>${v}</option>`).join('')}
-function rows(){const c=$('f-cat').value,k=$('f-kat').value,o=$('f-oz').value,u=$('f-cur').value,p=$('f-pys').value,t=$('f-tf').value,ok=$('f-oks').value;const R=[];
+function rows(fo=true){if(fo&&FON){const f=FI[FON];return f==null?[]:[f]}const c=$('f-cat').value,k=$('f-kat').value,o=$('f-oz').value,u=$('f-cur').value,p=$('f-pys').value,t=$('f-tf').value,ok=$('f-oks').value;const R=[];
  for(let f=0;f<NF;f++){const r=META[f];if((!c||r[2]==c)&&(k===''||r[5]==k)&&(o===''||r[6]==o)&&(!u||r[3]==u)&&(!p||r[4]==p)&&(t===''||r[7]==t)&&(ok===''||r[10]==ok))R.push(f)}return R}
 const cell=(f,k)=>{const v=G[k](f),c=own?U(f):'TL';
  switch(k){case'v0':return fU(v,c);case'v1':return '<b>'+fU(v,c)+'</b>';case'p0':case'p1':return big(v);case'yat':return v==null?'—':nf(v,0);
@@ -266,11 +285,12 @@ function draw(){const R=rows(),all=R.filter(f=>V[f][i1]);RCUR=R;CH.forEach(c=>c.
  const tl=F=>F.reduce((s,f)=>s+V[f][i1]*1000,0),P0=pa(),nfl=R.reduce((s,f)=>s+flow(f,P0,i1,false),0);
  let fa=0,fb=0;all.forEach(f=>{if(META[f][9]!=null){fa+=META[f][9]*V[f][i1];fb+=V[f][i1]}});
  const invs=all.reduce((s,f)=>s+(KS[f][i1]||0),0),wr=wavg(all,k1,ob);
- const K=[{t:'Toplam fon değeri',x:tl(all),f:v=>big(v)+' ₺',n:`${all.length} fon`+(cmp?` · ${tr(DATES[i0])}: ${big(R.reduce((s,f)=>s+(V[f][i0]||0)*1000,0))} ₺`:''),c:'#2563eb'},
-  {t:'Ağırlıklı ort. getiri'+(cu?' — '+UN[cu]:''),x:wr,f:fmtR,n:`Son 1 ay, yıllık · ${ob?UN[cu]+' bazında':'TL bazında'}`+(cmp?` · Dönem: ${fmtR(wavg(all,kp,ob))}`:''),c:'#059669'},
+ const fz=FON&&R.length==1?R[0]:null;fonKart(fz);
+ const K=[{t:fz!=null?'Fon değeri':'Toplam fon değeri',x:tl(all),f:v=>big(v)+' ₺',n:`${all.length} fon`+(cmp?` · ${tr(DATES[i0])}: ${big(R.reduce((s,f)=>s+(V[f][i0]||0)*1000,0))} ₺`:''),c:'#2563eb'},
+  {t:(fz!=null?'Getiri':'Ağırlıklı ort. getiri')+(cu?' — '+UN[cu]:''),x:wr,f:fmtR,n:`Son 1 ay, yıllık · ${ob?UN[cu]+' bazında':'TL bazında'}`+(cmp?` · Dönem: ${fmtR(wavg(all,kp,ob))}`:''),c:'#059669'},
   {t:cmp?'Dönem net akım':'1A net akım',x:nfl,f:v=>sgn(big(v),v)+' ₺',k:cls(nfl),n:`${tr(DATES[P0])} – ${tr(DATES[i1])}`,c:'#dc2626'},
-  {t:'Toplam yatırımcı',x:invs||null,f:big,n:'Fon bazında toplam; birden çok fonu olan kişi tekrar sayılır',c:'#0d9488'},
-  {t:'Ort. yönetim ücreti',x:fb?fa/fb:null,f:v=>v==null?'—':'%'+nf(v,2),n:'Yıllık, fon değeri ağırlıklı',c:'#b45309'}];
+  {t:fz!=null?'Yatırımcı sayısı':'Toplam yatırımcı',x:invs||null,f:big,n:fz!=null?'Seçili tarihte bu fonun yatırımcısı':'Fon bazında toplam; birden çok fonu olan kişi tekrar sayılır',c:'#0d9488'},
+  {t:fz!=null?'Yönetim ücreti':'Ort. yönetim ücreti',x:fb?fa/fb:null,f:v=>v==null?'—':'%'+nf(v,2),n:fz!=null?'Yıllık':'Yıllık, fon değeri ağırlıklı',c:'#b45309'}];
  const KK=['deger','getiri','akim','yatirimci',null];
  $('kpis').innerHTML=K.map((k,i)=>KK[i]&&!own?`<div class="kpi" role="button" tabindex="0" data-ks="${KK[i]}" aria-pressed="${KSEL.has(KK[i])}" title="Trend grafiğinde göster" style="--kc:${k.c}"><div class="lbl">${k.t}<span class="hint">${KSEL.has(KK[i])?'grafikte ✓':'grafikte göster'}</span></div><div class="v ${k.k||''}">${k.f(k.x)}</div><div class="n">${k.n}</div></div>`
   :`<div class="kpi" style="--kc:${k.c}"><div class="lbl">${k.t}</div><div class="v ${k.k||''}">${k.f(k.x)}</div><div class="n">${k.n}</div></div>`).join('');
@@ -317,10 +337,11 @@ function draw(){const R=rows(),all=R.filter(f=>V[f][i1]);RCUR=R;CH.forEach(c=>c.
   const tot=new Float64Array(b-a+1);used.forEach(c=>ser[c].forEach((x,i)=>tot[i]+=x));
   const tdd=new Float64Array(b-a+1);used.filter(c=>!DOFF.has(c)).forEach(c=>ser[c].forEach((x,i)=>tdd[i]+=x));const dd=Array.from(tdd).map((x,i)=>i?x-tdd[i-1]:0).slice(1),ddc=tdd[b-a]-tdd[0];
   const chg=tot[b-a]-tot[0],chp=tot[0]?chg/tot[0]*100:null,wsum=used.reduce((s,c)=>s+wf[c].reduce((x,y)=>x+y,0),0),rng=`${tr(DATES[a])} – ${tr(DATES[b])}`;
-  $('tr-t').innerHTML=KSEL.has('deger')?`Fon Toplam Değeri Trendi — Kategori Bazlı (₺) · ${rng} · <span class="${cls(chg)}">Değişim: ${sgn(big(chg),chg)} ₺ (${sp(chp)})</span>`
-   :`${[KSEL.has('getiri')?'Ağırlıklı Ort. Getiri (1A, yıllık)':'',KSEL.has('yatirimci')?'Toplam Yatırımcı':'',KSEL.has('akim')?'Günlük Net Akım (₺)':''].filter(Boolean).join(' · ')} · ${rng}`;
-  $('dd-t').innerHTML=`Günlük Fon Değeri Değişimi — ${DOFF.size?'Seçili kategoriler':'Toplam'} (₺) · ${rng} · <span class="${cls(ddc)}">${sgn(big(ddc),ddc)} ₺</span>`;
-  $('wk-t').innerHTML=`Haftalık Para Akımı — Kategori Bazlı (₺) · ${rng} · <span class="${cls(wsum)}">${sgn(big(wsum),wsum)} ₺</span>`;
+  const fk=fz!=null?META[fz][0]:'';
+  $('tr-t').innerHTML=KSEL.has('deger')?`${fk?'Fon Değeri Trendi — '+fk:'Fon Toplam Değeri Trendi — Kategori Bazlı'} (₺) · ${rng} · <span class="${cls(chg)}">Değişim: ${sgn(big(chg),chg)} ₺ (${sp(chp)})</span>`
+   :`${fk?fk+' · ':''}${[KSEL.has('getiri')?'Ağırlıklı Ort. Getiri (1A, yıllık)':'',KSEL.has('yatirimci')?'Toplam Yatırımcı':'',KSEL.has('akim')?'Günlük Net Akım (₺)':''].filter(Boolean).join(' · ')} · ${rng}`;
+  $('dd-t').innerHTML=`Günlük Fon Değeri Değişimi — ${fk||(DOFF.size?'Seçili kategoriler':'Toplam')} (₺) · ${rng} · <span class="${cls(ddc)}">${sgn(big(ddc),ddc)} ₺</span>`;
+  $('wk-t').innerHTML=`Haftalık Para Akımı — ${fk||'Kategori Bazlı'} (₺) · ${rng} · <span class="${cls(wsum)}">${sgn(big(wsum),wsum)} ₺</span>`;
   $('wk-t').title='Haftalar cuma günü kapanır; ilk çubuk başlangıç tarihinden ilk cumaya, son çubuk son cumadan bitiş tarihine kadardır.';
   mkc($('c-dd'),{type:'bar',data:{labels:lab.slice(1),datasets:[{data:dd,backgroundColor:dd.map(x=>x>=0?pos:neg),borderRadius:2}]},options:{maintainAspectRatio:false,animation:barAn(dd.length),scales:{x:xs,y:ys(v=>big(v))},plugins:{legend:{display:false},tooltip:{callbacks:{title:t=>tr(DATES[a+1+t[0].dataIndex]),label:t=>' '+sgn(big(t.parsed.y),t.parsed.y)+' ₺'}}}}});
   const wu=used.filter(c=>wf[c].some(x=>x));
@@ -382,10 +403,31 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{thl();
 function useTab(k){TAB=k;const d=DSETS[k];META=d.m;V=d.v;P=d.p;KS=d.k;PD=d.pd;CC=d.cc;NF=META.length;FL=d.fl||(d.fl=mkFL());
  [...$('tabs').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.t==k));
  ['f-cat','f-kat','f-oz','f-cur','f-pys','f-tf','f-oks'].forEach(i=>$(i).value='');
+ FI={};META.forEach((r,f)=>FI[r[0]]=f);$('f-fon').innerHTML='<option value=""></option>'+META.map(r=>`<option value="${esc(r[0])}">${esc(r[0])}</option>`).join('');fonSec('',1);
  fill($('f-cat'),'Tüm Kategoriler',Object.keys(CC));fill($('f-pys'),k=='EMK'?'Tüm Emeklilik Şirketleri':"Tüm PYŞ'ler",[...new Set(META.map(r=>r[4]))].sort((a,b)=>a.localeCompare(b,'tr')));
  $('f-oks').hidden=k!='EMK';$('f-oz').hidden=$('f-tf').hidden=k!='YAT';colF={};page=0;sortK='v1';dir=-1;draw()}
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.dataset.t!=TAB)useTab(b.dataset.t)});
 $('f-oks').addEventListener('change',()=>{page=0;draw()});
+// fon bazlı filtre: kod/ad ile ara, listeden seç; tüm kutucuk, grafik ve tablo o fona göre çizilir
+{const q=$('f-fon-q'),L=$('fon-l');let hi=0,M=[];
+ const low=x=>String(x).toLocaleLowerCase('tr');
+ const ac=a=>{L.hidden=!a;q.setAttribute('aria-expanded',String(a));if(a){const r=$('fon').getBoundingClientRect();L.style.left=r.left+Math.min(460,innerWidth*.86)>innerWidth-8?'auto':'0';L.style.right=L.style.left=='auto'?'0':'auto'}};
+ const isa=()=>{const t=low(q.value.trim()),B=rows(false).filter(f=>V[f][i1]||V[f].some(x=>x)),sz=f=>V[f][i1]||0;
+  if(!t)M=B.sort((x,y)=>sz(y)-sz(x));
+  else{const a=[],b=[];B.forEach(f=>{const k=low(META[f][0]);if(k.startsWith(t))a.push(f);else if(low(META[f][1]).includes(t)||k.includes(t))b.push(f)});a.sort((x,y)=>(low(META[x][0])==t?-1:0)-(low(META[y][0])==t?-1:0)||sz(y)-sz(x));b.sort((x,y)=>sz(y)-sz(x));M=a.concat(b)}
+  hi=Math.max(0,FON?M.indexOf(FI[FON]):0);if(hi>=80)hi=0;const S=M.slice(0,80);
+  L.innerHTML=S.map((f,i)=>`<div role="option" id="fo-${i}" data-k="${esc(META[f][0])}" aria-selected="${i==hi}"><b>${esc(META[f][0])}</b><span title="${esc(META[f][1])}">${esc(META[f][1])}</span><small>${V[f][i1]?big(V[f][i1]*1000)+' ₺':'—'}</small></div>`).join('')
+   +(M.length>80?`<div class="e">${M.length-80} fon daha · aramayı daraltın</div>`:'')+(M.length?'':'<div class="e">Eşleşen fon yok'+(rows(false).length<NF?' (diğer filtreleri gevşetin)':'')+'</div>');
+  q.setAttribute('aria-activedescendant',S.length?'fo-'+hi:'');ac(true)};
+ const vurgu=i=>{const o=L.querySelectorAll('[role=option]');if(!o.length)return;hi=(i+o.length)%o.length;o.forEach((x,j)=>x.setAttribute('aria-selected',String(j==hi)));o[hi].scrollIntoView({block:'nearest'});q.setAttribute('aria-activedescendant','fo-'+hi)};
+ q.addEventListener('focus',()=>{if(FON){q.value='';q.placeholder=fonAd(FI[FON])}isa()});q.addEventListener('input',isa);q.addEventListener('click',()=>{if(L.hidden){if(FON&&q.value){q.value='';q.placeholder=fonAd(FI[FON])}isa()}});
+ q.addEventListener('keydown',e=>{if(e.key=='ArrowDown'||e.key=='ArrowUp'){e.preventDefault();if(L.hidden)isa();else vurgu(hi+(e.key=='ArrowDown'?1:-1))}
+  else if(e.key=='Enter'){e.preventDefault();const o=L.querySelectorAll('[role=option]')[hi];if(!L.hidden&&o)fonSec(o.dataset.k);else{const t=q.value.trim().toLocaleUpperCase('tr');if(FI[t]!=null)fonSec(t)}q.blur()}
+  else if(e.key=='Escape'){ac(false);q.value=FON?fonAd(FI[FON]):'';q.blur()}});
+ q.addEventListener('blur',()=>setTimeout(()=>{ac(false);q.placeholder='Fon seç: kod veya ad';q.value=FON?fonAd(FI[FON]):''},120));
+ L.addEventListener('mousedown',e=>{const o=e.target.closest('[role=option]');e.preventDefault();if(o){fonSec(o.dataset.k);q.blur()}});
+ $('fon-x').onclick=()=>{fonSec('');q.focus()};
+ $('f-fon').addEventListener('change',e=>{if(e.target.value!==FON)fonSec(e.target.value)})}
 useTab('YAT');
 
 }
