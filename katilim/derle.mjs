@@ -21,12 +21,13 @@ const S = JSON.parse(fs.readFileSync(path.join(KOK, "onceki.json"), "utf8"));
 S.snaps ||= {}; S.reports ||= {}; S.catalog ||= []; S.fx ||= {};
 
 // ---- Excel'leri işle
-const dosyalar = fs.existsSync(path.join(KOK, "excel"))
-  ? fs.readdirSync(path.join(KOK, "excel")).filter(f => /\.(xlsx|xlsm|xls)$/i.test(f) && !f.startsWith("~$"))
-  : [];
+// Bülten Excel'i katilim/excel/ yerine yanlışlıkla doğrudan katilim/ altına yüklenirse de okunur
+const xl = d => fs.existsSync(d) ? fs.readdirSync(d).filter(f => /\.(xlsx|xlsm|xls)$/i.test(f) && !f.startsWith("~$")).map(f => path.join(d, f)) : [];
+const dosyalar = [...xl(KOK), ...xl(path.join(KOK, "excel"))];
 const okunan = [];
-for (const ad of dosyalar) {
-  const wb = XLSX.read(fs.readFileSync(path.join(KOK, "excel", ad)), { type: "buffer" });
+for (const yol of dosyalar) {
+  const ad = path.basename(yol);
+  const wb = XLSX.read(fs.readFileSync(yol), { type: "buffer" });
   let p = null, son = null;
   for (const n of wb.SheetNames) {
     const ws = wb.Sheets[n]; if (!ws["!ref"]) continue;
