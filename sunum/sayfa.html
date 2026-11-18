@@ -218,6 +218,14 @@ dialog::backdrop{background:rgba(10,8,9,.45)}
 .sb{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
 .sb b{font-size:14.5px}.sb small{font-size:12.5px;color:var(--muted)}
 .sb .ic{grid-row:span 2;display:flex;gap:6px}
+.sk-tur{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.sk-tur label{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;cursor:pointer;background:var(--surface)}
+.sk-tur label:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;background:var(--accent-wash)}
+.sk-tur input{margin-top:3px;accent-color:var(--accent)}.sk-tur b{font-size:14px}.sk-tur small{grid-column:2;font-size:12px;color:var(--muted);line-height:1.4}
+.sk-gh{border:1px dashed var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}.sk-gh input{font-family:var(--mono);font-size:13px}
+.sk-alt{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px}.sk-alt .dg{display:flex;gap:8px;flex-shrink:0}
+.etk.k{background:var(--surface-2);color:var(--muted)}
+@media (max-width:560px){.sk-tur{grid-template-columns:1fr}}
 .etk{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:2px 6px;margin-left:6px;background:var(--accent-wash);color:var(--accent);vertical-align:2px}
 .ilerleme{position:fixed;inset:0;z-index:300;background:rgba(10,8,9,.55);display:flex;align-items:center;justify-content:center}
 .ilerleme div{background:var(--surface);border-radius:16px;padding:24px 28px;min-width:340px;box-shadow:0 30px 80px rgba(0,0,0,.3)}
@@ -273,7 +281,24 @@ dialog::backdrop{background:rgba(10,8,9,.45)}
       <button class="btn" id="sAc">⤒ Dosyadan aç…</button><input type="file" id="sInp" accept=".json,application/json" hidden>
     </div>
     <div id="sListe"></div>
-    <p class="ipucu">Ortak şablonlar sitenin <b>ortak/sunum_sablon.json</b> dosyasından gelir ve siteyi açan herkes görür. Kendi şablonunuzu herkesle paylaşmak için "Dosyaya kaydet" ile indirip içeriğini bu dosyaya ekleyebilirsiniz. Şablon açıldığında slaytlar her zaman o günün güncel verisiyle gelir.</p>
+    <p class="ipucu">Ortak şablonlar sitenin <b>ortak/sunum_sablon.json</b> dosyasında durur ve siteyi açan herkes görür; kaydederken "Ortak" seçildiğinde şablon bu dosyaya eklenir. Kendi şablonlarınız yalnızca bu tarayıcıda görünür. Şablon açıldığında slaytlar her zaman o günün güncel verisiyle gelir.</p>
+  </div></div></dialog>
+<dialog id="dSabK" style="width:min(620px,calc(100vw - 32px))"><div class="dlg"><header><h2>Şablon olarak kaydet</h2><button class="btn" data-kapat>Kapat</button></header>
+  <div class="gov">
+    <div class="alan" style="margin-bottom:10px"><label for="skAd">Şablon adı</label><input type="text" id="skAd" maxlength="80"></div>
+    <div class="alan" style="margin-bottom:12px"><label for="skAc">Açıklama <small>isteğe bağlı · listede adın altında görünür</small></label><input type="text" id="skAc" maxlength="200" placeholder="Örn. Piyasa, likidite ve bankacılık görünümü"></div>
+    <div class="alan" style="margin-bottom:0"><div class="lb">Nereye kaydedilsin?</div></div>
+    <div class="sk-tur" role="radiogroup" aria-label="Şablon türü">
+      <label><input type="radio" name="skTur" value="o"><b>Ortak</b><small>Siteyi açan herkesin "Ortak şablonlar" listesinde görünür</small></label>
+      <label><input type="radio" name="skTur" value="k" checked><b>Kendi tarayıcınıza</b><small>Yalnızca bu tarayıcıda, "Kendi şablonlarım" altında görünür</small></label>
+    </div>
+    <div class="sk-gh" id="skGh" hidden>
+      <div class="alan" style="margin-bottom:6px"><label for="skAnahtar">GitHub erişim anahtarı <small id="skAnDurum"></small></label><input type="text" id="skAnahtar" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></div>
+      <p class="ipucu" style="margin:0">Ortak şablonlar sitenin GitHub deposuna yazılır; bunun için depoya yazma yetkisi olan bir anahtar gerekir. Bir kez girmeniz yeterli, bu tarayıcıda saklanır.
+        <a id="skAnYeni" target="_blank" rel="noopener">Anahtar oluştur ↗</a> (Repository access: <b>piyasa-verisi</b>, Contents: <b>Read and write</b>) · <a href="#" id="skAnUnut">Kayıtlı anahtarı unut</a></p>
+    </div>
+    <p class="ipucu" id="skBilgi" style="margin:0 0 4px"></p>
+    <div class="sk-alt"><span class="ipucu" id="skDurum" role="status"></span><span class="dg"><button class="btn" data-kapat>İptal</button><button class="btn ana" id="skKaydet">Kaydet</button></span></div>
   </div></div></dialog>
 <dialog id="dKay" style="width:min(640px,calc(100vw - 32px))"><div class="dlg"><header><h2>Sunumu kaydet</h2><button class="btn" data-kapat>Kapat</button></header>
   <div class="gov">
@@ -331,7 +356,7 @@ Promise.all([
   CANLI.DURUM = du || {};
   CANLI.OC = [...(oz?.one_cikan?.piyasa || []).map(x => ({ ...x, g: "Piyasa" })), ...(oz?.one_cikan?.eko || []).map(x => ({ ...x, g: "Ekonomi" }))];
   if (!ARSIV) { DURUM = CANLI.DURUM; OC = CANLI.OC; }
-  KATALOG = kt?.alanlar || []; ORTAK = sb?.sablonlar || [];
+  KATALOG = kt?.alanlar || []; ORTAK_SITE = sb?.sablonlar || []; ortakBirlestir();
   ciz();
   if (location.hash === "#sablon") { history.replaceState(null, "", location.pathname); sablonAc(); }
 });
@@ -839,9 +864,47 @@ function temizKopya(d) {     // şablon: güncel ölçüler ve seçim zamanı ol
   c.slaytlar.forEach(s => { s.id = A.uid(); s.ogeler.forEach(o => { if (!foto(o)) o.id = A.uid(); }); delete s.yer; });
   return c;
 }
+// ortak şablonlar: GitHub deposundaki ortak/sunum_sablon.json; kaydedilen şablon site yeniden yayımlanana kadar (birkaç dakika) bu tarayıcıda "bekleyen" olarak gösterilir
+const GH = { depo: "ALCO-Dashboard/piyasa-verisi", dal: "main", yol: "ortak/sunum_sablon.json" }, KA = "alco-gh-anahtar", KB = "alco-sunum-ortak-bekleyen";
+const ghAnahtar = () => { try { return localStorage.getItem(KA) || ""; } catch (e) { return ""; } };
+const ghAnahtarYaz = v => { try { v ? localStorage.setItem(KA, v) : localStorage.removeItem(KA); } catch (e) {} };
+const bekleyen = () => { try { return JSON.parse(localStorage.getItem(KB)) || []; } catch (e) { return []; } };
+const bekleyenYaz = a => { try { a.length ? localStorage.setItem(KB, JSON.stringify(a)) : localStorage.removeItem(KB); } catch (e) {} };
+let ORTAK_SITE = [];
+function ortakBirlestir() {     // sitedeki liste + henüz yayımlanmamış ekleme/silmeler
+  let L = ORTAK_SITE.slice(); const B = bekleyen().filter(b => {
+    const v = L.findIndex(x => x.ad === b.ad), yayinda = b.sil ? v < 0 : v >= 0 && (L[v].t || 0) >= b.t;
+    return !yayinda && Date.now() - b.t < 864e5;
+  });
+  bekleyenYaz(B);
+  B.forEach(b => { const v = L.findIndex(x => x.ad === b.ad); if (b.sil) { if (v >= 0) L.splice(v, 1); } else if (v >= 0) L[v] = { ...b.s, _b: 1 }; else L.push({ ...b.s, _b: 1 }); });
+  ORTAK = L;
+}
+const b64 = s => { const u = new TextEncoder().encode(s); let r = ""; for (let i = 0; i < u.length; i += 0x8000) r += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(r); };
+async function ghIstek(yol, ayar = {}) {
+  const r = await fetch("https://api.github.com/repos/" + GH.depo + yol, { ...ayar, headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + ghAnahtar(), "X-GitHub-Api-Version": "2022-11-28", ...(ayar.headers || {}) } });
+  if (!r.ok) { const e = new Error("gh"); e.durum = r.status; try { e.mesaj = (await r.json()).message; } catch (x) {} throw e; }
+  return r;
+}
+async function ortakDegistir(fn, mesaj) {     // dosyayı oku → fn ile değiştir → yaz (araya başka kayıt girerse bir kez yeniden dener)
+  for (let den = 0; den < 3; den++) {
+    const m = await (await ghIstek(`/contents/${GH.yol}?ref=${GH.dal}&t=${Date.now()}`, { cache: "no-store" })).json();
+    const metin = m.content ? new TextDecoder().decode(Uint8Array.from(atob(m.content.replace(/\s/g, "")), c => c.charCodeAt(0)))
+      : await (await ghIstek(`/contents/${GH.yol}?ref=${GH.dal}&t=${Date.now()}`, { cache: "no-store", headers: { Accept: "application/vnd.github.raw+json" } })).text();
+    let j; try { j = JSON.parse(metin); } catch (e) { j = {}; } if (!Array.isArray(j.sablonlar)) j.sablonlar = [];
+    if (fn(j.sablonlar) === false) return false;
+    try { await ghIstek(`/contents/${GH.yol}`, { method: "PUT", body: JSON.stringify({ message: mesaj, content: b64(JSON.stringify(j, null, 1) + "\n"), sha: m.sha, branch: GH.dal }) }); return true; }
+    catch (e) { if (e.durum !== 409 && e.durum !== 422 || den === 2) throw e; }
+  }
+}
+const ghHata = e => e.durum === 401 ? "GitHub anahtarı geçersiz ya da süresi dolmuş" : e.durum === 403 || e.durum === 404 ? "Bu anahtarın piyasa-verisi deposuna yazma yetkisi yok (Contents: Read and write gerekli)" : "GitHub'a yazılamadı" + (e.mesaj ? ": " + e.mesaj : " (bağlantıyı kontrol edin)");
+async function resimEkle(c) {     // ortak şablon başka tarayıcılarda da açılacağı için ekran görüntüleri şablonun içine gömülür
+  const ids = fotoIdler(c); if (!ids.length) return; await resimYukle(ids);
+  const r = {}; ids.forEach(id => { if (RESIM[id]) r[id] = RESIM[id]; }); if (Object.keys(r).length) c.resim = r;
+}
 function sablonCiz() {
-  const k = kisisel();
-  const kart = (s, tur, i) => `<div class="sb"><b>${esc(s.ad)}${tur === "o" ? `<span class="etk">Ortak</span>` : ""}</b><span class="ic"><button class="btn ana" data-s="${tur}${i}">Aç</button>${tur === "k" ? `<button class="btn" data-sil="${i}" title="Sil">✕</button>` : ""}</span>
+  ortakBirlestir(); const k = kisisel();
+  const kart = (s, tur, i) => `<div class="sb"><b>${esc(s.ad)}${tur === "o" ? `<span class="etk">Ortak</span>${s._b ? `<span class="etk k" title="Siteye birkaç dakika içinde yansır; o zamana kadar yalnız bu tarayıcıda görünür">yayımlanıyor…</span>` : ""}` : ""}</b><span class="ic"><button class="btn ana" data-s="${tur}${i}">Aç</button><button class="btn" data-sil="${tur}${i}" title="${tur === "o" ? "Ortak şablonu herkes için sil" : "Sil"}">✕</button></span>
     <small>${esc(s.aciklama || "")}${s.aciklama ? " · " : ""}${s.sunum.slaytlar.length} slayt${s.t ? " · " + new Date(s.t).toLocaleDateString("tr-TR") : ""}</small></div>`;
   $("#sListe").innerHTML = (ORTAK.length ? `<div class="kt-grp">Ortak şablonlar</div>` + ORTAK.map((s, i) => kart(s, "o", i)).join("") : "") +
     `<div class="kt-grp">Kendi şablonlarım <small style="text-transform:none;letter-spacing:0;font-weight:400">(bu tarayıcıda)</small></div>` + (k.length ? k.map((s, i) => kart(s, "k", i)).join("") : `<p class="ipucu">Henüz kayıtlı şablonunuz yok.</p>`);
@@ -850,22 +913,74 @@ function sablonAc() { sablonCiz(); $("#dSab").showModal(); }
 $("#bSab").onclick = sablonAc;
 $("#sListe").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
-  if (b.dataset.sil != null) { const k = kisisel(); if (confirm(`"${k[+b.dataset.sil].ad}" şablonu silinsin mi?`)) { k.splice(+b.dataset.sil, 1); kisiselYaz(k); sablonCiz(); } return; }
+  if (b.dataset.sil != null) {
+    const t = b.dataset.sil[0], i = +b.dataset.sil.slice(1);
+    if (t === "k") { const k = kisisel(); if (confirm(`"${k[i].ad}" şablonu silinsin mi?`)) { k.splice(i, 1); kisiselYaz(k); sablonCiz(); } return; }
+    ortakSil(ORTAK[i]); return;
+  }
   const t = b.dataset.s[0], i = +b.dataset.s.slice(1), s = t === "o" ? ORTAK[i] : kisisel()[i];
   const mevcut = ARSIV ? A.oku() : D;
   if (mevcut.slaytlar.length && !confirm(`Mevcut taslak (${mevcut.slaytlar.length} slayt) "${s.ad}" şablonuyla değiştirilsin mi?`)) return;
   if (ARSIV?.degisti && !confirm("Açık arşiv sunumundaki kaydedilmemiş değişiklikler kaybolacak. Devam edilsin mi?")) return;
-  const yeni = { ...A.yeniSunum(), ...temizKopya(s.sunum) };
+  if (s.sunum.resim) for (const [id, u] of Object.entries(s.sunum.resim)) { RESIM[id] = u; A.idb.set("resim", id, u).catch(() => {}); }
+  const yeni = { ...A.yeniSunum(), ...temizKopya(s.sunum) }; delete yeni.resim;
   if (ARSIV) { A.yaz(yeni); arsivKapat(yeni); } else { D = yeni; aktif = 0; kaydet(); }
   $("#dSab").close(); toast(`"${s.ad}" açıldı · veriler güncel`);
 });
+const skTur = () => document.querySelector("input[name=skTur]:checked").value;
+function skGuncelle() {
+  const o = skTur() === "o", an = ghAnahtar();
+  $("#skGh").hidden = !o || !!an && !$("#skGh").dataset.goster;
+  $("#skAnDurum").textContent = an ? "bu tarayıcıda kayıtlı" : "";
+  $("#skBilgi").innerHTML = o ? (an ? `Ortak şablon GitHub deposuna kaydedilir; herkes için birkaç dakika içinde yayına girer. <a href="#" id="skAnGoster">Anahtarı değiştir</a>` : "")
+    : "Şablon yalnızca bu tarayıcıda saklanır.";
+  $("#skKaydet").textContent = o ? "Ortak şablon olarak kaydet" : "Kaydet";
+  $("#skDurum").textContent = "";
+}
 $("#sKaydet").onclick = () => {
   if (!D.slaytlar.length) { toast("Önce slayt ekleyin"); return; }
-  const ad = prompt("Şablon adı:", D.ad || "APKO Haftalık"); if (!ad) return;
-  const k = kisisel(), var_ = k.findIndex(x => x.ad === ad), yeni = { ad, t: Date.now(), sunum: temizKopya(D) };
-  if (var_ >= 0) { if (!confirm(`"${ad}" adlı şablon var; üzerine yazılsın mı?`)) return; k[var_] = yeni; } else k.unshift(yeni);
-  kisiselYaz(k); sablonCiz(); toast("Şablon kaydedildi");
+  $("#skAd").value = D.ad || "APKO Haftalık"; $("#skAc").value = ""; document.querySelector("input[name=skTur][value=k]").checked = true;   // her açılışta güvenli varsayılan: kendi tarayıcı $("#skAnahtar").value = ""; delete $("#skGh").dataset.goster;
+  $("#skAnYeni").href = "https://github.com/settings/personal-access-tokens/new?" + new URLSearchParams({ name: "ALCO Sunum şablonları", description: "alco-dashboard.github.io/piyasa-verisi Sunum sayfasından ortak şablon kaydı", target_name: GH.depo.split("/")[0], expires_in: "366", contents: "write" });
+  skGuncelle(); $("#dSabK").showModal(); $("#skAd").select();
 };
+$("#dSabK").addEventListener("change", e => { if (e.target.name === "skTur") skGuncelle(); });
+$("#dSabK").addEventListener("click", e => {
+  if (e.target.id === "skAnGoster") { e.preventDefault(); $("#skGh").dataset.goster = 1; skGuncelle(); $("#skAnahtar").focus(); }
+  if (e.target.id === "skAnUnut") { e.preventDefault(); ghAnahtarYaz(""); skGuncelle(); toast("Anahtar bu tarayıcıdan silindi"); }
+});
+$("#skAd").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("#skKaydet").click(); } });
+$("#skKaydet").onclick = async () => {
+  const ad = $("#skAd").value.trim(), aciklama = $("#skAc").value.trim(), dur = $("#skDurum");
+  if (!ad) { $("#skAd").focus(); dur.textContent = "Şablon adı yazın"; return; }
+  const sunum = temizKopya(D), yeni = { ad, ...(aciklama ? { aciklama } : {}), t: Date.now(), sunum };
+  if (skTur() === "k") {
+    const k = kisisel(), var_ = k.findIndex(x => x.ad === ad);
+    if (var_ >= 0) { if (!confirm(`"${ad}" adlı şablon var; üzerine yazılsın mı?`)) return; k[var_] = yeni; } else k.unshift(yeni);
+    kisiselYaz(k); $("#dSabK").close(); sablonCiz(); toast("Şablon kaydedildi · Kendi şablonlarım"); return;
+  }
+  const yeniAn = $("#skAnahtar").value.trim(); if (yeniAn) ghAnahtarYaz(yeniAn);
+  if (!ghAnahtar()) { $("#skGh").hidden = false; $("#skAnahtar").focus(); dur.textContent = "Ortak kayıt için GitHub erişim anahtarı gerekli"; return; }
+  const btn = $("#skKaydet"); btn.disabled = true; dur.textContent = "Kaydediliyor…";
+  try {
+    await resimEkle(sunum);
+    const ok = await ortakDegistir(L => { const v = L.findIndex(x => x.ad === ad);
+      if (v >= 0) { if (!confirm(`Ortak şablonlarda "${ad}" adlı şablon var; üzerine yazılsın mı?`)) return false; L[v] = yeni; } else L.push(yeni); }, `Sunum: "${ad}" ortak şablonu kaydedildi`);
+    if (ok === false) { dur.textContent = ""; return; }
+    bekleyenYaz(bekleyen().filter(b => b.ad !== ad).concat([{ ad, t: yeni.t, s: yeni }]));
+    $("#dSabK").close(); sablonCiz(); toast("Ortak şablon kaydedildi · herkes için birkaç dakika içinde yayında", 3600);
+  } catch (e) {
+    dur.textContent = ghHata(e); if (e.durum === 401) { ghAnahtarYaz(""); $("#skGh").dataset.goster = 1; $("#skGh").hidden = false; }
+  } finally { btn.disabled = false; }
+};
+async function ortakSil(s) {
+  if (!s || !confirm(`"${s.ad}" ortak şablonu herkes için silinsin mi?`)) return;
+  if (!ghAnahtar()) { const v = prompt("Ortak şablonu silmek için piyasa-verisi deposuna yazma yetkisi olan GitHub erişim anahtarını girin:"); if (!v || !v.trim()) return; ghAnahtarYaz(v.trim()); }
+  toast("Siliniyor…");
+  try {
+    await ortakDegistir(L => { const v = L.findIndex(x => x.ad === s.ad); if (v < 0) return false; L.splice(v, 1); }, `Sunum: "${s.ad}" ortak şablonu silindi`);
+    bekleyenYaz(bekleyen().filter(b => b.ad !== s.ad).concat([{ ad: s.ad, t: Date.now(), sil: 1 }])); sablonCiz(); toast("Ortak şablon silindi");
+  } catch (e) { if (e.durum === 401) ghAnahtarYaz(""); toast(ghHata(e), 4000); }
+}
 $("#sDosya").onclick = async () => {
   if (!D.slaytlar.length) { toast("Önce slayt ekleyin"); return; }
   const ad = D.ad || "Sunum şablonu";
