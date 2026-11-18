@@ -484,8 +484,7 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
 
   // ---- üst başlıktaki "Sunum" düğmesi ve menü
   function dugmeGuncelle() {
-    const n = ogeler(oku()).length, sb = document.querySelector(".alco-top a[data-sunum] .b");
-    if (sb) { sb.textContent = n; sb.hidden = !n; }
+    const n = ogeler(oku()).length;
     const b = document.getElementById("atSunum"); if (!b) return;
     b.innerHTML = `▣ Sunum${n ? ` <span style="font-family:'DM Mono',ui-monospace,monospace;background:var(--at-red,#c8102e);color:#fff;border-radius:8px;padding:1px 6px;font-size:11px;margin-left:3px">${n}</span>` : ""}`;
     b.setAttribute("aria-pressed", modAcik() ? "true" : "false");
@@ -498,14 +497,15 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
     p.innerHTML = `<button data-a="mod"><i>${modAcik() ? "■" : "✚"}</i>${modAcik() ? "Seçim modunu kapat" : "Tıklayarak alan seç"}<small>${modAcik() ? "Seçtikleriniz taslakta kalır" : "Sitedeki grafik, tablo ve kartları sunuma ekleyin"}</small></button>
       <button data-a="ac"><i>▶</i>Sunumu düzenle ve başlat<small>${n ? `${n} alan seçili · sıralama, not, PDF, PowerPoint` : "Katalogdan ya da şablondan da başlayabilirsiniz"}</small></button>
       <button data-a="sablon"><i>☰</i>Şablondan oluştur<small>Örn. APKO Haftalık — güncel verilerle hazır</small></button>
-      ${n ? `<hr><button data-a="yeni"><i>⟲</i>Yeni sunum<small>Seçili ${n} alanı temizle</small></button>` : ""}`;
+      ${n ? `<hr><button data-a="yeni"><i>⟲</i>Yeni sunum<small>Seçili ${n} alanı temizle</small></button>` : ""}
+      <hr><button data-a="ana"><i>⌂</i>Sunum ana sayfası<small>Slaytlar, kayıtlı sunumlar ve şablonlar</small></button>`;
     document.body.appendChild(p);
     const r = cap.getBoundingClientRect();
     p.style.top = r.bottom + scrollY + 6 + "px";
     p.style.left = Math.max(8, Math.min(innerWidth - p.offsetWidth - 8, r.right + scrollX - p.offsetWidth)) + "px";
     p.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; e.stopPropagation(); p.remove();
       if (b.dataset.a === "mod") modAcik() ? api.bitir() : api.basla();
-      if (b.dataset.a === "ac") api.ac();
+      if (b.dataset.a === "ac" || b.dataset.a === "ana") api.ac();
       if (b.dataset.a === "sablon") api.ac("sablon");
       if (b.dataset.a === "yeni" && confirm("Sunum taslağındaki tüm slaytlar silinsin mi?")) { yaz(yeniSunum()); toast("Taslak temizlendi"); } });
     setTimeout(() => document.addEventListener("click", function k(e) { if (!p.contains(e.target)) { p.remove(); document.removeEventListener("click", k); } }), 0);
@@ -649,8 +649,6 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
   const kur = () => {
     if (UST && PAGE !== "sunum") ustDugme();
     dugmeGuncelle();
-    const sn = document.querySelector(".alco-top a[data-sunum]");      // üst menüdeki "Sunum" sekmesi: sunum sayfasını aynı sekmede (varsa) öne getirir
-    if (sn && PAGE !== "sunum") sn.addEventListener("click", e => { if (e.ctrlKey || e.metaKey || e.shiftKey || e.button) return; e.preventDefault(); api.ac(); });
     document.addEventListener("mousemove", hareket, { passive: true });
     addEventListener("keydown", e => { if (e.key === "Control" || e.key === "Meta") ctrlAyarla(true); });
     addEventListener("keyup", e => { if (e.key === "Control" || e.key === "Meta") ctrlAyarla(false); });
