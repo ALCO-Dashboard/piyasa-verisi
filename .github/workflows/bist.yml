@@ -1,0 +1,66 @@
+name: BIST bülten verilerini güncelle
+
+# Borsa İstanbul BAP (borçlanma araçları) ve KMTP (kıymetli madenler) günlük bültenleri.
+# Bülten akşam yayımlanır; eksik günler (2025 başından) her çalışmada sırayla tamamlanır.
+on:
+  schedule:
+    - cron: "40 15 * * 1-5"   # hafta içi 18:40 (Türkiye saati)
+    - cron: "20 17 * * 1-5"   # hafta içi 20:20: bülten gecikirse
+    - cron: "50 4 * * 1-6"    # 07:50: önceki günün eksiği
+  push:
+    branches: [main]
+    paths:
+      - "bist/**"
+  workflow_dispatch:
+    inputs:
+      max_gun:
+        description: "Bu çalışmada en fazla kaç gün indirilsin"
+        default: "700"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fon-detay-guncelle
+  cancel-in-progress: false
+
+jobs:
+  bist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Gerekli paketleri kur
+        run: pip install requests openpyxl xlrd
+
+      - name: Yayındaki siteyi al
+        run: git clone --depth 1 -b gh-pages "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" site
+
+      - name: BIST bültenlerini indir ve derle
+        run: python bist/guncelle.py --site site --max-gun "${{ github.event.inputs.max_gun || '700' }}" --sure 95
+
+      - name: Makro sayfasını yenile
+        run: |
+          python - <<'EOF'
+          import os
+          h = open("makro/sayfa.html", encoding="utf-8").read().replace("/*BIST*/", open("makro/bist.js", encoding="utf-8").read(), 1)
+          os.makedirs("site/makro", exist_ok=True)
+          open("site/makro/index.html", "w", encoding="utf-8").write(h)
+          EOF
+
+      - name: Sayfayı yayınla
+        if: always()
+        run: |
+          cd site
+          git config user.name "fon-detay-bot"
+          git config user.email "fon-detay-bot@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && { echo "Değişiklik yok"; exit 0; }
+          git commit -q -m "BIST bülten verileri güncellendi"
+          git pull -q --rebase origin gh-pages || true
+          git push origin gh-pages
