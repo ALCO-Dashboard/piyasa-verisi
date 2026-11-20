@@ -5,6 +5,36 @@
 // Tarih, PPK geri sayımı, koyu/açık tema ve veri güncelliği (durum.json) gösterir.
 (function () {
   const me = document.currentScript, PAGE = me.dataset.page || "", ROOT = me.dataset.root || "./";
+  // Sunum alanı (?sunum=…): sayfanın yüklediği veri dosyalarının yolları kayıt için not edilir (window.__ssVeri).
+  // Kayıtlı sunum hareketli açılırken (?anlik=1) veri dosyaları Sunum sayfasından, kayıt günündeki hâliyle gelir; tarih de o güne sabitlenir.
+  (() => {
+    const Q = new URLSearchParams(location.search); if (!Q.get("sunum") || window.__ssVeri) return;
+    const kokYol = new URL(ROOT, location.href).pathname, KAYIT = window.__ssVeri = {}, ANLIK = Q.get("anlik") === "1", bekleyen = {};
+    let no = 0;
+    if (ANLIK) {
+      addEventListener("message", e => { const m = e.data; if (!m || e.origin !== location.origin || m.ssVeriYanit == null) return; const f = bekleyen[m.ssVeriYanit]; if (f) { delete bekleyen[m.ssVeriYanit]; f(m.metin); } });
+      const an = +Q.get("an");
+      if (an) {
+        const D0 = Date, fark = an - D0.now();
+        const D = function (...a) { if (!new.target) return new D0(D0.now() + fark).toString(); return a.length ? new D0(...a) : new D0(D0.now() + fark); };
+        Object.setPrototypeOf(D, D0); D.prototype = D0.prototype; D.now = () => D0.now() + fark; window.Date = D;
+      }
+    }
+    const iste = yol => new Promise(ok => {
+      const n = ++no; bekleyen[n] = ok;
+      try { parent.postMessage({ ssVeriIste: yol, n }, location.origin); } catch (e) { delete bekleyen[n]; ok(null); return; }
+      setTimeout(() => { if (bekleyen[n]) { delete bekleyen[n]; ok(null); } }, 10000);
+    });
+    const of = window.fetch.bind(window);
+    window.fetch = async (u, o) => {
+      let yol = null;
+      try { const url = new URL(typeof u === "string" || u instanceof URL ? u : u.url, location.href); if (url.origin === location.origin && url.pathname.startsWith(kokYol) && /\.json$/i.test(url.pathname)) yol = decodeURIComponent(url.pathname.slice(kokYol.length)); } catch (e) {}
+      if (yol && ANLIK) { const t = await iste(yol); if (t != null) return new Response(t, { status: 200, headers: { "Content-Type": "application/json" } }); }
+      const r = await of(u, o);
+      if (yol && !ANLIK && r.ok) KAYIT[yol] = 1;      // yalnız yol; içerik kayıt anında Sunum sayfasınca alınır
+      return r;
+    };
+  })();
   const host = document.getElementById("alcoTop"); if (!host) return;
   const SHELL = me.dataset.shell === "1";
   let EMBED = false, IC = false;     // IC: kabuktaki bir sayfanın içine gömülü (ör. Bankacılık → TCMB Rezervler)

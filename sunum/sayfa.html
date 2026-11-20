@@ -398,10 +398,31 @@ const CANLI = { OC: [], DURUM: {}, HABER: [] };
 // grafik yorumları: slayttaki alanların iframe'leri, grafiklerinin verisinden kısa yorum gönderir (alan id → satırlar)
 const KY = "alco-sunum-yorum";
 let YORUM = (() => { try { return JSON.parse(localStorage.getItem(KY)) || {}; } catch (e) { return {}; } })(), HABER = [];
+// yorum ilk geldiği gün sabit kalır; ertesi gün ya da "Yorumu yenile" ile yeniden yazılır (sürekli güncellenip slaytı yeniden çizmesin)
+const KYG = "alco-sunum-yorum-gun", YGUN = (() => { try { return JSON.parse(localStorage.getItem(KYG)) || {}; } catch (e) { return {}; } })(), YENILE = new Set();
+const gunAnahtar = () => new Date().toISOString().slice(0, 10);
 const YCANLI = YORUM;
 // Arşiv sunumu: kaydedilmiş bir sunum açıldığında grafikler kayıt günündeki görüntüleriyle, öne çıkanlar ve kaynak
 // tarihleri o günkü hâliyle gelir (veriler güncellenmez). ARSIV null ise taslak (canlı) moddayız.
-let ARSIV = null, GOR = {};     // GOR: öğe id → {u: görüntü (data URL), w, h}
+let ARSIV = null, GOR = {};
+// ARSIV.canli: kayıtta sayfaların veri dosyaları da saklandıysa (anlik) grafikler hareketli açılır, veri ve tarih kayıt günündeki gibi kalır
+const canliArsiv = () => !!(ARSIV && ARSIV.canli);
+const VERI_ON = {};      // açılmış (gzip'ten çözülmüş) veri dosyaları
+async function arsivVeri(yol) {
+  const d = ARSIV?.anlik?.d; if (!d || d[yol] == null) return null;
+  if (VERI_ON[yol] == null) VERI_ON[yol] = (async () => { const b = Uint8Array.from(atob(d[yol]), c => c.charCodeAt(0)); return await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream("gzip"))).text(); })();
+  try { return await VERI_ON[yol]; } catch (e) { return null; }
+}
+const VERI_YOLLAR = new Set();      // slaytlardaki sayfaların yüklediği veri dosyaları (iframe kapatılsa da hatırlanır)
+const yolTopla = f => { try { Object.keys(f.contentWindow.__ssVeri || {}).forEach(y => VERI_YOLLAR.add(y)); } catch (e) {} };
+async function veriTopla() {      // kayıt: bu dosyaların o anki içeriği (gzip + base64)
+  $$(".hucre iframe").forEach(yolTopla);
+  const d = {};
+  for (const yol of VERI_YOLLAR) {
+    try { const t = await (await fetch(new URL(yol, kok).href + "?t=" + Date.now(), { cache: "no-store" })).text(); if (!t) continue; const b = new Uint8Array(await new Response(new Blob([t]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer()); let s = ""; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); d[yol] = btoa(s); } catch (e) {}
+  }
+  return Object.keys(d).length ? { an: Date.now(), d } : null;
+}     // GOR: öğe id → {u: görüntü (data URL), w, h}
 // RESIM: "📷 ekran görüntüsü" olarak eklenen alanların sabit resimleri (tarayıcı veritabanında durur)
 const RESIM = {}, foto = o => o && o.tur === "goruntu";
 async function resimYukle(ids) {
@@ -481,7 +502,7 @@ const KONU = [
   { k: "rezerv", ad: /rezerv/i, oc: /rezerv/i, hb: /rezerv/i },
   { k: "zk", ad: /zorunlu karşılık|\bZK\b|likidite|net fonlama|açık piyasa/i, oc: /\bZK\b|zorunlu karşılık|likidite/i, hb: /zorunlu karşılık|likidite/i },
   { k: "enf", ad: /TÜFE|ÜFE|enflasyon|fiyat endeks|çekirdek/i, oc: /TÜFE|enflasyon/i, hb: /enflasyon|TÜFE|ÜFE|fiyat artış/i },
-  { k: "bek", ad: /beklenti|piyasa katılımcı/i, oc: /beklenti|Enflasyon Raporu|tahmin/i, hb: /beklenti anket|enflasyon beklenti|piyasa katılımcıları|Enflasyon Raporu/i },
+  { k: "bek", ad: /beklenti|piyasa katılımcı/i, oc: /beklenti|Enflasyon Raporu|enflasyon tahmin/i, hb: /beklenti anket|enflasyon beklenti|piyasa katılımcıları|Enflasyon Raporu/i },
   { k: "buyume", ad: /GSYH|büyüme|milli gelir/i, oc: /GSYH|büyü/i, hb: /GSYH|büyüme (oranı|rakam|veri)|ekonomi.{0,20}büyüdü/i },
   { k: "uretim", ad: /PMI|sanayi üretim|imalat|kapasite kullanım|güven endeks/i, oc: /PMI|sanayi üretim/i, hb: /PMI|sanayi üretim|kapasite kullanım|imalat sanayi/i },
   { k: "istihdam", ad: /işsizlik|istihdam|işgücü/i, oc: /işsizlik|istihdam/i, hb: /işsizlik|istihdam|işgücü/i },
@@ -574,22 +595,22 @@ function hucreler(s) {
   }
   out.forEach(c => { if (c.ogeler.length > 1) c.id = "g-" + c.ogeler[0].id; });
   // eski kayıtlı sunumlarda birleşik görüntü yoksa alanlar ayrı gösterilir
-  return ARSIV ? out.flatMap(c => c.ogeler.length > 1 && !GOR[c.id] ? c.ogeler.map(o => ({ id: o.id, ogeler: [o] })) : [c]) : out;
+  return ARSIV && !ARSIV.canli ? out.flatMap(c => c.ogeler.length > 1 && !GOR[c.id] ? c.ogeler.map(o => ({ id: o.id, ogeler: [o] })) : [c]) : out;
 }
 function hucreBul(id) { for (const s of D.slaytlar) { const c = hucreler(s).find(x => x.id === id); if (c) return c; } return null; }
 const hucreAd = c => { if (c.ogeler.length === 1) return c.ogeler[0].ad; const b = c.ogeler.reduce((a, o) => (o.w || 0) * (o.h || 0) > (a.w || 0) * (a.h || 0) ? o : a); return `${b.ad} + ${c.ogeler.length - 1} alan`; };
 window.alcoSunumOge = id => { const c = hucreBul(id); if (!c) return null; return c.ogeler.length === 1 ? c.ogeler[0] : { ogeler: c.ogeler, durum: c.ogeler[0].durum }; };
 // hücrenin sitedeki (doğal) boyutu: kayıtlı görüntü > sayfanın bildirdiği ölçü > seçim anındaki ölçü
 function hucreBoyut(c) {
-  const g = GOR[c.id]; if (g && g.w) return { w: g.w, h: g.h };
-  const m = olcu[c.id]; if (m && m.w && !m.hata) return { w: m.w, h: m.h };
+  const g = GOR[c.id], m = olcu[c.id];
+  if (g && g.w && !(canliArsiv() && m && m.w && !m.hata)) return { w: g.w, h: g.h }; if (m && m.w && !m.hata) return { w: m.w, h: m.h };
   if (c.ogeler.length === 1) { const o = c.ogeler[0]; return { w: Math.max(200, o.w || 600), h: o.h || 400 }; }
   const L = c.ogeler.filter(o => o.x != null);
   if (L.length) { const x0 = Math.min(...L.map(o => o.x)), y0 = Math.min(...L.map(o => o.y)); return { w: Math.max(...L.map(o => o.x + o.w)) - x0, h: Math.max(...L.map(o => o.y + o.h)) - y0 }; }
   return { w: Math.max(...c.ogeler.map(o => o.w || 600)), h: c.ogeler.reduce((a, o) => a + (o.h || 300), 0) };
 }
 const ifrGen = (c, bw, gen) => Math.max(Math.max(bw, gen || 0) + 40, c.ogeler[0].vw || 1400);
-const sabitMi = c => !!ARSIV || foto(c.ogeler[0]);       // görüntü olan alan yeniden çizilemez: yalnızca köşeden orantılı boyutlanır
+const sabitMi = c => (!!ARSIV && !ARSIV.canli) || foto(c.ogeler[0]);       // görüntü olan alan yeniden çizilemez: yalnızca köşeden orantılı boyutlanır
 function genGonder(f, g) { if (!f || f._gen === g) return; f._gen = g; try { f.contentWindow.postMessage({ ssGen: g }, location.origin); } catch (e) {} }
 // tek ortak ölçekle satırlara dizme: sitede küçük olan kutucuk küçük, büyük grafik büyük kalır
 function rafla(B, kutu, kip) {
@@ -658,7 +679,7 @@ function yerlesim(s) {
 
 // ---------------------------------------------------------------- canlı slaytlar (iframe'li, kalıcı DOM)
 const sahne = $("#sahne"), DOM = {};
-function iframeSrc(c) { const o = c.ogeler[0], g = yerBul(c.id)?.gen; return `../${o.sayfa}?sunum=${encodeURIComponent(c.id)}&tema=${tema()}&v=${surum}${g ? "&gen=" + Math.round(g) : ""}${o.durum?.h || ""}`; }
+function iframeSrc(c) { const o = c.ogeler[0], g = yerBul(c.id)?.gen; return `../${o.sayfa}?sunum=${encodeURIComponent(c.id)}&tema=${tema()}&v=${surum}${g ? "&gen=" + Math.round(g) : ""}${canliArsiv() ? `&anlik=1&an=${ARSIV.anlik.an}` : ""}${o.durum?.h || ""}`; }
 function yerBul(id) { for (const s of D.slaytlar) if (s.yer && s.yer[id]) return s.yer[id]; return null; }
 const ustSerit = () => `<div class="s-cizgi"></div><div class="s-ust"><span><b>DOST KATILIM</b> · Aktif Pasif Yönetimi</span><span>${esc(D.ad || "Piyasa Verileri (ALCO)")} · ${BUGUN}</span></div>`;
 function slaytIcerik(x, no, top) {
@@ -697,6 +718,11 @@ function hucreleriGuncelle(el, s) {
   });
   var_.forEach(c => c.remove());
 }
+// uzaktaki slaytların sayfaları kapatılır: her alan sitenin bir sayfasını çalıştırır; hepsi açık kalınca editör ağırlaşıp kasıyordu
+function bosalt(el) {
+  $$(".hucre iframe", el).forEach(f => { yolTopla(f); const k = f.closest(".kes"); f.src = "about:blank"; f.remove(); if (k && !k.querySelector(".yuk")) k.insertAdjacentHTML("afterbegin", `<div class="yuk">Yükleniyor…</div>`); });
+}
+function uzaklariKapat(tut) { Object.entries(DOM).forEach(([id, el]) => { if (!tut.has(id)) bosalt(el); }); }
 function yukle(el) {      // slayttaki iframe'leri oluştur (tembel yükleme)
   $$(".hucre", el).forEach(c => {
     if (c.querySelector("iframe,img.gor")) return;
@@ -708,7 +734,7 @@ function yukle(el) {      // slayttaki iframe'leri oluştur (tembel yükleme)
       kes.querySelector(".yuk")?.remove();
       const im = document.createElement("img"); im.className = "gor"; im.alt = hucreAd(h); im.dataset.id = h.id; im.src = u; kes.appendChild(im); return;
     }
-    if (ARSIV) {
+    if (ARSIV && (!ARSIV.canli || foto(h.ogeler[0]))) {
       const kes = c.querySelector(".kes"), g = GOR[h.id];
       if (!g) { kes.innerHTML = `<div class="yuk bos">Görüntü yok: ${esc(hucreAd(h))}</div>`; return; }
       kes.querySelector(".yuk")?.remove();
@@ -729,10 +755,17 @@ let olcuT, yorumT;
 addEventListener("message", e => {
   const m = e.data; if (!m || e.origin !== location.origin) return;
   if (m.ssYorum) {      // grafik yorumu geldi: öne çıkanları yenile (arşivde kayıtlı yorum değişmez)
-    if (ARSIV || !m.id) return; const k = JSON.stringify(m.satirlar || []); if (JSON.stringify(YORUM[m.id] || []) === k) return;
+    if (ARSIV || !m.id) return;
+    if (YORUM[m.id] && YGUN[m.id] === gunAnahtar() && !YENILE.has(m.id)) return;       // bugün yazıldı: sabit
+    YENILE.delete(m.id); YGUN[m.id] = gunAnahtar();
+    try { localStorage.setItem(KYG, JSON.stringify(YGUN)); } catch (x) {}
+    const k = JSON.stringify(m.satirlar || []); if (JSON.stringify(YORUM[m.id] || []) === k) return;
     if ((m.satirlar || []).length) YORUM[m.id] = m.satirlar; else delete YORUM[m.id];
     try { localStorage.setItem(KY, JSON.stringify(YORUM)); } catch (x) {}
     clearTimeout(yorumT); yorumT = setTimeout(() => { if (!sahne.classList.contains("suruk")) { sahneCiz(); ayarCiz(); } }, 120); return;
+  }
+  if (m.ssVeriIste != null) {      // kayıtlı sunum: iframe veri dosyasını kayıt günündeki hâliyle ister
+    const src = e.source; arsivVeri(m.ssVeriIste).then(t => { try { src.postMessage({ ssVeriYanit: m.n, metin: t }, location.origin); } catch (x) {} }); return;
   }
   if (m.ssDurum) {      // ayrı gösterilen alanlar: birinde kutucuğa tıklanınca aynı sayfadan gelen diğer alanlar da o duruma geçer
     const x = sira().find(z => z.tur === "icerik" && hucreler(z.s).some(c => c.id === m.id)); if (!x) return;
@@ -777,11 +810,12 @@ function goster(i, sessiz) {
   aktif = Math.max(0, Math.min(L.length - 1, i));
   L.forEach((x, j) => DOM[x.id]?.classList.toggle("aktif", j === aktif));
   [aktif, aktif + 1, aktif - 1].forEach(j => { const x = L[j]; if (x && DOM[x.id]) yukle(DOM[x.id]); });
+  if (!DISA) uzaklariKapat(new Set([aktif, aktif + 1, aktif - 1].map(j => L[j]?.id).filter(Boolean)));
   $("#sayac").textContent = `${aktif + 1} / ${L.length}`;
   const x = L[aktif];
   // sitede Ctrl ile "aynı slayta ekle", editörde açık olan slayta eklesin
   if (x.tur === "icerik" && !ARSIV && D.sonSlayt !== x.s.id) { D.sonSlayt = x.s.id; try { A.yaz(D); } catch (e) {} }
-  $("#sBilgi").textContent = x.tur === "icerik" ? `Slayt ${aktif + 1} / ${L.length} · ${x.s.ogeler.length} alan · ${ARSIV ? `arşiv: grafikler ${ARSIV.tarih} verileriyle sabit` : "grafikler canlı · üzerine gelince ✥ Taşı, kenarlardan uzatma ve köşeden boyutlandırma çıkar · Taşı'yı soldaki listede başka bir slayta bırakırsanız alan oraya taşınır"}` : `Slayt ${aktif + 1} / ${L.length}`;
+  $("#sBilgi").textContent = x.tur === "icerik" ? `Slayt ${aktif + 1} / ${L.length} · ${x.s.ogeler.length} alan · ${ARSIV ? `arşiv: ${ARSIV.canli ? "grafikler hareketli, veriler" : "grafikler"} ${ARSIV.tarih} ${ARSIV.canli ? "tarihindeki hâliyle" : "verileriyle sabit"}` : "grafikler canlı · üzerine gelince ✥ Taşı, kenarlardan uzatma ve köşeden boyutlandırma çıkar · Taşı'yı soldaki listede başka bir slayta bırakırsanız alan oraya taşınır"}` : `Slayt ${aktif + 1} / ${L.length}`;
   if (!sessiz) { listeCiz(); ayarCiz(); }
   tutamakCiz();
 }
@@ -1002,7 +1036,7 @@ function ayarCiz() {
     <div class="alan"><div class="lb"><label class="kutucuk"><input type="checkbox" id="ocG" ${ocGoster(s) ? "checked" : ""}> Otomatik öne çıkanlar</label><small>${ARSIV ? `${esc(ARSIV.tarih)} itibarıyla sabit` : "grafik verisi, ilgili haber ve Özet yorumları · slaytın altında satır satır"}</small></div>
       <div class="oclist"><div class="grp">Kendi maddeleriniz <small>· her zaman görünür, slaytta en üstte</small></div>${elleL.map(elleSatir).join("")}
         <div class="ocYeni"><input type="text" id="ocYeni" placeholder="Yeni madde yazın · **kalın**, [metin](adres) bağlantı"><button class="btn" data-hedef-lnk="ocYeni" title="Bağlantı ekle">🔗</button><button class="btn ana" data-ocd="ekle">Ekle</button></div>
-      <div ${ocGoster(s) ? "" : 'style="opacity:.45;pointer-events:none"'}>${grp("Grafik yorumu", X.yorum, bekleyen ? "grafik yüklenince oluşur" : "bu alanda yorumlanacak grafik verisi yok")}${grp("İlgili haberler", X.hb, "bu konuda yeni haber yok")}${grp("Özet'ten ilgili yorumlar", X.oc, X.T.length ? "eşleşen yorum yok" : "")}${grp("Diğer Özet yorumları", diger)}</div></div></div>
+      <div ${ocGoster(s) ? "" : 'style="opacity:.45;pointer-events:none"'}>${grp(`Grafik yorumu${ARSIV ? "" : ` <button class="duz" data-ocd="yorumYenile" title="Grafik yorumunu şimdiki görünüme göre yeniden yaz (yorum kendiliğinden güncellenmez)">↻ yenile</button>`}`, X.yorum, bekleyen ? "grafik yüklenince bir kez yazılır" : "bu alanda yorumlanacak grafik verisi yok")}${grp("İlgili haberler", X.hb, "bu konuda yeni haber yok")}${grp("Özet'ten ilgili yorumlar", X.oc, X.T.length ? "eşleşen yorum yok" : "")}${grp("Diğer Özet yorumları", diger)}</div></div></div>
     <div class="alan"><label for="sN">Değerlendirme notu <small>slayta yazılır, PowerPoint'te konuşmacı notu olur</small></label>${cubuk("sN", 1)}<textarea id="sN" data-f="s.not" placeholder="Bu hafta dikkat çeken nokta…">${esc(s.not || "")}</textarea></div>
     <div class="alan tam"><label for="sG">Metin <small>${s.govde != null ? "slayttaki metin kutusu · satır başında - madde, # ara başlık" : "slayta serbest metin kutusu ekleyin"}</small></label>${s.govde != null
       ? `${cubuk("sG", 1, `<span class="sag">Yazı <span class="seg" data-g="mpx">${[[24, "Küçük"], [30, "Orta"], [38, "Büyük"], [46, "Çok büyük"]].map(([v, l]) => `<button data-v="${v}" aria-pressed="${(s.govdePx || 30) === v}">${l}</button>`).join("")}</span></span>`)}<textarea id="sG" data-f="s.govde" style="min-height:150px" placeholder="# Ara başlık&#10;- Birinci madde&#10;- [TEFAS fon verisi](${esc(kok)}#tefas) için tıklayınız">${esc(s.govde || "")}</textarea>`
@@ -1058,6 +1092,10 @@ $("#ayar").addEventListener("input", e => {
   clearTimeout(yazT); yazT = setTimeout(() => kaydet(true), 250);
 });
 function ocDuzIslem(s, ne) {
+  if (ne === "yorumYenile") {
+    hucreler(s).forEach(c => { YENILE.add(c.id); $$(`.hucre[data-id="${CSS.escape(c.id)}"] iframe`).forEach(f => { try { f.contentWindow.postMessage({ ssYorumIste: 1 }, location.origin); } catch (e) {} }); });
+    toast("Grafik yorumu yeniden yazılıyor…"); return;
+  }
   if (ne === "ekle") { const i = $("#ocYeni"), v = i.value.trim(); if (!v) { i.focus(); return; } s.ocElle = [...(s.ocElle || []), { k: "e:" + A.uid(), md: v }]; kaydet(); setTimeout(() => $("#ocYeni")?.focus(), 30); return; }
   const i = $("#ocDuzG"), k = i?.dataset.k; OC_DUZ = null;
   if (ne === "ok" && k) {
@@ -1092,7 +1130,7 @@ $("#ayar").addEventListener("click", e => {
   if (b.dataset.o === "metinEkle") { s.govde = ""; kaydet(); setTimeout(() => $("#sG")?.focus(), 30); return; }
   if (b.dataset.oce != null) { e.preventDefault(); OC_DUZ = b.dataset.oce; ayarCiz(); const i = $("#ocDuzG"); if (i) { i.focus(); i.select(); } return; }
   if (b.dataset.ocsil != null) { e.preventDefault(); s.ocElle = (s.ocElle || []).filter(z => z.k !== b.dataset.ocsil); kaydet(); return; }
-  if (b.dataset.ocd) { e.preventDefault(); ocDuzIslem(s, b.dataset.ocd); return; }
+  if (b.dataset.ocd) { e.preventDefault(); e.stopPropagation(); ocDuzIslem(s, b.dataset.ocd); return; }
   const o = b.dataset.o, id = b.dataset.id;
   if (o === "sil") { s.ogeler = s.ogeler.filter(z => z.id !== id); if (!s.ogeler.length && !bosKalir(s)) D.slaytlar = D.slaytlar.filter(z => z !== s); kaydet(); }
   if (o === "ayir") { const z = s.ogeler.find(q => q.id === id); s.ogeler = s.ogeler.filter(q => q !== z); D.slaytlar.splice(D.slaytlar.indexOf(s) + 1, 0, { id: A.uid(), baslik: z.ad, not: "", duzen: "oto", ogeler: [z], kilit: true }); kaydet(); }
@@ -1387,12 +1425,14 @@ async function iframeHazir(f, ms = 45000) {
   throw new Error("zaman aşımı");
 }
 // tüm alanların görüntüsü: canlı taslakta slayttaki iframe'lerden alınır, arşivde kayıtlı görüntüler kullanılır
+let DISA = false;      // dışa aktarma sürerken goster() slaytları kapatmasın
 async function goruntuler(il, p1 = .85) {
   const L = sira(), isler = [], img = {};
-  if (ARSIV) {
+  if (ARSIV && !ARSIV.canli) {
     for (const [id, g] of Object.entries(GOR)) { if (!g) continue; const im = new Image(); im.src = g.u; try { await im.decode(); img[id] = { url: g.u, u: g.u, w: g.w, h: g.h, im }; } catch (e) {} }
     return img;
   }
+  DISA = true;
   L.forEach(x => { if (x.tur === "icerik") { const el = DOM[x.id]; if (el) hucreler(x.s).forEach(o => isler.push({ o, el })); } });
   const els = [...new Set(isler.map(x => x.el))];
   let n = 0;
@@ -1400,11 +1440,12 @@ async function goruntuler(il, p1 = .85) {
   for (const { o, el } of isler) {
     if (foto(o.ogeler[0])) {
       il.yaz(`Görüntüler hazırlanıyor · ${++n} / ${isler.length}`, n / isler.length * p1);
-      const u = RESIM[o.id]; if (!u) { img[o.id] = null; continue; }
+      const u = RESIM[o.id] || GOR[o.id]?.u; if (!u) { img[o.id] = null; continue; }
       try { const im = new Image(); im.src = u; await im.decode(); img[o.id] = { url: u, u, w: o.ogeler[0].w, h: o.ogeler[0].h, im }; } catch (e) { img[o.id] = null; }
       continue;
     }
     const k = els.indexOf(el); els.slice(k, k + 3).forEach(yukle);      // sıradaki iki slayt önden yüklensin
+    els.slice(0, Math.max(0, k - 1)).forEach(e2 => { if (!e2.classList.contains("aktif")) bosalt(e2); });     // geride kalanlar kapansın
 
     il.yaz(`Grafikler alınıyor · ${++n} / ${isler.length} · ${hucreAd(o)}`, n / isler.length * p1);
     const f = el.querySelector(`.hucre[data-id="${CSS.escape(o.id)}"] iframe`);
@@ -1415,6 +1456,7 @@ async function goruntuler(il, p1 = .85) {
       img[o.id] = { url: r.url, u: r.url, w: r.w, h: r.h, im };
     } catch (e) { console.warn("yakalanamadı", hucreAd(o), e); img[o.id] = null; }
   }
+  DISA = false; $$(".hucre iframe").forEach(yolTopla);
   return img;
 }
 
@@ -1666,9 +1708,9 @@ function gosterici() {
     if (k === "ilk") go(0); if (k === "geri") go(a - 1); if (k === "ileri") go(a + 1); if (k === "tam") tam(); });
   S.addEventListener("click", e => { if (!e.target.closest(".kontrol,a")) go(e.clientX < innerWidth / 4 ? a - 1 : a + 1); });
 }
-function htmlBlob(img, tb) {
+function htmlBlob(img, tb, anlik) {
   const L = sira(), n = L.length, sunum = JSON.parse(JSON.stringify(D)); delete sunum.degisti;
-  const veri = { tur: "alco-sunum-arsiv", v: 1, kayit: tb.kayit, tarih: tb.tarih, sunum, oc: OC, durum: DURUM, haber: HABER, yorum: yorumKopya(sunum),
+  const veri = { tur: "alco-sunum-arsiv", v: 1, kayit: tb.kayit, tarih: tb.tarih, sunum, oc: OC, durum: DURUM, haber: HABER, yorum: yorumKopya(sunum), ...(anlik ? { anlik } : {}),
     goruntu: Object.fromEntries(Object.entries(img).filter(([, g]) => g).map(([id, g]) => [id, { u: g.u, w: g.w, h: g.h }])) };
   const meta = { ad: D.ad || "", tarih: tb.tarih, kayit: tb.kayit, n, tema: tema() };
   const css = `:root{--sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"DM Mono","SF Mono",ui-monospace,Menlo,monospace}
@@ -1690,7 +1732,7 @@ ${css}
 <body>
 <div class="sahne tamEkran" id="sahne">
 ${L.map((x, i) => statikSlayt(x, i, n)).join("\n")}
-<div class="kontrol" id="kontrol"><button data-k="ilk" title="İlk slayt (Home)">⏮</button><button data-k="geri" title="Önceki (←)">◀</button><span id="sayac"></span><button data-k="ileri" title="Sonraki (→)">▶</button><button data-k="tam" title="Tam ekran (F)">⛶</button></div>
+<div class="kontrol" id="kontrol"><button data-k="ilk" title="İlk slayt (Home)">⏮</button><button data-k="geri" title="Önceki (←)">◀</button><span id="sayac"></span><button data-k="ileri" title="Sonraki (→)">▶</button><button data-k="tam" title="Tam ekran (F)">⛶</button><span class="ipucu-h" style="padding:0 8px;cursor:help;opacity:.75" title="Bu dosyadaki grafikler kayıt anının görüntüleridir. Hareketli (fareyle gezilebilen) grafikler için sitede Sunum sayfasındaki Kayıtlı sunumlar listesinden ya da 'Dosyadan aç' ile bu dosyayı açın; veriler yine ${esc(tb.tarih)} tarihindeki hâliyle gelir.">ⓘ</span></div>
 </div>
 <script type="application/json" id="alcoSunumArsiv">${JSON.stringify(veri).replace(/</g, "\\u003c")}<\/script>
 <script>(${gosterici.toString()})();<\/script>
@@ -1798,7 +1840,7 @@ function sahneSifirla() { Object.values(DOM).forEach(e => e.remove()); for (cons
 function bantCiz() {
   const b = $("#arsivBant"); b.classList.toggle("hidden", !ARSIV);
   if (!ARSIV) { b.innerHTML = ""; return; }
-  b.innerHTML = `<div class="in"><span><b>Kayıtlı sunum</b> · ${esc(ARSIV.dosya || "")} · grafikler, tablolar ve öne çıkanlar <b>${esc(ARSIV.tarih)}</b> verileriyle sabit${ARSIV.degisti ? " · <i>kaydedilmemiş değişiklik var</i>" : ""}</span><span class="sp"></span>
+  b.innerHTML = `<div class="in"><span><b>Kayıtlı sunum</b> · ${esc(ARSIV.dosya || "")} · ${ARSIV.canli ? "grafikler hareketli; veriler, tarih ve öne çıkanlar" : "grafikler, tablolar ve öne çıkanlar"} <b>${esc(ARSIV.tarih)}</b> ${ARSIV.canli ? "tarihindeki hâliyle" : "verileriyle"} sabit${ARSIV.degisti ? " · <i>kaydedilmemiş değişiklik var</i>" : ""}</span><span class="sp"></span>
     <button class="btn" data-b="taslak" title="Aynı slaytlar, başlıklar, notlar ve düzen; grafikler bugünkü verilerle">⟳ Güncel verilerle yeni taslak</button><button class="btn" data-b="kapat" title="Kayıtlı sunumu kapatıp düzenlediğiniz taslağa dönün">✕ Kapat</button></div>`;
 }
 $("#arsivBant").addEventListener("click", e => {
@@ -1814,12 +1856,14 @@ $("#arsivBant").addEventListener("click", e => {
 });
 function arsivAc(v, dosya) {
   if (ARSIV?.degisti && !confirm("Açık kayıtlı sunumdaki kaydedilmemiş değişiklikler kaybolacak. Devam edilsin mi?")) return;
-  ARSIV = { kayit: v.kayit, tarih: v.tarih || "", dosya, degisti: false };
+  ARSIV = { kayit: v.kayit, tarih: v.tarih || "", dosya, degisti: false, anlik: v.anlik || null, canli: !!(v.anlik && v.anlik.d && typeof DecompressionStream === "function") };
+  for (const k in VERI_ON) delete VERI_ON[k]; for (const k in olcu) delete olcu[k];
   D = { ...A.yeniSunum(), ...v.sunum }; OC = v.oc || []; DURUM = v.durum || {}; BUGUN = v.tarih || BUGUN0; GOR = v.goruntu || {}; HABER = v.haber || []; YORUM = v.yorum || {};
   aktif = 0; sahneSifirla(); bantCiz(); klasorCiz(); ciz(); gecmisBaslat();
-  toast(`${dosya} açıldı · ${v.tarih} verileri`);
+  toast(ARSIV.canli ? `${dosya} açıldı · grafikler hareketli, veriler ${v.tarih} tarihindeki hâliyle` : `${dosya} açıldı · ${v.tarih} verileri (bu kayıt eski biçimde: grafikler görüntü olarak)`, 4200);
 }
 function arsivKapat(d) {
+  for (const k in olcu) delete olcu[k];
   ARSIV = null; GOR = {}; OC = CANLI.OC; DURUM = CANLI.DURUM; HABER = CANLI.HABER; YORUM = YCANLI; BUGUN = BUGUN0; D = d || A.oku();
   aktif = 0; sahneSifirla(); bantCiz(); klasorCiz(); ciz(); gecmisBaslat();
 }
@@ -1870,11 +1914,14 @@ async function kaydetCalistir(sec) {
     const img = await goruntuler(il, .6);
     GOR = img;                                  // yerleşim, kaydedilen görüntülerin ölçüleriyle hesaplansın
     const tb = ARSIV ? { kayit: ARSIV.kayit, tarih: ARSIV.tarih } : { kayit: new Date().toISOString(), tarih: BUGUN0 };
+    // hareketli açılış için sayfaların o anki veri dosyaları da HTML'e eklenir (arşivden yeniden kayıtta ilk kaydınki korunur)
+    let anlik = ARSIV ? ARSIV.anlik : null;
+    if (!ARSIV && sec.some(x => x.t === "html")) { il.yaz("Veriler kayıt için hazırlanıyor…", .62); anlik = await veriTopla(); }
     const out = [];
     for (const x of sec) {
       if (x.t === "pdf") out.push([x.ad, await pdfBlob(img, il, .62, .8)]);
       if (x.t === "pptx") { il.yaz("PowerPoint oluşturuluyor…", .84); out.push([x.ad, await pptBlob(img)]); }
-      if (x.t === "html") { il.yaz("HTML sunum oluşturuluyor…", .93); out.push([x.ad, htmlBlob(img, tb)]); }
+      if (x.t === "html") { il.yaz("HTML sunum oluşturuluyor…", .93); out.push([x.ad, htmlBlob(img, tb, anlik)]); }
     }
     il.yaz("Klasöre yazılıyor…", .97);
     if (FS && KLASOR) for (const [ad, b] of out) { const fh = await KLASOR.getFileHandle(ad, { create: true }), w = await fh.createWritable(); await w.write(b); await w.close(); }
@@ -1893,7 +1940,7 @@ A.dinle(d => { if (!ARSIV) resimYukle(fotoIdler(d)).then(y => { if (y) sahneCiz(
 
 ciz(); gecmisBaslat();
 // otomatik test için (yalnızca ?test ile açıldığında)
-if (new URLSearchParams(location.search).has("test")) window.alcoSunumTest = { goruntuler, pdfBlob, pptBlob, htmlBlob, aktif: () => aktif };
+if (new URLSearchParams(location.search).has("test")) window.alcoSunumTest = { goruntuler, pdfBlob, pptBlob, htmlBlob, veriTopla, arsivAc, aktif: () => aktif, arsiv: () => ARSIV };
 })();
 </script>
 </body>
