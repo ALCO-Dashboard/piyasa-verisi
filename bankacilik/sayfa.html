@@ -194,7 +194,7 @@ tbody tr.sel{background:var(--accent-wash)}
 tr.detail td{background:var(--surface-2);cursor:default;white-space:normal}
 td.na{color:var(--muted)}
 td .sm{color:var(--muted);font-size:11px;margin-left:6px}
-.vtabs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:4px 0 2px}.vtabs .chip{font-size:12.5px;padding:4px 12px}
+.vtabs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:4px 0 2px}.vtabs.ktur{justify-content:flex-start;margin:10px 0 2px}.vtabs .chip{font-size:12.5px;padding:4px 12px}
 .plab{font:600 11px var(--mono);fill:var(--ink-2)}.plab.f{fill:var(--muted);font-weight:500}
 td .shr{color:var(--muted);font-size:11.5px;margin-left:4px}
 tr.vgrp td{background:var(--surface-2,var(--bg));font-size:12.5px;padding-top:8px;text-align:left!important}
@@ -883,16 +883,48 @@ const isVade = t => t.cols.some(c => /vadesiz/i.test(c));
 const vCols = t => t.cols.map((c, i) => [c.replace(/\s+/g, " ").replace(/ Arası$/i, "").trim(), i]).filter(([c]) => !/^toplam/i.test(c));
 const vTot = t => { const i = t.cols.findIndex(c => /^\s*toplam/i.test(c)); return i >= 0 ? i : t.cols.length - 1; };
 const vMode = (M, t) => S.bVd[M.freq + t.key] ?? "dag";
+// Kısa kalem seçimi (TCMB faiz / kâr payındaki Tüketici, İhtiyaç… sekmeleri gibi): tıklanan kalem grafikte,
+// başlıkta ve grup kutucuklarında gösterilir. Kalemler BDDK satır adlarından bulunur; tabloda olmayan kalem çıkmaz.
+const KISA = [
+  [/^krediler/i, [
+    ["Toplam", ["toplam krediler"]], ["Bireysel", ["tuketici kredileri ve bireysel"], "Tüketici kredileri + bireysel kredi kartları"],
+    ["Tüketici", ["tuketici kredileri"]], ["Konut", ["tuketici kredileri", "konut"]], ["Taşıt", ["tuketici kredileri", "tasit"]], ["İhtiyaç", ["tuketici kredileri", "ihtiyac"]],
+    ["Bireysel KK", ["bireysel kredi kartlari"], "Bireysel kredi kartları"], ["Ticari", ["ticari ve diger krediler"], "Ticari ve diğer krediler"],
+    ["Taksitli Ticari", ["taksitli ticari krediler"]], ["Kurumsal KK", ["kurumsal kredi kartlari"], "Kurumsal kredi kartları"],
+    ["KOBİ", ["kobi kredileri"], "KOBİ kredileri (bilgi)"], ["KMH", ["kredili mevduat hesaplari tuketici"], "Kredili mevduat hesapları (tüketici)"]]]
+];
+const kNorm = n => trLower(String(n || "")).replace(/^[a-zçğıöşü]\)\s*/, "").replace(/[çğıöşü]/g, c => ({ ç: "c", ğ: "g", ı: "i", ö: "o", ş: "s", ü: "u" })[c]).replace(/[^a-z0-9]+/g, " ").trim();
+function kisaBul(tr, yol) {
+  let havuz = Object.values(tr.byKey), dug = null;
+  for (const p of yol) {
+    dug = havuz.find(n => kNorm(n.name) === p) || havuz.find(n => kNorm(n.name).startsWith(p)); if (!dug) return null;
+    const alt = []; const gez = n => n.kids.forEach(k => { alt.push(k); gez(k); }); gez(dug); havuz = alt;
+  }
+  return dug;
+}
+// "c) İhtiyaç" gibi alt kalemler başlıkta üst kalemiyle: "Tüketici Kredileri › İhtiyaç"
+function dugAd(tr, n) {
+  if (!/^[a-zçğıöşü]\)\s*/i.test(n.name)) return n.name;
+  const ust = Object.values(tr.byKey).find(x => x.kids.includes(n));
+  return (ust ? ust.name + " › " : "") + n.name.replace(/^[a-zçğıöşü]\)\s*/i, "");
+}
+function kisaSecim(M, t, chk) {
+  const tanim = KISA.find(([re]) => re.test(t.name)); if (!tanim) return "";
+  const tr = treeOf(M, t), L = tanim[1].map(([ad, yol, uzun]) => ({ ad, uzun, n: kisaBul(tr, yol) })).filter(x => x.n);
+  if (L.length < 2) return "";
+  return `<div class="vtabs ktur" role="group" aria-label="Kredi türü">${L.map(x => `<button class="chip" data-kt="${t.key}" data-n="${esc(x.n.key)}" title="${esc(x.uzun || x.n.name)}" aria-pressed="${chk.length === 1 && chk[0] === x.n.key}">${esc(x.ad)}</button>`).join("")}</div>`;
+}
 function bddkCard(M, t) {
   const A = S.bA, B = S.bB, groups = S.bGroups, multi = groups.length > 1, g0 = groups[0], vd = isVade(t), c = vd ? vTot(t) : colFor(t);
-  const tid = M.freq + t.key, tr = treeOf(M, t), hn = tr.roots[0], chk = chkOf(M, t);
+  const tid = M.freq + t.key, tr = treeOf(M, t), hn0 = tr.roots[0], chk = chkOf(M, t);
+  const hn = chk.length === 1 && tr.byKey[chk[0]] ? tr.byKey[chk[0]] : hn0;     // tek kalem seçiliyse başlık ve grup kutucukları o kalemi gösterir
   const kh = nodeKind(M, t, hn, c), V = (n, g, i) => nodeVal(M, t, n, g, c, i);
   let head;
   if (!multi) {
     const a = V(hn, g0, A), b = V(hn, g0, B), d = ok(a) && ok(b) ? b - a : null;
-    head = `<div class="headline"><span class="big ${cls(d, 1e-9)}">${kh === "pct" ? fmtBp(ok(d) ? d * 100 : null) : fmtVal(d, kh, true)}</span>${kh !== "pct" ? `<span class="pc ${cls(pct(b, a), .05)}">(${fmtPct(pct(b, a), 2)})</span>` : ""}<span class="lvl">${esc(hn.name)} · <b>${fmtVal(a, kh)}</b> → <b>${fmtVal(b, kh)}</b></span></div>`;
+    head = `<div class="headline"><span class="big ${cls(d, 1e-9)}">${kh === "pct" ? fmtBp(ok(d) ? d * 100 : null) : fmtVal(d, kh, true)}</span>${kh !== "pct" ? `<span class="pc ${cls(pct(b, a), .05)}">(${fmtPct(pct(b, a), 2)})</span>` : ""}<span class="lvl">${esc(dugAd(tr, hn))} · <b>${fmtVal(a, kh)}</b> → <b>${fmtVal(b, kh)}</b></span></div>`;
   } else {
-    head = `<div class="headline"><span class="lvl">${esc(hn.name)} · grup değişimleri aşağıda</span></div>`;
+    head = `<div class="headline"><span class="lvl">${esc(dugAd(tr, hn))} · grup değişimleri aşağıda</span></div>`;
   }
   const vis = visibleNodes(M, t);
   const hasKids = Object.values(tr.byKey).some(n => n.kids.length);
@@ -947,6 +979,7 @@ function bddkCard(M, t) {
   return `<article class="card" data-card="${t.key}">
     <div class="cardhead"><div><div class="btitle"><details class="dd tdd"><summary title="Tablo seç"><h3>${esc(t.name)}</h3></summary><div class="ddpanel">${tableMenu(M, t.key)}</div></details>${head}</div></div><div class="bcur">${vd ? "" : curList().length > 1 ? `<span class="note">Tablo ve rakamlar: ${curList()[0]}</span>` : ""}${vd ? "" : `<div class="seg" role="group" aria-label="Para birimi">${CURS.map(cc => `<button data-bc="${cc}" aria-pressed="${curList().includes(cc)}">${cc}</button>`).join("")}</div>`}</div></div>
     ${ctl}
+    ${vd ? "" : kisaSecim(M, t, chk)}
     ${vd ? (() => { const vm = vMode(M, t); return `<div class="chartbox" style="position:static"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="sub" data-csub="${t.key}"></span><label class="note"><input type="checkbox" data-vpay="${t.key}"${S.bVdPay[tid] ? " checked" : ""}> Eksende pay (%)</label></div><div data-chart="${t.key}"></div>
       <div class="vtabs" role="group" aria-label="Vade dilimi">${[["dag", "Vade dağılımı"], ...vCols(t).map(([cc, i]) => [String(i), cc])].map(([k, l]) => `<button class="chip" data-vd="${t.key}" data-k="${k}" aria-pressed="${String(vm) === k}">${esc(l)}</button>`).join("")}</div><div data-chart2="${t.key}"></div></div>`; })()
     : `<div class="chartbox" style="position:static"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="sub" data-csub="${t.key}"></span><label class="note"><input type="checkbox" data-idx="${t.key}"${S.bIdx[tid] ? " checked" : ""}> Endeks (dönem başı = 100)</label></div><div data-chart="${t.key}"></div></div>`}
@@ -1040,6 +1073,7 @@ function bindBddk() {
     const s = e.target.closest("select[data-colsel]"); if (!s) return; S.bColOverride[S.bFreq + s.dataset.colsel] = +s.value; refreshCard(s.dataset.colsel); });
   $("#bCards").addEventListener("click", e => {
     const M = curOf();
+    const kt = e.target.closest("button[data-kt]"); if (kt) { S.bChk[M.freq + kt.dataset.kt] = [kt.dataset.n]; refreshCard(kt.dataset.kt); return; }
     const vb = e.target.closest("button[data-vd]"); if (vb) { S.bVd[S.bFreq + vb.dataset.vd] = vb.dataset.k; refreshCard(vb.dataset.vd); return; }
     const ts = e.target.closest("button[data-tsel]"); if (ts) { const sel = S.bTables[S.bFreq] || [], i = sel.indexOf(ts.dataset.tcur), k = ts.dataset.tsel;
       S.bTables[S.bFreq] = sel.includes(k) ? sel : (i >= 0 ? sel.map((x, j) => j === i ? k : x) : [k]); renderBddk(); return; }
