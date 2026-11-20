@@ -207,6 +207,17 @@ def ekonomik(M, E, B):
         N["beklenti"] = dict(v=b["pk_12ay"][i], ys=ys, ay=b["months"][i])
         if th:
             N["rapor"] = dict(ad=rad, tarih=rt, tahmin=th, yil=yil)
+    # Tüketici güven endeksi (TÜİK, EVDS) — enflasyon beklentisinin hemen ardından
+    A0 = (E or {}).get("aylik") or {}
+    if A0.get("dates") and A0.get("tg"):
+        g = A0["tg"]
+        i = son_i(g)
+        if i >= 0:
+            dy = g[i] - g[i - 1] if i > 0 and ok(g[i - 1]) else None
+            gb = (A0.get("tg_genel_bek") or [None] * (i + 1))[i]
+            K.append(kart("guven", "Tüketici güven endeksi", nf(g[i]), f"genel ekonomik durum beklentisi <b>{nf(gb)}</b>" if ok(gb) else "",
+                          ay_ad(A0["dates"][i]) + " · eşik 100", f"{sg(dy)} puan" if ok(dy) else None, yon(dy, True), spark(g), "guven", "TÜİK"))
+            N["guven"] = dict(v=g[i], dy=dy, ay=A0["dates"][i])
     if not E:
         return K, N
     Q = E.get("ceyrek") or {}
@@ -567,6 +578,10 @@ def one_cikanlar(N, BD, takvim):
         fark = t["yoy"] - bk["v"]
         ekle(eko, f"Piyasa katılımcılarının 12 ay sonrası enflasyon beklentisi <b>{yuzde(bk['v'], 2)}</b>; yıl sonu beklentisi {yuzde(bk['ys'], 2)}. "
                   f"Beklenti mevcut enflasyonun {nf(abs(fark))} puan {'altında' if fark > 0 else 'üstünde'}.", "")
+    gv = N.get("guven")
+    if gv:
+        ekle(eko, f"Tüketici güven endeksi {ay_ad(gv['ay'])} ayında <b>{nf(gv['v'])}</b>"
+                  + (f" ({sg(gv['dy'])} puan)" if ok(gv["dy"]) else "") + f"; endeks 100'ün {'altında, tüketiciler kötümser' if gv['v'] < 100 else 'üstünde, tüketiciler iyimser'}.", yon(gv["dy"], True))
     g = N.get("gsyh")
     if g:
         ekle(eko, f"GSYH {q_ad(g['q'])} yıllık <b>{pyuzde(g['yy'])}</b> büyüdü (önceki çeyrek {pyuzde(g['onceki'])}); "

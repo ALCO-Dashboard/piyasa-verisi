@@ -57,6 +57,10 @@ AYLIK = {
     "b_faiz": "TP.KB.GID152", "b_faiz_ic": "TP.KB.GID153", "b_faiz_dis": "TP.KB.GID160", "b_faiz_kira": "TP.KB.GID163",
     # kapasite kullanım
     "kko": "TP.KKO.MA",
+    # tüketici güven endeksi ve alt endeksler (TÜİK-TCMB Tüketici Eğilim Anketi)
+    "tg": "TP.TG2.Y01", "tg_maddi": "TP.TG2.Y02", "tg_maddi_bek": "TP.TG2.Y03", "tg_genel": "TP.TG2.Y04", "tg_genel_bek": "TP.TG2.Y05",
+    "tg_issiz_bek": "TP.TG2.Y06", "tg_dayanikli": "TP.TG2.Y09", "tg_tasarruf": "TP.TG2.Y12", "tg_borc": "TP.TG2.Y13",
+    "tg_fiyat_bek": "TP.TG2.Y15", "tg_ucret_bek": "TP.TG2.Y16",
 }
 CEYREK = {
     # MEA zincirlenmiş hacim endeksi (harcama)

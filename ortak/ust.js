@@ -105,7 +105,7 @@ ${PAGE === "tefas" ? "#thm{display:none!important}" : ""}`;
 
   const TABS = [["ozet", "Özet", "ozet/", "ozet/"], ["banka", "Bankacılık Verileri", "bankacilik/", "bankacilik/"], ["tefas", "TEFAS Verileri", "", "tefas.html"], ["makro", "Makro ve Piyasa", "makro/", "makro/"], ["bilanco", "Banka Bilanço Verileri", "bilanco/", "bilanco/"]];
   const ALIAS = { katilim: ["banka", "katilim"], tcmb: ["banka", "rezerv"], rezerv: ["banka", "rezerv"], zk: ["banka", "zk"], pp: ["banka", "pp"], ppaof: ["banka", "ppaof"], bddk: ["banka", "bddk"], bddkw: ["banka", "bddkw"], bddkm: ["banka", "bddkm"],   // eski bağlantılar ve Özet kartları: alt sekmeler
-    enf: ["makro", "enf"], piyasa: ["makro", "piyasa"], buyume: ["makro", "buyume"], istihdam: ["makro", "istihdam"], uretim: ["makro", "uretim"], dis: ["makro", "dis"], butce: ["makro", "butce"], hazine: ["makro", "hazine"] };
+    enf: ["makro", "enf"], piyasa: ["makro", "piyasa"], buyume: ["makro", "buyume"], istihdam: ["makro", "istihdam"], uretim: ["makro", "uretim"], guven: ["makro", "guven"], dis: ["makro", "dis"], butce: ["makro", "butce"], hazine: ["makro", "hazine"] };
   const SRC = [ // anahtar, ad, sekme, kaç gün içinde "güncel"
     ["bddk_haftalik", "BDDK Haftalık Bülten", "banka", 14], ["bddk_aylik", "BDDK Aylık Bülten", "banka", 75],
     ["evds", "TCMB EVDS", "banka", 7], ["politika", "Para Politikası (TCMB)", "banka", 5],
