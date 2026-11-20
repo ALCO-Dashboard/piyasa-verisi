@@ -530,6 +530,7 @@ function lineChart(el, { series, height = 340, yFmt, gapDays = 0, unit = "", y2F
   el.innerHTML = "";
   series = series.filter(s => s.data.some(p => ok(p[1])));
   if (!series.length) { el.innerHTML = '<div class="empty">Seçili dönemde veri yok.</div>'; return; }
+  el._ssSeri = { birim: unit, fmt: yFmt, seriler: series.map(s => ({ ad: s.name, fmt: s.axis === "r" ? y2Fmt : yFmt, p: s.data })) };     // Sunum: grafik yorumu için veri
   if (series.length > 1) {
     const lg = document.createElement("div"); lg.className = "legend";
     lg.innerHTML = series.map(s => `<span><i style="${s.dash ? `background:none;border-top:2px ${s.dash === "2 3" ? "dotted" : "dashed"} ${s.color};height:0` : `background:${s.color}`}"></i>${esc(s.name)}${s.dash === true ? " (kesikli)" : ""}${s.axis === "r" && series.some(x => x.axis !== "r") ? " (sağ eksen)" : ""}</span>`).join("");
