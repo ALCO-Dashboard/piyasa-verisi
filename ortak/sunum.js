@@ -533,7 +533,11 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
   }
   // ayrı gösterilen alanlar: kullanıcı bu alanda bir şeye (kutucuk, sekme) tıklayınca durum Sunum sayfasına bildirilir; o da aynı sayfadan gelen diğer alanlara uygular
   if (IZOLE) document.addEventListener("click", e => { if (!e.isTrusted || !hedef) return; setTimeout(() => { try { parent.postMessage({ ssDurum: 1, id: Q.get("sunum"), durum: durumAl() }, location.origin); } catch (x) {} }, 350); }, true);
-  if (IZOLE) addEventListener("message", e => { const m = e.data; if (m && e.origin === location.origin && m.ssDurumUygula) durumUygula(m.ssDurumUygula).then(() => { setTimeout(haber, 300); yorumPlan(600); }).catch(() => {}); });
+  if (IZOLE) addEventListener("message", e => { const m = e.data; if (m && e.origin === location.origin && m.ssDurumUygula) durumUygula(m.ssDurumUygula).then(() => { setTimeout(haber, 300); }).catch(() => {}); });
+  if (IZOLE) addEventListener("message", e => { const m = e.data; if (m && e.origin === location.origin && m.ssYorumIste) { sonYorum = ""; yorumGonder(); } });
+  // grafiğin üzerinde gezinirken açılan ipucu kutuları alanı büyütmesin (slayt sürekli yeniden çizilip kasmasın)
+  let etkilesim = false;
+  if (IZOLE) document.addEventListener("pointermove", () => { etkilesim = true; }, { capture: true, passive: true });
   if (IZOLE) addEventListener("message", e => {
     const m = e.data; if (!m || e.origin !== location.origin || m.ssGen == null) return;
     const g = Math.round(+m.ssGen) || 0; if (g === genZorla) return;
@@ -606,13 +610,12 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
     dispatchEvent(new Event("resize"));
     if (ro) ro.disconnect();
     ro = new ResizeObserver(() => haber()); ro.observe(el);
-    setTimeout(haber, 50); yorumPlan(900);
-    if (!yorumMo) { yorumMo = new MutationObserver(() => yorumPlan(500)); yorumMo.observe(document.body, { childList: true, subtree: true, characterData: true }); }
+    setTimeout(haber, 50); yorumPlan(1200); setTimeout(() => yorumPlan(0), 4000);     // grafik geç çizilirse bir kez daha
   }
 
   // ---- grafik yorumu: alandaki grafiklerin verisinden kısa, sayıya dayalı yorum (slaytın "Öne çıkanlar" satırlarına gider)
   // Sayfalar grafiği çizerken verisini kaba bırakır (el._ssSeri); TEFAS'taki Chart.js grafikleri doğrudan okunur.
-  let yorumT = 0, yorumIlk = 0, yorumMo, sonYorum = "";
+  let yorumT = 0, yorumIlk = 0, sonYorum = "";
   // sayfa sürekli değişse de (saat, kayan yazı) en geç ~2 sn'de bir yorum gönderilir
   const yorumPlan = ms => { const t = Date.now(); if (yorumT && t - yorumIlk > 1500) return; if (!yorumT) yorumIlk = t; clearTimeout(yorumT); yorumT = setTimeout(() => { yorumT = 0; yorumGonder(); }, ms); };
   const sayi = (v, d) => v == null || !isFinite(v) ? "—" : v.toLocaleString("tr-TR", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -688,9 +691,13 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
     try { parent.postMessage({ ssYorum: 1, id: Q.get("sunum"), satirlar: satir }, location.origin); } catch (e) {}
   }
   let sonOlcu = "";
+  let sonW = 0, sonH = 0;
   function haber(x) {
     const r = hedef ? hedef.getBoundingClientRect() : null;
-    const m = x || { w: Math.ceil(r ? Math.max(r.width, hedef.scrollWidth) : 0), h: Math.ceil(r ? Math.max(r.height, hedef.scrollHeight) : 0) };
+    let w = r ? Math.max(r.width, hedef.scrollWidth) : 0, h = r ? Math.max(r.height, hedef.scrollHeight) : 0;
+    if (r && etkilesim) { w = Math.max(r.width, Math.min(w, sonW || r.width)); h = Math.max(r.height, Math.min(h, sonH || r.height)); }     // taşma yalnız ilk ölçümde
+    if (!x) { sonW = w; sonH = h; }
+    const m = x || { w: Math.ceil(w), h: Math.ceil(h) };
     const k = m.w + "x" + m.h + (m.hata ? "!" : ""); if (k === sonOlcu) return; sonOlcu = k;
     try { parent.postMessage({ ssBoyut: 1, id: Q.get("sunum"), ...m }, location.origin); } catch (e) {}
   }
