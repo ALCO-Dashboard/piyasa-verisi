@@ -531,6 +531,9 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
     const gen = genZorla || (hedefler.length > 1 ? kokGen : izOge && (izOge.w || (izOge.ogeler && izOge.ogeler.length === 1 && izOge.ogeler[0].w)));
     if (gen) hedef.style.setProperty("width", Math.max(200, gen) + "px", "important"); else hedef.style.removeProperty("width");
   }
+  // ayrı gösterilen alanlar: kullanıcı bu alanda bir şeye (kutucuk, sekme) tıklayınca durum Sunum sayfasına bildirilir; o da aynı sayfadan gelen diğer alanlara uygular
+  if (IZOLE) document.addEventListener("click", e => { if (!e.isTrusted || !hedef) return; setTimeout(() => { try { parent.postMessage({ ssDurum: 1, id: Q.get("sunum"), durum: durumAl() }, location.origin); } catch (x) {} }, 350); }, true);
+  if (IZOLE) addEventListener("message", e => { const m = e.data; if (m && e.origin === location.origin && m.ssDurumUygula) durumUygula(m.ssDurumUygula).then(() => { setTimeout(haber, 300); yorumPlan(600); }).catch(() => {}); });
   if (IZOLE) addEventListener("message", e => {
     const m = e.data; if (!m || e.origin !== location.origin || m.ssGen == null) return;
     const g = Math.round(+m.ssGen) || 0; if (g === genZorla) return;
