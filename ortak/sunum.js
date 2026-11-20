@@ -535,6 +535,29 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
   if (IZOLE) document.addEventListener("click", e => { if (!e.isTrusted || !hedef) return; setTimeout(() => { try { parent.postMessage({ ssDurum: 1, id: Q.get("sunum"), durum: durumAl() }, location.origin); } catch (x) {} }, 350); }, true);
   if (IZOLE) addEventListener("message", e => { const m = e.data; if (m && e.origin === location.origin && m.ssDurumUygula) durumUygula(m.ssDurumUygula).then(() => { setTimeout(haber, 300); }).catch(() => {}); });
   if (IZOLE) addEventListener("message", e => { const m = e.data; if (m && e.origin === location.origin && m.ssYorumIste) { sonYorum = ""; yorumGonder(); } });
+  // "Veri" açılınca tablo grafiğin altına eklenip alan uzuyordu (slayttan taşıyordu). Sunumda tablo grafiğin yerine geçer,
+  // grafiğin yüksekliğinde kalır; uzun tablo kendi içinde kaydırılır.
+  function veriModu() {
+    if (!hedef) return;
+    const D = [...hedef.querySelectorAll(".veri, .tdata, .bdata")].filter(d => d.querySelector("table") && d.getClientRects().length);
+    let acildi = false;      // grafik gizliyken yeniden çizildiyse genişliği sıfır sanıp küçük çizer: geri açınca yeniden çizdir
+    $$("[data-ss-vgiz]", hedef).forEach(e => { if (!D.some(d => d === e.__ssVeri && d.isConnected)) { e.style.removeProperty("display"); e.removeAttribute("data-ss-vgiz"); acildi = true; } });
+    if (acildi) setTimeout(yenidenCiz, 0);
+    $$("[data-ss-vkut]", hedef).forEach(d => { if (!D.includes(d)) { ["height", "max-height", "overflow", "box-sizing"].forEach(k => d.style.removeProperty(k)); d.removeAttribute("data-ss-vkut"); } });
+    D.forEach(d => {
+      let kap = d.parentElement, blok = null;
+      while (kap && hedef.contains(kap) || kap === hedef) {
+        const g = [...kap.querySelectorAll("svg, canvas")].find(x => !d.contains(x) && (x.getBoundingClientRect().height > 80 || x.closest("[data-ss-vgiz]")));
+        if (g) { blok = [...kap.children].find(ch => ch !== d && !ch.contains(d) && ch.contains(g)) || null; break; }
+        if (kap === hedef) break; kap = kap.parentElement;
+      }
+      if (!blok) return;
+      if (!blok.hasAttribute("data-ss-vgiz")) { blok.__ssYuk = Math.round(blok.getBoundingClientRect().height); blok.__ssVeri = d; blok.setAttribute("data-ss-vgiz", ""); blok.style.setProperty("display", "none", "important"); }
+      const dug = d.querySelector(".vb, .tdb"), H = Math.max(180, (blok.__ssYuk || 300) + (dug ? Math.round(dug.getBoundingClientRect().height) : 0));
+      d.setAttribute("data-ss-vkut", ""); d.style.setProperty("height", H + "px", "important"); d.style.setProperty("max-height", H + "px", "important"); d.style.setProperty("overflow", "auto", "important"); d.style.setProperty("box-sizing", "border-box", "important");
+    });
+  }
+  if (IZOLE) document.addEventListener("click", e => { if (!e.isTrusted) return; [80, 400, 1000].forEach(t => setTimeout(() => { veriModu(); haber(); }, t)); }, true);
   // grafiğin üzerinde gezinirken açılan ipucu kutuları alanı büyütmesin (slayt sürekli yeniden çizilip kasmasın)
   let etkilesim = false;
   if (IZOLE) document.addEventListener("pointermove", () => { etkilesim = true; }, { capture: true, passive: true });
@@ -610,7 +633,7 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
     dispatchEvent(new Event("resize"));
     if (ro) ro.disconnect();
     ro = new ResizeObserver(() => haber()); ro.observe(el);
-    setTimeout(haber, 50); yorumPlan(1200); setTimeout(() => yorumPlan(0), 4000);     // grafik geç çizilirse bir kez daha
+    setTimeout(() => { veriModu(); haber(); }, 50); yorumPlan(1200); setTimeout(() => yorumPlan(0), 4000);     // grafik geç çizilirse bir kez daha
   }
 
   // ---- grafik yorumu: alandaki grafiklerin verisinden kısa, sayıya dayalı yorum (slaytın "Öne çıkanlar" satırlarına gider)
