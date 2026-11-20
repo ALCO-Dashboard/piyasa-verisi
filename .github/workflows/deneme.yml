@@ -7,12 +7,17 @@ permissions:
 jobs:
   d:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
       - run: |
-          mkdir -p out && pip install requests openpyxl >/dev/null 2>&1
-          python3 t/p.py 2>&1 | tee out/log.txt
-      - run: |
+          mkdir -p out && pip install requests openpyxl xlrd >/dev/null 2>&1
+          python bist/guncelle.py --site site --max-gun 700 --sure 100 2>&1 | tee out/log.txt
+          cp -r site/makro/data out/
+      - if: always()
+        run: |
           git config user.name bot; git config user.email bot@users.noreply.github.com
           git checkout --orphan bist-deneme-veri; git rm -rqf --cached .; git add -f out; git commit -qm veri; git push -f origin bist-deneme-veri
