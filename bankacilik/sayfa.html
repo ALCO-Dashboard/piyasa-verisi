@@ -194,6 +194,10 @@ tbody tr.sel{background:var(--accent-wash)}
 tr.detail td{background:var(--surface-2);cursor:default;white-space:normal}
 td.na{color:var(--muted)}
 td .sm{color:var(--muted);font-size:11px;margin-left:6px}
+.vtabs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:4px 0 2px}.vtabs .chip{font-size:12.5px;padding:4px 12px}
+.plab{font:600 11px var(--mono);fill:var(--ink-2)}.plab.f{fill:var(--muted);font-weight:500}
+td .shr{color:var(--muted);font-size:11.5px;margin-left:4px}
+tr.vgrp td{background:var(--surface-2,var(--bg));font-size:12.5px;padding-top:8px;text-align:left!important}
 td .sm.up{color:var(--up)} td .sm.down{color:var(--down)}
 .bctl{display:flex;flex-direction:column;gap:8px;margin:8px 0 12px}
 .bctl .brow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
@@ -466,7 +470,7 @@ async function loadAll() {
 const S = {
   tab: "bddk",
   bFreq: store.get("bv.freq") || "w", bA: null, bB: null, bGroups: (store.get("bv.groups") || "katilim").split(","), bCurs: (store.get("bv.curs") || store.get("bv.cur") || "Toplam").split(",").filter(x => ["TP", "YP", "Toplam"].includes(x)), bVeri: !!store.get("bv.veri"), bTables: {},
-  bColOverride: {}, bChk: {}, bIdx: {}, bOpenN: new Set(),
+  bColOverride: {}, bChk: {}, bIdx: {}, bOpenN: new Set(), bVd: {}, bVdPay: {},
   tSub: "pp", tRg: {}, tTopics: {}, tAB: {}, tClosed: new Set(["faiz|Banka ve Kredi Kartı İstatistikleri"]), tBank: store.get("bv.tbank") || "katilim", tBankSet: (store.get("bv.tbanks") || store.get("bv.tbank") || "katilim").split(",").filter(Boolean), tA: null, tB: null, tSel: {}, tRange: "1 Yıl", tFrom: "", tTo: "", fMode: {}, fBank: {}, fCur: {}, fTyp: {}, tCur: {}, tTyp: {}, tOpen: new Set(), tData: new Set(), tRate: store.get("bv.trate") || "efektif",
   aSel: [], aIndex: false, aRange: "2Y", aSrc: "all",
 };
@@ -594,6 +598,58 @@ function lineChart(el, { series, height = 340, yFmt, gapDays = 0, unit = "", y2F
   };
   svgEl.addEventListener("pointermove", move);
   svgEl.addEventListener("pointerleave", () => { tip.style.opacity = 0; xh.setAttribute("opacity", 0); dots.innerHTML = ""; });
+}
+// kategorik eksenli grafik (mevduat vade dağılımı): çizgi + nokta etiketi (pay %) ya da gruplu çubuk
+function vadeChart(el, { cats, series, yFmt, unit = "", height = 320, bars = false, labFmt = v => "%" + nf(1).format(v), etiketMax = 3 }) {
+  el.innerHTML = "";
+  series = series.filter(s => s.vals.some(ok));
+  if (!series.length) { el.innerHTML = '<div class="empty">Seçili dönemde veri yok.</div>'; return; }
+  el._ssSeri = { birim: unit, fmt: yFmt, seriler: series.map(s => ({ ad: s.name, fmt: yFmt, p: cats.map((c, k) => [c, s.vals[k]]) })) };
+  if (series.length > 1) {
+    const lg = document.createElement("div"); lg.className = "legend";
+    lg.innerHTML = series.map(s => `<span><i style="${s.dash ? `background:none;border-top:2px dashed ${s.color};height:0` : `background:${s.color}`}"></i>${esc(s.name)}</span>`).join("");
+    el.appendChild(lg);
+  }
+  const box = el.appendChild(Object.assign(document.createElement("div"), { className: "chart" }));
+  const W = Math.max(320, box.clientWidth || el.clientWidth || 640), H = height, m = { t: unit ? 26 : 16, r: 16, b: 28, l: 64 };
+  const all = series.flatMap(s => s.vals.filter(ok));
+  let y0 = Math.min(0, ...all), y1 = Math.max(0, ...all); if (y0 === y1) y1 = y0 + 1;
+  const pad = (y1 - y0) * .1; y1 += pad; if (y0 < 0) y0 -= pad;
+  const ticks = niceTicks(y0, y1, 5); y0 = Math.min(y0, ticks[0]); y1 = Math.max(y1, ticks[ticks.length - 1]);
+  const band = (W - m.l - m.r) / cats.length, X = k => m.l + band * (k + .5), Y = v => m.t + (1 - (v - y0) / (y1 - y0)) * (H - m.t - m.b);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Vade dağılımı grafiği"><g class="axis">${unit ? `<text x="${m.l - 8}" y="10" text-anchor="end" class="yunit">${esc(unit)}</text>` : ""}`;
+  for (const t of ticks) svg += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--grid)"/><text x="${m.l - 8}" y="${Y(t) + 4}" text-anchor="end">${yFmt(t)}</text>`;
+  // dar ekranda kısa vade adları
+  const kisa = c => band >= 80 ? c : c.replace(/^Vadesiz$/i, "Vad.").replace(/^1 Aya Kadar$/i, "≤1A").replace(/ Ay$/i, "A").replace(/^1 Yıl Üzeri$/i, ">1Y");
+  cats.forEach((c, k) => { svg += `<text x="${X(k)}" y="${H - 8}" text-anchor="middle">${esc(kisa(c))}</text>`; });
+  svg += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--axis)"/></g>`;
+  const nAna = series.filter(s => !s.faint).length, etiket = nAna <= (band < 70 ? 1 : etiketMax);
+  if (bars) {
+    const n = series.length, bw = Math.min(30, band * .72 / n);
+    series.forEach((s, q) => s.vals.forEach((v, k) => { if (!ok(v)) return; const x = X(k) - n * bw / 2 + q * bw, y = Y(Math.max(v, 0)), h = Math.max(1, Math.abs(Y(v) - Y(0)));
+      svg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${(bw - 2).toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${s.color}"/>`;
+      if (etiket && ok(s.lab?.[k])) svg += `<text class="plab" x="${(x + bw / 2 - 1).toFixed(1)}" y="${(v >= 0 ? y - 5 : y + h + 12).toFixed(1)}" text-anchor="middle">${labFmt(s.lab[k])}</text>`; }));
+  } else {
+    for (const s of series) {
+      let d = "", pen = false;
+      s.vals.forEach((v, k) => { if (!ok(v)) { pen = false; return; } d += (pen ? "L" : "M") + X(k).toFixed(1) + " " + Y(v).toFixed(1); pen = true; });
+      svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.faint ? 1.6 : 2.4}" stroke-linejoin="round" stroke-linecap="round"${s.dash ? ` stroke-dasharray="${s.dash}"` : ""}${s.faint ? ' opacity=".75"' : ""}/>`;
+      s.vals.forEach((v, k) => { if (!ok(v)) return; svg += `<circle cx="${X(k)}" cy="${Y(v)}" r="${s.faint ? 3 : 4}" fill="${s.faint ? "var(--surface)" : s.color}" stroke="${s.color}" stroke-width="2"/>`;
+        if (etiket && (!s.faint || nAna === 1) && ok(s.lab?.[k])) svg += `<text class="plab${s.faint ? " f" : ""}" x="${X(k)}" y="${(s.faint ? Y(v) + 16 : Y(v) - 9).toFixed(1)}" text-anchor="middle">${labFmt(s.lab[k])}</text>`; });
+    }
+  }
+  svg += `<rect class="vh" x="0" y="${m.t}" width="${band}" height="${H - m.t - m.b}" fill="var(--ink)" opacity="0"/><rect x="${m.l}" y="${m.t}" width="${W - m.l - m.r}" height="${H - m.t - m.b}" fill="transparent"/></svg><div class="tip"></div>`;
+  box.innerHTML = svg;
+  const svgEl = box.querySelector("svg"), tip = box.querySelector(".tip"), vh = box.querySelector(".vh");
+  svgEl.addEventListener("pointermove", ev => {
+    const r = svgEl.getBoundingClientRect(), px = (ev.clientX - r.left) * (W / r.width), k = Math.floor((px - m.l) / band);
+    if (k < 0 || k >= cats.length) return;
+    vh.setAttribute("x", m.l + band * k); vh.setAttribute("opacity", .05);
+    tip.innerHTML = `<div class="d">${esc(cats[k])}</div>` + series.map(s => ok(s.vals[k]) ? `<div class="r"><span><i style="background:${s.color}"></i>${esc(s.name)}</span><b>${yFmt(s.vals[k])}${ok(s.lab?.[k]) ? ` <small>(${labFmt(s.lab[k])})</small>` : ""}</b></div>` : "").join("");
+    tip.style.opacity = 1; const bw = box.clientWidth, tw = tip.offsetWidth, sx = X(k) * (r.width / W);
+    tip.style.top = "6px"; tip.style.left = (sx + band / 2 + tw > bw ? Math.max(0, sx - tw - 20) : sx + 20) + "px";
+  });
+  svgEl.addEventListener("pointerleave", () => { tip.style.opacity = 0; vh.setAttribute("opacity", 0); });
 }
 function niceTicks(a, b, n) {
   const span = b - a || 1, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
@@ -822,8 +878,13 @@ function visibleNodes(M, t) {
   treeOf(M, t).roots.forEach(n => go(n, 0, ""));
   return out;
 }
+// Mevduat vade itibarıyla: kolonlar vade dilimleri (Vadesiz, 1 aya kadar … 1 yıl üzeri, Toplam)
+const isVade = t => t.cols.some(c => /vadesiz/i.test(c));
+const vCols = t => t.cols.map((c, i) => [c.replace(/\s+/g, " ").replace(/ Arası$/i, "").trim(), i]).filter(([c]) => !/^toplam/i.test(c));
+const vTot = t => { const i = t.cols.findIndex(c => /^\s*toplam/i.test(c)); return i >= 0 ? i : t.cols.length - 1; };
+const vMode = (M, t) => S.bVd[M.freq + t.key] ?? "dag";
 function bddkCard(M, t) {
-  const A = S.bA, B = S.bB, c = colFor(t), groups = S.bGroups, multi = groups.length > 1, g0 = groups[0];
+  const A = S.bA, B = S.bB, groups = S.bGroups, multi = groups.length > 1, g0 = groups[0], vd = isVade(t), c = vd ? vTot(t) : colFor(t);
   const tid = M.freq + t.key, tr = treeOf(M, t), hn = tr.roots[0], chk = chkOf(M, t);
   const kh = nodeKind(M, t, hn, c), V = (n, g, i) => nodeVal(M, t, n, g, c, i);
   let head;
@@ -838,7 +899,20 @@ function bddkCard(M, t) {
   const caret = x => x.n.kids.length ? `<button class="caret" data-open="${esc(tid + x.path)}" aria-expanded="${S.bOpenN.has(tid + x.path)}" aria-label="Alt kalemler">${S.bOpenN.has(tid + x.path) ? "▾" : "▸"}</button>` : `<span class="caret-sp"></span>`;
   const nameCell = x => `<td class="nm" style="padding-left:${8 + x.depth * 16}px"><div class="nmw">${caret(x)}<span class="${x.depth === 0 ? "b" : ""}${x.n.row ? "" : " syn"}">${esc(x.n.name)}</span></div></td>`;
   let th, body = "";
-  if (!multi) {
+  if (vd) {
+    const VC = vCols(t), ti = vTot(t), cols = [...VC, ["Toplam", ti]], nv = (n, g, j, i) => nodeVal(M, t, n, g, j, i);
+    th = `<tr><th class="chk"></th><th>Kalem · ${dShort(M.dates[B])}</th>${cols.map(([cc]) => `<th>${esc(cc)}</th>`).join("")}</tr>`;
+    for (const g of groups) {
+      if (multi) body += `<tr class="vgrp"><td></td><td colspan="${cols.length + 1}"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${gColor(g)};margin-right:6px"></span><b>${esc(gName(g))}</b></td></tr>`;
+      for (const x of vis) {
+        const on = chk.includes(x.n.key), tB = nv(x.n, g, ti, B), tA = nv(x.n, g, ti, A);
+        body += `<tr class="row lrow${on ? " sel" : ""}${x.depth === 0 ? " root" : ""}" data-t="${t.key}" data-n="${esc(x.n.key)}"><td class="chk"><input type="checkbox" ${on ? "checked" : ""} aria-label="Grafiğe ekle"></td>${nameCell(x)}`
+          + cols.map(([, j]) => { const b = nv(x.n, g, j, B), a = nv(x.n, g, j, A), sh = ok(b) && tB ? b / tB * 100 : null, sa = ok(a) && tA ? a / tA * 100 : null;
+            const dg = j === ti ? pct(b, a) : ok(sh) && ok(sa) ? sh - sa : null;
+            return `<td title="${dShort(M.dates[A])}: ${fmtVal(a, "tl")}${ok(sa) && j !== ti ? ` (%${nf(1).format(sa)})` : ""}">${fmtVal(b, "tl")}${j !== ti && ok(sh) ? `<span class="shr">(%${nf(1).format(sh)})</span>` : ""}<span class="sm ${cls(dg, .05)}">${ok(dg) ? (j === ti ? fmtPct(dg) : `${dg > 0 ? "+" : dg < 0 ? "−" : ""}${nf(1).format(Math.abs(dg))} p`) : ""}</span></td>`; }).join("") + `</tr>`;
+      }
+    }
+  } else if (!multi) {
     const all = vis.map(x => { const k = nodeKind(M, t, x.n, c), a = V(x.n, g0, A), b = V(x.n, g0, B); return { ...x, k, a, b, d: ok(a) && ok(b) ? (b - a) * (k === "pct" ? 100 : 1) : null }; });
     const inner = all.filter(x => x.depth > 0 && x.k === kh && ok(x.d)); const pool = inner.length ? inner : all.filter(x => ok(x.d) && x.k === kh);
     const mx = Math.max(...pool.map(x => Math.abs(x.d)), 1e-9);
@@ -871,15 +945,54 @@ function bddkCard(M, t) {
     </div>`;
   const tools = hasKids ? `<div class="treetools"><button class="more" data-expand="${t.key}">Tümünü aç</button><button class="more" data-collapse="${t.key}">Tümünü kapat</button></div>` : "";
   return `<article class="card" data-card="${t.key}">
-    <div class="cardhead"><div><div class="btitle"><details class="dd tdd"><summary title="Tablo seç"><h3>${esc(t.name)}</h3></summary><div class="ddpanel">${tableMenu(M, t.key)}</div></details>${head}</div></div><div class="bcur">${curList().length > 1 ? `<span class="note">Tablo ve rakamlar: ${curList()[0]}</span>` : ""}<div class="seg" role="group" aria-label="Para birimi">${CURS.map(cc => `<button data-bc="${cc}" aria-pressed="${curList().includes(cc)}">${cc}</button>`).join("")}</div></div></div>
+    <div class="cardhead"><div><div class="btitle"><details class="dd tdd"><summary title="Tablo seç"><h3>${esc(t.name)}</h3></summary><div class="ddpanel">${tableMenu(M, t.key)}</div></details>${head}</div></div><div class="bcur">${vd ? "" : curList().length > 1 ? `<span class="note">Tablo ve rakamlar: ${curList()[0]}</span>` : ""}${vd ? "" : `<div class="seg" role="group" aria-label="Para birimi">${CURS.map(cc => `<button data-bc="${cc}" aria-pressed="${curList().includes(cc)}">${cc}</button>`).join("")}</div>`}</div></div>
     ${ctl}
-    <div class="chartbox" style="position:static"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="sub" data-csub="${t.key}"></span><label class="note"><input type="checkbox" data-idx="${t.key}"${S.bIdx[tid] ? " checked" : ""}> Endeks (dönem başı = 100)</label></div><div data-chart="${t.key}"></div></div>
+    ${vd ? (() => { const vm = vMode(M, t); return `<div class="chartbox" style="position:static"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="sub" data-csub="${t.key}"></span><label class="note"><input type="checkbox" data-vpay="${t.key}"${S.bVdPay[tid] ? " checked" : ""}> Eksende pay (%)</label></div><div data-chart="${t.key}"></div>
+      <div class="vtabs" role="group" aria-label="Vade dilimi">${[["dag", "Vade dağılımı"], ...vCols(t).map(([cc, i]) => [String(i), cc])].map(([k, l]) => `<button class="chip" data-vd="${t.key}" data-k="${k}" aria-pressed="${String(vm) === k}">${esc(l)}</button>`).join("")}</div><div data-chart2="${t.key}"></div></div>`; })()
+    : `<div class="chartbox" style="position:static"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="sub" data-csub="${t.key}"></span><label class="note"><input type="checkbox" data-idx="${t.key}"${S.bIdx[tid] ? " checked" : ""}> Endeks (dönem başı = 100)</label></div><div data-chart="${t.key}"></div></div>`}
     <div class="bveri"><label><input type="checkbox" data-bveri${veri ? " checked" : ""}> Veri</label></div>
     ${veri ? `<div class="bdata"><div class="tbl-wrap lt"><table><thead>${th}</thead><tbody>${body}</tbody></table></div>${tools}</div>` : ""}
   </article>`;
 }
+function drawVade(M, t, el) {
+  const tid = M.freq + t.key, vm = vMode(M, t), chk = chkOf(M, t), tr = treeOf(M, t), groups = S.bGroups, pal = PAL();
+  const nodes = chk.map(k => tr.byKey[k]).filter(Boolean), sub = $(`#bCards [data-csub="${t.key}"]`), el2 = $(`#bCards [data-chart2="${t.key}"]`);
+  if (el2) el2.innerHTML = "";
+  if (!nodes.length) { sub.textContent = ""; el.innerHTML = '<div class="empty">Grafikte görmek için Veri tablosundan kalem işaretleyin.</div>'; return; }
+  const VC = vCols(t), ti = vTot(t), A = S.bA, B = S.bB, mg = groups.length > 1, val = (s, j, i) => nodeVal(M, t, s.n, s.g, j, i);
+  let sers = []; nodes.forEach((n, ri) => groups.forEach(g => sers.push({ n, g, name: [mg ? gName(g) : "", n.name].filter(Boolean).join(" · "), color: mg ? gColor(g) : pal[ri % 8] })));
+  const over = sers.length > 6; sers = sers.slice(0, 6);
+  const cats = VC.map(x => x[0]);
+  if (vm === "dag") {
+    const pay = !!S.bVdPay[tid];
+    const mx = Math.max(0, ...sers.flatMap(s => VC.flatMap(([, j]) => [Math.abs(val(s, j, A) || 0), Math.abs(val(s, j, B) || 0)]))), as = axisScale("tl", mx);
+    const yF = v => nf(as.d).format(v), aF = v => `${nf(as.d).format(v)} ${({ trilyon: "trn", milyar: "mr", milyon: "mn" })[as.lab.split(" ")[0]] || ""}`;
+    // eksen: tutar (etiket pay %) ya da pay % (etiket tutar)
+    const seri = (s, i, faint) => { const tt = val(s, ti, i), v = VC.map(([, j]) => val(s, j, i)), sh = v.map(x => ok(x) && tt ? x / tt * 100 : null);
+      return { name: `${s.name} · ${dShort(M.dates[i])}`, color: s.color, faint, dash: faint ? "5 4" : "", vals: pay ? sh : v.map(x => ok(x) ? x / as.k : null), lab: pay ? v.map(x => ok(x) ? x / as.k : null) : sh }; };
+    vadeChart(el, { cats, series: sers.flatMap(s => [seri(s, B, false), seri(s, A, true)]), yFmt: pay ? v => "%" + nf(1).format(v) : yF, unit: pay ? "% pay" : as.lab, height: 340, labFmt: pay ? aF : undefined, etiketMax: pay ? 1 : 3 });
+    sub.textContent = `${dShort(M.dates[B])} (düz) ve ${dShort(M.dates[A])} (kesikli) · ${pay ? "noktalarda tutar" : "noktalarda toplam mevduat içindeki pay"}${over ? " · ilk 6 seri" : ""} · bir vade dilimine tıklayınca dönem içindeki seyri`;
+    if (el2) {
+      const fs = sers.map(s => { const tB = val(s, ti, B), tA = val(s, ti, A);
+        return { name: s.name, color: s.color, vals: VC.map(([, j]) => { const b = val(s, j, B), a = val(s, j, A); return ok(a) && ok(b) ? (b - a) / as.k : null; }),
+          lab: VC.map(([, j]) => { const b = val(s, j, B), a = val(s, j, A); return ok(a) && ok(b) && tA && tB ? b / tB * 100 - a / tA * 100 : null; }) }; });
+      el2.innerHTML = `<div class="sub" style="margin:14px 0 2px">Fark · ${dShort(M.dates[A])} → ${dShort(M.dates[B])}: çubuk tutar değişimi, etiket pay değişimi (puan)</div><div></div>`;
+      vadeChart(el2.lastElementChild, { cats, series: fs, bars: true, yFmt: yF, unit: as.lab, height: 230, labFmt: v => `${v > 0 ? "+" : v < 0 ? "−" : ""}${nf(1).format(Math.abs(v))} p` });
+    }
+    return;
+  }
+  const j = +vm, pay = !!S.bVdPay[tid], idx = []; for (let i = A; i <= B; i++) idx.push(i);
+  let series = sers.map(s => ({ name: s.name, color: s.color, data: idx.map(i => { const v = val(s, j, i), tt = val(s, ti, i); return [M.dates[i], pay ? (ok(v) && tt ? v / tt * 100 : null) : v, toTime(M.dates[i])]; }) }));
+  let yFmt, unit;
+  if (pay) { yFmt = v => nf(1).format(v); unit = "% pay"; }
+  else { const mx = Math.max(0, ...series.flatMap(s => s.data.map(p => Math.abs(p[1] || 0)))), as = axisScale("tl", mx);
+    series = series.map(s => ({ ...s, data: s.data.map(p => [p[0], ok(p[1]) ? p[1] / as.k : null, p[2]]) })); yFmt = v => nf(as.d).format(v); unit = as.lab; }
+  sub.textContent = `${cats[VC.findIndex(x => x[1] === j)] || t.cols[j]} · ${pay ? "toplam içindeki pay (%)" : "tutar"} · ${dShort(M.dates[A])} – ${dShort(M.dates[B])}${over ? " · ilk 6 seri" : ""}`;
+  lineChart(el, { series, height: 340, yFmt, unit });
+}
 function drawCardChart(M, t) {
   const el = $(`#bCards [data-chart="${t.key}"]`); if (!el) return;
+  if (isVade(t)) return drawVade(M, t, el);
   const c = colFor(t), chk = chkOf(M, t), groups = S.bGroups, pal = PAL(), tr = treeOf(M, t);
   const nodes = chk.map(k => tr.byKey[k]).filter(Boolean);
   const sub = $(`#bCards [data-csub="${t.key}"]`);
@@ -922,10 +1035,12 @@ function bindBddk() {
     if (t_.matches("select[data-ba]")) { S.bA = +t_.value; if (S.bA >= S.bB) S.bB = Math.min(curOf().dates.length - 1, S.bA + 1); renderBddk(); return; }
     if (t_.matches("select[data-bb]")) { S.bB = +t_.value; if (S.bA >= S.bB) S.bA = Math.max(0, S.bB - 1); renderBddk(); return; }
     if (t_.matches("input[data-bveri]")) { S.bVeri = t_.checked; store.set("bv.veri", S.bVeri ? "1" : ""); renderBddk(); return; }
+    const vp = e.target.closest("input[data-vpay]"); if (vp) { S.bVdPay[S.bFreq + vp.dataset.vpay] = vp.checked; drawCardChart(curOf(), curOf().tables.find(x => x.key === vp.dataset.vpay)); return; }
     const ix = e.target.closest("input[data-idx]"); if (ix) { S.bIdx[S.bFreq + ix.dataset.idx] = ix.checked; drawCardChart(curOf(), curOf().tables.find(x => x.key === ix.dataset.idx)); return; }
     const s = e.target.closest("select[data-colsel]"); if (!s) return; S.bColOverride[S.bFreq + s.dataset.colsel] = +s.value; refreshCard(s.dataset.colsel); });
   $("#bCards").addEventListener("click", e => {
     const M = curOf();
+    const vb = e.target.closest("button[data-vd]"); if (vb) { S.bVd[S.bFreq + vb.dataset.vd] = vb.dataset.k; refreshCard(vb.dataset.vd); return; }
     const ts = e.target.closest("button[data-tsel]"); if (ts) { const sel = S.bTables[S.bFreq] || [], i = sel.indexOf(ts.dataset.tcur), k = ts.dataset.tsel;
       S.bTables[S.bFreq] = sel.includes(k) ? sel : (i >= 0 ? sel.map((x, j) => j === i ? k : x) : [k]); renderBddk(); return; }
     const q = e.target.closest("button[data-bq]"); if (q) { if (q.disabled) return; S.bA = +q.dataset.bq; if (S.bA >= S.bB) S.bA = Math.max(0, S.bB - 1); renderBddk(); return; }
