@@ -182,7 +182,7 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
 <main class="wrap">
   <div id="gate">Veriler yükleniyor…</div>
   <section id="pMakro" class="hidden">
-    <div class="subtabs" role="group" aria-label="Makro konu" id="mkTabs"><button data-mk="enf" aria-pressed="true">Enflasyon</button><button data-mk="buyume" aria-pressed="false">Büyüme</button><button data-mk="istihdam" aria-pressed="false">İstihdam</button><button data-mk="uretim" aria-pressed="false">Üretim Endeksleri</button><button data-mk="dis" aria-pressed="false">Dış Ticaret ve Dış Denge</button><button data-mk="butce" aria-pressed="false">Bütçe</button><button data-mk="hazine" aria-pressed="false">Hazine Borçlanma</button></div>
+    <div class="subtabs" role="group" aria-label="Makro konu" id="mkTabs"><button data-mk="enf" aria-pressed="true">Enflasyon</button><button data-mk="buyume" aria-pressed="false">Büyüme</button><button data-mk="istihdam" aria-pressed="false">İstihdam</button><button data-mk="uretim" aria-pressed="false">Üretim Endeksleri</button><button data-mk="guven" aria-pressed="false">Güven Endeksleri</button><button data-mk="dis" aria-pressed="false">Dış Ticaret ve Dış Denge</button><button data-mk="butce" aria-pressed="false">Bütçe</button><button data-mk="hazine" aria-pressed="false">Hazine Borçlanma</button></div>
     <div id="mkEnf">
     <h2 class="sec">Manşet enflasyon</h2>
     <div class="kpis" id="infKpi"></div>
@@ -265,6 +265,20 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
           <div class="chart" id="ur3G"></div>
           <div class="tw" id="ur3X"></div>
         </div>
+        </div>
+      </div>
+      <div id="mkGuven" class="ekt hidden">
+        <h2 class="sec">Tüketici güven endeksi</h2>
+        <div class="kpis" id="tgKpi"></div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="tg1T"></h3><div class="sub" id="tg1S"></div></div><div class="hdr2"><span class="chips" id="tg1R"></span></div></div>
+          <div class="chips" id="tg1L" style="margin:2px 0 8px"></div>
+          <div class="chart" id="tg1G"></div>
+          <div class="veri" id="tg1V"></div>
+        </div>
+        <div class="card">
+          <div class="cardhead"><div><h3 id="tg2T"></h3><div class="sub" id="tg2S"></div></div></div>
+          <div class="tw" id="tg2X"></div>
         </div>
       </div>
       <div id="mkDis" class="ekt hidden">
@@ -1320,7 +1334,7 @@ function renderMakro() {
 // ---------------------------------------------------------------- Ekonomik göstergeler (EVDS + TÜİK): büyüme, istihdam, üretim, dış denge, bütçe
 let E;   // ekonomi.json (undefined: yükleniyor, null: yok)
 const EK = { by1R: "5Y", by2Y: "harcama", by2R: "3Y", is1On: new Set(["issizlik", "atil", "genc"]), is1R: "5Y", is2R: "5Y",
-  ur1M: "mea", ur1On: new Set(["sanayi", "hizmet", "ticaret", "insaat", "pmi"]), ur1R: "3Y", ur2Y: "sanayi", ur2B: 0, ur2R: "3Y", ur3R: "5Y",
+  ur1M: "mea", ur1On: new Set(["sanayi", "hizmet", "ticaret", "insaat", "pmi"]), ur1R: "3Y", ur2Y: "sanayi", ur2B: 0, ur2R: "3Y", ur3R: "5Y", tg1R: "3Y", tg1On: new Set(["tg", "tg_maddi", "tg_maddi_bek", "tg_genel_bek", "tg_dayanikli"]),
   dt1M: "ay", dt1R: "3Y", dt2Y: "ihr", dt3Y: "ihr", od1M: "ay", od1R: "3Y", od2R: "5Y", bc1M: "tl", bc1R: "3Y" };
 const R_M = [["2Y", 24], ["3Y", 36], ["5Y", 60], ["Tümü", 999]], R_Q = [["3Y", 12], ["5Y", 20], ["10Y", 40], ["Tümü", 999]];
 const qAd = q => q ? `${q.slice(0, 4)} ${q.slice(6)}. çeyrek` : "—", qKisa = q => `Ç${q.slice(6)} ${q.slice(2, 4)}`;
@@ -1481,6 +1495,39 @@ function renderUretim() {
   const s3 = [{ name: "KKO (MEA)", vals: M?.kko || [], color: css("--c2"), width: 2.4, fmt: v => "%" + nf(v, 1) }];
   legH("#ur3L", s3); if (M) zc("ur3", M.dates, s3, { yeniden: renderUretim, yFmt: v => nf(v, 0), height: 240 });
 }
+// ---------------------------------------------------------------- Güven endeksleri (TÜİK-TCMB Tüketici Eğilim Anketi, EVDS)
+// endeks 0-200 arası; 100 üstü iyimser, altı kötümser. Endeksi oluşturan dört alt endeks + seçilmiş diğer sorular
+const TG = [["tg", "Tüketici güven endeksi", "--c1", 1], ["tg_maddi", "Hanenin maddi durumu (son 12 ay)", "--c3", 1], ["tg_maddi_bek", "Hanenin maddi durum beklentisi (12 ay)", "--c6", 1],
+  ["tg_genel_bek", "Genel ekonomik durum beklentisi (12 ay)", "--c4", 1], ["tg_dayanikli", "Dayanıklı tüketim malı harcama düşüncesi (12 ay)", "--c5", 1],
+  ["tg_genel", "Genel ekonomik durum (son 12 ay)", "--c2", 0], ["tg_issiz_bek", "İşsiz sayısı beklentisi (12 ay)", "--c2", 0], ["tg_fiyat_bek", "Tüketici fiyatları beklentisi (12 ay)", "--c2", 0],
+  ["tg_ucret_bek", "Ücret beklentisi (12 ay)", "--c3", 0], ["tg_tasarruf", "Tasarruf etme ihtimali (12 ay)", "--c6", 0], ["tg_borc", "Borç kullanma ihtimali (3 ay)", "--c5", 0]];
+function renderGuven() {
+  const M = E.aylik, d = M?.dates || [], i = sonI(d, M?.tg); if (i < 0) { $("#tgKpi").innerHTML = `<div class="empty">Tüketici güven endeksi verisi bir sonraki güncellemede alınacak.</div>`; return; }
+  const dlt = (a, k) => ok(a?.[k]) && ok(a?.[k - 1]) ? a[k] - a[k - 1] : null, ar = v => ok(v) ? `${sg(v)}${nf(Math.abs(v), 1)}` : "—";
+  $("#tgKpi").innerHTML = TG.filter(x => x[3]).map(([k, l, c]) => { const a = M[k] || [], v = dlt(a, i);
+    return kp(l, ok(a[i]) ? nf(a[i], 1) : "—", `aylık <b class="${cls(v, .05)}">${ar(v)} puan</b> · yıllık <b class="${cls(dlt2(a, i, 12), .05)}">${ar(dlt2(a, i, 12))} puan</b>`,
+      `${ayAd(d[i])}${k === "tg" ? " · 100 eşik: altı kötümser" : ""}`, c); }).join("");
+  $("#tg1T").textContent = "Tüketici güven endeksi ve alt endeksler"; $("#tg1S").textContent = "TÜİK-TCMB Tüketici Eğilim Anketi · 100 eşiği kesikli çizgi · seriye tıklayarak aç/kapat";
+  const L = TG.filter(x => x[3]); $("#tg1L").innerHTML = L.map(([k, l, c]) => `<button class="chip" data-t="${k}" aria-pressed="${EK.tg1On.has(k)}"><i style="background:var(${c})"></i>${l}</button>`).join("");
+  const sec = L.filter(([k]) => EK.tg1On.has(k));
+  zc("tg1", d, [...sec.map(([k, l, c]) => ({ name: l, vals: M[k] || [], color: css(c), width: k === "tg" ? 2.8 : 1.8, fmt: v => nf(v, 1) })),
+    { name: "Eşik", vals: d.map(() => 100), color: css("--muted"), width: 1, dash: "4 4", fmt: () => "100" }], { yeniden: renderGuven, yFmt: v => nf(v, 0), height: 320 });
+  // Veri: seçili dönemin ilk / son ayı ve fark
+  const n = R_M.find(r => r[0] === EK.tg1R)?.[1] ?? 999, j0 = Math.max(0, i + 1 - n), il = sec.map(([k]) => M[k]?.[j0]), sn = sec.map(([k]) => M[k]?.[i]);
+  const ac = !!EK.tg1V, h = a => a.map(v => td(ok(v) ? nf(v, 1) : "—")).join("");
+  $("#tg1V").innerHTML = `<div class="vb"><button class="chip" aria-pressed="${ac}">${ac ? "Veriyi gizle" : "Veri"}</button></div>` + (ac ? `<div class="tw">${tbl(["", ...sec.map(x => x[1])],
+    [`<tr><td class="l">${ayAd(d[j0])}</td>${h(il)}</tr>`, `<tr><td class="l">${ayAd(d[i])}</td>${h(sn)}</tr>`,
+     `<tr class="dg"><td class="l">Değişim</td>${sn.map((v, k) => ok(v) && ok(il[k]) ? tdc(v - il[k], x => ar(x) + " puan") : td("—")).join("")}</tr>`])}</div>` : "");
+  // tablo: tüm sorular
+  $("#tg2T").textContent = "Alt endeksler"; $("#tg2S").textContent = `${ayAd(d[i])} · endeksi oluşturan dört alt endeks ve ankette yer alan diğer seçilmiş sorular`;
+  const o = (a, k, m) => { const v = a.slice(Math.max(0, k - m + 1), k + 1).filter(ok); return v.length ? sum(v) / v.length : null; };
+  $("#tg2X").innerHTML = tbl(["Gösterge", ayAd(d[i]), ayAd(d[i - 1]), "Aylık fark", ayAd(d[i - 12]), "Yıllık fark", "12 ay ort."],
+    TG.map(([k, l], j) => { const a = M[k] || [];
+      return `<tr class="${j === 0 ? "ust" : ""}"><td class="l s${j && j < 5 ? " ind" : ""}">${l}</td>${td(nf(a[i], 1))}${td(nf(a[i - 1], 1))}${tdc(dlt(a, i), ar)}${td(nf(a[i - 12], 1))}${tdc(dlt2(a, i, 12), ar)}${td(nf(o(a, i, 12), 1))}</tr>`; }));
+}
+const dlt2 = (a, k, m) => ok(a?.[k]) && ok(a?.[k - m]) ? a[k] - a[k - m] : null;
+$("#tg1L").onclick = e => { e.stopPropagation(); const b = e.target.closest("button[data-t]"); if (!b) return; const k = b.dataset.t; if (EK.tg1On.has(k)) { if (EK.tg1On.size > 1) EK.tg1On.delete(k); } else EK.tg1On.add(k); renderGuven(); };
+$("#tg1V").onclick = e => { e.stopPropagation(); if (e.target.closest("button")) { EK.tg1V = !EK.tg1V; renderGuven(); } };
 $("#ur2X").onclick = e => { const tr = e.target.closest("tr[data-b]"); if (tr) { EK.ur2B = +tr.dataset.b; renderUretim(); } };
 
 // ---------------------------------------------------------------- Dış ticaret ve dış denge
@@ -1595,7 +1642,7 @@ function renderButce() {
 }
 
 // ---------------------------------------------------------------- dağıtım
-const EKT = { buyume: ["#mkBuyume", renderBuyume], istihdam: ["#mkIstihdam", renderIstihdam], uretim: ["#mkUretim", renderUretim], dis: ["#mkDis", renderDis], butce: ["#mkButce", renderButce] };
+const EKT = { buyume: ["#mkBuyume", renderBuyume], istihdam: ["#mkIstihdam", renderIstihdam], uretim: ["#mkUretim", renderUretim], guven: ["#mkGuven", renderGuven], dis: ["#mkDis", renderDis], butce: ["#mkButce", renderButce] };
 function renderEko() {
   const g = $("#ekGate");
   $$(".ekt").forEach(x => x.classList.add("hidden"));
@@ -1619,6 +1666,7 @@ function renderSrc() {
     const K = { buyume: `TÜİK Dönemsel Gayrisafi Yurt İçi Hasıla (TCMB EVDS üzerinden): harcama, üretim ve gelir yöntemi; zincirlenmiş hacim, mevsim ve takvim etkisinden arındırılmış endeks, cari fiyatlar · USD karşılığı TCMB döviz alış kurunun çeyrek ortalamasıyla · kişi başı GSYH TÜİK yıllık`,
       istihdam: `TÜİK Veri Portalı: ${b("isgucu") || "İşgücü İstatistikleri"} — temel işgücü göstergeleri (15+ ve 15-24 yaş, mevsim etkisinden arındırılmış), işgücüne ilişkin tamamlayıcı göstergeler (atıl işgücü)`,
       uretim: `TÜİK Veri Portalı: ${["sanayi", "hizmet", "ticaret", "insaat"].map(b).filter(Boolean).join(", ")} · kapasite kullanım oranı: TCMB İktisadi Yönelim Anketi (EVDS)`,
+      guven: `TÜİK-TCMB Tüketici Eğilim Anketi: tüketici güven endeksi ve alt endeksler (TCMB EVDS üzerinden, aylık; 0-200 arası, 100 üstü iyimserlik)`,
       dis: `Dış ticaret: TÜİK genel ticaret sistemi (TCMB EVDS: ISIC Rev.4 ve BEC), en çok ihracat/ithalat yapılan ülkeler TÜİK Veri Portalı · ödemeler dengesi: TCMB (analitik ve ayrıntılı sunum, altın ve enerji hariç cari denge) · cari denge/GSYH için GSYH son 4 çeyrek USD`,
       butce: `Merkezi yönetim bütçe gelir ve giderleri: Hazine ve Maliye Bakanlığı (TCMB EVDS) · GSYH oranları son 4 çeyrek cari fiyatlı GSYH ile · reel değişim TÜİK TÜFE yıllık ile` };
     $("#src").innerHTML = `Kaynak: ${K[S.mk]}. Son güncelleme ${E?.updated ? new Date(E.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${E?.failed?.length ? ` · son çekimde alınamayan: ${esc(E.failed.join(", "))} (önceki veri gösteriliyor)` : ""}.`; return; }
@@ -1642,7 +1690,7 @@ const hashUygula = h => {
   if (h === "piyasa-imp") { S.tab = "piyasa"; S.ps = "faiz"; S.impT = "O/N"; S.pOn = new Set(["imp"]); return true; }   // Özet: TRY Implied Yield kartı
   const pm = /^piyasa-(tlrefk|tlref|endeks|gosterge|swap|faiz|borc)(?:-(\w+))?$/.exec(h);     // Özet kartlarından: alt sekme ve kalem
   if (pm) { S.tab = "piyasa"; S.ps = pm[1] === "tlref" || pm[1] === "tlrefk" ? "faiz" : pm[1]; if (pm[1] === "tlref" || pm[1] === "tlrefk") S.pOn = new Set([pm[1]]); if (pm[1] === "endeks" && pm[2]) S.ee = pm[2]; if (pm[1] === "gosterge") S.gU = "tr"; return true; }
-  if (h === "piyasa" || h === "makro") S.tab = h; else if (["enf", "hazine", "buyume", "istihdam", "uretim", "dis", "butce"].includes(h)) { S.tab = "makro"; S.mk = h; } else return false; return true; };
+  if (h === "piyasa" || h === "makro") S.tab = h; else if (["enf", "hazine", "buyume", "istihdam", "uretim", "guven", "dis", "butce"].includes(h)) { S.tab = "makro"; S.mk = h; } else return false; return true; };
 hashUygula(location.hash.slice(1));
 addEventListener("hashchange", () => { if (hashUygula(location.hash.slice(1)) && D) { render(); scrollTo(0, 0); } });   // Özet sekmesinden gelen bağlantılar
 H = undefined;
