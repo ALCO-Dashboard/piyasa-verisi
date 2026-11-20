@@ -16,7 +16,7 @@ const BI_PZ_AD = { kes: "KES", repo: "Repo-T.Repo (normal)", repos: "Repo-T.Repo
   mktr: "MK tercihli repo", prep: "Pay repo", para: "Para piyasası", kmsw: "KM swap", ihrac: "İhraç pazarı", eurob: "Eurobond", diger: "Diğer" };
 const BI_MET = [["au", "Altın", "--c4"], ["ag", "Gümüş", "--c6"], ["pt", "Platin", "--c3"], ["pd", "Paladyum", "--c2"]];
 
-const biMr = (v, d = 1) => ok(v) ? `${nf(v / 1e3, v >= 1e5 ? 0 : d)} mr ₺` : "—";            // milyon TL → milyar
+const biMr = (v, d = 1) => !ok(v) ? "—" : Math.abs(v) < 1e3 && v ? `${nf(v, v < 10 ? 1 : 0)} mn ₺` : `${nf(v / 1e3, v >= 1e5 ? 0 : d)} mr ₺`;     // milyon TL → milyar (1 milyarın altı milyon)
 const biPc = v => ok(v) ? `${v > 0 ? "+" : v < 0 ? "−" : ""}%${nf(Math.abs(v), 1)}` : "—";
 const biCh = (a, b) => ok(a) && ok(b) && b ? (a / b - 1) * 100 : null;
 const biDates = () => Object.keys(BI?.g || {}).sort();
@@ -52,12 +52,15 @@ function biOis(ccy, tarih, gun) {
 function biImplied(cift, tarih, gun, puan, spot) {
   if (!ok(puan) || !ok(spot) || !spot || !gun) return null;
   const rf = biOis(cift.startsWith("EUR") ? "EUR" : "USD", tarih, gun); if (!ok(rf)) return null;
-  const F = spot + puan / 1e4; return ((F / spot) * (1 + rf / 100 * gun / 360) - 1) * 365 / gun * 100;
+  const F = spot + puan / 1e4, r = ((F / spot) * (1 + rf / 100 * gun / 360) - 1) * 365 / gun * 100;
+  return r > 5 && r < 150 ? r : null;        // hatalı girilmiş / uç işlemler
 }
 function biSwapGun(g, cift, tarih) {
   const R = g?.sw?.[cift] || []; let on = null, dh = 0, dw = 0, dwh = 0;
-  for (const [gun, puan, spot, h] of R) { const r = biImplied(cift, tarih, gun, puan, spot);
-    if (gun <= 4 && !on) on = { gun, puan, spot, h, r }; else { dh += h; if (ok(r)) { dw += r * h; dwh += h; } } }
+  // gecelik: en kısa vade (tatil öncesinde gecelik işlem birkaç gün sürebilir: ≤ 10 gün)
+  const enk = R.reduce((m, x) => x[0] <= 10 && (!m || x[0] < m[0]) ? x : m, null);
+  for (const x of R) { const [gun, puan, spot, h] = x, r = biImplied(cift, tarih, gun, puan, spot);
+    if (x === enk) on = { gun, puan, spot, h, r }; else { dh += h; if (ok(r)) { dw += r * h; dwh += h; } } }
   return { on, dh, dr: dwh ? dw / dwh : null, n: R.length };
 }
 
@@ -198,7 +201,7 @@ function biOranPazar(pzler, baslik, aciklama) {
     const R = dates.map(d => G[d]?.m?.[pz]?.ron ?? G[d]?.m?.[pz]?.r ?? null), H = biPzSeri(dates, pz), hf = biHafta(H, i), r = R[i];
     if (!H.some(ok) && !R.some(ok)) return;
     if (R.some(ok)) k.push(biKpi(`${ad} · oran`, ok(r) ? pct(r, 2) : "—", ok(r) ? `günlük <b class="${cls(r - R[i - 1])}">${bp(r - R[i - 1])}</b> · haftalık <b class="${cls(r - R[j5])}">${bp(r - R[j5])}</b> · aylık <b class="${cls(r - R[j30])}">${bp(r - R[j30])}</b>` : "bu gün oranlı işlem yok",
-      `${gunAd(son)} · gecelik (≤4 gün) ağırlıklı ortalama`, c));
+      `${gunAd(son)} · gecelik (≤ 4 gün) ağırlıklı ortalama`, c));
     k.push(biKpi(`${ad} · hacim`, biMr(H[i]), `günlük <b class="${cls(biCh(H[i], H[i - 1]))}">${biPc(biCh(H[i], H[i - 1]))}</b> · işlem ${nf(G[son]?.m?.[pz]?.n || 0, 0)}`,
       `${gunAd(son)}`, c, "", `<div class="s2">Haftalık (5 gün) <b>${biMr(hf.top, 0)}</b> · önceki haftaya göre <b class="${cls(hf.deg)}">${biPc(hf.deg)}</b></div>`));
   });
@@ -233,7 +236,7 @@ function biSwapCiz() {
     const A = S_[c], x = A[i], on = x.on, r = dates.map((_, j) => A[j].on?.r ?? null), H = dates.map((_, j) => (A[j].on?.h || 0) + A[j].dh || null), hf = biHafta(H, i);
     k.push(biKpi(`${ad} swap · O/N`, on && ok(on.r) ? pct(on.r, 2) : "—",
       on ? `günlük <b class="${cls(on.r - r[i - 1])}">${bp(on.r - r[i - 1])}</b> · haftalık <b class="${cls(on.r - r[j5])}">${bp(on.r - r[j5])}</b> · aylık <b class="${cls(on.r - r[j30])}">${bp(on.r - r[j30])}</b>` : "bu gün O/N işlem yok",
-      on ? `TL implied (${ref} ile) · swap puanı ${nf(on.puan, 2)} · kur ${nf(on.spot, 4)} · ${gunAd(son)}` : gunAd(son), col, "",
+      on ? `TL implied (${ref} ile) · ${on.gun} gün · swap puanı ${nf(on.puan, 2)} · kur ${nf(on.spot, 4)} · ${gunAd(son)}` : gunAd(son), col, "",
       `<div class="s2">O/N hacim <b>${on ? biMr(on.h) : "—"}</b></div>`));
     k.push(biKpi(`${ad} swap · diğer vadeler`, ok(x.dr) ? pct(x.dr, 2) : "—", `hacim <b>${biMr(x.dh)}</b> · ${nf(Math.max(0, x.n - (on ? 1 : 0)), 0)} vade`,
       `Hacim ağırlıklı TL implied · ${ref} vadeye göre`, col, "", `<div class="s2">Haftalık toplam hacim <b>${biMr(hf.top, 0)}</b> · önceki haftaya göre <b class="${cls(hf.deg)}">${biPc(hf.deg)}</b></div>`));
@@ -290,7 +293,7 @@ function biKmpCiz() {
   const k = [];
   for (const [m, ad, c] of BI_MET) {
     const H = dates.map(d => K[d]?.[m]?.h ?? null), hf = biHafta(H, i), F = dates.map(d => K[d]?.[m]?.aofu ?? null), FT = dates.map(d => K[d]?.[m]?.aof ?? null);
-    if (!H.some(v => v > 0)) continue;
+    if (!H.slice(-22).some(v => v > 0)) continue;          // son bir ayda işlem görmeyen madenleri gösterme
     k.push(biKpi(`${ad} · işlem hacmi`, biMr(H[i]), `günlük <b class="${cls(biCh(H[i], H[i - 1]))}">${biPc(biCh(H[i], H[i - 1]))}</b> · ${nf(K[son]?.[m]?.kg || 0, 0)} kg · ${nf(K[son]?.[m]?.n || 0, 0)} işlem`,
       `${gunAd(son)} · tüm para birimleri, TL karşılığı`, c, "", `<div class="s2">Haftalık (5 gün) <b>${biMr(hf.top, 0)}</b> · önceki haftaya göre <b class="${cls(hf.deg)}">${biPc(hf.deg)}</b></div>`));
     if (m === "au" || m === "ag") k.push(biKpi(`${ad} · fiyat (USD/ons)`, ok(F[i]) ? nf(F[i], 2) : "—",

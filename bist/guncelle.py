@@ -191,9 +191,10 @@ def tur_bul(K, isin, bilesik):
         return k["t"]
     if isin.startswith("TRB"):
         return "sabit"                    # Hazine bonosu: iskontolu
-    if isin.startswith(("TRT", "TRD")) and bilesik is not None and bilesik < 15:
-        return "tufe"                     # listede olmayan (vadesi geçmiş) kıymet: reel getiri düzeyinden TÜFE'ye endeksli kabul
-    return "bil"
+    # listede olmayan (vadesi geçmiş) kıymet: bülten yalnızca sabit getirili ve TÜFE'ye endeksli kıymetlerde getiri yayımlar
+    if bilesik is not None:
+        return "tufe" if bilesik < 15 else "sabit"   # reel getiri düzeyi → TÜFE'ye endeksli
+    return "bil"                          # getirisi yayımlanmayan (endeksli / değişken) ve listede olmayan
 
 
 # ------------------------------------------------------------------ günlük dosyalar
@@ -356,7 +357,25 @@ def kmp_isle(z):
                 seri.append([d.get("Seriler"), d.get("Kıymetli Maden"), d.get("Market Segment"), d.get("Fiyat Birimi"), d.get("Ayar"),
                              d.get("Takas Tarihi"), d.get("Adet"), d.get("TL İşlem Hacmi"), d.get("USD İşlem Hacmi"), d.get("İşlem Sayısı"),
                              d.get("AOF"), d.get("En Düşük Fiyat"), d.get("En Yüksek Fiyat"), d.get("Kapanış Fiyatı")])
+    seri_fiyat(km, seri)
     return km, seri
+
+
+def seri_fiyat(km, seri):
+    """Eski bültenlerde 'Fiyatlar' sayfası yok: metal fiyatını seri istatistiklerinden (hacim ağırlıklı AOF) hesapla."""
+    MET = {"Altın": "au", "Gümüş": "ag", "Platin": "pt", "Paladyum": "pd"}
+    for ad, k in MET.items():
+        d = km.setdefault(k, {})
+        for birim, alan, hj in (("USD/OZ", "aofu", 8), ("TRY/KG", "aof", 7)):
+            if d.get(alan):
+                continue
+            w = h = 0
+            for r in seri:
+                if r[1] == ad and r[3] == birim and isinstance(r[10], (int, float)) and isinstance(r[hj], (int, float)) and "FIKSING" not in str(r[2]).upper():
+                    w += r[10] * r[hj]
+                    h += r[hj]
+            if h:
+                d[alan] = round(w / h, 2)
 
 
 # ------------------------------------------------------------------ ana akış
@@ -453,7 +472,8 @@ def main():
     D["yok"] = sorted(YOK)
     D["updated"] = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     D["vade_sinir"] = VADE_SINIR
-    D["eksik"] = max(0, len(eksik) - islenen)
+    D["eksik"] = sum(1 for d in is_gunleri(dt.date.fromisoformat(a.bas), son)
+                     if d.isoformat() not in YOK and (d.isoformat() not in G or d.isoformat() not in KM))
     json.dump(D, open(yol, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     json.dump(K, open(kyol, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     log(f"yazıldı: {yol} ({os.path.getsize(yol) // 1024} KB, {len(G)} gün BAP, {len(KM)} gün KMP) · bu çalışmada {islenen} gün · kalan {D['eksik']}")
