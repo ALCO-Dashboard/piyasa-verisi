@@ -57,6 +57,20 @@ button.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(-
 .kpi2 .kl{font-size:12.5px;font-weight:600;color:var(--ink-2)}.kpi2 .kv{font-family:var(--mono);font-size:22px;color:var(--ink)}
 .kpi .d{font-size:11.5px;color:var(--muted);margin-top:2px}
 div.kpi[role="button"]{cursor:pointer}
+.subtabs.sm button{padding:7px 14px;font-size:13px}
+.bik{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.bik .kpi.sel{background:var(--accent-wash);border-color:var(--accent);border-top-color:var(--accent)}
+.bten{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px 2px;margin-top:8px;border-top:1px dashed var(--line);padding-top:6px}
+.bten span{display:flex;flex-direction:column;align-items:center;font-family:var(--mono);font-size:11.5px;color:var(--ink)}
+.bten i{font-style:normal;font-family:inherit;font-size:10.5px;color:var(--muted);font-weight:600}
+details.bidet>summary{cursor:pointer;list-style:revert}
+.dtw{overflow:auto;max-height:70vh;margin-top:6px}
+.dtb th{position:sticky;top:0;background:var(--surface);cursor:pointer;white-space:nowrap;z-index:1}
+.dtb tr.flt th{top:28px;cursor:default;padding:3px 4px}
+.dtb tr.flt input{width:100%;min-width:56px;box-sizing:border-box;font:inherit;font-size:12px;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg,var(--surface));color:var(--ink)}
+.dtb td{white-space:nowrap;font-family:var(--mono);font-size:12.5px}.dtb td.l{font-family:inherit}
+.dtf{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:12.5px;color:var(--muted)}
+.bisel{font:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 div.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent);border-top-color:var(--accent)}
 .kpi .k2{font-size:12.5px;font-weight:600;color:var(--ink-2);margin-top:3px}
 .kpi .tn{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
@@ -412,7 +426,7 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
     </div>
   </section>
   <section id="pPiyasa" class="hidden">
-    <div class="subtabs" role="group" aria-label="Piyasa konu" id="psTabs"><button data-ps="faiz" aria-pressed="true">Kâr/Faiz/Swap Oranları</button><button data-ps="gosterge" aria-pressed="false">Gösterge Oranlar</button><button data-ps="endeks" aria-pressed="false">Endeks ve Emtia</button><button data-ps="swap" aria-pressed="false">Yabancı Stoğu</button><button data-ps="borc" aria-pressed="false">Banka Borçlanmaları</button></div>
+    <div class="subtabs" role="group" aria-label="Piyasa konu" id="psTabs"><button data-ps="faiz" aria-pressed="true">Kâr/Faiz/Swap Oranları</button><button data-ps="bist" aria-pressed="false">BIST Bülten Verileri</button><button data-ps="gosterge" aria-pressed="false">Gösterge Oranlar</button><button data-ps="endeks" aria-pressed="false">Endeks ve Emtia</button><button data-ps="swap" aria-pressed="false">Yabancı Stoğu</button><button data-ps="borc" aria-pressed="false">Banka Borçlanmaları</button></div>
     <div id="psFaiz">
     <h2 class="sec">Gecelik oranlar ve hacim</h2>
     <div class="kpis" id="pKpi"></div>
@@ -430,6 +444,12 @@ details.grpd>summary b{font-size:13.5px;text-transform:uppercase;letter-spacing:
         <div class="chart ech"></div><div class="veri everi"></div>
       </div>
     </div>
+    </div>
+    <div id="psBist" class="hidden">
+      <div class="subtabs" role="group" aria-label="BIST piyasası" id="biTabs"><button data-b="bap" aria-pressed="true">BAP · Borçlanma Araçları Piyasası</button><button data-b="kmp" aria-pressed="false">KMTP · Kıymetli Madenler ve Kıymetli Taşlar Piyasası</button></div>
+      <div class="empty hidden" id="biGate"></div>
+      <div id="biBap"><div class="subtabs sm" role="group" aria-label="BAP pazarı" id="bapTabs"></div><div id="bapBody"></div></div>
+      <div id="biKmp" class="hidden"><div id="kmpBody"></div></div>
     </div>
     <div id="psSwap" class="hidden">
       <h2 class="sec">Yabancı Swap Stoğu</h2>
@@ -991,8 +1011,8 @@ $("#gUlke").onclick = e => { const b = e.target.closest("button[data-u]"); if (b
 $("#psTabs").onclick = e => { const b = e.target.closest("button[data-ps]"); if (b) { S.ps = b.dataset.ps; renderPs(); } };
 function renderPs() {
   $$("#psTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.ps === S.ps));
-  $("#psFaiz").classList.toggle("hidden", S.ps !== "faiz"); $("#psGosterge").classList.toggle("hidden", S.ps !== "gosterge"); $("#psEndeks").classList.toggle("hidden", S.ps !== "endeks"); $("#psSwap").classList.toggle("hidden", S.ps !== "swap"); $("#psBorc").classList.toggle("hidden", S.ps !== "borc");
-  if (S.ps === "faiz") { renderPiyasa(); renderBbg(); } else if (S.ps === "gosterge") renderGosterge(); else if (S.ps === "swap") { renderSwap(); renderMk(); } else if (S.ps === "borc") renderBorc(); else renderEndeks();
+  $("#psFaiz").classList.toggle("hidden", S.ps !== "faiz"); $("#psBist").classList.toggle("hidden", S.ps !== "bist"); $("#psGosterge").classList.toggle("hidden", S.ps !== "gosterge"); $("#psEndeks").classList.toggle("hidden", S.ps !== "endeks"); $("#psSwap").classList.toggle("hidden", S.ps !== "swap"); $("#psBorc").classList.toggle("hidden", S.ps !== "borc");
+  if (S.ps === "faiz") { renderPiyasa(); renderBbg(); } else if (S.ps === "bist") renderBist(); else if (S.ps === "gosterge") renderGosterge(); else if (S.ps === "swap") { renderSwap(); renderMk(); } else if (S.ps === "borc") renderBorc(); else renderEndeks();
 }
 
 // ---------------------------------------------------------------- Endeks ve emtia (Bloomberg + LBMA)
@@ -1671,6 +1691,7 @@ function renderSrc() {
       dis: `Dış ticaret: TÜİK genel ticaret sistemi (TCMB EVDS: ISIC Rev.4 ve BEC), en çok ihracat/ithalat yapılan ülkeler TÜİK Veri Portalı · ödemeler dengesi: TCMB (analitik ve ayrıntılı sunum, altın ve enerji hariç cari denge) · cari denge/GSYH için GSYH son 4 çeyrek USD`,
       butce: `Merkezi yönetim bütçe gelir ve giderleri: Hazine ve Maliye Bakanlığı (TCMB EVDS) · GSYH oranları son 4 çeyrek cari fiyatlı GSYH ile · reel değişim TÜİK TÜFE yıllık ile` };
     $("#src").innerHTML = `Kaynak: ${K[S.mk]}. Son güncelleme ${E?.updated ? new Date(E.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${E?.failed?.length ? ` · son çekimde alınamayan: ${esc(E.failed.join(", "))} (önceki veri gösteriliyor)` : ""}.`; return; }
+  if (S.tab === "piyasa" && S.ps === "bist") { $("#src").innerHTML = `Kaynak: <a href="https://borsaistanbul.com/veriler/borclanma-araclari-piyasasi-verileri/bulten-verileri" target="_blank" rel="noopener">Borsa İstanbul BAP günlük bülten ve piyasa özet bülteni</a>, <a href="https://borsaistanbul.com/veriler/kiymetli-madenler-ve-kiymetli-taslar-piyasasi" target="_blank" rel="noopener">KMTP günlük bülten</a>; kıymet sınıflaması BIST işlem gören borçlanma araçları listesi (Hazine ISIN'leri TRT/TRB/TRD+rakam, özel sektör kira sertifikaları TRD+harf). Swap implied oranlarında SOFR / €STR: Bloomberg OIS. Son güncelleme ${BI?.updated ? new Date(BI.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}.`; return; }
   if (S.tab === "makro" && S.mk === "hazine") { const k = H?.kaynak || {}, a = (key, t) => k[key] ? `<a href="${esc(k[key])}" target="_blank" rel="noopener">${t}</a>` : t;
     $("#src").innerHTML = `Kaynak: <a href="https://www.hmb.gov.tr/kamu-finansmani-istatistikleri" target="_blank" rel="noopener">Hazine ve Maliye Bakanlığı · Kamu Finansmanı İstatistikleri</a> — ${a("ic_stok", "İç borç stoku DİBS listesi")}, ${a("dis_stok", "dış borç stoku tahvil listesi")}, ${a("ic_proj", "iç")} ve ${a("dis_proj", "dış")} borç ödeme projeksiyonları (aylık), ${a("sahip", "iç borç stokunun elinde bulunduranlara göre dağılımı")}; geçmiş grafikleri: ${a("dfy", "borç stoku döviz-faiz yapısı")}, ${a("vks", "vadeye kalan ortalama süre")}, ${a("dis_tar", "dış borç stoku")} ve altın / döviz cinsi senet ihraç listeleri; ihraç takvimi: ${H?.strateji ? `<a href="${esc(H.strateji.pdf)}" target="_blank" rel="noopener">${esc(H.strateji.baslik)}</a>` : "iç borçlanma stratejisi"}. Döviz ve altın cinsi iç borç, HMB listesinde TL karşılığıyla verilir; USD/EUR ve ton karşılığı stok tarihindeki TCMB döviz alış kuru${H?.cevrim ? ` (${gunAd(H.cevrim.tarih)})` : ""} ve altın fiyatıyla${H?.cevrim?.altin_kaynak ? ` (${esc(H.cevrim.altin_kaynak)})` : ""} hesaplanır, yaklaşıktır. Sukuk: kira sertifikası (TRD ISIN). Son güncelleme ${H?.updated ? new Date(H.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${H?.failed?.length ? ` · son çekimde alınamayan: ${H.failed.join(", ")} (önceki veri gösteriliyor)` : ""}.`; return; }
   $("#src").innerHTML = `Kaynaklar: <a href="https://veriportali.tuik.gov.tr" target="_blank" rel="noopener">TÜİK Veri Portalı</a> (TÜFE, Yİ-ÜFE) · <a href="https://evds3.tcmb.gov.tr" target="_blank" rel="noopener">TCMB EVDS</a> (Piyasa Katılımcıları Anketi, sektörel enflasyon beklentileri) · TCMB (enflasyon hedefleri, Enflasyon Raporu) · <a href="https://www.borsaistanbul.com/endeksler/tlref" target="_blank" rel="noopener">Borsa İstanbul</a> (TLREF, TLREFK) · Borsa İstanbul Repo Pazarı O/N (TCMB EVDS)${B ? ` · Bloomberg (TL implied, OIS, BIST VİOP; en yeni veri ${gunAd(B.guncel)})` : ""}. Son güncelleme ${D.updated ? new Date(D.updated).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" }) : "—"}${f}.`;
@@ -1689,8 +1710,8 @@ $("#grpBox").addEventListener("toggle", e => { if (e.target.classList?.contains(
 let rz, lw = innerWidth; addEventListener("resize", () => { if (!D || Math.abs(innerWidth - lw) < 30 && !rz) { } lw = innerWidth; clearTimeout(rz); rz = setTimeout(() => { rz = null; render(); }, 150); });
 const hashUygula = h => {
   if (h === "piyasa-imp") { S.tab = "piyasa"; S.ps = "faiz"; S.impT = "O/N"; S.pOn = new Set(["imp"]); return true; }   // Özet: TRY Implied Yield kartı
-  const pm = /^piyasa-(tlrefk|tlref|endeks|gosterge|swap|faiz|borc)(?:-(\w+))?$/.exec(h);     // Özet kartlarından: alt sekme ve kalem
-  if (pm) { S.tab = "piyasa"; S.ps = pm[1] === "tlref" || pm[1] === "tlrefk" ? "faiz" : pm[1]; if (pm[1] === "tlref" || pm[1] === "tlrefk") S.pOn = new Set([pm[1]]); if (pm[1] === "endeks" && pm[2]) S.ee = pm[2]; if (pm[1] === "gosterge") S.gU = "tr"; return true; }
+  const pm = /^piyasa-(tlrefk|tlref|endeks|gosterge|swap|faiz|borc|bist)(?:-(\w+))?$/.exec(h);     // Özet kartlarından: alt sekme ve kalem
+  if (pm) { S.tab = "piyasa"; S.ps = pm[1] === "tlref" || pm[1] === "tlrefk" ? "faiz" : pm[1]; if (pm[1] === "tlref" || pm[1] === "tlrefk") S.pOn = new Set([pm[1]]); if (pm[1] === "endeks" && pm[2]) S.ee = pm[2]; if (pm[1] === "bist" && pm[2]) { if (pm[2] === "kmtp") BS.b = "kmp"; else { BS.b = "bap"; BS.m = pm[2]; } } if (pm[1] === "gosterge") S.gU = "tr"; return true; }
   if (h === "piyasa" || h === "makro") S.tab = h; else if (["enf", "hazine", "buyume", "istihdam", "uretim", "guven", "dis", "butce"].includes(h)) { S.tab = "makro"; S.mk = h; } else return false; return true; };
 hashUygula(location.hash.slice(1));
 addEventListener("hashchange", () => { if (hashUygula(location.hash.slice(1)) && D) { render(); scrollTo(0, 0); } });   // Özet sekmesinden gelen bağlantılar
@@ -1881,6 +1902,7 @@ function renderBorc() {
     + `<b>Kısa vadeli dış borç</b>: orijinal vadesi 1 yıl ve altı olan borç stoku. <b>Kalan vadesi ≤ 1 yıl</b>: orijinal vadesine bakılmaksızın önümüzdeki 12 ayda ödenecek borç. `
     + `<b>Yurt dışı tahvil stoku</b>: bankaların yurt dışında ihraç ettiği borçlanma senetlerinin yazılı değeri (haftalık seri, grafikte ay sonu). Aylık seriler yaklaşık iki ay gecikmeyle yayımlanır.`;
 }
+/*BIST*/
 fetch("data/borclanma.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { BO = j; if (S.tab === "piyasa" && S.ps === "borc") renderBorc(); });
 fetch("data/swap.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { SW = j; if (S.tab === "piyasa" && S.ps === "swap") { renderSwap(); renderMk(); } });
 fetch("data/hazine.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { H = j; if (D && S.tab === "makro" && S.mk === "hazine") { renderHazine(); renderSrc(); } });

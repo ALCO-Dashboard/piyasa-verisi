@@ -437,7 +437,9 @@ def main():
     D["updated"] = simdi()
     D["failed"] = sorun
     json.dump(D, open(yol, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
-    open(os.path.join(cikti, "index.html"), "w", encoding="utf-8").write(open(os.path.join(KOK, "sayfa.html"), encoding="utf-8").read())
+    html = open(os.path.join(KOK, "sayfa.html"), encoding="utf-8").read()
+    html = html.replace("/*BIST*/", open(os.path.join(KOK, "bist.js"), encoding="utf-8").read(), 1)     # BIST bülten sekmesi
+    open(os.path.join(cikti, "index.html"), "w", encoding="utf-8").write(html)
     try:
         sys.path.insert(0, os.path.join(os.path.dirname(KOK), "ortak"))
         from durum import yaz
