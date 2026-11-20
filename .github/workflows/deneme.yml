@@ -1,0 +1,18 @@
+name: BIST deneme
+on:
+  push:
+    branches: [bist-deneme]
+permissions:
+  contents: write
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          mkdir -p out && pip install requests openpyxl >/dev/null 2>&1
+          python3 t/p.py 2>&1 | tee out/log.txt
+      - run: |
+          git config user.name bot; git config user.email bot@users.noreply.github.com
+          git checkout --orphan bist-deneme-veri; git rm -rqf --cached .; git add -f out; git commit -qm veri; git push -f origin bist-deneme-veri
