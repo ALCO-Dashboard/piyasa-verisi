@@ -609,7 +609,15 @@ function hucreBoyut(c) {
   if (L.length) { const x0 = Math.min(...L.map(o => o.x)), y0 = Math.min(...L.map(o => o.y)); return { w: Math.max(...L.map(o => o.x + o.w)) - x0, h: Math.max(...L.map(o => o.y + o.h)) - y0 }; }
   return { w: Math.max(...c.ogeler.map(o => o.w || 600)), h: c.ogeler.reduce((a, o) => a + (o.h || 300), 0) };
 }
-const ifrGen = (c, bw, gen) => Math.max(Math.max(bw, gen || 0) + 40, c.ogeler[0].vw || 1400);
+// iframe genişliği alanın sitede seçildiği genişlikten gelir; ölçülen genişliğe bağlanmaz.
+// (Bağlanınca içerik iframe'le birlikte genişleyip her ölçümde 40 px büyüyor, slayt sürekli yeniden ölçeklenip titriyordu.)
+function dogalGen(c) {
+  const L = c.ogeler.filter(o => o.w);
+  if (!L.length) return 0;
+  if (L.length > 1 && L.every(o => o.x != null)) return Math.max(...L.map(o => o.x + o.w)) - Math.min(...L.map(o => o.x));
+  return Math.max(...L.map(o => o.w));
+}
+const ifrGen = (c, bw, gen) => Math.max(Math.max(gen || 0, dogalGen(c)) + 40, c.ogeler[0].vw || 1400);
 const sabitMi = c => (!!ARSIV && !ARSIV.canli) || foto(c.ogeler[0]);       // görüntü olan alan yeniden çizilemez: yalnızca köşeden orantılı boyutlanır
 function genGonder(f, g) { if (!f || f._gen === g) return; f._gen = g; try { f.contentWindow.postMessage({ ssGen: g }, location.origin); } catch (e) {} }
 // tek ortak ölçekle satırlara dizme: sitede küçük olan kutucuk küçük, büyük grafik büyük kalır
