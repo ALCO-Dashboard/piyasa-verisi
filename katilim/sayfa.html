@@ -952,6 +952,7 @@ function drawSmall(host,series,O,HH){
   const ds=dates();
   const data=series.map((s,i)=>{ const pts=ds.map(d=>({d,t:pd(d),v:s.fn(d)})).filter(p=>p.v!=null); pts.forEach(p=>p.y=O?p.v:p.v/1000); return {label:s.label,color:COLORS[i%3],pts}; }).filter(s=>s.pts.length);
   if(!data.length){ host.innerHTML='<div class="empty">Veri yok.</div>'; return; }
+  host._ssSeri={birim:O?'':'mlr TL',seriler:data.map(s=>({ad:s.label,p:s.pts.map(p=>[p.d,p.y])}))};   // Sunum: grafik yorumu için veri
   const W=Math.max(220,host.clientWidth), H=HH||150, m={t:10,r:10,b:22,l:52};
   const all=data.flatMap(s=>s.pts), ext=d3.extent(all,p=>p.t);
   const x=d3.scaleUtc(+ext[0]===+ext[1]?[+ext[0]-864e5*3,+ext[1]+864e5*3]:ext,[m.l,W-m.r]);

@@ -256,6 +256,7 @@ function renderBddk() {
 function bdChart() {
   const B = D.bddk, box = $("#bdChart"), w = Math.max(320, box.clientWidth || 600), h = 190, m = { l: 40, r: 8, t: 8, b: 22 };
   const hf = B.seri.hafta, a = B.seri[`sektor_${S.bd}`] || [], b = B.seri[`katilim_${S.bd}`] || [], n = hf.length;
+  box._ssSeri = { birim: "% haftalık değişim", seriler: [["Sektör", a], ["Katılım", b]].map(([ad, v]) => ({ ad: ad + " haftalık değişim", fmt: x => "%" + nf(x, 2), p: hf.map((d, i) => [d, v[i]]) })) };
   const all = [...a, ...b].filter(v => v != null); let lo = Math.min(0, ...all), hi = Math.max(0, ...all); const pad = (hi - lo) * .08 || 1; lo -= pad; hi += pad;
   const iw = w - m.l - m.r, ih = h - m.t - m.b, bw = iw / n, X = i => m.l + i * bw, Y = v => m.t + (hi - v) / (hi - lo) * ih;
   const step = (hi - lo) / 4, mag = Math.pow(10, Math.floor(Math.log10(step))), st = Math.ceil(step / mag) * mag, ticks = [];

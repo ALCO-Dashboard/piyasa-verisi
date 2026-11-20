@@ -147,6 +147,27 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .slayt .el-boy{right:-18px;bottom:-18px;width:38px;height:38px;border-radius:50%;background:#1d4ed8;border:5px solid #fff;cursor:nwse-resize;box-shadow:0 2px 8px rgba(0,0,0,.35)}
 .slayt .panel>.el-tasi{top:12px;left:auto;right:18px;transform:none;background:#b45309}
 .slayt .panel>.el-boy{right:8px;bottom:8px;background:#b45309}
+.slayt .el-sag,.slayt .el-alt,.slayt .tut .boyS,.slayt .tut .boyA{position:absolute;z-index:6;touch-action:none;background:#1d4ed8;border:4px solid #fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.35);font-style:normal}
+.slayt .el-sag,.slayt .el-alt{opacity:0;transition:opacity .15s}
+.slayt .el-sag,.slayt .tut .boyS{right:-14px;top:50%;width:26px;height:88px;transform:translateY(-50%);cursor:ew-resize}
+.slayt .el-alt,.slayt .tut .boyA{bottom:-14px;left:50%;width:88px;height:26px;transform:translateX(-50%);cursor:ns-resize}
+.slayt .hucre:hover>.el-sag,.slayt .hucre:hover>.el-alt,.slayt .panel:hover>.el-sag,.slayt .panel:hover>.el-alt,.sahne.suruk .el-sag,.sahne.suruk .el-alt{opacity:1}
+.slayt .panel>.el-sag,.slayt .panel>.el-alt,.slayt .tut.pnl .boyS,.slayt .tut.pnl .boyA{background:#b45309}
+.slayt .panel>.el-sag{right:2px}.slayt .panel>.el-alt{bottom:2px}
+.slayt .hucre.sabit>.el-sag,.slayt .hucre.sabit>.el-alt,.slayt .tut.sabit .boyS,.slayt .tut.sabit .boyA{display:none}
+.sahne:fullscreen .el-sag,.sahne:fullscreen .el-alt,.sahne.tamEkran .el-sag,.sahne.tamEkran .el-alt{display:none}
+.slayt .hucre.disari{opacity:.35}
+.sl.birak{outline:2px dashed #1d4ed8;outline-offset:-2px;background:rgba(29,78,216,.09)}
+.yeniHedef{display:none;margin:6px 8px 4px;padding:12px;border:2px dashed var(--line);border-radius:10px;text-align:center;font-size:12.5px;font-weight:700;color:var(--muted)}
+body.hucreSuruk .yeniHedef{display:block}.yeniHedef.birak{border-color:#1d4ed8;color:#1d4ed8;background:rgba(29,78,216,.07)}
+body.hucreSuruk #liste{outline:2px solid rgba(29,78,216,.25);outline-offset:2px;border-radius:12px}
+.tasiEt{position:fixed;z-index:500;pointer-events:none;background:#1d4ed8;color:#fff;font-weight:700;font-size:12.5px;padding:6px 10px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.25);white-space:nowrap;display:none}
+.slayt .panel li .hb{display:inline-block;font-size:15px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--s-red);border-radius:6px;padding:2px 8px;margin-right:6px;vertical-align:2px}
+.slayt .panel li small{font-size:18px;color:var(--s-mut)}.slayt .panel li .hb i,.oclist .hb i{display:none}
+.slayt .panel li.yorum::before{background:var(--s-red)}
+.slayt .panel.alt .blk.oc ul{columns:1}
+.oclist .grp small{font-weight:500;text-transform:none;letter-spacing:0}
+.oclist .hb{font-size:10px;font-weight:800;color:#fff;background:var(--accent);border-radius:4px;padding:1px 5px;margin-right:4px;vertical-align:1px}
 .slayt .hucre:hover>.kes{outline:3px dashed rgba(29,78,216,.55);outline-offset:6px}
 .sahne.suruk iframe{pointer-events:none}
 .sahne:fullscreen .el-tasi,.sahne:fullscreen .el-boy,.sahne.tamEkran .el-tasi,.sahne.tamEkran .el-boy{display:none}
@@ -157,7 +178,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .slayt .tut{position:absolute;border:3px dashed #1d4ed8;border-radius:12px;background:rgba(29,78,216,.05);cursor:move;touch-action:none}
 .slayt .tut:hover,.slayt .tut.tasi{background:rgba(29,78,216,.12);border-style:solid}
 .slayt .tut span{position:absolute;left:8px;top:8px;font:700 20px/1.2 var(--sans);color:#fff;background:#1d4ed8;border-radius:8px;padding:5px 11px;white-space:nowrap;max-width:calc(100% - 16px);overflow:hidden;text-overflow:ellipsis;pointer-events:none}
-.slayt .tut .boy{position:absolute;right:-16px;bottom:-16px;width:34px;height:34px;border-radius:50%;background:#1d4ed8;border:5px solid #fff;cursor:nwse-resize;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.slayt .tut .boy{position:absolute;z-index:2;right:-16px;bottom:-16px;width:34px;height:34px;border-radius:50%;background:#1d4ed8;border:5px solid #fff;cursor:nwse-resize;box-shadow:0 2px 8px rgba(0,0,0,.35)}
 .slayt .tut.pnl{border-color:#b45309;background:rgba(180,83,9,.05)}
 .slayt .tut.pnl span,.slayt .tut.pnl .boy{background:#b45309}
 #bKonum[aria-pressed="true"]{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
@@ -333,7 +354,11 @@ let D = A.oku();
 let aktif = 0;                  // sıralı slayt listesindeki konum
 const olcu = {};                // öğe id → {w,h} (iframe'den gelen gerçek boyut)
 let DURUM = {}, OC = [], KATALOG = [], ORTAK = [];
-const CANLI = { OC: [], DURUM: {} };
+const CANLI = { OC: [], DURUM: {}, HABER: [] };
+// grafik yorumları: slayttaki alanların iframe'leri, grafiklerinin verisinden kısa yorum gönderir (alan id → satırlar)
+const KY = "alco-sunum-yorum";
+let YORUM = (() => { try { return JSON.parse(localStorage.getItem(KY)) || {}; } catch (e) { return {}; } })(), HABER = [];
+const YCANLI = YORUM;
 // Arşiv sunumu: kaydedilmiş bir sunum açıldığında grafikler kayıt günündeki görüntüleriyle, öne çıkanlar ve kaynak
 // tarihleri o günkü hâliyle gelir (veriler güncellenmez). ARSIV null ise taslak (canlı) moddayız.
 let ARSIV = null, GOR = {};     // GOR: öğe id → {u: görüntü (data URL), w, h}
@@ -355,7 +380,8 @@ Promise.all([
 ]).then(([du, oz, kt, sb]) => {
   CANLI.DURUM = du || {};
   CANLI.OC = [...(oz?.one_cikan?.piyasa || []).map(x => ({ ...x, g: "Piyasa" })), ...(oz?.one_cikan?.eko || []).map(x => ({ ...x, g: "Ekonomi" }))];
-  if (!ARSIV) { DURUM = CANLI.DURUM; OC = CANLI.OC; }
+  CANLI.HABER = (oz?.haber_havuz || []).filter(h => h && h.b);
+  if (!ARSIV) { DURUM = CANLI.DURUM; OC = CANLI.OC; HABER = CANLI.HABER; }
   KATALOG = kt?.alanlar || []; ORTAK_SITE = sb?.sablonlar || []; ortakBirlestir();
   ciz();
   if (location.hash === "#sablon") { history.replaceState(null, "", location.pathname); sablonAc(); }
@@ -397,23 +423,72 @@ function kaynakMetni(s) {
   return `Kaynak: ${ad}${t ? " · son veri " + tarihYaz(t) : ""}`;
 }
 
-// otomatik öne çıkanlar: Özet'teki kural tabanlı yorumlar konu eşleşmesiyle slayta düşer
-const KONU = [["faiz", /politika faizi|PPK|repo|TLREF|fonlama|kâr payı|para politikası/i], ["rezerv", /rezerv/i], ["zk", /\bZK\b|zorunlu karşılık|likidite/i],
-  ["bddk", /BDDK|kredi|mevduat/i], ["enf", /TÜFE|ÜFE|enflasyon|beklenti/i], ["buyume", /GSYH|büyüme/i], ["uretim", /PMI|sanayi üretim|üretim endeks|imalat/i],
-  ["istihdam", /işsizlik|istihdam|işgücü/i], ["dis", /cari|dış ticaret|ihracat|ithalat|dış denge/i], ["butce", /bütçe|faiz dışı/i], ["hazine", /hazine|borçlanma|ihale|itfa/i],
-  ["piyasa", /BIST|USD\/TRY|CDS|tahvil|getiri|Brent|altın|kur\b|swap|endeks|emtia/i], ["katilim", /katılım bank|katılım sektör/i]];
-const konular = t => KONU.filter(([, r]) => r.test(t)).map(([k]) => k);
-const anaKonu = t => { let en = null, i = 1e9; KONU.forEach(([k, r]) => { const m = t.search(r); if (m >= 0 && m < i) { i = m; en = k; } }); return en; };
-// slaytın konuları: başlık bir konuya işaret ediyorsa o; değilse alanların adları ve alt sekmeleri
-const slaytKonu = s => { const b = konular(s.baslik || ""); return b.length ? b : konular(s.ogeler.map(o => o.ad + " " + (o.yolAd || "").split(" › ").slice(1).join(" ")).join(" ")); };
-const ocAnah = m => A.norm(m.replace(/<[^>]+>/g, "")).slice(0, 48);
-function ocListesi(s) {
-  const kon = slaytKonu(s);
-  const haric = s.ocHaric || [], ek = s.ocEk || [];
-  const oto = OC.filter(x => kon.includes(anaKonu(x.m.replace(/<[^>]+>/g, ""))) && !haric.includes(ocAnah(x.m)));
-  const ekl = OC.filter(x => ek.includes(ocAnah(x.m)) && !oto.includes(x));
-  return [...oto, ...ekl].slice(0, s.ocSinir || 4);
+// otomatik öne çıkanlar — üç kaynak, slayttaki her alanın kendi konusuna göre (genel sayfa adına göre değil):
+//  1) grafik yorumu: alanın grafiğindeki veriden (son değer, önceki döneme / yılbaşına / bir yıl önceye göre değişim)
+//  2) Özet'teki kural tabanlı yorumlar: yalnızca alanla aynı konudaki satırlar
+//  3) ilgili haberler: Özet'in haber havuzundan konuyla eşleşen başlıklar; eşleşme yoksa hiçbir şey eklenmez
+const sade = m => String(m || "").replace(/<[^>]+>/g, "");
+const YABANCI = /(?<!\p{L})(ABD|Fed(?!\p{L})|ECB|AB(?!\p{L})|Avrupa|Avro|Euro Bölgesi|Alman|Japon|Çin(?!\p{Ll})|İngiltere|Rus|Ukrayna|Putin|Trump|Asya|Wall Street|Nasdaq|Dow Jones|Goldman|JPMorgan|Morgan Stanley|Barclays|BCA|S&P Global|IEA|Macron|Xi Jinping|Brexit|G10|Gelişen piyasa|Kanada|Hindistan|Brezilya|İran|İsrail|Hürmüz|Bitcoin|Ethereum|Tesla|Apple|Alibaba|TSMC|Anthropic|Netflix|Amazon|Nvidia|MSCI)/u;
+const FAIZ_DEGIL = t => !/faiz|kâr pay|kar pay|oran/i.test(t);
+const KONU = [
+  { k: "ppk", ad: /politika faiz|PPK|TLREF|fonlama maliyet|ortalama fonlama|AOFM|gecelik|\brepo\b|O\/N/i, oc: /politika faizi|PPK/i, hb: /PPK|politika faiz|faiz karar|Merkez Bankası.{0,40}faiz|TCMB.{0,40}faiz|Karahan/i },
+  { k: "mfaiz", ad: /mevduat faiz|katılma hesab|kâr payı oran|mevduat.{0,20}oran/i, hb: /mevduat faiz|kâr payı oran|katılma hesab|mevduata .{0,20}faiz/i },
+  { k: "kfaiz", ad: /kredi faiz|kredi.{0,30}kâr oran|kredi kartı|konut kredisi faiz|taşıt kredisi faiz/i, hb: /kredi (kartı )?faiz|kredi kartı|konut kredisi|taşıt kredisi|kredi faiz/i },
+  { k: "yv", ad: /yatırım vekalet/i, hb: /yatırım vekalet/i },
+  { k: "kredi", ad: t => /kredi|takip|NPL|tahsili gecikmiş/i.test(t) && FAIZ_DEGIL(t), oc: /kredi|^BDDK|^YP \(dolar/i, hb: /takipteki alacak|kredi (büyüme|hacm|stok|sınır)|krediler(de|in)?\b|BDDK/i },
+  { k: "mevduat", ad: t => /mevduat|toplanan fon|katılma hesap|DTH|döviz tevdiat|KKM/i.test(t) && FAIZ_DEGIL(t), oc: /mevduat|^BDDK|^YP \(dolar/i, hb: t => /mevduat|DTH|döviz tevdiat|kur korumalı|KKM/i.test(t) && !/faiz/i.test(t) },
+  { k: "rezerv", ad: /rezerv/i, oc: /rezerv/i, hb: /rezerv/i },
+  { k: "zk", ad: /zorunlu karşılık|\bZK\b|likidite|net fonlama|açık piyasa/i, oc: /\bZK\b|zorunlu karşılık|likidite/i, hb: /zorunlu karşılık|likidite/i },
+  { k: "enf", ad: /TÜFE|ÜFE|enflasyon|fiyat endeks|çekirdek/i, oc: /TÜFE|enflasyon/i, hb: /enflasyon|TÜFE|ÜFE|fiyat artış/i },
+  { k: "bek", ad: /beklenti|piyasa katılımcı/i, oc: /beklenti|Enflasyon Raporu|tahmin/i, hb: /beklenti anket|enflasyon beklenti|piyasa katılımcıları|Enflasyon Raporu/i },
+  { k: "buyume", ad: /GSYH|büyüme|milli gelir/i, oc: /GSYH|büyü/i, hb: /GSYH|büyüme (oranı|rakam|veri)|ekonomi.{0,20}büyüdü/i },
+  { k: "uretim", ad: /PMI|sanayi üretim|imalat|kapasite kullanım|güven endeks/i, oc: /PMI|sanayi üretim/i, hb: /PMI|sanayi üretim|kapasite kullanım|imalat sanayi/i },
+  { k: "istihdam", ad: /işsizlik|istihdam|işgücü/i, oc: /işsizlik|istihdam/i, hb: /işsizlik|istihdam|işgücü/i },
+  { k: "dis", ad: /cari|dış ticaret|ihracat|ithalat|ödemeler denge|dış borç/i, oc: /cari|dış ticaret/i, hb: /cari (açık|denge|işlemler)|dış ticaret|ihracat|ithalat|dış borç/i },
+  { k: "butce", ad: /bütçe|faiz dışı/i, oc: /bütçe/i, hb: /bütçe/i },
+  { k: "hazine", ad: /hazine|borçlanma|ihale|DİBS|tahvil|getiri eğri|\bOIS\b|gösterge|itfa/i, oc: /getiri eğrisi|tahvil/i, hb: /Hazine.{0,40}(ihale|borçlan|tahvil|itfa)|\bihale(si|ler)?\b.{0,20}(Hazine|DİBS|tahvil)|DİBS|eurobond|tahvil faiz|gösterge faiz/i },
+  { k: "kur", ad: /USD\/TRY|EUR\/TRY|dolar\/TL|döviz kur|\bkur\b|sepet|TL'nin/i, oc: /USD\/TRY/i, hb: /dolar\/TL|euro\/TL|Türk lirası|\bTL'(de|nin|ye)\b|döviz kur/i },
+  { k: "bist", ad: /BIST|borsa|hisse/i, oc: /BIST/i, hb: /Borsa İstanbul|BIST|PİYASAYA BAKIŞ- Borsa|Borsa günü|yabancı yatırımcı.{0,30}hisse/i },
+  { k: "cds", ad: /CDS|risk prim|kredi not/i, oc: /CDS/i, hb: /CDS|kredi notu|Moody's|Fitch|S&P.{0,20}(not|Türkiye)/i },
+  { k: "emtia", ad: t => /altın|Brent|petrol|gümüş|emtia|\bons\b|metal/i.test(t) && !/rezerv/i.test(t), oc: /Brent|altın/i, hb: /altın|Brent|petrol|gümüş|\bons\b|akaryakıt|motorin|benzin|doğal ?gaz/i, dis: 1 },
+  { k: "swap", ad: /swap/i, oc: /swap/i, hb: /swap/i },
+  { k: "send", ad: /sendikasyon|seküritizasyon|ihraç|eurobond/i, hb: /sendikasyon|seküritizasyon|eurobond|tahvil ihrac/i },
+  { k: "konut", ad: /konut/i, hb: /konut/i },
+  { k: "fon", ad: (t, o) => o.sayfa === "tefas.html" || /TEFAS|yatırım fon|emeklilik fon|\bBYF\b|portföy yönetim/i.test(t), hb: /(?<!\p{L})fon(lar|u|un|da|ları)?(?!\p{L})|TEFAS|emeklilik|BES(?!\p{L})/iu },
+  { k: "katilim", ad: (t, o) => o.sayfa === "katilim/" || /katılım bank|katılım sektör/i.test(t), oc: /katılım/i, hb: /katılım bank|TKBB|faizsiz|sukuk|kira sertifika/i },
+  { k: "kuresel", ad: /\bFed\b|ECB|ABD|US ?10|Treasury|DXY|küresel|VIX|S&P 500|Nasdaq|Dow/i, hb: /\bFed\b|ECB|ABD|Wall Street|Nasdaq|Dow Jones|S&P 500|Treasury/i, dis: 1 }
+];
+const esle = (r, t, o) => !r ? false : typeof r === "function" ? r(t, o || {}) : r.test(t);
+// alanın konusu: önce alanın kendi adı; ad bir konuya işaret etmiyorsa sitedeki yerinin son kısmı (alt sekme)
+function ogeKonu(o) {
+  const ad = o.ad || "", yol = (o.yolAd || "").split(" › ").slice(1).pop() || "";
+  let k = KONU.filter(x => esle(x.ad, ad, o));
+  if (!k.some(x => x.k !== "katilim" && x.k !== "fon")) k = k.concat(KONU.filter(x => !k.includes(x) && esle(x.ad, yol, {})));
+  return k;
 }
+const slaytKonu = s => { const k = new Set(); s.ogeler.forEach(o => ogeKonu(o).forEach(x => k.add(x))); if (!k.size) KONU.filter(x => esle(x.ad, s.baslik || "", {})).forEach(x => k.add(x)); return [...k]; };
+const ocAnah = m => A.norm(sade(m)).slice(0, 48);
+const zamanKisa = t => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(t || ""); return m ? `${+m[3]} ${["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"][+m[2] - 1]}` : ""; };
+const haberSatir = h => ({ m: `<span class="hb">Haber<i>:</i></span> ${esc(h.b)}${zamanKisa(h.t) ? ` <small>· ${zamanKisa(h.t)}</small>` : ""}`, k: "h:" + ocAnah(h.b), g: "haber", u: h.u });
+function ocAday(s) {
+  const T = slaytKonu(s), hc = hucreler(s);
+  const yorum = hc.flatMap(c => (YORUM[c.id] || []).slice(0, 2).map((m, i) => ({ m, k: "y:" + c.id + ":" + i, g: "yorum", t: "yorum" })));
+  // Özet satırı yalnızca ilk cümlesindeki konuya göre eşleşir ("Politika faizi …; TÜFE'ye göre reel getiri" enflasyon slaytına düşmez)
+  // grafik yorumunda zaten geçen değeri tekrar eden Özet satırı atlanır (ör. "TÜFE %29,77" iki kez yazılmasın)
+  const degerler = yorum.flatMap(y => [...y.m.matchAll(/<b>([^<]*\d[^<]*)<\/b>/g)].map(m => m[1].trim())).filter(v => v.length >= 3);
+  const oc = OC.filter(x => { const t = sade(x.m), ilk = t.split(/;|\.\s/)[0]; return T.some(k => esle(k.oc, ilk)) && !degerler.some(v => t.includes(v)); }).map(x => ({ ...x, k: ocAnah(x.m), g: "ozet" }));
+  const gor = new Set(), hb = HABER.filter(h => T.some(t => esle(t.hb, h.b) && (t.dis || !YABANCI.test(h.b))))
+    .sort((a, b) => String(b.t).localeCompare(String(a.t))).filter(h => { const k = ocAnah(h.b); if (gor.has(k)) return false; gor.add(k); return true; }).slice(0, 4).map(haberSatir);
+  return { T, yorum, oc, hb };
+}
+function ocListesi(s) {
+  const X = ocAday(s), haric = s.ocHaric || [], ek = s.ocEk || [];
+  const oto = [...X.yorum.slice(0, 2), ...X.oc.slice(0, 2), ...X.hb.slice(0, 2)].filter(x => !haric.includes(x.k));
+  const tum = [...X.yorum, ...X.oc, ...X.hb, ...OC.map(x => ({ ...x, k: ocAnah(x.m), g: "ozet" })), ...HABER.map(haberSatir)];
+  const L = [...oto, ...tum.filter(x => ek.includes(x.k))], gor = new Set();
+  return L.filter(x => !gor.has(x.k) && gor.add(x.k)).slice(0, s.ocSinir || 5);
+}
+function yorumKopya(d) { const o = {}; d.slaytlar.forEach(s => hucreler(s).forEach(c => { if (YORUM[c.id]) o[c.id] = YORUM[c.id]; })); return o; }
 const ocGoster = s => s.oc !== false;
 const notSatir = t => String(t || "").split(/\n/).map(x => x.trim()).filter(Boolean);
 
@@ -446,7 +521,9 @@ function hucreBoyut(c) {
   if (L.length) { const x0 = Math.min(...L.map(o => o.x)), y0 = Math.min(...L.map(o => o.y)); return { w: Math.max(...L.map(o => o.x + o.w)) - x0, h: Math.max(...L.map(o => o.y + o.h)) - y0 }; }
   return { w: Math.max(...c.ogeler.map(o => o.w || 600)), h: c.ogeler.reduce((a, o) => a + (o.h || 300), 0) };
 }
-const ifrGen = (c, bw) => Math.max(bw + 40, c.ogeler[0].vw || 1400);
+const ifrGen = (c, bw, gen) => Math.max(Math.max(bw, gen || 0) + 40, c.ogeler[0].vw || 1400);
+const sabitMi = c => !!ARSIV || foto(c.ogeler[0]);       // görüntü olan alan yeniden çizilemez: yalnızca köşeden orantılı boyutlanır
+function genGonder(f, g) { if (!f || f._gen === g) return; f._gen = g; try { f.contentWindow.postMessage({ ssGen: g }, location.origin); } catch (e) {} }
 // tek ortak ölçekle satırlara dizme: sitede küçük olan kutucuk küçük, büyük grafik büyük kalır
 function rafla(B, kutu, kip) {
   const dene = k => {
@@ -490,20 +567,25 @@ function yerlesim(s) {
     const ph = panelYuk(oc, nt, C.w), pw = 540;
     const alt = { panel: { x: C.x, y: C.y + C.h - ph, w: C.w, h: ph, yon: "alt" }, icerik: { x: C.x, y: C.y, w: C.w, h: C.h - ph - ARA } };
     const sag = { panel: { x: C.x + C.w - pw, y: C.y, w: pw, h: C.h, yon: "sag" }, icerik: { x: C.x, y: C.y, w: C.w - pw - 34, h: C.h } };
-    let sec = s.panel === "alt" ? alt : s.panel === "sag" ? sag : null;
-    if (!sec) sec = alanTop(diz(B, alt.icerik, duzen)) > alanTop(diz(B, sag.icerik, duzen)) * 1.08 ? alt : sag;   // grafiklerin daha büyük kaldığı yer
+    const sec = s.panel === "sag" ? sag : alt;      // öne çıkanlar ve not varsayılan olarak altta satır satır
     panel = sec.panel; icerik = sec.icerik;
     if (yer && yer._panel) { const p = yer._panel; panel = { ...p, yon: p.w > p.h * 1.6 ? "alt" : "sag" }; }
   }
   const K = diz(B, icerik, duzen);
   // elle konumlandırılmış slaytta kayıtlı kutular kullanılır (kutu, alanın görünen sınırıdır)
-  const hucre = hc.map((c, i) => ({ id: c.id, c, ogeler: c.ogeler, bw: B[i].w, bh: B[i].h, ...sigdir((yer && yer[c.id]) || K[i], B[i].w, B[i].h) }));
+  const hucre = hc.map((c, i) => {
+    const y = yer && yer[c.id], sb = sabitMi(c), o = { id: c.id, c, ogeler: c.ogeler, bw: B[i].w, bh: B[i].h, gen: 0 };
+    // kenardan uzatılmış alan: genişlik (gen) sayfanın yeniden çizildiği sanal genişliktir; ölçek kutu genişliğinden, yükseklik içerikten gelir
+    if (y && y.gen) { const k = y.w / (sb ? B[i].w : Math.max(y.gen, B[i].w)); return { ...o, gen: sb ? 0 : y.gen, x: y.x, y: y.y, w: y.w, h: B[i].h * k, k }; }
+    return { ...o, ...sigdir(y || K[i], B[i].w, B[i].h) };
+  });
   return { icerik, panel, oc, nt, hucre, elle: !!yer };
 }
 
 // ---------------------------------------------------------------- canlı slaytlar (iframe'li, kalıcı DOM)
 const sahne = $("#sahne"), DOM = {};
-function iframeSrc(c) { const o = c.ogeler[0]; return `../${o.sayfa}?sunum=${encodeURIComponent(c.id)}&tema=${tema()}&v=${surum}${o.durum?.h || ""}`; }
+function iframeSrc(c) { const o = c.ogeler[0], g = yerBul(c.id)?.gen; return `../${o.sayfa}?sunum=${encodeURIComponent(c.id)}&tema=${tema()}&v=${surum}${g ? "&gen=" + Math.round(g) : ""}${o.durum?.h || ""}`; }
+function yerBul(id) { for (const s of D.slaytlar) if (s.yer && s.yer[id]) return s.yer[id]; return null; }
 const ustSerit = () => `<div class="s-cizgi"></div><div class="s-ust"><span><b>DOST KATILIM</b> · Aktif Pasif Yönetimi</span><span>${esc(D.ad || "Piyasa Verileri (ALCO)")} · ${BUGUN}</span></div>`;
 function slaytIcerik(x, no, top) {
   if (x.tur === "kapak") { const k = D.kapak || {};
@@ -519,7 +601,7 @@ function slaytIcerik(x, no, top) {
   }
   const s = x.s, Y = yerlesim(s);
   const pnl = Y.panel ? `<div class="panel ${Y.panel.yon}" style="left:${Y.panel.x}px;top:${Y.panel.y}px;width:${Y.panel.w}px;height:${Y.panel.h}px">
-      ${Y.oc.length ? `<div class="blk"><h4>Öne çıkanlar</h4><ul>${Y.oc.map(o => `<li class="${o.t || ""}">${o.m}</li>`).join("")}</ul></div>` : ""}
+      ${Y.oc.length ? `<div class="blk oc"><h4>Öne çıkanlar</h4><ul>${Y.oc.map(o => `<li class="${o.t || ""}">${o.m}</li>`).join("")}</ul></div>` : ""}
       ${Y.nt.length ? `<div class="blk"><h4>Değerlendirme</h4><div class="not">${esc(s.not.trim())}</div></div>` : ""}</div>` : "";
   return `${ustSerit()}<div class="s-bas">${esc(s.baslik)}</div><div class="s-yol">${esc(bolum(s))}</div>${pnl}
     <div class="s-alt"><span>${esc(kaynakMetni(s))}</span><span>${no} / ${top}</span></div>`;
@@ -529,11 +611,13 @@ function hucreleriGuncelle(el, s) {
   const var_ = new Map($$(".hucre", kap).map(h => [h.dataset.id, h]));
   Y.hucre.forEach(h => {
     let c = var_.get(h.id); var_.delete(h.id);
-    if (!c) { c = document.createElement("div"); c.className = "hucre"; c.dataset.id = h.id; c.innerHTML = `<div class="kes"><div class="yuk">Yükleniyor…</div></div><i class="el-tasi" title="Sürükleyerek taşıyın">✥ Taşı</i><i class="el-boy" title="Köşeden sürükleyerek büyütün / küçültün"></i>`; kap.appendChild(c); }
+    if (!c) { c = document.createElement("div"); c.className = "hucre"; c.dataset.id = h.id; c.innerHTML = `<div class="kes"><div class="yuk">Yükleniyor…</div></div><i class="el-tasi" title="Sürükleyerek taşıyın · soldaki listede başka bir slaytın üzerine bırakırsanız o slayta taşınır">✥ Taşı</i><i class="el-sag" title="Yandan uzatın: genişlik (grafik yeni genişliğe göre yeniden çizilir)"></i><i class="el-alt" title="Alttan uzatın: yükseklik"></i><i class="el-boy" title="Köşeden sürükleyerek orantılı büyütün / küçültün"></i>`; kap.appendChild(c); }
+    c.classList.toggle("sabit", sabitMi(h.c));
     Object.assign(c.style, { left: h.x + "px", top: h.y + "px", width: h.w + "px", height: h.h + "px" });
     Object.assign(c.querySelector(".kes").style, { left: "0px", top: "0px", width: h.w + "px", height: h.h + "px" });
     const ifr = c.querySelector("iframe");
-    if (ifr) { ifr.style.transform = `scale(${h.k})`; ifr.style.width = ifrGen(h.c, h.bw) + "px"; ifr.style.height = (h.bh + 30) + "px"; }
+    if (ifr) { ifr.style.transform = `scale(${h.k})`; ifr.style.width = ifrGen(h.c, h.bw, h.gen) + "px"; ifr.style.height = (h.bh + 30) + "px";
+      clearTimeout(ifr._gT); const g = Math.round(h.gen || 0); ifr._gT = setTimeout(() => genGonder(ifr, g), sahne.classList.contains("suruk") ? 140 : 0); }
     c._f = h;
   });
   var_.forEach(c => c.remove());
@@ -557,19 +641,28 @@ function yukle(el) {      // slayttaki iframe'leri oluştur (tembel yükleme)
     }
     const f = document.createElement("iframe"), b = hucreBoyut(h);
     f.setAttribute("title", hucreAd(h)); f.setAttribute("loading", "eager"); f.dataset.id = h.id;
-    f.style.width = ifrGen(h, b.w) + "px"; f.style.height = (b.h + 30) + "px";
+    f.style.width = ifrGen(h, b.w, yerBul(h.id)?.gen) + "px"; f.style.height = (b.h + 30) + "px";
     if (c._f) f.style.transform = `scale(${c._f.k})`;
     f.src = iframeSrc(h);
-    f.addEventListener("load", () => { const y = c.querySelector(".yuk"); try { f.contentWindow.alcoSunum?.hazir?.then(() => y && y.remove()); } catch (e) {} setTimeout(() => y && y.remove(), 15000); });
+    f._gen = Math.round(yerBul(h.id)?.gen || 0);
+    f.addEventListener("load", () => { const y = c.querySelector(".yuk"); try { f.contentWindow.alcoSunum?.hazir?.then(() => y && y.remove()); } catch (e) {} setTimeout(() => y && y.remove(), 15000);
+      const g = f._gen; f._gen = -1; setTimeout(() => genGonder(f, Math.round(yerBul(h.id)?.gen || g || 0)), 300); });
     c.querySelector(".kes").appendChild(f);
   });
 }
-let olcuT;
+let olcuT, yorumT;
 addEventListener("message", e => {
-  const m = e.data; if (!m || !m.ssBoyut || e.origin !== location.origin) return;
+  const m = e.data; if (!m || e.origin !== location.origin) return;
+  if (m.ssYorum) {      // grafik yorumu geldi: öne çıkanları yenile (arşivde kayıtlı yorum değişmez)
+    if (ARSIV || !m.id) return; const k = JSON.stringify(m.satirlar || []); if (JSON.stringify(YORUM[m.id] || []) === k) return;
+    if ((m.satirlar || []).length) YORUM[m.id] = m.satirlar; else delete YORUM[m.id];
+    try { localStorage.setItem(KY, JSON.stringify(YORUM)); } catch (x) {}
+    clearTimeout(yorumT); yorumT = setTimeout(() => { if (!sahne.classList.contains("suruk")) { sahneCiz(); ayarCiz(); } }, 120); return;
+  }
+  if (!m.ssBoyut) return;
   const eski = olcu[m.id]; olcu[m.id] = { w: m.w, h: m.h, hata: m.hata };
   $$(`.hucre[data-id="${CSS.escape(m.id)}"] .yuk`).forEach(y => y.remove());
-  if (eski && Math.abs(eski.h - m.h) < 2 && !m.hata === !eski.hata) return;
+  if (eski && Math.abs(eski.h - m.h) < 2 && Math.abs(eski.w - m.w) < 2 && !m.hata === !eski.hata) return;
   clearTimeout(olcuT); olcuT = setTimeout(() => { sahneCiz(); if (m.hata) ayarCiz(); }, 60);
 });
 
@@ -604,7 +697,9 @@ function goster(i, sessiz) {
   [aktif, aktif + 1, aktif - 1].forEach(j => { const x = L[j]; if (x && DOM[x.id]) yukle(DOM[x.id]); });
   $("#sayac").textContent = `${aktif + 1} / ${L.length}`;
   const x = L[aktif];
-  $("#sBilgi").textContent = x.tur === "icerik" ? `Slayt ${aktif + 1} / ${L.length} · ${x.s.ogeler.length} alan · ${ARSIV ? `arşiv: grafikler ${ARSIV.tarih} verileriyle sabit` : "grafikler canlı · alanın üzerine gelince ✥ Taşı ve köşeden boyutlandırma çıkar"}` : `Slayt ${aktif + 1} / ${L.length}`;
+  // sitede Ctrl ile "aynı slayta ekle", editörde açık olan slayta eklesin
+  if (x.tur === "icerik" && !ARSIV && D.sonSlayt !== x.s.id) { D.sonSlayt = x.s.id; try { A.yaz(D); } catch (e) {} }
+  $("#sBilgi").textContent = x.tur === "icerik" ? `Slayt ${aktif + 1} / ${L.length} · ${x.s.ogeler.length} alan · ${ARSIV ? `arşiv: grafikler ${ARSIV.tarih} verileriyle sabit` : "grafikler canlı · üzerine gelince ✥ Taşı, kenarlardan uzatma ve köşeden boyutlandırma çıkar · Taşı'yı soldaki listede başka bir slayta bırakırsanız alan oraya taşınır"}` : `Slayt ${aktif + 1} / ${L.length}`;
   if (!sessiz) { listeCiz(); ayarCiz(); }
   tutamakCiz();
 }
@@ -619,11 +714,12 @@ function tutamakCiz() {
   sahne.classList.toggle("konumla", kon);
   if (!kon || !DOM[x.id]) return;
   const Y = yerlesim(x.s), k = document.createElement("div"); k.className = "tutk";
-  Y.hucre.forEach(h => k.insertAdjacentHTML("beforeend", `<div class="tut" data-id="${esc(h.id)}" style="left:${h.x}px;top:${h.y}px;width:${h.w}px;height:${h.h}px"><span>${esc(hucreAd(h))}</span><i class="boy" title="Boyutlandır"></i></div>`));
-  if (Y.panel) k.insertAdjacentHTML("beforeend", `<div class="tut pnl" data-id="_panel" style="left:${Y.panel.x}px;top:${Y.panel.y}px;width:${Y.panel.w}px;height:${Y.panel.h}px"><span>Not ve öne çıkanlar</span><i class="boy" title="Boyutlandır"></i></div>`);
+  const kenar = `<i class="boyS" title="Yandan uzat"></i><i class="boyA" title="Alttan uzat"></i><i class="boy" title="Köşeden orantılı boyutlandır"></i>`;
+  Y.hucre.forEach(h => k.insertAdjacentHTML("beforeend", `<div class="tut${sabitMi(h.c) ? " sabit" : ""}" data-id="${esc(h.id)}" style="left:${h.x}px;top:${h.y}px;width:${h.w}px;height:${h.h}px"><span>${esc(hucreAd(h))}</span>${kenar}</div>`));
+  if (Y.panel) k.insertAdjacentHTML("beforeend", `<div class="tut pnl" data-id="_panel" style="left:${Y.panel.x}px;top:${Y.panel.y}px;width:${Y.panel.w}px;height:${Y.panel.h}px"><span>Not ve öne çıkanlar</span>${kenar}</div>`);
   DOM[x.id].appendChild(k);
 }
-function panelTut(el) { const p = el.querySelector(".metin .panel"); if (p) p.insertAdjacentHTML("beforeend", `<i class="el-tasi" data-pid="_panel" title="Not kutusunu taşıyın">✥ Taşı</i><i class="el-boy" data-pid="_panel" title="Not kutusunu boyutlandırın"></i>`); }
+function panelTut(el) { const p = el.querySelector(".metin .panel"); if (p) p.insertAdjacentHTML("beforeend", `<i class="el-tasi" data-pid="_panel" title="Not kutusunu taşıyın">✥ Taşı</i><i class="el-sag" data-pid="_panel" title="Yandan uzatın"></i><i class="el-alt" data-pid="_panel" title="Alttan uzatın"></i><i class="el-boy" data-pid="_panel" title="Not kutusunu boyutlandırın"></i>`); }
 function anlikCiz() {
   cancelAnimationFrame(anT);
   anT = requestAnimationFrame(() => {
@@ -633,10 +729,22 @@ function anlikCiz() {
     $$(".tut", el).forEach(t => { const r = t.dataset.id === "_panel" ? Y.panel : Y.hucre.find(h => h.id === t.dataset.id); if (r) Object.assign(t.style, { left: r.x + "px", top: r.y + "px", width: r.w + "px", height: r.h + "px" }); });
   });
 }
-$("#bKonum").onclick = () => { KONUM = !KONUM; tutamakCiz(); if (KONUM) toast("Tüm alanlar çerçevelendi: sürükleyerek taşıyın, sağ alt köşeden boyutlandırın", 3200); };
+$("#bKonum").onclick = () => { KONUM = !KONUM; tutamakCiz(); if (KONUM) toast("Tüm alanlar çerçevelendi: sürükleyerek taşıyın; sağ kenardan genişletin, alt kenardan uzatın, köşeden orantılı boyutlandırın", 3600); };
 $("#bOto").onclick = () => { const x = sira()[aktif]; if (x?.tur === "icerik") { delete x.s.yer; kaydet(); } };
+const tasiEt = document.body.appendChild(Object.assign(document.createElement("div"), { className: "tasiEt" }));
+function hucreTasi(s, cid, hedefId) {     // alanı (birleşik görünümse tüm parçalarıyla) başka bir slayta ya da yeni slayta taşı
+  const c = hucreler(s).find(h => h.id === cid); if (!c) return;
+  const ids = new Set(c.ogeler.map(o => o.id));
+  let t = hedefId === "_yeni" ? null : D.slaytlar.find(z => z.id === hedefId); if (t === s) return;
+  s.ogeler = s.ogeler.filter(o => !ids.has(o.id)); if (s.yer) delete s.yer[cid];
+  if (!t) { t = { id: A.uid(), baslik: hucreAd(c), not: "", duzen: "oto", ogeler: [], kilit: true }; D.slaytlar.splice(D.slaytlar.indexOf(s) + 1, 0, t); }
+  t.ogeler.push(...c.ogeler); t.kilit = true;
+  if (!s.ogeler.length) D.slaytlar = D.slaytlar.filter(z => z !== s);
+  D.sonSlayt = t.id; aktif = sira().findIndex(x => x.id === t.id); kaydet();
+  toast(`${hucreAd(c)} → Slayt ${aktif + 1}${hedefId === "_yeni" ? " (yeni slayt)" : ""} taşındı`);
+}
 sahne.addEventListener("pointerdown", e => {
-  const tut = e.target.closest(".tut"), el_ = e.target.closest(".el-tasi,.el-boy");
+  const tut = e.target.closest(".tut"), el_ = e.target.closest(".el-tasi,.el-boy,.el-sag,.el-alt");
   const t = tut && KONUM ? tut : el_; if (!t) return;
   if (document.fullscreenElement === sahne || sahne.classList.contains("tamEkran")) return;
   const x = sira()[aktif]; if (!x || x.tur !== "icerik" || !t.closest(".slayt.aktif")) return;
@@ -648,23 +756,53 @@ sahne.addEventListener("pointerdown", e => {
   }
   const id = t === tut ? t.dataset.id : (t.dataset.pid || t.closest(".hucre")?.dataset.id); if (!id) return;
   if (!s.yer[id]) { const r = id === "_panel" ? Y.panel : Y.hucre.find(h => h.id === id); if (!r) return; s.yer[id] = { x: r.x, y: r.y, w: r.w, h: r.h }; }
-  const b0 = { ...s.yer[id] }, boy = e.target.classList.contains("boy") || e.target.classList.contains("el-boy"), oran = b0.w / b0.h, pnl = id === "_panel";
+  const cl = e.target.classList, b0 = { ...s.yer[id] }, oran = b0.w / b0.h, pnl = id === "_panel";
+  const tip = cl.contains("boy") || cl.contains("el-boy") ? "kose" : cl.contains("boyS") || cl.contains("el-sag") ? "sag" : cl.contains("boyA") || cl.contains("el-alt") ? "alt" : "tasi", boy = tip !== "tasi";
+  const Yh = pnl ? null : Y.hucre.find(h => h.id === id), k0 = Yh ? Yh.k : 1, nh0 = Yh ? Yh.bh : 1;
+  let hedefSl = null;
+  if (!boy && !pnl) document.body.classList.add("hucreSuruk");
   const kk = parseFloat(getComputedStyle(sahne).getPropertyValue("--k")) || .5, x0 = e.clientX, y0 = e.clientY;
   const yuv = v => Math.round(v / 10) * 10, sin = (v, a, b) => Math.max(a, Math.min(b, v));
   const X0 = 20, Y0 = 190, X1 = W - 20, Y1 = 1000;
   t.classList.add("tasi"); sahne.classList.add("suruk");
   const tasi = ev => {
     const dx = (ev.clientX - x0) / kk, dy = (ev.clientY - y0) / kk; let b;
-    if (boy) {
+    if (tip === "sag" && pnl) b = { ...b0, w: sin(yuv(b0.w + dx), 160, X1 - b0.x) };
+    else if (tip === "alt" && pnl) b = { ...b0, h: sin(yuv(b0.h + dy), 100, Y1 - b0.y) };
+    else if (tip === "sag") {      // genişlik: ölçek aynı kalır, sayfa daha geniş/dar çizilir
+      const w = sin(yuv(b0.w + dx), 160, X1 - b0.x); b = { ...b0, w, gen: Math.round(w / k0), h: nh0 * k0 };
+    } else if (tip === "alt") {    // yükseklik: kutu genişliği aynı kalır; içerik büyütülüp daha dar çizilir, böylece grafik uzar
+      let hh = sin(yuv(b0.h + dy), 80, Y1 - b0.y), k = hh / nh0, gen = b0.w / k;
+      if (gen < 260) { gen = 260; k = b0.w / gen; hh = nh0 * k; }
+      b = { ...b0, gen: Math.round(gen), h: hh };
+    } else if (boy) {
       let w = Math.max(120, yuv(b0.w + dx)), h = pnl ? Math.max(100, yuv(b0.h + dy)) : w / oran;
       if (b0.x + w > X1) { w = X1 - b0.x; if (!pnl) h = w / oran; }
       if (b0.y + h > Y1) { h = Y1 - b0.y; if (!pnl) w = h * oran; }
       b = { ...b0, w, h };
-    } else b = { ...b0, x: sin(yuv(b0.x + dx), X0, X1 - b0.w), y: sin(yuv(b0.y + dy), Y0, Y1 - b0.h) };
+    } else {
+      // soldaki slayt listesinin üzerine gelindiyse alan o slayta taşınacak
+      const hit = !pnl && document.elementFromPoint(ev.clientX, ev.clientY)?.closest("#liste .sl[data-id], #liste .yeniHedef");
+      const yeni = hit && (hit.classList.contains("yeniHedef") ? "_yeni" : hit.dataset.id !== s.id ? hit.dataset.id : null);
+      $$("#liste .birak").forEach(z => z !== hit && z.classList.remove("birak"));
+      if (yeni !== hedefSl) { hedefSl = yeni; if (hit && yeni) hit.classList.add("birak"); }
+      DOM[x.id]?.querySelector(`.hucre[data-id="${CSS.escape(id)}"]`)?.classList.toggle("disari", !!yeni);
+      tasiEt.style.display = yeni ? "block" : "none";
+      const lr = $("#liste").getBoundingClientRect();      // liste kenarına yaklaşınca kaydır
+      if (ev.clientX >= lr.left && ev.clientX <= lr.right) { const sk = ev.clientY < lr.top + 50 ? -14 : ev.clientY > lr.bottom - 50 ? 14 : 0; if (sk) { $("#liste").scrollTop += sk; document.scrollingElement.scrollTop += ev.clientY > innerHeight - 40 ? 14 : ev.clientY < 40 ? -14 : 0; } }
+      if (yeni) { const hs = D.slaytlar.find(z => z.id === yeni); tasiEt.textContent = yeni === "_yeni" ? "＋ Yeni slayt olarak ayır" : `→ Taşı: Slayt ${sira().findIndex(z => z.id === yeni) + 1} · ${(hs?.baslik || "").slice(0, 32)}`; tasiEt.style.left = ev.clientX + 14 + "px"; tasiEt.style.top = ev.clientY + 12 + "px"; b = { ...b0 }; }
+      else b = { ...b0, x: sin(yuv(b0.x + dx), X0, X1 - b0.w), y: sin(yuv(b0.y + dy), Y0, Y1 - b0.h) };
+    }
     s.yer[id] = b; anlikCiz();
   };
   // pencere düzeyinde izlenir: tutamak yeniden çizilse ya da fare bir grafiğin üzerinden geçse de sürükleme kopmaz
-  const birak = () => { removeEventListener("pointermove", tasi); removeEventListener("pointerup", birak); removeEventListener("pointercancel", birak); t.classList.remove("tasi"); sahne.classList.remove("suruk"); kaydet(true); ayarCiz(); };
+  const birak = ev => {
+    removeEventListener("pointermove", tasi); removeEventListener("pointerup", birak); removeEventListener("pointercancel", birak);
+    t.classList.remove("tasi"); sahne.classList.remove("suruk"); document.body.classList.remove("hucreSuruk"); tasiEt.style.display = "none"; $$("#liste .birak").forEach(z => z.classList.remove("birak"));
+    if (hedefSl && ev.type === "pointerup") { s.yer[id] = b0; hucreTasi(s, id, hedefSl); return; }
+    $$(".hucre.disari").forEach(z => z.classList.remove("disari"));
+    kaydet(true); ayarCiz();
+  };
   addEventListener("pointermove", tasi); addEventListener("pointerup", birak); addEventListener("pointercancel", birak);
 });
 
@@ -680,7 +818,7 @@ function listeCiz() {
     return `<div class="sl ozel" data-i="${i}" aria-current="${i === aktif}"><span class="no">${i + 1}</span><span class="bs">${ad}</span><span class="ic"><button data-a="gizle" data-t="${x.tur}" title="Sunumdan çıkar">✕</button></span><span class="yl">${x.tur === "gundem" ? "Slayt başlıklarından otomatik" : "Otomatik · düzenlenebilir"}</span></div>`;
   };
   const kapali = ["kapak", "gundem", "kapanis"].filter(t => D[t]?.goster === false);
-  li.innerHTML = `<h3><span>Slaytlar</span><span>${D.slaytlar.length} içerik</span></h3>` + L.map(satir).join("") +
+  li.innerHTML = `<h3><span>Slaytlar</span><span>${D.slaytlar.length} içerik</span></h3>` + L.map(satir).join("") + `<div class="yeniHedef">＋ Buraya bırakın: yeni slayt olarak ayır</div>` +
     (!D.slaytlar.length ? `<div class="bos"><b>Henüz slayt yok.</b><br>✚ <b>Sitede seç</b> ile sitedeki grafik ve tablolara tıklayarak ekleyin, ☷ <b>Katalogdan ekle</b> ile listeden seçin ya da ☰ <b>Şablonlar</b>'dan hazır bir sunumla başlayın.</div>` : "") +
     (kapali.length ? `<div style="padding:8px;display:flex;gap:6px;flex-wrap:wrap">${kapali.map(t => `<button class="btn" data-a="goster" data-t="${t}">＋ ${{ kapak: "Kapak", gundem: "Gündem", kapanis: "Kapanış" }[t]}</button>`).join("")}</div>` : "");
 }
@@ -726,17 +864,18 @@ function ayarCiz() {
     A_.innerHTML = `<div class="alan"><label for="cB">Kapanış başlığı</label><input type="text" id="cB" data-f="kapanis.baslik" value="${esc(k.baslik || "")}" placeholder="Teşekkürler"></div>
       <div class="alan"><label for="cA">Alt metin <small>isteğe bağlı</small></label><input type="text" id="cA" data-f="kapanis.alt" value="${esc(k.alt || "")}" placeholder="Sorular ve görüşler"></div>`; return; }
   if (x.tur === "gundem") { A_.innerHTML = `<div class="tam ipucu">Gündem slaytı, içerik slaytlarının başlıklarından ve bölümlerinden otomatik oluşur. Slayt başlıklarını değiştirdiğinizde burada da güncellenir.</div>`; return; }
-  const s = x.s, oc = ocListesi(s), anah = new Set(oc.map(o => ocAnah(o.m)));
-  const kon = slaytKonu(s);
-  const ilgili = OC.filter(o => kon.includes(anaKonu(o.m.replace(/<[^>]+>/g, "")))), diger = OC.filter(o => !ilgili.includes(o));
-  const ocSatir = o => `<label class="${anah.has(ocAnah(o.m)) ? "esl" : ""}"><input type="checkbox" data-oc="${esc(ocAnah(o.m))}" ${anah.has(ocAnah(o.m)) ? "checked" : ""}><span>${o.m}</span></label>`;
+  const s = x.s, oc = ocListesi(s), anah = new Set(oc.map(o => o.k)), X = ocAday(s);
+  const ocSatir = o => `<label class="${anah.has(o.k) ? "esl" : ""}"><input type="checkbox" data-oc="${esc(o.k)}" ${anah.has(o.k) ? "checked" : ""}><span>${o.m}</span></label>`;
+  const ozetK = new Set(X.oc.map(o => o.k)), diger = OC.map(x => ({ ...x, k: ocAnah(x.m), g: "ozet" })).filter(o => !ozetK.has(o.k));
+  const bekleyen = hucreler(s).some(c => !YORUM[c.id] && !foto(c.ogeler[0])) && !ARSIV;
+  const grp = (b, L, bos) => L.length ? `<div class="grp">${b}</div>${L.map(ocSatir).join("")}` : bos ? `<div class="grp">${b} <small>· ${bos}</small></div>` : "";
   const D_ = s.duzen || "oto", P_ = s.panel || "oto";
   A_.innerHTML = `<div class="alan"><label for="sB">Slayt başlığı</label><input type="text" id="sB" data-f="s.baslik" value="${esc(s.baslik)}"></div>
     <div class="alan"><div class="lb">Düzen <small>${s.ogeler.length} alan${s.yer ? " · elle konumlandırıldı" : ""}</small></div>
       <div class="seg" data-g="duzen">${[["oto", "Otomatik"], ["yan", "Yan yana"], ["alt", "Alt alta"], ["izgara", "Izgara"]].map(([v, l]) => `<button data-v="${v}" aria-pressed="${!s.yer && D_ === v}">${l}</button>`).join("")}</div>
-      <div class="seg" data-g="panel" style="margin-left:6px" title="Not ve öne çıkanlar kutusunun yeri">${[["oto", "Not: oto"], ["sag", "Sağda"], ["alt", "Altta"]].map(([v, l]) => `<button data-v="${v}" aria-pressed="${P_ === v}">${l}</button>`).join("")}</div></div>
-    <div class="alan"><div class="lb"><label class="kutucuk"><input type="checkbox" id="ocG" ${ocGoster(s) ? "checked" : ""}> Otomatik öne çıkanlar</label><small>${ARSIV ? `Özet'teki yorumlar · ${esc(ARSIV.tarih)} itibarıyla` : "Özet'teki yorumlar · her hafta güncel"}</small></div>
-      <div class="oclist" ${ocGoster(s) ? "" : 'style="opacity:.45;pointer-events:none"'}>${ilgili.length ? `<div class="grp">Bu slaytla ilgili</div>${ilgili.map(ocSatir).join("")}` : `<div class="grp">Bu slayt için eşleşen yorum yok</div>`}${diger.length ? `<div class="grp">Diğer</div>${diger.map(ocSatir).join("")}` : ""}</div></div>
+      <div class="seg" data-g="panel" style="margin-left:6px" title="Not ve öne çıkanlar kutusunun yeri">${[["alt", "Not ve öne çıkanlar: altta"], ["sag", "Sağda"]].map(([v, l]) => `<button data-v="${v}" aria-pressed="${(P_ === "sag" ? "sag" : "alt") === v}">${l}</button>`).join("")}</div></div>
+    <div class="alan"><div class="lb"><label class="kutucuk"><input type="checkbox" id="ocG" ${ocGoster(s) ? "checked" : ""}> Otomatik öne çıkanlar</label><small>${ARSIV ? `${esc(ARSIV.tarih)} itibarıyla sabit` : "grafik verisi, ilgili haber ve Özet yorumları · slaytın altında satır satır"}</small></div>
+      <div class="oclist" ${ocGoster(s) ? "" : 'style="opacity:.45;pointer-events:none"'}>${grp("Grafik yorumu", X.yorum, bekleyen ? "grafik yüklenince oluşur" : "bu alanda yorumlanacak grafik verisi yok")}${grp("İlgili haberler", X.hb, "bu konuda yeni haber yok")}${grp("Özet'ten ilgili yorumlar", X.oc, X.T.length ? "eşleşen yorum yok" : "")}${grp("Diğer Özet yorumları", diger)}</div></div>
     <div class="alan"><label for="sN">Değerlendirme notu <small>slayta yazılır, PowerPoint'te konuşmacı notu olur</small></label><textarea id="sN" data-f="s.not" placeholder="Bu hafta dikkat çeken nokta…">${esc(s.not || "")}</textarea></div>
     <div class="alan tam"><label for="sK">Kaynak satırı <small>boş bırakılırsa otomatik</small></label><input type="text" id="sK" data-f="s.kaynak" value="${esc(s.kaynak || "")}" placeholder="${esc(kaynakMetni({ ...s, kaynak: null }))}"></div>
     <div class="alan tam"><div class="lb">Slayttaki alanlar <small>✥ Konumlandır ile slaytta sürükleyip boyutlandırabilirsiniz</small></div>
@@ -760,14 +899,14 @@ $("#ayar").addEventListener("change", e => {
   if (e.target.dataset.oc != null) {
     const a = e.target.dataset.oc; s.ocHaric = (s.ocHaric || []).filter(k => k !== a); s.ocEk = (s.ocEk || []).filter(k => k !== a);
     if (!e.target.checked) s.ocHaric.push(a); else s.ocEk.push(a);
-    s.ocSinir = Math.max(4, ocListesi({ ...s, ocSinir: 99 }).length); kaydet();
+    s.ocSinir = Math.max(5, ocListesi({ ...s, ocSinir: 99 }).length); kaydet();
   }
 });
 $("#ayar").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return; const x = sira()[aktif]; if (!x || x.tur !== "icerik") return; const s = x.s;
   const g = b.closest(".seg")?.dataset.g;
   if (g === "duzen") { s.duzen = b.dataset.v; delete s.yer; kaydet(); return; }
-  if (g === "panel") { s.panel = b.dataset.v === "oto" ? undefined : b.dataset.v; delete s.yer; kaydet(); return; }
+  if (g === "panel") { s.panel = b.dataset.v === "sag" ? "sag" : undefined; delete s.yer; kaydet(); return; }
   const o = b.dataset.o, id = b.dataset.id;
   if (o === "sil") { s.ogeler = s.ogeler.filter(z => z.id !== id); if (!s.ogeler.length) D.slaytlar = D.slaytlar.filter(z => z !== s); kaydet(); }
   if (o === "ayir") { const z = s.ogeler.find(q => q.id === id); s.ogeler = s.ogeler.filter(q => q !== z); D.slaytlar.splice(D.slaytlar.indexOf(s) + 1, 0, { id: A.uid(), baslik: z.ad, not: "", duzen: "oto", ogeler: [z], kilit: true }); kaydet(); }
@@ -1023,7 +1162,7 @@ const tarihDosya = `${bugun.getFullYear()}-${String(bugun.getMonth() + 1).padSta
 // "<b>%36,00</b> metin" → [{t, b}]
 function parcala(html) {
   const d = new DOMParser().parseFromString(`<div>${html}</div>`, "text/html").body.firstChild, out = [];
-  const gez = (n, b) => n.childNodes.forEach(c => { if (c.nodeType === 3) out.push({ t: c.textContent, b }); else if (c.nodeType === 1) gez(c, b || /^(B|STRONG)$/.test(c.tagName)); });
+  const gez = (n, b) => n.childNodes.forEach(c => { if (c.nodeType === 3) out.push({ t: c.textContent, b }); else if (c.nodeType === 1) gez(c, b || /^(B|STRONG)$/.test(c.tagName) || c.classList.contains("hb")); });
   gez(d, false); return out.filter(x => x.t);
 }
 // ilerleme penceresi
@@ -1289,7 +1428,7 @@ function gosterici() {
 }
 function htmlBlob(img, tb) {
   const L = sira(), n = L.length, sunum = JSON.parse(JSON.stringify(D)); delete sunum.degisti;
-  const veri = { tur: "alco-sunum-arsiv", v: 1, kayit: tb.kayit, tarih: tb.tarih, sunum, oc: OC, durum: DURUM,
+  const veri = { tur: "alco-sunum-arsiv", v: 1, kayit: tb.kayit, tarih: tb.tarih, sunum, oc: OC, durum: DURUM, haber: HABER, yorum: yorumKopya(sunum),
     goruntu: Object.fromEntries(Object.entries(img).filter(([, g]) => g).map(([id, g]) => [id, { u: g.u, w: g.w, h: g.h }])) };
   const meta = { ad: D.ad || "", tarih: tb.tarih, kayit: tb.kayit, n, tema: tema() };
   const css = `:root{--sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"DM Mono","SF Mono",ui-monospace,Menlo,monospace}
@@ -1436,12 +1575,12 @@ $("#arsivBant").addEventListener("click", e => {
 function arsivAc(v, dosya) {
   if (ARSIV?.degisti && !confirm("Açık kayıtlı sunumdaki kaydedilmemiş değişiklikler kaybolacak. Devam edilsin mi?")) return;
   ARSIV = { kayit: v.kayit, tarih: v.tarih || "", dosya, degisti: false };
-  D = { ...A.yeniSunum(), ...v.sunum }; OC = v.oc || []; DURUM = v.durum || {}; BUGUN = v.tarih || BUGUN0; GOR = v.goruntu || {};
+  D = { ...A.yeniSunum(), ...v.sunum }; OC = v.oc || []; DURUM = v.durum || {}; BUGUN = v.tarih || BUGUN0; GOR = v.goruntu || {}; HABER = v.haber || []; YORUM = v.yorum || {};
   aktif = 0; sahneSifirla(); bantCiz(); klasorCiz(); ciz();
   toast(`${dosya} açıldı · ${v.tarih} verileri`);
 }
 function arsivKapat(d) {
-  ARSIV = null; GOR = {}; OC = CANLI.OC; DURUM = CANLI.DURUM; BUGUN = BUGUN0; D = d || A.oku();
+  ARSIV = null; GOR = {}; OC = CANLI.OC; DURUM = CANLI.DURUM; HABER = CANLI.HABER; YORUM = YCANLI; BUGUN = BUGUN0; D = d || A.oku();
   aktif = 0; sahneSifirla(); bantCiz(); klasorCiz(); ciz();
 }
 addEventListener("beforeunload", e => { if (ARSIV?.degisti) { e.preventDefault(); e.returnValue = ""; } });

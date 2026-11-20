@@ -327,7 +327,8 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
     const r = el.getBoundingClientRect(), ek = !!ekliMi(el), d = oku(), h = sonHedef(d), grup = ctrl && !ek && h;
     Object.assign(hl.style, { display: "block", left: r.left - 3 + "px", top: r.top - 3 + "px", width: r.width + 6 + "px", height: r.height + 6 + "px" });
     hl.classList.toggle("ekli", ek); et.classList.toggle("ekli", ek); hl.classList.toggle("grup", !!grup); et.classList.toggle("grup", !!grup);
-    const etiket = ek ? "✓ Sunumda · çıkar" : grup ? `＋ Aynı slayta ekle (Slayt ${slaytNo(d, h.id)})` : "＋ Sunuma ekle";
+    const kisa = t => { t = String(t || ""); return t.length > 28 ? t.slice(0, 27) + "…" : t; };
+    const etiket = ek ? "✓ Sunumda · çıkar" : grup ? `＋ Aynı slayta ekle (Slayt ${slaytNo(d, h.id)}: ${esc(kisa(h.baslik))})` : "＋ Sunuma ekle";
     et.title = ek ? "" : grup ? `Ctrl basılı: önceki eklemenin slaytına (${h.baslik}) eklenir` : "Yeni slayt olarak eklenir · Ctrl'e basılı tutarak tıklarsanız önceki slayta eklenir";
     const grp = !ek ? baglilar(el) : null;
     et.innerHTML = `<div class="sat"><button data-a="ekle">${etiket} <span class="ad">${esc(baslik(el))}</span></button>` +
@@ -519,7 +520,22 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
   }
 
   // ---- izole gösterim (Sunum sayfasındaki slaytlar)
-  let hedef = null, izOge = null, hedefler = [], kokGen = 0;
+  let hedef = null, izOge = null, hedefler = [], kokGen = 0, genZorla = +Q.get("gen") || 0;
+  // slaytta kenardan uzatma: Sunum sayfası alanın sayfa içindeki genişliğini değiştirir (ssGen), sayfa o genişlikte yeniden çizer.
+  // Bazı sayfalar yalnızca pencere genişliği değişince yeniden çizer; bunun için innerWidth'e küçük bir sapma eklenip resize tetiklenir.
+  let iwEk = 0;
+  if (IZOLE) try { const d = Object.getOwnPropertyDescriptor(window, "innerWidth"); if (d && d.get) Object.defineProperty(window, "innerWidth", { configurable: true, enumerable: true, get() { return d.get.call(window) + iwEk; } }); } catch (e) {}
+  const yenidenCiz = () => { iwEk = iwEk ? 0 : 64; dispatchEvent(new Event("resize")); };
+  function genUygula() {
+    if (!hedef) return;
+    const gen = genZorla || (hedefler.length > 1 ? kokGen : izOge && (izOge.w || (izOge.ogeler && izOge.ogeler.length === 1 && izOge.ogeler[0].w)));
+    if (gen) hedef.style.setProperty("width", Math.max(200, gen) + "px", "important"); else hedef.style.removeProperty("width");
+  }
+  if (IZOLE) addEventListener("message", e => {
+    const m = e.data; if (!m || e.origin !== location.origin || m.ssGen == null) return;
+    const g = Math.round(+m.ssGen) || 0; if (g === genZorla) return;
+    genZorla = g; genUygula(); yenidenCiz(); setTimeout(haber, 60); yorumPlan(400);
+  });
   const ortakAta = els => { let a = els[0]; while (a && !els.every(e => a.contains(e))) a = a.parentElement; return a && a !== document.body && a !== document.documentElement ? a : els[0]; };
   async function izole(o) {
     izOge = o;
@@ -573,8 +589,7 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
     if (hedef) hedef.removeAttribute("data-ss-hedef");
     const el = ortakAta(els);
     hedef = el; hedefler = els; el.setAttribute("data-ss-hedef", "");
-    const gen = els.length > 1 ? kokGen : izOge && (izOge.w || (izOge.ogeler && izOge.ogeler.length === 1 && izOge.ogeler[0].w));
-    if (gen) el.style.setProperty("width", Math.max(200, gen) + "px", "important");
+    genUygula();
     // alanın üstündeki sarmalayıcılar sadeleşir, yanındaki her şey gizlenir
     for (let x = el; x && x !== document.body; x = x.parentElement) {
       if (x !== el) x.setAttribute("data-ss-yol", "");
@@ -588,7 +603,86 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
     dispatchEvent(new Event("resize"));
     if (ro) ro.disconnect();
     ro = new ResizeObserver(() => haber()); ro.observe(el);
-    setTimeout(haber, 50);
+    setTimeout(haber, 50); yorumPlan(900);
+    if (!yorumMo) { yorumMo = new MutationObserver(() => yorumPlan(500)); yorumMo.observe(document.body, { childList: true, subtree: true, characterData: true }); }
+  }
+
+  // ---- grafik yorumu: alandaki grafiklerin verisinden kısa, sayıya dayalı yorum (slaytın "Öne çıkanlar" satırlarına gider)
+  // Sayfalar grafiği çizerken verisini kaba bırakır (el._ssSeri); TEFAS'taki Chart.js grafikleri doğrudan okunur.
+  let yorumT = 0, yorumIlk = 0, yorumMo, sonYorum = "";
+  // sayfa sürekli değişse de (saat, kayan yazı) en geç ~2 sn'de bir yorum gönderilir
+  const yorumPlan = ms => { const t = Date.now(); if (yorumT && t - yorumIlk > 1500) return; if (!yorumT) yorumIlk = t; clearTimeout(yorumT); yorumT = setTimeout(() => { yorumT = 0; yorumGonder(); }, ms); };
+  const sayi = (v, d) => v == null || !isFinite(v) ? "—" : v.toLocaleString("tr-TR", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const AYK = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+  function tarihAl(x) {
+    if (x instanceof Date) return isNaN(x) ? null : x;
+    if (typeof x === "number") return x > 1e11 ? new Date(x) : null;
+    const m = /^(\d{4})-(\d{2})(?:-(\d{2}))?/.exec(String(x || "")); return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +(m[3] || 1))) : null;
+  }
+  const tarihYaz = (x, gunlu) => { const d = tarihAl(x); if (!d) return String(x ?? ""); return (gunlu ? d.getUTCDate() + " " : "") + AYK[d.getUTCMonth()] + " " + d.getUTCFullYear(); };
+  function serilerTopla() {
+    if (!hedef) return [];
+    const L = [];
+    [hedef, ...hedef.querySelectorAll("*")].forEach(n => { if (n._ssSeri && n.isConnected && n.getClientRects().length) L.push(n._ssSeri); });
+    const C = window.Chart;
+    if (C && C.getChart) hedef.querySelectorAll("canvas").forEach(cv => {
+      const ch = C.getChart(cv); if (!ch || !cv.getClientRects().length) return;
+      const lab = ch.data.labels || [];
+      const tip = ch.config.type, seri = ch.data.datasets.filter(d => !d.hidden && ch.isDatasetVisible(ch.data.datasets.indexOf(d))).map(d => ({ ad: d.label || "", p: d.data.map((v, i) => typeof v === "object" && v ? [v.x, v.y] : [lab[i], v]) }));
+      if (tip === "doughnut" || tip === "pie") L.push({ pasta: 1, baslik: ch.options?.plugins?.title?.text || "", dilim: lab.map((l, i) => [l, ch.data.datasets[0]?.data[i]]) });
+      else L.push({ seriler: seri });
+    });
+    return L;
+  }
+  function seriYorum(S, baslik) {
+    if (S.pasta) {      // dağılım: en büyük iki dilim
+      const t = S.dilim.reduce((a, d) => a + (+d[1] || 0), 0); if (!t) return [];
+      const D = S.dilim.filter(d => +d[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 3);
+      return [`Dağılımda <b>${esc(D[0][0])}</b> %${sayi(D[0][1] / t * 100, 1)} payla ilk sırada` + (D[1] ? `; ardından ${esc(D[1][0])} (%${sayi(D[1][1] / t * 100, 1)})` + (D[2] ? ` ve ${esc(D[2][0])} (%${sayi(D[2][1] / t * 100, 1)})` : "") : "") + " geliyor."];
+    }
+    const out = [];
+    const ss = (S.seriler || []).map(x => ({ ...x, p: (x.p || []).filter(q => q && q[1] != null && isFinite(q[1])) })).filter(x => x.p.length >= 2);
+    ss.slice(0, 2).forEach(x => {
+      const P = x.p, n = P.length, son = P[n - 1], onc = P[n - 2], v = +son[1];
+      const ad = (x.ad || S.baslik || baslik || "Seri").replace(/\s+/g, " ").trim();
+      const ipucu = (S.birim || "") + " " + ad + " " + (S.baslik || "") + " " + (baslik || "");
+      const fmt = x.fmt || S.fmt;
+      const birim = S.birim && !/%|değişim|endeks/i.test(S.birim) ? " " + S.birim : "";
+      const deger = q => { try { if (fmt) return String(fmt(q)).replace(/<[^>]+>/g, "") + (/[a-zA-Z₺$€%]/.test(String(fmt(q))) ? "" : birim); } catch (e) {} return sayi(q, Math.abs(q) >= 1000 ? 0 : Math.abs(q) >= 100 ? 1 : 2) + birim; };
+      const bp = /\bbp\b|baz puan|CDS/i.test(ipucu), oran = bp || /%|faiz|oran|getiri|enflasyon|TÜFE|ÜFE|beklenti|büyüme|kâr payı|swap|değişim/i.test(ipucu) || /%/.test(deger(v));
+      const fark = (a, b) => {
+        if (b == null || !isFinite(b)) return "";
+        if (bp) { const d = a - b; return `${d > 0 ? "+" : d < 0 ? "−" : "±"}${sayi(Math.abs(d), 0)} bp`; }
+        if (oran) { const d = a - b; return Math.abs(d) < .005 ? "değişmedi" : `${d > 0 ? "+" : "−"}${sayi(Math.abs(d), 2)} puan`; }
+        if (!b) return ""; const r = (a / b - 1) * 100; return Math.abs(r) < .05 ? "yatay" : `${r > 0 ? "+" : "−"}%${sayi(Math.abs(r), 1)}`;
+      };
+      const dS = tarihAl(son[0]), gunlu = dS && P.length > 2 && (() => { const d0 = tarihAl(P[n - 2][0]); return d0 && (dS - d0) < 20 * 864e5; })();
+      let yil = null, ybb = null;
+      if (dS) {
+        const hedefT = new Date(dS); hedefT.setUTCFullYear(dS.getUTCFullYear() - 1);
+        for (let i = n - 1; i >= 0; i--) { const d = tarihAl(P[i][0]); if (!d) break; if (!ybb && d.getUTCFullYear() < dS.getUTCFullYear()) ybb = P[i]; if (d <= hedefT) { if (hedefT - d < 45 * 864e5) yil = P[i]; break; } }
+      }
+      const parca = [];
+      const f1 = fark(v, +onc[1]); if (f1) parca.push(`bir önceki ${gunlu ? "veriye" : "döneme"}${tarihAl(onc[0]) ? " (" + tarihYaz(onc[0], gunlu) + ")" : ""} göre ${f1}`);
+      if (ybb && ybb !== onc) { const f = fark(v, +ybb[1]); if (f) parca.push(`yılbaşından bu yana ${f}`); }
+      if (yil && yil !== onc && yil !== ybb) { const f = fark(v, +yil[1]); if (f) parca.push(`bir yılda ${f}`); }
+      let ek = "";
+      const V = P.map(q => +q[1]), mx = Math.max(...V), mn = Math.min(...V);
+      if (n >= 6 && v === mx && mx !== mn) ek = " Grafikteki dönemin en yüksek seviyesinde.";
+      else if (n >= 6 && v === mn && mx !== mn) ek = " Grafikteki dönemin en düşük seviyesinde.";
+      let seri = 0, yon = Math.sign(V[n - 1] - V[n - 2]); for (let i = n - 1; i > 0 && yon && Math.sign(V[i] - V[i - 1]) === yon; i--) seri++;
+      if (seri >= 3) ek += ` Üst üste ${seri} ${gunlu ? "veridir" : "dönemdir"} ${yon > 0 ? "artıyor" : "geriliyor"}.`;
+      out.push(`<b>${esc(ad)}</b>${dS ? " " + tarihYaz(son[0], gunlu) : son[0] != null && typeof son[0] !== "number" ? " (" + esc(son[0]) + ")" : ""} itibarıyla <b>${esc(deger(v))}</b>${parca.length ? "; " + parca.join(", ") : ""}.${ek}`);
+    });
+    return out;
+  }
+  function yorumGonder() {
+    if (!hedef || !IZOLE) return;
+    let satir = [];
+    try { serilerTopla().forEach(S => { satir.push(...seriYorum(S, baslik(hedef))); }); } catch (e) { satir = []; }
+    satir = [...new Set(satir)].slice(0, 3);
+    const k = satir.join("|"); if (k === sonYorum) return; sonYorum = k;
+    try { parent.postMessage({ ssYorum: 1, id: Q.get("sunum"), satirlar: satir }, location.origin); } catch (e) {}
   }
   let sonOlcu = "";
   function haber(x) {
@@ -603,6 +697,7 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
     const s = document.createElement("script"); s.src = new URL("ortak/lib/" + ad, KOK).href; s.onload = () => ok(window[glob]); s.onerror = () => no(new Error(ad + " yüklenemedi")); document.head.appendChild(s); });
   async function yakala(pr = 2) {
     if (!hedef) throw new Error("alan yok");
+    try { yorumGonder(); } catch (e) {}       // dışa aktarmada öne çıkanlar güncel grafikle aynı olsun
     const H = await libYukle("html-to-image.js", "htmlToImage");
     // SVG çizimlerinde sınıfla verilen stiller (fill:none gibi) görüntüye geçsin diye hesaplanmış değerleri öğeye yaz
     $$("svg *", hedef).forEach(n => {
@@ -632,6 +727,7 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
       let w = null; try { w = (top || window).open(u, "alco-sunum"); } catch (e) {}
       if (!w) location.href = u; else try { w.focus(); } catch (e) {}
     },
+    yorumlar: () => hedef ? serilerTopla().flatMap(S => seriYorum(S, baslik(hedef))) : [],
     menu, modAcik, _yenile: modDegisti, _yolAd: () => yolAd(), idb, kirp, fotoAlan,
     yakala, hazir: null
   };

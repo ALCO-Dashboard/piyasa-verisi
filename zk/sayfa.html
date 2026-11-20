@@ -252,6 +252,7 @@ function chart(el, o) {
   el.innerHTML = "";
   const xs = o.xs, n = xs.length, ser = o.series.filter(s => s.vals.some(ok));
   if (!n || !ser.length) { el.innerHTML = '<div class="empty">Seçili dönemde veri yok.</div>'; return; }
+  el._ssSeri = { baslik: o.label || "", fmt: o.yFmt, seriler: ser.map(s => ({ ad: s.name, fmt: s.fmt || (s.axis === "r" ? o.y2Fmt : o.yFmt), p: xs.map((x, i) => [x, s.vals[i]]) })) };     // Sunum: grafik yorumu için veri
   const W = Math.max(320, el.clientWidth || 700), H = o.height || 320, hasR = ser.some(s => s.axis === "r");
   const m = { t: 10, r: hasR ? 58 : 14, b: 26, l: 56 };
   const bars = ser.filter(x => x.type === "bar"), stk = bars.filter(b => b.stack), solo = bars.filter(b => !b.stack);
