@@ -945,15 +945,15 @@ function egriKart(cfg) {
   q(".ev").innerHTML = `<button class="chip" data-v="egri" aria-pressed="${st.v === "egri"}">Getiri eğrisi</button>` +
     btn.map(v => `<button class="chip" data-v="${v}" aria-pressed="${st.v === v}">${VADE[v] || v}</button>`).join("");
   const ch = q(".ech");
-  // ülke katmanı (Tahvil/Eurobond kartı): Türkiye + ABD + Almanya aynı grafikte; seçili para birimiyle eşleşmeyen ülke soluk
+  // ülke katmanı (Tahvil/Eurobond kartı): Türkiye + ABD + Almanya aynı grafikte; seçili para biriminde getirisi olmayan ülke seçilemez
   const UL = cfg.ulkeler ? cfg.ulkeler.filter(u => !u.tb || B?.tablolar?.[u.tb]?.dates?.length) : null, US = UL ? (S.gUs ||= new Set(UL.map(u => u.k))) : null;
   if (UL) {
-    q(".eu").innerHTML = UL.map(u => `<button class="chip" data-u="${u.k}" aria-pressed="${US.has(u.k)}"><i style="background:${u.tb ? css(u.rk) : col}"></i>${u.ad}</button>`).join("");
+    q(".eu").innerHTML = UL.map(u => { const kap = u.ccy && u.ccy !== kod;    // bu para biriminde verisi yok
+      return `<button class="chip" data-u="${u.k}" aria-pressed="${!kap && US.has(u.k)}"${kap ? ` disabled title="${u.ad} için ${kod} getirisi yok" style="opacity:.4;cursor:not-allowed"` : ""}><i style="background:${u.tb ? css(u.rk) : col}"></i>${u.ad}</button>`; }).join("");
   }
-  const soluk = c => { const m = /^#([0-9a-f]{6})$/i.exec(c.trim()); if (m) { const n = parseInt(m[1], 16); return `rgba(${n >> 16},${n >> 8 & 255},${n & 255},.35)`; }
-    const r = /rgba?\(([^)]+)\)/.exec(c); return r ? `rgba(${r[1].split(",").slice(0, 3).join(",")},.35)` : c; };
-  const dis = UL ? UL.filter(u => u.tb && US.has(u.k)).map(u => { const tt = B.tablolar[u.tb], fade = u.ccy !== kod; return { u, t: tt, et: tt.kolonlar.map(k => k.etiket), fade, color: fade ? soluk(css(u.rk)) : css(u.rk) }; }) : [];
-  const trVar = !UL || US.has("tr");
+  const dis = UL ? UL.filter(u => u.tb && u.ccy === kod && US.has(u.k)).map(u => { const tt = B.tablolar[u.tb]; return { u, t: tt, et: tt.kolonlar.map(k => k.etiket), fade: false, color: css(u.rk) }; }) : [];
+  const trVar = !UL || US.has("tr") || !dis.length;
+  if (UL) q('.eu button[data-u="tr"]')?.setAttribute("aria-pressed", trVar);
   const vg = e => { const m = /^(\d+)([WMY])$/.exec(e); return m ? +m[1] * { W: 7, M: 30, Y: 365 }[m[2]] : 0; };
   if (st.v === "egri") {
     const i = sonSatir(t); if (i < 0) { q(".er").innerHTML = ""; ch.innerHTML = '<div class="empty">Veri yok.</div>'; return true; }
@@ -998,7 +998,7 @@ document.addEventListener("click", e => {
   const box = e.target.closest(".card.egri"); if (!box || !EGRI[box.id]) return;
   const st = S.EG[box.id], b = e.target.closest("button");
   if (!b || b.closest(".chips.er") && b.dataset.k) return;      // dönem düğmeleri kendi işleyicisiyle
-  if (b.dataset.u && b.closest(".eu")) { const U = S.gUs, k = b.dataset.u; if (U.has(k)) { if (U.size > 1) U.delete(k); } else U.add(k); }
+  if (b.dataset.u && b.closest(".eu")) { if (b.disabled) return; const U = S.gUs, k = b.dataset.u; if (U.has(k)) U.delete(k); else U.add(k); }
   else if (b.dataset.c) st.c = b.dataset.c;
   else if (b.dataset.v) st.v = b.dataset.v;
   else if (b.dataset.cmp) st.cmp = b.dataset.cmp === "x" || st.cmp?.k === b.dataset.cmp ? null : { k: b.dataset.cmp };
