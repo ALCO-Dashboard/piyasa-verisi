@@ -611,7 +611,7 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
       clearTimeout(mt); mt = setTimeout(() => { const y = L.map(x => bul(x.konum)).filter(Boolean); if (y.length) yerlestir(y); }, 30);
     }).observe(document.body, { childList: true, subtree: true });
   }
-  let ro;
+  let ro, sonYerGen = -1;
   const korunur = s => /^(SCRIPT|STYLE|LINK)$/.test(s.tagName) || s.classList.contains("tip") || s.classList.contains("tt");
   function yerlestir(els) {
     if (!Array.isArray(els)) els = [els];
@@ -630,7 +630,11 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
       const yolda = new Set(); els.forEach(e => { for (let x = e; x && x !== el; x = x.parentElement) yolda.add(x); });
       yolda.forEach(x => { for (const s of x.parentElement.children) if (!yolda.has(s) && !korunur(s) && (blokMu(s) || s.querySelector(BLOK) || s.getBoundingClientRect().height > 90)) s.setAttribute("data-ss-gizle", ""); });
     }
-    dispatchEvent(new Event("resize"));
+    // Grafikler alanın yeni genişliğine göre çizilsin diye "resize" yalnız genişlik değişince gönderilir. Her yerleştirmede
+    // gönderilince, kutucukları baştan çizen sayfalarda (TCMB rezerv, Makro gecelik oranlar) çiz → yeniden bul → resize → çiz
+    // döngüsü oluşuyor; alan sürekli titriyor ve sayfa kasıyordu.
+    const gw = Math.round(el.getBoundingClientRect().width);
+    if (gw !== sonYerGen) { sonYerGen = gw; dispatchEvent(new Event("resize")); }
     if (ro) ro.disconnect();
     ro = new ResizeObserver(() => haber()); ro.observe(el);
     setTimeout(() => { veriModu(); haber(); }, 50); yorumPlan(1200); setTimeout(() => yorumPlan(0), 4000);     // grafik geç çizilirse bir kez daha
