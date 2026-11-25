@@ -587,6 +587,9 @@ html.ss-izole [data-ss-yol]{display:block!important;padding:0!important;margin:0
 html.ss-izole [data-ss-vkut] table{width:100%!important;margin-left:0!important;margin-right:0!important}html.ss-izole [data-ss-vkut] .tw,html.ss-izole [data-ss-vkut] .tblwrap,html.ss-izole [data-ss-vkut] .tdw{margin-left:0!important;width:100%!important;max-width:none!important}html.ss-izole [data-ss-vkut] th:first-child,html.ss-izole [data-ss-vkut] td:first-child{text-align:left!important}
 html.ss-izole [data-ss-hedef]{margin:0!important;width:100%!important;max-width:none!important;position:relative!important;inset:auto!important;transform:none!important;box-sizing:border-box!important;max-height:none!important;cursor:default!important}
 html.ss-izole [data-ss-hedef].kc .t span:last-child{display:none!important}
+html.ss-izole [data-ss-hedef].ss-ic{position:relative!important}
+html.ss-izole [data-ss-hedef].ss-ic [data-ss-icyol]{position:static!important;transform:none!important;overflow:visible!important;contain:none!important;display:block!important;padding:0!important;margin:0!important;border:0!important;height:auto!important;min-height:0!important}
+html.ss-izole [data-ss-hedef].ss-ic [data-ss-icgiz]{display:none!important}
 html.ss-izole .tw,html.ss-izole [data-ss-hedef] .tw{overflow:visible!important}
 html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{display:none!important}`;
     document.head.appendChild(st);
@@ -598,13 +601,14 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
     const t0 = Date.now(); let onceki = "", sabit = 0, el = null, els = [];
     while (Date.now() - t0 < 30000) {
       const deg = await durumUygula(durum);
+      icEsle = () => L.map(x => [x.id, bul(x.konum)]);
       els = L.map(x => bul(x.konum)).filter(Boolean); el = els.length ? ortakAta(els) : null;
       const r = el && el.getBoundingClientRect(), olcu = r ? Math.round(r.width) + "x" + Math.round(r.height) + ":" + els.length : "";
       if (el && r.height > 20 && !deg && olcu === onceki && (els.length === L.length || Date.now() - t0 > 8000)) { if (++sabit >= 2) break; } else sabit = 0;
       onceki = olcu; await bekle(350);
     }
     if (el && els.length > 1) kokGen = Math.round(el.getBoundingClientRect().width);     // grubun sitedeki genişliği
-    if (!el) { document.body.innerHTML = `<div style="font:14px system-ui;color:#888;padding:30px;text-align:center">Bu alan sayfada bulunamadı: <b>${esc(o.ad || L.map(x => x.ad).join(", "))}</b><br>Sayfa yapısı değişmiş olabilir; slaytı silip alanı yeniden ekleyin.</div>`; root.classList.remove("ss-izole"); haber({ hata: 1, w: 500, h: 120 }); return; }
+    if (!el) { document.documentElement.classList.remove("ss-bekle"); document.body.innerHTML = `<div style="font:14px system-ui;color:#888;padding:30px;text-align:center">Bu alan sayfada bulunamadı: <b>${esc(o.ad || L.map(x => x.ad).join(", "))}</b><br>Sayfa yapısı değişmiş olabilir; slaytı silip alanı yeniden ekleyin.</div>`; root.classList.remove("ss-izole"); haber({ hata: 1, w: 500, h: 120 }); return; }
     yerlestir(els);
     // sayfa kendini yeniden çizerse (ör. kutucuğa tıklanınca grafik değişir) alanları yeniden bul
     let mt; new MutationObserver(() => {
@@ -613,6 +617,37 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
     }).observe(document.body, { childList: true, subtree: true });
   }
   let ro, sonYerGen = -1;
+  // ---- iç düzen: birden çok alan (kutucuklar + grafik) tek görünümdeyken her biri alanın içinde ayrı konumlanıp boyutlanır.
+  // Sunum sayfası {ssIc: {alanId: {x, y, w, z}}} gönderir: x,y alanın sol üstüne göre, w genişlik (içerik yeniden çizilir), z büyütme.
+  let icAyar = {}, icEsle = null;
+  function icCiftler() { return icEsle ? icEsle().filter(p => p[1] && hedef && hedef.contains(p[1])) : []; }
+  function icUygula() {
+    if (!hedef) return;
+    const P = icCiftler(), ac = hedefler.length > 1 && P.some(([id]) => icAyar[id]);
+    $$("[data-ss-ic]", hedef).forEach(e => { if (!ac || !P.some(p => p[1] === e)) { ["position", "left", "top", "width", "zoom", "margin", "z-index", "box-sizing"].forEach(k => e.style.removeProperty(k)); e.removeAttribute("data-ss-ic"); } });
+    $$("[data-ss-icyol],[data-ss-icgiz]", hedef).forEach(e => { e.removeAttribute("data-ss-icyol"); e.removeAttribute("data-ss-icgiz"); });
+    hedef.classList.toggle("ss-ic", ac);
+    if (!ac) { hedef.style.removeProperty("height"); return; }
+    const yol = new Set([hedef]);
+    P.forEach(([, e]) => { yol.add(e); for (let x = e.parentElement; x && x !== hedef; x = x.parentElement) { yol.add(x); x.setAttribute("data-ss-icyol", ""); } });
+    yol.forEach(x => { if (P.some(p => p[1] === x)) return; for (const c of x.children) if (!yol.has(c) && !korunur(c)) c.setAttribute("data-ss-icgiz", ""); });
+    let H = 0;
+    P.forEach(([id, e]) => {
+      const a = icAyar[id]; if (!a) { e.setAttribute("data-ss-icgiz", ""); return; }
+      e.setAttribute("data-ss-ic", "");
+      const z = a.z || 1, ss = (k, v) => e.style.setProperty(k, v, "important");
+      ss("position", "absolute"); ss("left", (a.x / z) + "px"); ss("top", (a.y / z) + "px"); ss("width", a.w + "px"); ss("zoom", String(z)); ss("margin", "0"); ss("box-sizing", "border-box");
+    });
+    const hr = hedef.getBoundingClientRect();
+    P.forEach(([, e]) => { if (e.hasAttribute("data-ss-ic")) H = Math.max(H, e.getBoundingClientRect().bottom - hr.top); });
+    hedef.style.setProperty("height", Math.ceil(H + 4) + "px", "important");
+  }
+  if (IZOLE) addEventListener("message", e => {
+    const m = e.data; if (!m || e.origin !== location.origin || !m.ssIc) return;
+    const yeni = m.ssIc.ic || {}; if (JSON.stringify(yeni) === JSON.stringify(icAyar)) return;
+    const oncekiAc = Object.keys(icAyar).length > 0; icAyar = yeni;
+    icUygula(); if (oncekiAc !== Object.keys(icAyar).length > 0 || m.ssIc.ciz) yenidenCiz(); setTimeout(() => { icUygula(); haber(); }, 120); setTimeout(() => { icUygula(); haber(); }, 600);
+  });
   const korunur = s => /^(SCRIPT|STYLE|LINK)$/.test(s.tagName) || s.classList.contains("tip") || s.classList.contains("tt");
   function yerlestir(els) {
     if (!Array.isArray(els)) els = [els];
@@ -621,6 +656,7 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
     const el = ortakAta(els);
     hedef = el; hedefler = els; el.setAttribute("data-ss-hedef", "");
     genUygula();
+    document.documentElement.classList.remove("ss-bekle");
     // alanın üstündeki sarmalayıcılar sadeleşir, yanındaki her şey gizlenir
     for (let x = el; x && x !== document.body; x = x.parentElement) {
       if (x !== el) x.setAttribute("data-ss-yol", "");
@@ -634,6 +670,7 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
     // Grafikler alanın yeni genişliğine göre çizilsin diye "resize" yalnız genişlik değişince gönderilir. Her yerleştirmede
     // gönderilince, kutucukları baştan çizen sayfalarda (TCMB rezerv, Makro gecelik oranlar) çiz → yeniden bul → resize → çiz
     // döngüsü oluşuyor; alan sürekli titriyor ve sayfa kasıyordu.
+    icUygula();
     const gw = Math.round(el.getBoundingClientRect().width);
     if (gw !== sonYerGen) { sonYerGen = gw; dispatchEvent(new Event("resize")); }
     if (ro) ro.disconnect();
@@ -726,7 +763,8 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
     if (r && etkilesim) { w = Math.max(r.width, Math.min(w, sonW || r.width)); h = Math.max(r.height, Math.min(h, sonH || r.height)); }     // taşma yalnız ilk ölçümde
     if (!x) { sonW = w; sonH = h; }
     const m = x || { w: Math.ceil(w), h: Math.ceil(h) };
-    const k = m.w + "x" + m.h + (m.hata ? "!" : ""); if (k === sonOlcu) return; sonOlcu = k;
+    if (!x && r && hedefler.length > 1) m.ic = icCiftler().map(([id, e]) => { const q = e.getBoundingClientRect(); return { id, x: Math.round(q.left - r.left), y: Math.round(q.top - r.top), w: Math.round(q.width), h: Math.round(q.height) }; });
+    const k = m.w + "x" + m.h + (m.hata ? "!" : "") + JSON.stringify(m.ic || ""); if (k === sonOlcu) return; sonOlcu = k;
     try { parent.postMessage({ ssBoyut: 1, id: Q.get("sunum"), ...m }, location.origin); } catch (e) {}
   }
 

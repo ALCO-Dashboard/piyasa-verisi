@@ -9,6 +9,9 @@
   // Kayıtlı sunum hareketli açılırken (?anlik=1) veri dosyaları Sunum sayfasından, kayıt günündeki hâliyle gelir; tarih de o güne sabitlenir.
   (() => {
     const Q = new URLSearchParams(location.search); if (!Q.get("sunum") || window.__ssVeri) return;
+    // slayttaki alan ayıklanana kadar sayfanın tamamı görünmesin (sunumda önce sitenin tamamı görünüp sonra düzeliyordu)
+    try { const st = document.createElement("style"); st.textContent = "html.ss-bekle body{visibility:hidden!important}"; document.head.appendChild(st);
+      document.documentElement.classList.add("ss-bekle"); setTimeout(() => document.documentElement.classList.remove("ss-bekle"), 30000); } catch (e) {}
     const kokYol = new URL(ROOT, location.href).pathname, KAYIT = window.__ssVeri = {}, ANLIK = Q.get("anlik") === "1", bekleyen = {};
     let no = 0;
     if (ANLIK) {

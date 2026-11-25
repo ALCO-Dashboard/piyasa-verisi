@@ -114,7 +114,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .alan textarea{min-height:96px;resize:vertical;line-height:1.45}
 .alan input[type=text]:focus,.alan textarea:focus{outline:none;border-color:var(--accent);background:var(--surface)}
 .oclist{display:flex;flex-direction:column;gap:2px;max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:9px;padding:4px}
-.oclist label{all:unset;display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;padding:6px 6px;border-radius:7px;cursor:pointer;font-size:12.5px;line-height:1.4;color:var(--ink-2)}
+.oclist label{all:unset;display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:8px;padding:6px 6px;border-radius:7px;cursor:pointer;font-size:12.5px;line-height:1.4;color:var(--ink-2)}
 .oclist label:hover{background:var(--surface-2)}
 .oclist label.esl{color:var(--ink)}
 .oclist label b{font-family:var(--mono);font-weight:500}
@@ -164,10 +164,26 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .slayt .panel li{padding-right:30px}
 .slayt .el-ayir{left:14px;top:-24px;height:46px;padding:0 20px;border-radius:23px;background:#7c3aed;color:#fff;font:700 21px/46px var(--sans);white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.25)}
 .slayt .hucre:not(.grup)>.el-ayir{display:none}
+.slayt .icler{position:absolute;inset:0;z-index:9}
+.slayt .icler .icK{position:absolute;outline:3px dashed #7c3aed;outline-offset:-2px;background:rgba(124,58,237,.06);cursor:move;touch-action:none;border-radius:10px}
+.slayt .icler .icK:hover,.slayt .icler .icK.tasi{background:rgba(124,58,237,.14)}
+.slayt .icler .icK span{position:absolute;left:8px;top:6px;max-width:calc(100% - 16px);background:#7c3aed;color:#fff;font:700 17px/1.6 var(--sans);padding:0 10px;border-radius:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.slayt .icler .icS{position:absolute;right:-12px;top:50%;width:22px;height:64px;transform:translateY(-50%);background:#7c3aed;border:4px solid #fff;border-radius:11px;cursor:ew-resize}
+.slayt .icler .icB{position:absolute;right:-12px;bottom:-12px;width:28px;height:28px;background:#7c3aed;border:4px solid #fff;border-radius:50%;cursor:nwse-resize}
+.slayt .icler .icbar{position:absolute;left:50%;top:-58px;transform:translateX(-50%);display:flex;gap:10px;z-index:2}
+.slayt .icler .icbar button{font:700 20px var(--sans);padding:8px 18px;border-radius:22px;border:0;background:#7c3aed;color:#fff;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.slayt .icler .icbar button[data-icb="sifirla"]{background:#fff;color:#7c3aed;outline:2px solid #7c3aed}
+.sahne:fullscreen .icler,.sahne.tamEkran .icler{display:none}
 .slayt .hucre:hover>.el-sil,.slayt .hucre:hover>.el-ayir,.slayt .mtk:hover>.el-sil,.slayt .panel .blk:hover>.el-sil,.slayt .panel li:hover>.li-sil{opacity:1}
 .sahne:fullscreen .el-sil,.sahne:fullscreen .li-sil,.sahne:fullscreen .el-ayir,.sahne.tamEkran .el-sil,.sahne.tamEkran .li-sil,.sahne.tamEkran .el-ayir{display:none}
 .sahne:fullscreen .mtk .mi,.sahne.tamEkran .mtk .mi{outline:none!important}
 .sahne:fullscreen .mtk.bos,.sahne.tamEkran .mtk.bos{display:none}
+.yb{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:2px 0 12px}.yb summary{cursor:pointer;font-weight:700;font-size:13px}.yb summary small{font-weight:400;color:var(--muted);margin-left:6px}
+.yb-sat{display:grid;grid-template-columns:150px 1fr auto auto auto;gap:8px;align-items:center;margin:10px 0 0}.yb-ad{font-size:13px;font-weight:600}
+.yb-sat select,.yb-sat input{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;background:var(--surface);color:inherit}.yb-px{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}.yb-px input{width:64px}
+.yb-not{font-size:11.5px;color:var(--muted)}.yb-t{width:34px;height:32px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:14px;color:inherit}
+.yb-t[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}.yb-alt{display:flex;gap:8px;margin-top:12px}
+@media (max-width:640px){.yb-sat{grid-template-columns:1fr 1fr}}
 .ac-cubuk{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 6px}.ac-cubuk button{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:4px 9px;font:600 12.5px var(--sans);cursor:pointer;color:var(--ink-2)}
 .ac-cubuk button:hover{border-color:var(--accent);color:var(--accent)}.ac-cubuk .sag{margin-left:auto;display:flex;gap:4px;align-items:center;font-size:12px;color:var(--muted)}
 .ac-cubuk button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -198,7 +214,7 @@ body.hucreSuruk #liste{outline:2px solid rgba(29,78,216,.25);outline-offset:2px;
 .slayt .panel li small{font-size:18px;color:var(--s-mut)}.slayt .panel li .hb i,.oclist .hb i{display:none}
 .slayt .panel li.yorum::before{background:var(--s-red)}
 .slayt .panel.alt .blk.oc ul{columns:1}
-.oclist .grp small{font-weight:500;text-transform:none;letter-spacing:0}
+.oclist .grp small{font-weight:500;text-transform:none;letter-spacing:0}.oclist .grp .duz{display:inline;margin-left:6px;text-transform:none;letter-spacing:0;font-size:11.5px}.oclist label .duz{align-self:start}
 .oclist .hb{font-size:10px;font-weight:800;color:#fff;background:var(--accent);border-radius:4px;padding:1px 5px;margin-right:4px;vertical-align:1px}
 .slayt .hucre:hover>.kes{outline:3px dashed rgba(29,78,216,.55);outline-offset:6px}
 .sahne.suruk iframe{pointer-events:none}
@@ -218,6 +234,8 @@ body.hucreSuruk #liste{outline:2px solid rgba(29,78,216,.25);outline-offset:2px;
 .slayt .hucre .yuk.bos::before{display:none}
 .slayt .hucre iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:transparent;color-scheme:normal}
 .slayt .hucre .yuk{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--s-mut);font-size:22px;gap:12px}
+.sahne:fullscreen .hucre .yuk,.sahne.tamEkran .hucre .yuk{color:transparent;border-radius:14px;background:linear-gradient(100deg,var(--s-panel) 30%,var(--s-line) 50%,var(--s-panel) 70%);background-size:300% 100%;animation:yukParla 1.6s linear infinite}
+@keyframes yukParla{from{background-position:100% 0}to{background-position:0 0}}
 .slayt .hucre .yuk::before{content:"";width:22px;height:22px;border:3px solid var(--s-line);border-top-color:var(--s-red);border-radius:50%;animation:don 1s linear infinite}
 @keyframes don{to{transform:rotate(360deg)}}
 .slayt .panel{position:absolute;background:var(--s-panel);border-radius:18px;padding:28px 32px;overflow:hidden;display:flex;gap:34px}
@@ -226,6 +244,7 @@ body.hucreSuruk #liste{outline:2px solid rgba(29,78,216,.25);outline-offset:2px;
 .slayt .panel .blk{min-width:0;flex:1}
 .slayt .panel ul{list-style:none;margin:0;padding:0}
 .slayt .panel li{position:relative;padding:0 0 12px 24px;font-size:23px;line-height:1.38;color:var(--s-ink2)}
+.slayt .panel ul[style] li{font-size:inherit;font-weight:inherit;font-style:inherit;font-family:inherit}
 .slayt .panel li::before{content:"";position:absolute;left:2px;top:12px;width:10px;height:10px;border-radius:50%;background:var(--s-mut)}
 .slayt .panel li.iyi::before{background:var(--s-up)}.slayt .panel li.kotu::before{background:var(--s-down)}
 .slayt .panel li b{color:var(--s-ink);font-weight:700}
@@ -557,10 +576,16 @@ function yorumKopya(d) { const o = {}; d.slaytlar.forEach(s => hucreler(s).forEa
 const ocGoster = s => s.oc !== false;
 const notSatir = t => String(t || "").split(/\n/).map(x => x.trim()).filter(Boolean);
 // basit biçim: **kalın**, [metin](adres) bağlantı; blokta satır başı "- " madde, "# " ara başlık
+// yazı biçimi: slayt başlığı, öne çıkanlar + not, metin kutusu için yazı tipi / punto / kalın / italik (s.stil)
+const AILELER = [["", "Varsayılan (DM Sans)"], ["Arial, Helvetica, sans-serif", "Arial"], ["Calibri, Carlito, 'Segoe UI', sans-serif", "Calibri"], ["Georgia, 'Times New Roman', serif", "Georgia"], ["'Times New Roman', Times, serif", "Times New Roman"], ["Verdana, Geneva, sans-serif", "Verdana"], ["'Courier New', monospace", "Courier New"]];
+const STIL_VAR = { bas: { px: 50, b: true }, pnl: { px: 23, b: false }, mtk: { b: false } };
+const stilAl = (s, k) => ({ f: "", i: false, ...STIL_VAR[k], ...((s && s.stil && s.stil[k]) || {}) });
+const stilCss = (st, pxSabit) => `${st.f ? `font-family:${st.f};` : ""}${pxSabit !== false && st.px ? `font-size:${st.px}px;` : ""}font-weight:${st.b ? 800 : 500};font-style:${st.i ? "italic" : "normal"};`;
+const pptAile = f => (f || "Segoe UI").split(",")[0].replace(/['"]/g, "").trim();
 const mutlak = u => { try { return new URL(u, kok).href; } catch (e) { return u; } };
 function zengin(t) {
   return esc(String(t ?? "")).replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g, (m, a, u) => /^(https?:|mailto:|#|\.{0,2}\/)/i.test(u.replace(/&amp;/g, "&")) ? `<a href="${mutlak(u.replace(/&amp;/g, "&")).replace(/"/g, "%22")}" target="_blank" rel="noopener">${a}</a>` : m)
-    .replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>");
+    .replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>").replace(/(^|[^*\w])\*(\S(?:[^*\n]*\S)?)\*(?![*\w])/g, "$1<i>$2</i>");
 }
 function zenginBlok(t) {
   const out = []; let ul = null;
@@ -576,7 +601,7 @@ function zenginBlok(t) {
 function htmlMd(m) {
   const d = new DOMParser().parseFromString(`<div>${m}</div>`, "text/html").body.firstChild;
   const gez = n => [...n.childNodes].map(c => c.nodeType === 3 ? c.textContent : c.nodeType !== 1 ? "" : c.tagName === "B" || c.tagName === "STRONG" ? `**${gez(c)}**`
-    : c.tagName === "A" ? `[${gez(c)}](${c.getAttribute("href")})` : c.tagName === "I" && c.closest(".hb") ? ":" : gez(c)).join("");
+    : c.tagName === "A" ? `[${gez(c)}](${c.getAttribute("href")})` : c.tagName === "I" && c.closest(".hb") ? ":" : c.tagName === "I" || c.tagName === "EM" ? `*${gez(c)}*` : gez(c)).join("");
   return gez(d).replace(/\s+/g, " ").trim();
 }
 
@@ -622,6 +647,62 @@ const ifrGen = (c, bw, gen) => Math.max(Math.max(gen || 0, dogalGen(c)) + 40, c.
 // değiştiriyor ve alan sürekli titriyordu (rezerv kutucukları). Yükseklik yalnız gerektiğinde ve paylı büyütülür, nadiren küçültülür.
 function ifrYuk(f, bh) { const su = parseFloat(f.style.height) || 0, gerek = bh + 30; if (gerek > su || gerek < su - 700) f.style.height = Math.ceil(gerek + 160) + "px"; }
 const sabitMi = c => (!!ARSIV && !ARSIV.canli) || foto(c.ogeler[0]);       // görüntü olan alan yeniden çizilemez: yalnızca köşeden orantılı boyutlanır
+// ---- iç düzen: tek görünümdeki kutucuk ve grafikler alanın içinde ayrı taşınır / boyutlanır (yer[alan].ic = {öğe: {x, y, w, z}})
+let IC_DUZ = null;
+function icGonder(f, cid, ciz) { if (!f) return; const ic = yerBul(cid)?.ic || {}, k = JSON.stringify(ic); if (f._ic === k && !ciz) return; f._ic = k; try { f.contentWindow.postMessage({ ssIc: { ic, ciz: !!ciz } }, location.origin); } catch (e) {} }
+function icDuzenAc(s, cid) {
+  const R = olcu[cid]?.ic; if (!R || !R.length) { toast("Alan henüz yükleniyor, birkaç saniye sonra tekrar deneyin"); return; }
+  s.yer = s.yer || {};
+  const Y = yerlesim(s); if (!s.yer[cid]) { const r = Y.hucre.find(h => h.id === cid); if (r) s.yer[cid] = { x: r.x, y: r.y, w: r.w, h: r.h }; }
+  if (!s.yer[cid].ic) s.yer[cid].ic = Object.fromEntries(R.map(r => [r.id, { x: r.x, y: r.y, w: r.w, z: 1 }]));
+  IC_DUZ = cid; kaydet(true); sahneCiz();
+  toast("Kutucuk ve grafikleri sürükleyin; sağ kenardan genişletin, köşeden büyütün. Bitince ✓ Bitti", 4200);
+}
+function icCiz() {
+  $$(".icler").forEach(x => { if (x.closest(".hucre")?.dataset.id !== IC_DUZ) x.remove(); });
+  if (!IC_DUZ) return;
+  const x = sira()[aktif], c = x && DOM[x.id]?.querySelector(`.hucre[data-id="${CSS.escape(IC_DUZ)}"]`), h = c?._f; if (!c || !h) return;
+  const R = olcu[IC_DUZ]?.ic || [], ad = id => hucreAd({ ogeler: h.ogeler.filter(o => o.id === id) }) || "";
+  let ov = c.querySelector(".icler"); if (!ov) { ov = document.createElement("div"); ov.className = "icler"; c.appendChild(ov); }
+  if (ov._suruk) return;
+  ov.innerHTML = `<div class="icbar"><button data-icb="bitti">✓ Bitti</button><button data-icb="sifirla" title="Kutucuk ve grafiği sitedeki yerleşimine döndür">↺ Sitedeki düzen</button></div>` +
+    R.map(r => `<div class="icK" data-ic="${esc(r.id)}" style="left:${r.x * h.k}px;top:${r.y * h.k}px;width:${r.w * h.k}px;height:${r.h * h.k}px"><span>${esc(ad(r.id))}</span><i class="icS" title="Genişlik"></i><i class="icB" title="Büyüt / küçült"></i></div>`).join("");
+}
+function icBitir() { IC_DUZ = null; icCiz(); kaydet(); }
+function icOlayKur() {      // sahne tanımlandıktan sonra çağrılır
+sahne.addEventListener("click", e => {
+  const b = e.target.closest(".icbar button"); if (!b) return; e.stopImmediatePropagation();
+  const x = sira()[aktif]; if (!x || x.tur !== "icerik") return;
+  if (b.dataset.icb === "bitti") { icBitir(); return; }
+  if (b.dataset.icb === "sifirla") { const y = x.s.yer?.[IC_DUZ]; if (y) { delete y.ic; y.h = undefined; delete x.s.yer[IC_DUZ]; } IC_DUZ = null; icCiz(); kaydet(); toast("Sitedeki düzene dönüldü"); }
+}, true);
+sahne.addEventListener("pointerdown", e => {
+  const k = e.target.closest(".icK"); if (!k || !IC_DUZ) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const x = sira()[aktif], s = x.s, y = s.yer?.[IC_DUZ], id = k.dataset.ic, c = k.closest(".hucre"), h = c._f; if (!y || !y.ic || !y.ic[id]) return;
+  const a0 = { ...y.ic[id] }, tip = e.target.classList.contains("icS") ? "w" : e.target.classList.contains("icB") ? "z" : "m";
+  const sx = sahne.getBoundingClientRect().width / 1920, kk = h.k, x0 = e.clientX, y0 = e.clientY, ov = c.querySelector(".icler"), r0 = (olcu[IC_DUZ]?.ic || []).find(r => r.id === id);
+  const W = olcu[IC_DUZ]?.w || 2000, ifr = c.querySelector("iframe");
+  ov._suruk = true; k.classList.add("tasi"); sahne.classList.add("suruk");
+  let zT;
+  const tasi = ev => {
+    const dx = (ev.clientX - x0) / sx / kk, dy = (ev.clientY - y0) / sx / kk, z0 = a0.z || 1, a = { ...a0 };
+    if (tip === "m") { a.x = Math.max(0, Math.min(W - a0.w * z0, Math.round(a0.x + dx))); a.y = Math.max(0, Math.round(a0.y + dy)); }
+    if (tip === "w") a.w = Math.max(120, Math.min(Math.round((W - a0.x) / z0), Math.round(a0.w + dx / z0)));
+    if (tip === "z") a.z = Math.max(.35, Math.min(3, (W - a0.x) / a0.w, +(z0 * (a0.w * z0 + dx) / (a0.w * z0)).toFixed(3)));
+    y.ic[id] = a;
+    // çerçeve hemen, içerik kısa aralıklarla güncellenir
+    const rw = r0 ? r0.w / ((a0.w || 1) * z0) : 1, rh = r0 ? r0.h / z0 : 0, z = a.z || 1;
+    Object.assign(k.style, { left: a.x * kk + "px", top: a.y * kk + "px", width: a.w * z * rw * kk + "px", height: (rh ? rh * z : parseFloat(k.style.height) / kk) * kk + "px" });
+    clearTimeout(zT); zT = setTimeout(() => icGonder(ifr, IC_DUZ), 90);
+  };
+  const birak = () => {
+    removeEventListener("pointermove", tasi); removeEventListener("pointerup", birak); removeEventListener("pointercancel", birak);
+    ov._suruk = false; k.classList.remove("tasi"); sahne.classList.remove("suruk"); clearTimeout(zT); icGonder(ifr, IC_DUZ); kaydet(true); setTimeout(icCiz, 700);
+  };
+  addEventListener("pointermove", tasi); addEventListener("pointerup", birak); addEventListener("pointercancel", birak);
+}, true);
+}
 function genGonder(f, g) { if (!f || f._gen === g) return; f._gen = g; try { f.contentWindow.postMessage({ ssGen: g }, location.origin); } catch (e) {} }
 // tek ortak ölçekle satırlara dizme: sitede küçük olan kutucuk küçük, büyük grafik büyük kalır
 function rafla(B, kutu, kip) {
@@ -652,18 +733,19 @@ function izgaraC(B, kutu) {      // eşit hücreli ızgara: her alan kendi hücr
 const diz = (B, kutu, duzen) => !B.length ? [] : duzen === "izgara" ? izgaraC(B, kutu) : rafla(B, kutu, duzen);
 const alanTop = K => K.reduce((a, b) => a + b.w * b.h, 0);
 function sigdir(kutu, bw, bh) { const k = Math.min(kutu.w / bw, kutu.h / bh), w = bw * k, h = bh * k; return { x: kutu.x + (kutu.w - w) / 2, y: kutu.y + (kutu.h - h) / 2, w, h, k }; }
-function panelYuk(oc, nt, w) {      // alttaki not kutusu: içerik kadar yükseklik (tahmini satır sayısıyla)
-  const ikili = oc.length && nt.length, bw = ikili ? (w - 64 - 34) / 2 : w - 64;
-  const sat = (t, px) => Math.max(1, Math.ceil(t.length * px * .5 / (bw - 24)));
-  const a = oc.reduce((t, o) => t + sat(o.m.replace(/<[^>]+>/g, ""), 23) * 32 + 12, 0), b = nt.reduce((t, x) => t + sat(x, 24) * 34, 0) + (nt.length ? 12 : 0);
-  return Math.round(Math.min(330, Math.max(140, 28 + 34 + (ikili ? Math.max(a, b) : a + b) + 18 + 26)));
+const pnlCss = (s, not) => { const st = stilAl(s, "pnl"); return `${st.f ? `font-family:${st.f};` : ""}font-size:${st.px + (not ? 1 : 0)}px;font-weight:${st.b ? 700 : 400};font-style:${st.i ? "italic" : "normal"};`; };
+function panelYuk(oc, nt, w, s) {      // alttaki not kutusu: içerik kadar yükseklik (tahmini satır sayısıyla)
+  const ikili = oc.length && nt.length, bw = ikili ? (w - 64 - 34) / 2 : w - 64, px = stilAl(s, "pnl").px, o = px / 23;
+  const sat = (t, p) => Math.max(1, Math.ceil(t.length * p * .5 / (bw - 24)));
+  const a = oc.reduce((t, x) => t + sat(x.m.replace(/<[^>]+>/g, ""), px) * 32 * o + 12, 0), b = nt.reduce((t, x) => t + sat(x, px + 1) * 34 * o, 0) + (nt.length ? 12 : 0);
+  return Math.round(Math.min(330 * Math.max(1, o), Math.max(140, 28 + 34 + (ikili ? Math.max(a, b) : a + b) + 18 + 26)));
 }
 function yerlesim(s) {
   const oc = ocListesi(s), nt = notSatir(s.not);
   const hc = hucreler(s), B = hc.map(hucreBoyut), duzen = s.duzen || "oto", yer = s.yer || null;
   let icerik = { ...C }, panel = null;
   if (oc.length || nt.length) {
-    const ph = panelYuk(oc, nt, C.w), pw = 540;
+    const ph = panelYuk(oc, nt, C.w, s), pw = 540;
     const alt = { panel: { x: C.x, y: C.y + C.h - ph, w: C.w, h: ph, yon: "alt" }, icerik: { x: C.x, y: C.y, w: C.w, h: C.h - ph - ARA } };
     const sag = { panel: { x: C.x + C.w - pw, y: C.y, w: pw, h: C.h, yon: "sag" }, icerik: { x: C.x, y: C.y, w: C.w - pw - 34, h: C.h } };
     const sec = s.panel === "sag" ? sag : alt;      // öne çıkanlar ve not varsayılan olarak altta satır satır
@@ -690,6 +772,7 @@ function yerlesim(s) {
 
 // ---------------------------------------------------------------- canlı slaytlar (iframe'li, kalıcı DOM)
 const sahne = $("#sahne"), DOM = {};
+icOlayKur();
 function iframeSrc(c) { const o = c.ogeler[0], g = yerBul(c.id)?.gen; return `../${o.sayfa}?sunum=${encodeURIComponent(c.id)}&tema=${tema()}&v=${surum}${g ? "&gen=" + Math.round(g) : ""}${canliArsiv() ? `&anlik=1&an=${ARSIV.anlik.an}` : ""}${o.durum?.h || ""}`; }
 function yerBul(id) { for (const s of D.slaytlar) if (s.yer && s.yer[id]) return s.yer[id]; return null; }
 const ustSerit = () => `<div class="s-cizgi"></div><div class="s-ust"><span><b>DOST KATILIM</b> · Aktif Pasif Yönetimi</span><span>${esc(D.ad || "Piyasa Verileri (ALCO)")} · ${BUGUN}</span></div>`;
@@ -707,10 +790,10 @@ function slaytIcerik(x, no, top) {
   }
   const s = x.s, Y = yerlesim(s);
   const pnl = Y.panel ? `<div class="panel ${Y.panel.yon}" style="left:${Y.panel.x}px;top:${Y.panel.y}px;width:${Y.panel.w}px;height:${Y.panel.h}px">
-      ${Y.oc.length ? `<div class="blk oc"><h4>Öne çıkanlar</h4><ul>${Y.oc.map(o => `<li class="${o.t || ""}" data-k="${esc(o.k || "")}">${o.m}</li>`).join("")}</ul></div>` : ""}
-      ${Y.nt.length ? `<div class="blk nt"><h4>Değerlendirme</h4><div class="not">${zengin(s.not.trim())}</div></div>` : ""}</div>` : "";
-  const mtk = Y.metin ? `<div class="mtk${(s.govde || "").trim() ? "" : " bos"}" style="left:${Y.metin.x}px;top:${Y.metin.y}px;width:${Y.metin.w}px;height:${Y.metin.h}px"><div class="mi" style="font-size:${s.govdePx || 30}px">${(s.govde || "").trim() ? zenginBlok(s.govde) : "Metni sağdaki “Metin” alanına yazın"}</div></div>` : "";
-  return `${ustSerit()}<div class="s-bas">${esc(s.baslik)}</div><div class="s-yol">${esc(bolum(s))}</div>${pnl}${mtk}
+      ${Y.oc.length ? `<div class="blk oc"><h4>Öne çıkanlar</h4><ul style="${pnlCss(s)}">${Y.oc.map(o => `<li class="${o.t || ""}" data-k="${esc(o.k || "")}">${o.m}</li>`).join("")}</ul></div>` : ""}
+      ${Y.nt.length ? `<div class="blk nt"><h4>Değerlendirme</h4><div class="not" style="${pnlCss(s, 1)}">${zengin(s.not.trim())}</div></div>` : ""}</div>` : "";
+  const mtk = Y.metin ? `<div class="mtk${(s.govde || "").trim() ? "" : " bos"}" style="left:${Y.metin.x}px;top:${Y.metin.y}px;width:${Y.metin.w}px;height:${Y.metin.h}px"><div class="mi" style="font-size:${s.govdePx || 30}px;${stilCss(stilAl(s, "mtk"), false)}">${(s.govde || "").trim() ? zenginBlok(s.govde) : "Metni sağdaki “Metin” alanına yazın"}</div></div>` : "";
+  return `${ustSerit()}<div class="s-bas" style="${stilCss(stilAl(s, "bas"))}">${esc(s.baslik)}</div><div class="s-yol">${esc(bolum(s))}</div>${pnl}${mtk}
     <div class="s-alt"><span>${esc(kaynakMetni(s))}</span><span>${no} / ${top}</span></div>`;
 }
 function hucreleriGuncelle(el, s) {
@@ -718,16 +801,17 @@ function hucreleriGuncelle(el, s) {
   const var_ = new Map($$(".hucre", kap).map(h => [h.dataset.id, h]));
   Y.hucre.forEach(h => {
     let c = var_.get(h.id); var_.delete(h.id);
-    if (!c) { c = document.createElement("div"); c.className = "hucre"; c.dataset.id = h.id; c.innerHTML = `<div class="kes"><div class="yuk">Yükleniyor…</div></div><i class="el-tasi" title="Sürükleyerek taşıyın · soldaki listede başka bir slaytın üzerine bırakırsanız o slayta taşınır">✥ Taşı</i><i class="el-sag" title="Yandan uzatın: genişlik (grafik yeni genişliğe göre yeniden çizilir)"></i><i class="el-alt" title="Alttan uzatın: yükseklik"></i><i class="el-boy" title="Köşeden sürükleyerek orantılı büyütün / küçültün"></i><i class="el-sil" title="Slayttan çıkar (Ctrl+Z ile geri alınır)">✕</i><i class="el-ayir" title="Kutucuk ve grafiği ayrı ayrı göster: her biri ayrı taşınır ve boyutlandırılır, kutucuğa tıklayınca grafik yine değişir">⇲ Ayır</i>`; kap.appendChild(c); }
+    if (!c) { c = document.createElement("div"); c.className = "hucre"; c.dataset.id = h.id; c.innerHTML = `<div class="kes"><div class="yuk">Yükleniyor…</div></div><i class="el-tasi" title="Sürükleyerek taşıyın · soldaki listede başka bir slaytın üzerine bırakırsanız o slayta taşınır">✥ Taşı</i><i class="el-sag" title="Yandan uzatın: genişlik (grafik yeni genişliğe göre yeniden çizilir)"></i><i class="el-alt" title="Alttan uzatın: yükseklik"></i><i class="el-boy" title="Köşeden sürükleyerek orantılı büyütün / küçültün"></i><i class="el-sil" title="Slayttan çıkar (Ctrl+Z ile geri alınır)">✕</i><i class="el-ayir" title="Kutucukları ve grafiği bu alanın içinde ayrı ayrı taşıyıp boyutlandırın (kutucuğa tıklayınca grafik yine değişir)">▦ İçini düzenle</i>`; kap.appendChild(c); }
     c.classList.toggle("sabit", sabitMi(h.c)); c.classList.toggle("grup", h.ogeler.length > 1);
     Object.assign(c.style, { left: h.x + "px", top: h.y + "px", width: h.w + "px", height: h.h + "px" });
     Object.assign(c.querySelector(".kes").style, { left: "0px", top: "0px", width: h.w + "px", height: h.h + "px" });
     const ifr = c.querySelector("iframe");
     if (ifr) { ifr.style.transform = `scale(${h.k})`; ifr.style.width = ifrGen(h.c, h.bw, h.gen) + "px"; ifrYuk(ifr, h.bh);
-      clearTimeout(ifr._gT); const g = Math.round(h.gen || 0); ifr._gT = setTimeout(() => genGonder(ifr, g), sahne.classList.contains("suruk") ? 140 : 0); }
+      clearTimeout(ifr._gT); const g = Math.round(h.gen || 0); ifr._gT = setTimeout(() => { genGonder(ifr, g); icGonder(ifr, h.id); }, sahne.classList.contains("suruk") ? 140 : 0); }
     c._f = h;
   });
   var_.forEach(c => c.remove());
+  if (IC_DUZ) icCiz();
 }
 // uzaktaki slaytların sayfaları kapatılır: her alan sitenin bir sayfasını çalıştırır; hepsi açık kalınca editör ağırlaşıp kasıyordu
 function bosalt(el) {
@@ -757,8 +841,8 @@ function yukle(el) {      // slayttaki iframe'leri oluştur (tembel yükleme)
     if (c._f) f.style.transform = `scale(${c._f.k})`;
     f.src = iframeSrc(h);
     f._gen = Math.round(yerBul(h.id)?.gen || 0);
-    f.addEventListener("load", () => { const y = c.querySelector(".yuk"); try { f.contentWindow.alcoSunum?.hazir?.then(() => y && y.remove()); } catch (e) {} setTimeout(() => y && y.remove(), 15000);
-      const g = f._gen; f._gen = -1; setTimeout(() => genGonder(f, Math.round(yerBul(h.id)?.gen || g || 0)), 300); });
+    f.addEventListener("load", () => { const y = c.querySelector(".yuk"); setTimeout(() => y && y.remove(), 30000);      // ilk ölçü gelince (alan ayıklanınca) kalkar
+      const g = f._gen; f._gen = -1; f._ic = null; setTimeout(() => { genGonder(f, Math.round(yerBul(h.id)?.gen || g || 0)); icGonder(f, h.id); }, 300); });
     c.querySelector(".kes").appendChild(f);
   });
 }
@@ -786,7 +870,8 @@ addEventListener("message", e => {
     return;
   }
   if (!m.ssBoyut) return;
-  const eski = olcu[m.id]; olcu[m.id] = { w: m.w, h: m.h, hata: m.hata };
+  const eski = olcu[m.id]; olcu[m.id] = { w: m.w, h: m.h, hata: m.hata, ic: m.ic || eski?.ic };
+  if (IC_DUZ === m.id) icCiz();
   $$(`.hucre[data-id="${CSS.escape(m.id)}"] .yuk`).forEach(y => y.remove());
   if (eski && Math.abs(eski.h - m.h) < 2 && Math.abs(eski.w - m.w) < 2 && !m.hata === !eski.hata) return;
   clearTimeout(olcuT); olcuT = setTimeout(() => { sahneCiz(); if (m.hata) ayarCiz(); }, 60);
@@ -820,8 +905,9 @@ function goster(i, sessiz) {
   const L = sira(); if (!L.length) return;
   aktif = Math.max(0, Math.min(L.length - 1, i));
   L.forEach((x, j) => DOM[x.id]?.classList.toggle("aktif", j === aktif));
-  [aktif, aktif + 1, aktif - 1].forEach(j => { const x = L[j]; if (x && DOM[x.id]) yukle(DOM[x.id]); });
-  if (!DISA) uzaklariKapat(new Set([aktif, aktif + 1, aktif - 1].map(j => L[j]?.id).filter(Boolean)));
+  const yakin = [aktif, aktif + 1, aktif + 2, aktif - 1];      // sunarken sonraki iki slayt önden hazır olsun
+  yakin.forEach(j => { const x = L[j]; if (x && DOM[x.id]) yukle(DOM[x.id]); });
+  if (!DISA) uzaklariKapat(new Set(yakin.map(j => L[j]?.id).filter(Boolean)));
   $("#sayac").textContent = `${aktif + 1} / ${L.length}`;
   const x = L[aktif];
   // sitede Ctrl ile "aynı slayta ekle", editörde açık olan slayta eklesin
@@ -873,7 +959,7 @@ sahne.addEventListener("click", e => {
   const b = e.target.closest(".el-sil,.li-sil,.el-ayir"); if (!b) return;
   e.preventDefault(); e.stopPropagation();
   const x = sira()[aktif]; if (!x || x.tur !== "icerik") return; const s = x.s;
-  if (b.classList.contains("el-ayir")) { s.birlesik = false; delete s.yer; kaydet(); toast("Alanlar ayrıldı: her birini ayrı taşıyıp boyutlandırabilirsiniz · kutucuğa tıklayınca grafik yine değişir", 3600); return; }
+  if (b.classList.contains("el-ayir")) { const cid = b.closest(".hucre")?.dataset.id; icDuzenAc(s, cid); return; }
   if (b.classList.contains("li-sil")) { const k = b.dataset.k;
     if (k.startsWith("e:")) s.ocElle = (s.ocElle || []).filter(z => z.k !== k); else { s.ocHaric = [...new Set([...(s.ocHaric || []), k])]; s.ocEk = (s.ocEk || []).filter(z => z !== k); }
     kaydet(); toast("Madde kaldırıldı · Ctrl+Z ile geri alabilirsiniz"); return; }
@@ -1048,25 +1134,39 @@ function ayarCiz() {
       <div class="oclist"><div class="grp">Kendi maddeleriniz <small>· her zaman görünür, slaytta en üstte</small></div>${elleL.map(elleSatir).join("")}
         <div class="ocYeni"><input type="text" id="ocYeni" placeholder="Yeni madde yazın · **kalın**, [metin](adres) bağlantı"><button class="btn" data-hedef-lnk="ocYeni" title="Bağlantı ekle">🔗</button><button class="btn ana" data-ocd="ekle">Ekle</button></div>
       <div ${ocGoster(s) ? "" : 'style="opacity:.45;pointer-events:none"'}>${grp(`Grafik yorumu${ARSIV ? "" : ` <button class="duz" data-ocd="yorumYenile" title="Grafik yorumunu şimdiki görünüme göre yeniden yaz (yorum kendiliğinden güncellenmez)">↻ yenile</button>`}`, X.yorum, bekleyen ? "grafik yüklenince bir kez yazılır" : "bu alanda yorumlanacak grafik verisi yok")}${grp("İlgili haberler", X.hb, "bu konuda yeni haber yok")}${grp("Özet'ten ilgili yorumlar", X.oc, X.T.length ? "eşleşen yorum yok" : "")}${grp("Diğer Özet yorumları", diger)}</div></div></div>
+    <details class="alan tam yb" ${YB_ACIK ? "open" : ""}><summary>Yazı biçimi <small>başlık, öne çıkanlar ve not, metin kutusu · yazı tipi, punto, kalın, italik</small></summary>
+      ${[["bas", "Başlık"], ["pnl", "Öne çıkanlar ve not"], ["mtk", "Metin kutusu"]].map(([k, ad]) => { const st = stilAl(s, k); return `<div class="yb-sat"><span class="yb-ad">${ad}</span>
+        <select data-st="${k}.f" aria-label="${ad} yazı tipi">${AILELER.map(([v, l]) => `<option value="${esc(v)}" ${v === st.f ? "selected" : ""}>${l}</option>`).join("")}</select>
+        ${k === "mtk" ? `<span class="yb-not">punto: metin alanındaki Yazı düğmeleri</span>` : `<label class="yb-px"><input type="number" min="12" max="${k === "bas" ? 90 : 48}" step="1" data-st="${k}.px" value="${st.px}"> px</label>`}
+        <button type="button" class="yb-t" data-stt="${k}.b" aria-pressed="${!!st.b}" title="Kalın"><b>B</b></button><button type="button" class="yb-t" data-stt="${k}.i" aria-pressed="${!!st.i}" title="İtalik (yatık)"><i>I</i></button></div>`; }).join("")}
+      <div class="yb-alt"><button type="button" class="btn" data-o="stilHepsi">Tüm slaytlara uygula</button><button type="button" class="btn" data-o="stilSifirla">Varsayılana dön</button></div>
+    </details>
     <div class="alan"><label for="sN">Değerlendirme notu <small>slayta yazılır, PowerPoint'te konuşmacı notu olur</small></label>${cubuk("sN", 1)}<textarea id="sN" data-f="s.not" placeholder="Bu hafta dikkat çeken nokta…">${esc(s.not || "")}</textarea></div>
     <div class="alan tam"><label for="sG">Metin <small>${s.govde != null ? "slayttaki metin kutusu · satır başında - madde, # ara başlık" : "slayta serbest metin kutusu ekleyin"}</small></label>${s.govde != null
       ? `${cubuk("sG", 1, `<span class="sag">Yazı <span class="seg" data-g="mpx">${[[24, "Küçük"], [30, "Orta"], [38, "Büyük"], [46, "Çok büyük"]].map(([v, l]) => `<button data-v="${v}" aria-pressed="${(s.govdePx || 30) === v}">${l}</button>`).join("")}</span></span>`)}<textarea id="sG" data-f="s.govde" style="min-height:150px" placeholder="# Ara başlık&#10;- Birinci madde&#10;- [TEFAS fon verisi](${esc(kok)}#tefas) için tıklayınız">${esc(s.govde || "")}</textarea>`
       : `<button class="btn" data-o="metinEkle">＋ Metin kutusu ekle</button>`}</div>
     <div class="alan tam"><label for="sK">Kaynak satırı <small>boş bırakılırsa otomatik</small></label><input type="text" id="sK" data-f="s.kaynak" value="${esc(s.kaynak || "")}" placeholder="${esc(kaynakMetni({ ...s, kaynak: null }))}"></div>
     <div class="alan tam"><div class="lb">Slayttaki alanlar <small>✥ Konumlandır ile slaytta sürükleyip boyutlandırabilirsiniz</small></div>
-      ${s.ogeler.length > 1 ? `<label class="kutucuk" style="margin:0 0 8px"><input type="checkbox" id="birG" ${s.birlesik !== false ? "checked" : ""}> Aynı sayfadan gelen alanları sitedeki yerleşimleriyle tek görünümde göster <small style="font-weight:400;color:var(--muted)">· kapatırsanız (ya da alandaki ⇲ Ayır) kutucuk ve grafik ayrı ayrı taşınıp boyutlandırılır; kutucuğa tıklayınca grafik yine değişir</small></label>` : ""}
+      ${s.ogeler.length > 1 && s.birlesik === false ? `<label class="kutucuk" style="margin:0 0 8px"><input type="checkbox" id="birG" ${s.birlesik !== false ? "checked" : ""}> Aynı sayfadan gelen alanları sitedeki yerleşimleriyle tek görünümde göster <small style="font-weight:400;color:var(--muted)">· kapatırsanız (ya da alandaki ⇲ Ayır) kutucuk ve grafik ayrı ayrı taşınıp boyutlandırılır; kutucuğa tıklayınca grafik yine değişir</small></label>` : ""}
       ${s.ogeler.map((o, i) => { const hc = hucreler(s).find(c => c.ogeler.includes(o)); return `<div class="og"><b>${esc(o.ad)}</b><small>${foto(o) ? `<span style="color:#b45309">ekran görüntüsü · ${new Date(o.cekim || o.t).toLocaleString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · sabit</span> · ` : ""}${esc(o.yolAd)}${hc && hc.ogeler.length > 1 ? ` · <span style="color:#1d4ed8">birleşik görünüm (${hc.ogeler.length} alan)</span>` : ""}${hc && olcu[hc.id]?.hata ? " · <span style='color:var(--accent)'>alan bulunamadı</span>" : ""}</small><span class="ic">
         ${s.ogeler.length > 1 ? `<button data-o="ayir" data-id="${o.id}" title="Bu alanı ayrı bir slayta taşı">Ayrı slayt</button>` : ""}
         ${ARSIV || foto(o) ? "" : `<button data-o="yenile" data-id="${o.id}" title="Alanı yeniden yükle">↻</button>`}<button data-o="sil" data-id="${o.id}" title="Alanı slayttan çıkar">✕</button></span></div>`; }).join("")}
       ${D.slaytlar.indexOf(s) < D.slaytlar.length - 1 ? `<button class="btn" data-o="birlestir">⇣ Sonraki slaytla birleştir</button>` : ""}</div>`;
 }
 // metin araç çubuğu: kalın, madde, bağlantı
-const cubuk = (hedef, madde, ek = "") => `<div class="ac-cubuk" data-hedef="${hedef}"><button type="button" data-ac="kalin" title="Seçili metni kalın yap"><b>B</b></button>${madde ? `<button type="button" data-ac="madde" title="Seçili satırları madde yap">• Madde</button>` : ""}<button type="button" data-ac="link" title="Seçili kelimeye bağlantı ekle">🔗 Bağlantı</button>${ek}</div>`;
-let OC_DUZ = null;
+const cubuk = (hedef, madde, ek = "") => `<div class="ac-cubuk" data-hedef="${hedef}"><button type="button" data-ac="kalin" title="Seçili metni kalın yap"><b>B</b></button><button type="button" data-ac="italik" title="Seçili metni italik (yatık) yap"><i>I</i></button>${madde ? `<button type="button" data-ac="madde" title="Seçili satırları madde yap">• Madde</button>` : ""}<button type="button" data-ac="link" title="Seçili kelimeye bağlantı ekle">🔗 Bağlantı</button>${ek}</div>`;
+let OC_DUZ = null, YB_ACIK = false;
+$("#ayar").addEventListener("toggle", e => { if (e.target.classList?.contains("yb")) YB_ACIK = e.target.open; }, true);
+function stilYaz(s, yol, v) { const [k, a] = yol.split("."); s.stil = { ...(s.stil || {}) }; s.stil[k] = { ...(s.stil[k] || {}), [a]: v }; kaydet(); }
+$("#ayar").addEventListener("change", e => {
+  const yol = e.target.dataset.st; if (!yol) return; const x = sira()[aktif]; if (!x || x.tur !== "icerik") return;
+  stilYaz(x.s, yol, e.target.type === "number" ? Math.max(+e.target.min, Math.min(+e.target.max, +e.target.value || 0)) : e.target.value);
+});
 function alanaYaz(el, bas, son, yeni) { el.focus(); el.setSelectionRange(bas, son); document.execCommand("insertText", false, yeni) || el.setRangeText(yeni, bas, son, "end"); el.dispatchEvent(new Event("input", { bubbles: true })); }
 function aracUygula(ac, el) {
   const a = el.selectionStart ?? el.value.length, b = el.selectionEnd ?? a, sec = el.value.slice(a, b);
   if (ac === "kalin") { alanaYaz(el, a, b, `**${sec || "kalın metin"}**`); return; }
+  if (ac === "italik") { alanaYaz(el, a, b, `*${sec || "italik metin"}*`); return; }
   if (ac === "madde") { const s0 = el.value.lastIndexOf("\n", a - 1) + 1, s1 = (i => i < 0 ? el.value.length : i)(el.value.indexOf("\n", b)); alanaYaz(el, s0, s1, el.value.slice(s0, s1).split("\n").map(r => /^[-•]\s/.test(r) ? r : "- " + r).join("\n")); return; }
   if (ac === "link") baglantiAc(el, a, b, sec);
 }
@@ -1138,6 +1238,9 @@ $("#ayar").addEventListener("click", e => {
   if (g === "duzen") { s.duzen = b.dataset.v; delete s.yer; kaydet(); return; }
   if (g === "panel") { s.panel = b.dataset.v === "sag" ? "sag" : undefined; delete s.yer; kaydet(); return; }
   if (g === "mpx") { s.govdePx = +b.dataset.v; kaydet(); return; }
+  if (b.dataset.stt) { const st = stilAl(s, b.dataset.stt.split(".")[0]); stilYaz(s, b.dataset.stt, !st[b.dataset.stt.split(".")[1]]); return; }
+  if (b.dataset.o === "stilHepsi") { const st = JSON.parse(JSON.stringify(s.stil || {})); D.slaytlar.forEach(z => { z.stil = JSON.parse(JSON.stringify(st)); }); kaydet(); toast("Yazı biçimi tüm slaytlara uygulandı"); return; }
+  if (b.dataset.o === "stilSifirla") { delete s.stil; kaydet(); return; }
   if (b.dataset.o === "metinEkle") { s.govde = ""; kaydet(); setTimeout(() => $("#sG")?.focus(), 30); return; }
   if (b.dataset.oce != null) { e.preventDefault(); OC_DUZ = b.dataset.oce; ayarCiz(); const i = $("#ocDuzG"); if (i) { i.focus(); i.select(); } return; }
   if (b.dataset.ocsil != null) { e.preventDefault(); s.ocElle = (s.ocElle || []).filter(z => z.k !== b.dataset.ocsil); kaydet(); return; }
@@ -1261,7 +1364,7 @@ function temizKopya(d) {     // şablon: yeni kimliklerle; elle yapılan konum v
     s.id = A.uid(); const es = {};
     s.ogeler.forEach(o => { if (!foto(o)) { const y = A.uid(); es[o.id] = y; o.id = y; } });
     const cevir = k => es[k] || (k.startsWith("g-") && es[k.slice(2)] ? "g-" + es[k.slice(2)] : k);
-    if (s.yer) s.yer = Object.fromEntries(Object.entries(s.yer).map(([k, v]) => [cevir(k), v]));
+    if (s.yer) s.yer = Object.fromEntries(Object.entries(s.yer).map(([k, v]) => [cevir(k), v && v.ic ? { ...v, ic: Object.fromEntries(Object.entries(v.ic).map(([a, b]) => [es[a] || a, b])) } : v]));
     const kc = k => k.startsWith("y:") ? k.replace(/^y:(.*):(\d+)$/, (m, id, i) => `y:${cevir(id)}:${i}`) : k;
     if (s.ocHaric) s.ocHaric = s.ocHaric.map(kc); if (s.ocEk) s.ocEk = s.ocEk.map(kc);
     if (s.ocMetin) s.ocMetin = Object.fromEntries(Object.entries(s.ocMetin).map(([k, v]) => [kc(k), v]));
@@ -1480,11 +1583,11 @@ async function goruntuler(il, p1 = .85) {
 }
 
 // ---- tuval: slaytı 1920×1080 düzeninde çiz (PDF için)
-let LINK = null;      // PDF'e bağlantı alanı olarak eklenecek kelimeler (tuvalSlayt sırasında toplanır)
+let LINK = null, YAZI = { f: "", i: false };      // YAZI: tuvale yazılan metnin ailesi / italiği      // PDF'e bağlantı alanı olarak eklenecek kelimeler (tuvalSlayt sırasında toplanır)
 function satirlar(ctx, parca, maxW, px, agir) {
   const kelime = []; parca.forEach(p => p.t.split(/(\s+)/).forEach(w => { if (w) kelime.push({ t: w, b: p.b, u: p.u }); }));
   const L = []; let sat = [], gen = 0;
-  const olc = k => { ctx.font = `${k.b ? 700 : agir || 400} ${px}px ${SANS}`; return ctx.measureText(k.t).width; };
+  const olc = k => { ctx.font = `${YAZI.i ? "italic " : ""}${k.b ? 700 : agir || 400} ${px}px ${YAZI.f || SANS}`; return ctx.measureText(k.t).width; };
   kelime.forEach(k => {
     if (k.t === "\n") { L.push(sat); sat = []; gen = 0; return; }
     const w = olc(k);
@@ -1498,7 +1601,7 @@ function satirlar(ctx, parca, maxW, px, agir) {
 function yaziCiz(ctx, parca, x, y, maxW, px, lh, renk, renkB, agir, maxSatir = 99) {
   const L = satirlar(ctx, parca, maxW, px, agir).slice(0, maxSatir);
   L.forEach((s, i) => s.forEach(k => {
-    ctx.font = `${k.b ? 700 : agir || 400} ${px}px ${SANS}`; ctx.fillStyle = k.u ? (tema() === "dark" ? "#8fb0ff" : "#1d4ed8") : k.b ? renkB : renk; ctx.fillText(k.t, x + k.x, y + i * lh);
+    ctx.font = `${YAZI.i ? "italic " : ""}${k.b ? 700 : agir || 400} ${px}px ${YAZI.f || SANS}`; ctx.fillStyle = k.u ? (tema() === "dark" ? "#8fb0ff" : "#1d4ed8") : k.b ? renkB : renk; ctx.fillText(k.t, x + k.x, y + i * lh);
     if (k.u && !/^\s+$/.test(k.t)) { ctx.fillRect(x + k.x, y + i * lh + px * 1.08, k.w, Math.max(1.5, px / 14)); if (LINK) LINK.push({ x: x + k.x, y: y + i * lh, w: k.w, h: px * 1.25, u: k.u }); }
   }));
   return L.length * lh;
@@ -1544,7 +1647,7 @@ function tuvalSlayt(x, no, top, img, olcek) {
     alt(D.ad || "", `${no} / ${top}`); return cv;
   }
   const s = x.s, Y = yerlesim(s);
-  c.font = `800 50px ${SANS}`; c.fillStyle = P.ink; c.fillText(kisalt(c, s.baslik || "", W - 160), 80, 94);
+  { const st = stilAl(s, "bas"); c.font = `${st.i ? "italic " : ""}${st.b ? 800 : 500} ${st.px}px ${st.f || SANS}`; c.fillStyle = P.ink; c.fillText(kisalt(c, s.baslik || "", W - 160), 80, 94 + Math.max(0, st.px - 50) * .2); }
   c.font = `700 19px ${SANS}`; c.fillStyle = P.mut; c.letterSpacing = "2px"; c.fillText(kisalt(c, bolum(s).toLocaleUpperCase("tr"), W - 160), 80, 162); c.letterSpacing = "0px";
   // alanlar
   Y.hucre.forEach(h => {
@@ -1562,28 +1665,30 @@ function tuvalSlayt(x, no, top, img, olcek) {
     bloklar.forEach((b, i) => {
       if (yan && i === 1) { bx = p.x + 32 + bw2 + 34; by = p.y + 28; }
       c.font = `800 17px ${SANS}`; c.fillStyle = P.red; c.letterSpacing = "2px"; c.fillText(b === "oc" ? "ÖNE ÇIKANLAR" : "DEĞERLENDİRME", bx, by); c.letterSpacing = "0px"; by += 34;
+      const st = stilAl(s, "pnl"), px = st.px, o_ = px / 23; YAZI = { f: st.f, i: st.i };
       if (b === "oc") Y.oc.forEach(o => {
-        c.fillStyle = o.t === "iyi" ? P.up : o.t === "kotu" ? P.down : P.mut; c.beginPath(); c.arc(bx + 7, by + 14, 5, 0, 7); c.fill();
-        by += yaziCiz(c, parcala(o.m), bx + 24, by, bw2 - 24, 23, 32, P.ink2, P.ink, 400) + 12;
+        c.fillStyle = o.t === "iyi" ? P.up : o.t === "kotu" ? P.down : P.mut; c.beginPath(); c.arc(bx + 7, by + 14 * o_, 5, 0, 7); c.fill();
+        by += yaziCiz(c, parcala(o.m), bx + 24, by, bw2 - 24, px, Math.round(32 * o_), P.ink2, P.ink, st.b ? 700 : 400) + 12;
       });
-      else by += yaziCiz(c, parcala(zengin(s.not.trim())), bx, by, bw2, 24, 34, P.ink, P.ink, 400) + 12;
+      else by += yaziCiz(c, parcala(zengin(s.not.trim())), bx, by, bw2, px + 1, Math.round(34 * o_), P.ink, P.ink, st.b ? 700 : 400) + 12;
+      YAZI = { f: "", i: false };
       by += 18;
     });
     c.restore();
   }
   // metin kutusu
   if (Y.metin && (s.govde || "").trim()) {
-    const m = Y.metin, px = s.govdePx || 30, lh = Math.round(px * 1.42);
-    c.save(); c.beginPath(); c.rect(m.x - 4, m.y - 4, m.w + 8, m.h + 8); c.clip();
+    const m = Y.metin, px = s.govdePx || 30, lh = Math.round(px * 1.42), mst = stilAl(s, "mtk");
+    c.save(); c.beginPath(); c.rect(m.x - 4, m.y - 4, m.w + 8, m.h + 8); c.clip(); YAZI = { f: mst.f, i: mst.i };
     let my = m.y;
     String(s.govde).split(/\n/).forEach(r => {
       const t = r.trim(); if (!t) { my += lh * .45; return; }
       const mad = /^[-•*]\s+(.*)$/.exec(t), bas = /^#\s+(.*)$/.exec(t);
       if (mad) { c.fillStyle = P.red; c.beginPath(); c.arc(m.x + px * .33, my + px * .55 + px * .18, px * .18, 0, 7); c.fill(); my += yaziCiz(c, parcala(zengin(mad[1])), m.x + px * 1.05, my, m.w - px * 1.05, px, lh, P.ink, P.ink, 400) + px * .32; }
       else if (bas) my += yaziCiz(c, parcala(zengin(bas[1])).map(q => ({ ...q, b: true })), m.x, my, m.w, Math.round(px * 1.22), Math.round(px * 1.22 * 1.2), P.ink, P.ink, 800) + px * .45;
-      else my += yaziCiz(c, parcala(zengin(t)), m.x, my, m.w, px, lh, P.ink, P.ink, 400) + px * .45;
+      else my += yaziCiz(c, parcala(zengin(t)), m.x, my, m.w, px, lh, P.ink, P.ink, mst.b ? 700 : 400) + px * .45;
     });
-    c.restore();
+    c.restore(); YAZI = { f: "", i: false };
   }
   alt(kaynakMetni(s), `${no} / ${top}`);
   return cv;
@@ -1651,7 +1756,7 @@ async function pptBlob(img) {
         alt(sl, D.ad || "", `${i + 1} / ${L.length}`); return;
       }
       const s = x.s, Y = yerlesim(s);
-      sl.addText(s.baslik || "", { x: I(80), y: I(88), w: I(1760), h: I(70), fontFace: F, fontSize: pt(50), bold: true, color: hx(P.ink), margin: 0, fit: "shrink" });
+      { const st = stilAl(s, "bas"); sl.addText(s.baslik || "", { x: I(80), y: I(88), w: I(1760), h: I(Math.max(70, st.px * 1.4)), fontFace: st.f ? pptAile(st.f) : F, fontSize: pt(st.px), bold: st.b, italic: st.i, color: hx(P.ink), margin: 0, fit: "shrink" }); }
       sl.addText(bolum(s).toLocaleUpperCase("tr"), { x: I(80), y: I(158), w: I(1760), h: I(30), fontFace: F, fontSize: pt(19), bold: true, color: hx(P.mut), charSpacing: 2, margin: 0 });
       Y.hucre.forEach(h => {
         const g = img[h.id];
@@ -1669,17 +1774,17 @@ async function pptBlob(img) {
           const bx = pn.x + 32 + (yan && j ? bw2 + 34 : 0), by = pn.y + 28 + (!yan && j ? yukseklik : 0);
           sl.addText(b === "oc" ? "ÖNE ÇIKANLAR" : "DEĞERLENDİRME", { x: I(bx), y: I(by), w: I(bw2), h: I(30), fontFace: F, bold: true, color: hx(P.red), fontSize: pt(17), charSpacing: 2, margin: 0 });
           const runs = [];
-          const hl = r => r.u ? { hyperlink: { url: mutlak(r.u) } } : {};
-          if (b === "oc") Y.oc.forEach(o => { const pr = parcala(o.m); pr.forEach((r, q) => runs.push({ text: r.t, options: { bold: r.b, color: hx(r.b ? P.ink : P.ink2), fontSize: pt(23), ...hl(r), ...(q === 0 ? { bullet: { indent: 14 } } : {}), ...(q === pr.length - 1 ? { breakLine: true, paraSpaceAfter: 6 } : {}) } })); });
-          else notSatir(s.not).forEach(t => { const pr = parcala(zengin(t.replace(/^[-•]\s*/, ""))); pr.forEach((r, q) => runs.push({ text: r.t, options: { bold: r.b, color: hx(P.ink), fontSize: pt(24), ...hl(r), ...(q === 0 && /^[-•]/.test(t) ? { bullet: { indent: 14 } } : {}), ...(q === pr.length - 1 ? { breakLine: true, paraSpaceAfter: 4 } : {}) } })); });
+          const pst = stilAl(s, "pnl"), hl = r => ({ ...(r.u ? { hyperlink: { url: mutlak(r.u) } } : {}), ...(pst.f ? { fontFace: pptAile(pst.f) } : {}), ...(pst.i ? { italic: true } : {}) });
+          if (b === "oc") Y.oc.forEach(o => { const pr = parcala(o.m); pr.forEach((r, q) => runs.push({ text: r.t, options: { bold: r.b || pst.b, color: hx(r.b ? P.ink : P.ink2), fontSize: pt(pst.px), ...hl(r), ...(q === 0 ? { bullet: { indent: 14 } } : {}), ...(q === pr.length - 1 ? { breakLine: true, paraSpaceAfter: 6 } : {}) } })); });
+          else notSatir(s.not).forEach(t => { const pr = parcala(zengin(t.replace(/^[-•]\s*/, ""))); pr.forEach((r, q) => runs.push({ text: r.t, options: { bold: r.b || pst.b, color: hx(P.ink), fontSize: pt(pst.px + 1), ...hl(r), ...(q === 0 && /^[-•]/.test(t) ? { bullet: { indent: 14 } } : {}), ...(q === pr.length - 1 ? { breakLine: true, paraSpaceAfter: 4 } : {}) } })); });
           sl.addText(runs, { x: I(bx), y: I(by + 40), w: I(bw2), h: I(yukseklik - 40), fontFace: F, margin: 0, valign: "top", fit: "shrink" });
         });
       }
       if (Y.metin && (s.govde || "").trim()) {      // metin kutusu
-        const m = Y.metin, px = s.govdePx || 30, runs = [];
+        const m = Y.metin, px = s.govdePx || 30, runs = [], mst = stilAl(s, "mtk");
         String(s.govde).split(/\n/).map(r => r.trim()).filter(Boolean).forEach(t => {
           const mad = /^[-•*]\s+(.*)$/.exec(t), bas = /^#\s+(.*)$/.exec(t), pr = parcala(zengin(mad ? mad[1] : bas ? bas[1] : t));
-          pr.forEach((r, q) => runs.push({ text: r.t, options: { bold: r.b || !!bas, color: hx(P.ink), fontSize: pt(bas ? px * 1.22 : px), ...(r.u ? { hyperlink: { url: mutlak(r.u) } } : {}), ...(q === 0 && mad ? { bullet: { indent: 18 } } : {}), ...(q === pr.length - 1 ? { breakLine: true, paraSpaceAfter: 6 } : {}) } }));
+          pr.forEach((r, q) => runs.push({ text: r.t, options: { bold: r.b || !!bas || mst.b, italic: mst.i, ...(mst.f ? { fontFace: pptAile(mst.f) } : {}), color: hx(P.ink), fontSize: pt(bas ? px * 1.22 : px), ...(r.u ? { hyperlink: { url: mutlak(r.u) } } : {}), ...(q === 0 && mad ? { bullet: { indent: 18 } } : {}), ...(q === pr.length - 1 ? { breakLine: true, paraSpaceAfter: 6 } : {}) } }));
         });
         sl.addText(runs, { x: I(m.x), y: I(m.y), w: I(m.w), h: I(m.h), fontFace: F, margin: 0, valign: "top", fit: "shrink" });
       }
