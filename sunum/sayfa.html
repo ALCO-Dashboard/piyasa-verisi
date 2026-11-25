@@ -132,12 +132,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .slayt{--s-bg:#ffffff;--s-ink:#1c1416;--s-ink2:#4a3d3f;--s-mut:#7a6a6c;--s-line:#eadfe0;--s-red:#c8102e;--s-panel:#f8f6f6;--s-up:#0b7a0b;--s-down:#c62828;
   background:var(--s-bg);color:var(--s-ink);font-family:var(--sans);overflow:hidden}
 .slayt[data-tema="dark"]{--s-bg:#141011;--s-ink:#f3e9ea;--s-ink2:#d8c9cb;--s-mut:#b49ea1;--s-line:#3a2a2d;--s-red:#f0525f;--s-panel:#1f1719;--s-up:#4cc27a;--s-down:#ef6b6b}
-.slayt .s-ust{position:absolute;left:80px;right:80px;top:34px;height:40px;display:flex;justify-content:space-between;align-items:center;font-size:21px;color:var(--s-mut);font-weight:600;letter-spacing:.02em}
+.slayt .s-ust{position:absolute;left:80px;right:80px;top:22px;height:40px;display:flex;justify-content:space-between;align-items:center;font-size:21px;color:var(--s-mut);font-weight:600;letter-spacing:.02em}
 .slayt .s-ust b{color:var(--s-red);font-weight:800;letter-spacing:.04em}
 .slayt .s-cizgi{position:absolute;left:0;top:0;width:12px;height:1080px;background:var(--s-red)}
-.slayt .s-bas{position:absolute;left:80px;right:80px;top:92px;font-size:50px;font-weight:800;line-height:1.1;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.slayt .s-yol{position:absolute;left:80px;right:80px;top:160px;font-size:19px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--s-mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.slayt .s-alt{position:absolute;left:80px;right:80px;top:1012px;border-top:2px solid var(--s-line);padding-top:16px;display:flex;justify-content:space-between;gap:30px;font-size:18px;color:var(--s-mut)}
+.slayt .s-bas{position:absolute;left:80px;right:80px;top:66px;font-size:50px;font-weight:800;line-height:1.1;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slayt .s-yol{position:absolute;left:80px;right:80px;top:126px;font-size:19px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--s-mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slayt .s-alt{position:absolute;left:80px;right:80px;top:1040px;border-top:2px solid var(--s-line);padding-top:9px;display:flex;justify-content:space-between;gap:30px;font-size:14px;line-height:1.2;color:var(--s-mut)}
 .slayt .s-alt span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .slayt .s-alt span:last-child{font-family:var(--mono);white-space:nowrap}
 .slayt .hucre{position:absolute;overflow:visible}
@@ -257,7 +257,7 @@ body.hucreSuruk #liste{outline:2px solid rgba(29,78,216,.25);outline-offset:2px;
 .slayt .k-tar{position:absolute;left:150px;bottom:120px;font-family:var(--mono);font-size:28px;color:var(--s-mut)}
 .slayt .k-serit{position:absolute;right:0;top:0;width:520px;height:1080px;background:var(--s-red);opacity:.08}
 .slayt .k-serit2{position:absolute;right:150px;bottom:110px;width:220px;height:10px;background:var(--s-red)}
-.slayt .g-liste{position:absolute;left:80px;right:80px;top:230px;bottom:100px;columns:2;column-gap:80px;column-fill:auto}
+.slayt .g-liste{position:absolute;left:80px;right:80px;top:180px;bottom:64px;columns:2;column-gap:80px;column-fill:auto}
 .slayt .g-liste.tek{columns:1}
 .slayt .g-bol{break-inside:avoid;margin-bottom:26px}
 .slayt .g-bol h5{margin:0 0 8px;font-size:18px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--s-red)}
@@ -409,7 +409,17 @@ const A = window.alcoSunum;
 if (!A) { document.body.insertAdjacentHTML("beforeend", "<p style='padding:30px'>Sunum bileşeni yüklenemedi.</p>"); return; }
 
 // ---------------------------------------------------------------- veri
-let D = A.oku();
+// Slayt düzeni sıkılaştırıldı (başlık yukarı, içerik alanı 214–988 → 164–1028): elle konumlanmış eski kutular yeni alana taşınır.
+function goc(d) {
+  if (!d || !Array.isArray(d.slaytlar) || (d.yv || 0) >= 2) return d;
+  const r = 864 / 774, yy = y => Math.round(164 + (y - 214) * r);
+  d.slaytlar.forEach(s => { if (s && s.yer) for (const [k, v] of Object.entries(s.yer)) {
+    if (!v || typeof v.y !== "number") continue;
+    const alt = v.y + (v.h || 0); v.y = Math.max(140, yy(v.y)); if (k[0] === "_" && v.h) v.h = Math.max(60, yy(alt) - v.y);
+  } });
+  d.yv = 2; return d;
+}
+let D = goc(A.oku());
 let aktif = 0;                  // sıralı slayt listesindeki konum
 const olcu = {};                // öğe id → {w,h} (iframe'den gelen gerçek boyut)
 let DURUM = {}, OC = [], KATALOG = [], ORTAK = [];
@@ -606,7 +616,7 @@ function htmlMd(m) {
 }
 
 // ---------------------------------------------------------------- yerleşim (canlı slayt, PDF, PowerPoint ve HTML aynı ölçüleri kullanır)
-const W = 1920, H = 1080, C = { x: 80, y: 214, w: 1760, h: 774 }, ARA = 26, KMAKS = 2.2;
+const W = 1920, H = 1080, C = { x: 80, y: 164, w: 1760, h: 864 }, ARA = 26, KMAKS = 2.2;
 // Hücre: slayttaki tek bir görünüm. Aynı sayfa ve sekmeden gelen alanlar tek hücrede, tek sayfa kopyasında gösterilir;
 // böylece sitedeki yerleşim ve oranlar korunur, kutucuğa tıklayınca grafik değişir.
 const sekImza = st => (st?.b || []).filter(x => x.v && x.sek).map(x => x.g + ":" + x.k).sort().join("|") + "#" + (st?.h || "")
@@ -1006,7 +1016,7 @@ sahne.addEventListener("pointerdown", e => {
   if (!boy && !pnl) document.body.classList.add("hucreSuruk");
   const kk = parseFloat(getComputedStyle(sahne).getPropertyValue("--k")) || .5, x0 = e.clientX, y0 = e.clientY;
   const yuv = v => Math.round(v / 10) * 10, sin = (v, a, b) => Math.max(a, Math.min(b, v));
-  const X0 = 20, Y0 = 190, X1 = W - 20, Y1 = 1000;
+  const X0 = 20, Y0 = 140, X1 = W - 20, Y1 = 1032;
   t.classList.add("tasi"); sahne.classList.add("suruk");
   const tasi = ev => {
     const dx = (ev.clientX - x0) / kk, dy = (ev.clientY - y0) / kk; let b;
@@ -1287,7 +1297,7 @@ function ciz() {
 const ogeSay = d => d.slaytlar.reduce((a, s) => a + s.ogeler.length, 0);
 A.dinle(d => {
   if (ARSIV || d.degisti === D.degisti) return;          // arşiv açıkken taslak arka planda güncellenir
-  const n0 = ogeSay(D); D = d; gecmisKaydet();
+  const n0 = ogeSay(D); D = goc(d); gecmisKaydet();
   if (ogeSay(D) > n0) { const i = sira().findIndex(x => x.id === D.sonSlayt); aktif = i >= 0 ? i : sira().length - 1; }
   ciz();
 });
@@ -1351,7 +1361,7 @@ $("#kAra").addEventListener("input", katalogCiz);
 $("#kListe").addEventListener("click", e => { const b = e.target.closest("button[data-k]"); if (!b) return;
   const o = JSON.parse(JSON.stringify(KATALOG[+b.dataset.k])); o.id = A.uid(); o.t = Date.now(); delete o.tur;
   const ayni = e.ctrlKey || e.metaKey;
-  D = A.ekle(o, ayni); aktif = sira().findIndex(x => x.id === D.sonSlayt); ciz(); katalogCiz();
+  D = goc(A.ekle(o, ayni)); aktif = sira().findIndex(x => x.id === D.sonSlayt); ciz(); katalogCiz();
   const n = D.slaytlar.findIndex(x => x.id === D.sonSlayt) + 1; toast(ayni ? `Aynı slayta eklendi (Slayt ${n}): ${o.ad}` : `Eklendi: ${o.ad} · Slayt ${n}`); });
 
 // ---------------------------------------------------------------- şablonlar
@@ -1359,7 +1369,7 @@ const KS = "alco-sunum-sablonlar";
 const kisisel = () => { try { return JSON.parse(localStorage.getItem(KS)) || []; } catch (e) { return []; } };
 const kisiselYaz = a => { try { localStorage.setItem(KS, JSON.stringify(a)); } catch (e) { toast("Tarayıcı depolaması dolu"); } };
 function temizKopya(d) {     // şablon: yeni kimliklerle; elle yapılan konum ve boyutlar (yer) yeni kimliklere taşınarak korunur
-  const c = JSON.parse(JSON.stringify(d)); delete c.degisti; delete c.sonSlayt;
+  const c = goc(JSON.parse(JSON.stringify(d))); delete c.degisti; delete c.sonSlayt;
   c.slaytlar.forEach(s => {
     s.id = A.uid(); const es = {};
     s.ogeler.forEach(o => { if (!foto(o)) { const y = A.uid(); es[o.id] = y; o.id = y; } });
@@ -1627,19 +1637,19 @@ function tuvalSlayt(x, no, top, img, olcek) {
   }
   // üst şerit
   c.fillStyle = P.red; c.fillRect(0, 0, 12, H);
-  c.font = `800 21px ${SANS}`; c.fillStyle = P.red; c.letterSpacing = "1px"; c.fillText("DOST KATILIM", 80, 44); const bw = c.measureText("DOST KATILIM").width; c.letterSpacing = "0px";
-  c.font = `600 21px ${SANS}`; c.fillStyle = P.mut; c.fillText(" · Aktif Pasif Yönetimi", 80 + bw, 44);
-  const sagT = `${D.ad || "Piyasa Verileri (ALCO)"} · ${BUGUN}`; c.textAlign = "right"; c.fillText(kisalt(c, sagT, 900), W - 80, 44); c.textAlign = "left";
-  const alt = (sol, sag) => { c.fillStyle = P.line; c.fillRect(80, 1012, W - 160, 2); c.font = `400 18px ${SANS}`; c.fillStyle = P.mut; c.fillText(kisalt(c, sol, W - 400), 80, 1032); c.font = `400 18px ${MONO}`; c.textAlign = "right"; c.fillText(sag, W - 80, 1032); c.textAlign = "left"; };
+  c.font = `800 21px ${SANS}`; c.fillStyle = P.red; c.letterSpacing = "1px"; c.fillText("DOST KATILIM", 80, 32); const bw = c.measureText("DOST KATILIM").width; c.letterSpacing = "0px";
+  c.font = `600 21px ${SANS}`; c.fillStyle = P.mut; c.fillText(" · Aktif Pasif Yönetimi", 80 + bw, 32);
+  const sagT = `${D.ad || "Piyasa Verileri (ALCO)"} · ${BUGUN}`; c.textAlign = "right"; c.fillText(kisalt(c, sagT, 900), W - 80, 32); c.textAlign = "left";
+  const alt = (sol, sag) => { c.fillStyle = P.line; c.fillRect(80, 1040, W - 160, 2); c.font = `400 14px ${SANS}`; c.fillStyle = P.mut; c.fillText(kisalt(c, sol, W - 400), 80, 1051); c.font = `400 14px ${MONO}`; c.textAlign = "right"; c.fillText(sag, W - 80, 1051); c.textAlign = "left"; };
   if (x.tur === "gundem") {
-    c.font = `800 50px ${SANS}`; c.fillStyle = P.ink; c.fillText("Gündem", 80, 94);
+    c.font = `800 50px ${SANS}`; c.fillStyle = P.ink; c.fillText("Gündem", 80, 68);
     const L = sira(), bol = [];
     L.forEach((y, i) => { if (y.tur !== "icerik") return; const b = bolum(y.s); let g = bol[bol.length - 1]; if (!g || g.ad !== b) bol.push(g = { ad: b, s: [] }); g.s.push([i + 1, y.s.baslik]); });
     const satir = bol.reduce((a, g) => a + g.s.length + 1.4, 0), iki = satir > 13, sw = iki ? (W - 160 - 80) / 2 : W - 160;
-    let sx = 80, sy = 230; const altS = H - 100;
+    let sx = 80, sy = 180; const altS = H - 64;
     bol.forEach(g => {
       const gh = 34 + g.s.length * 40 + 26;
-      if (iki && sy + gh > altS && sx === 80) { sx = 80 + sw + 80; sy = 230; }
+      if (iki && sy + gh > altS && sx === 80) { sx = 80 + sw + 80; sy = 180; }
       c.font = `800 18px ${SANS}`; c.fillStyle = P.red; c.letterSpacing = "2px"; c.fillText(kisalt(c, g.ad.toLocaleUpperCase("tr"), sw), sx, sy); c.letterSpacing = "0px"; sy += 34;
       g.s.forEach(([n, t]) => { c.font = `400 27px ${MONO}`; c.fillStyle = P.mut; c.textAlign = "right"; c.fillText(String(n), sx + 44, sy); c.textAlign = "left"; c.font = `400 27px ${SANS}`; c.fillStyle = P.ink; c.fillText(kisalt(c, t || "", sw - 64), sx + 62, sy); sy += 40; });
       sy += 26;
@@ -1647,8 +1657,8 @@ function tuvalSlayt(x, no, top, img, olcek) {
     alt(D.ad || "", `${no} / ${top}`); return cv;
   }
   const s = x.s, Y = yerlesim(s);
-  { const st = stilAl(s, "bas"); c.font = `${st.i ? "italic " : ""}${st.b ? 800 : 500} ${st.px}px ${st.f || SANS}`; c.fillStyle = P.ink; c.fillText(kisalt(c, s.baslik || "", W - 160), 80, 94 + Math.max(0, st.px - 50) * .2); }
-  c.font = `700 19px ${SANS}`; c.fillStyle = P.mut; c.letterSpacing = "2px"; c.fillText(kisalt(c, bolum(s).toLocaleUpperCase("tr"), W - 160), 80, 162); c.letterSpacing = "0px";
+  { const st = stilAl(s, "bas"); c.font = `${st.i ? "italic " : ""}${st.b ? 800 : 500} ${st.px}px ${st.f || SANS}`; c.fillStyle = P.ink; c.fillText(kisalt(c, s.baslik || "", W - 160), 80, 68 + Math.max(0, st.px - 50) * .2); }
+  c.font = `700 19px ${SANS}`; c.fillStyle = P.mut; c.letterSpacing = "2px"; c.fillText(kisalt(c, bolum(s).toLocaleUpperCase("tr"), W - 160), 80, 128); c.letterSpacing = "0px";
   // alanlar
   Y.hucre.forEach(h => {
     const g = img[h.id];
@@ -1721,13 +1731,13 @@ async function pptBlob(img) {
     const serit = sl => sl.addShape(p.ShapeType.rect, { x: 0, y: 0, w: I(12), h: 7.5, fill: { color: hx(P.red) }, line: { color: hx(P.red), width: 0 } });
     const ust = sl => {
       serit(sl);
-      sl.addText([{ text: "DOST KATILIM", options: { bold: true, color: hx(P.red), charSpacing: 1 } }, { text: " · Aktif Pasif Yönetimi", options: { color: hx(P.mut) } }], { x: I(80), y: I(30), w: I(900), h: I(44), fontFace: F, fontSize: pt(21), margin: 0, valign: "middle" });
-      sl.addText(`${D.ad || "Piyasa Verileri (ALCO)"} · ${BUGUN}`, { x: I(960), y: I(30), w: I(880), h: I(44), fontFace: F, fontSize: pt(21), color: hx(P.mut), align: "right", margin: 0, valign: "middle" });
+      sl.addText([{ text: "DOST KATILIM", options: { bold: true, color: hx(P.red), charSpacing: 1 } }, { text: " · Aktif Pasif Yönetimi", options: { color: hx(P.mut) } }], { x: I(80), y: I(18), w: I(900), h: I(44), fontFace: F, fontSize: pt(21), margin: 0, valign: "middle" });
+      sl.addText(`${D.ad || "Piyasa Verileri (ALCO)"} · ${BUGUN}`, { x: I(960), y: I(18), w: I(880), h: I(44), fontFace: F, fontSize: pt(21), color: hx(P.mut), align: "right", margin: 0, valign: "middle" });
     };
     const alt = (sl, sol, sag) => {
-      sl.addShape(p.ShapeType.line, { x: I(80), y: I(1012), w: I(1760), h: 0, line: { color: hx(P.line), width: 1 } });
-      sl.addText(sol, { x: I(80), y: I(1026), w: I(1500), h: I(34), fontFace: F, fontSize: pt(18), color: hx(P.mut), margin: 0, valign: "middle" });
-      sl.addText(sag, { x: I(1600), y: I(1026), w: I(240), h: I(34), fontFace: "Consolas", fontSize: pt(18), color: hx(P.mut), align: "right", margin: 0, valign: "middle" });
+      sl.addShape(p.ShapeType.line, { x: I(80), y: I(1040), w: I(1760), h: 0, line: { color: hx(P.line), width: 1 } });
+      sl.addText(sol, { x: I(80), y: I(1046), w: I(1500), h: I(24), fontFace: F, fontSize: pt(14), color: hx(P.mut), margin: 0, valign: "middle" });
+      sl.addText(sag, { x: I(1600), y: I(1046), w: I(240), h: I(24), fontFace: "Consolas", fontSize: pt(14), color: hx(P.mut), align: "right", margin: 0, valign: "middle" });
     };
     L.forEach((x, i) => {
       const sl = p.addSlide(); sl.background = { color: hx(P.bg) };
@@ -1745,19 +1755,19 @@ async function pptBlob(img) {
       }
       ust(sl);
       if (x.tur === "gundem") {
-        sl.addText("Gündem", { x: I(80), y: I(88), w: I(1760), h: I(70), fontFace: F, fontSize: pt(50), bold: true, color: hx(P.ink), margin: 0 });
+        sl.addText("Gündem", { x: I(80), y: I(62), w: I(1760), h: I(70), fontFace: F, fontSize: pt(50), bold: true, color: hx(P.ink), margin: 0 });
         const runs = [];
         let bolAd = "";
         L.forEach((y, j) => { if (y.tur !== "icerik") return; const b = bolum(y.s);
           if (b !== bolAd) { bolAd = b; runs.push({ text: b.toLocaleUpperCase("tr"), options: { bold: true, color: hx(P.red), fontSize: pt(18), breakLine: true, paraSpaceBefore: runs.length ? 10 : 0 } }); }
           runs.push({ text: String(j + 1).padStart(2, " ") + "   ", options: { fontFace: "Consolas", color: hx(P.mut), fontSize: pt(27) } }, { text: y.s.baslik || "", options: { color: hx(P.ink), fontSize: pt(27), breakLine: true } }); });
         const cok = runs.length > 30;
-        sl.addText(runs, { x: I(80), y: I(230), w: I(1760), h: I(750), fontFace: F, margin: 0, valign: "top", columns: cok ? 2 : 1, fit: "shrink" });
+        sl.addText(runs, { x: I(80), y: I(180), w: I(1760), h: I(830), fontFace: F, margin: 0, valign: "top", columns: cok ? 2 : 1, fit: "shrink" });
         alt(sl, D.ad || "", `${i + 1} / ${L.length}`); return;
       }
       const s = x.s, Y = yerlesim(s);
-      { const st = stilAl(s, "bas"); sl.addText(s.baslik || "", { x: I(80), y: I(88), w: I(1760), h: I(Math.max(70, st.px * 1.4)), fontFace: st.f ? pptAile(st.f) : F, fontSize: pt(st.px), bold: st.b, italic: st.i, color: hx(P.ink), margin: 0, fit: "shrink" }); }
-      sl.addText(bolum(s).toLocaleUpperCase("tr"), { x: I(80), y: I(158), w: I(1760), h: I(30), fontFace: F, fontSize: pt(19), bold: true, color: hx(P.mut), charSpacing: 2, margin: 0 });
+      { const st = stilAl(s, "bas"); sl.addText(s.baslik || "", { x: I(80), y: I(62), w: I(1760), h: I(Math.max(70, st.px * 1.4)), fontFace: st.f ? pptAile(st.f) : F, fontSize: pt(st.px), bold: st.b, italic: st.i, color: hx(P.ink), margin: 0, fit: "shrink" }); }
+      sl.addText(bolum(s).toLocaleUpperCase("tr"), { x: I(80), y: I(124), w: I(1760), h: I(30), fontFace: F, fontSize: pt(19), bold: true, color: hx(P.mut), charSpacing: 2, margin: 0 });
       Y.hucre.forEach(h => {
         const g = img[h.id];
         if (!g) { sl.addText("Alan alınamadı: " + hucreAd(h), { x: I(h.x), y: I(h.y), w: I(h.w), h: I(80), fontFace: F, fontSize: 11, color: hx(P.mut) }); return; }
@@ -1982,13 +1992,13 @@ function arsivAc(v, dosya) {
   if (ARSIV?.degisti && !confirm("Açık kayıtlı sunumdaki kaydedilmemiş değişiklikler kaybolacak. Devam edilsin mi?")) return;
   ARSIV = { kayit: v.kayit, tarih: v.tarih || "", dosya, degisti: false, anlik: v.anlik || null, canli: !!(v.anlik && v.anlik.d && typeof DecompressionStream === "function") };
   for (const k in VERI_ON) delete VERI_ON[k]; for (const k in olcu) delete olcu[k];
-  D = { ...A.yeniSunum(), ...v.sunum }; OC = v.oc || []; DURUM = v.durum || {}; BUGUN = v.tarih || BUGUN0; GOR = v.goruntu || {}; HABER = v.haber || []; YORUM = v.yorum || {};
+  D = goc({ ...A.yeniSunum(), ...v.sunum }); OC = v.oc || []; DURUM = v.durum || {}; BUGUN = v.tarih || BUGUN0; GOR = v.goruntu || {}; HABER = v.haber || []; YORUM = v.yorum || {};
   aktif = 0; sahneSifirla(); bantCiz(); klasorCiz(); ciz(); gecmisBaslat();
   toast(ARSIV.canli ? `${dosya} açıldı · grafikler hareketli, veriler ${v.tarih} tarihindeki hâliyle` : `${dosya} açıldı · ${v.tarih} verileri (bu kayıt eski biçimde: grafikler görüntü olarak)`, 4200);
 }
 function arsivKapat(d) {
   for (const k in olcu) delete olcu[k];
-  ARSIV = null; GOR = {}; OC = CANLI.OC; DURUM = CANLI.DURUM; HABER = CANLI.HABER; YORUM = YCANLI; BUGUN = BUGUN0; D = d || A.oku();
+  ARSIV = null; GOR = {}; OC = CANLI.OC; DURUM = CANLI.DURUM; HABER = CANLI.HABER; YORUM = YCANLI; BUGUN = BUGUN0; D = goc(d || A.oku());
   aktif = 0; sahneSifirla(); bantCiz(); klasorCiz(); ciz(); gecmisBaslat();
 }
 addEventListener("beforeunload", e => { if (ARSIV?.degisti) { e.preventDefault(); e.returnValue = ""; } });
