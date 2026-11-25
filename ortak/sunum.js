@@ -642,6 +642,20 @@ html.ss-izole #alcoTop,html.ss-izole .ss-bar,html.ss-izole #alcoPrintHead{displa
     P.forEach(([, e]) => { if (e.hasAttribute("data-ss-ic")) H = Math.max(H, e.getBoundingClientRect().bottom - hr.top); });
     hedef.style.setProperty("height", Math.ceil(H + 4) + "px", "important");
   }
+  // Büyütülmüş (zoom) kutucuk/grafikte sayfaların ipucu kutusu fare konumunu büyütülmüş, kendi konumunu büyütülmemiş ölçüyle
+  // hesaplıyor ve ipucu sağa kayıp alanın dışında kalıyordu. Sayfa ipucunu yerleştirdikten sonra büyütmeye göre düzeltilir.
+  if (IZOLE) document.addEventListener("mousemove", ev => {
+    if (!hedef || !hedef.classList.contains("ss-ic")) return;
+    const kap = ev.target.closest && ev.target.closest("[data-ss-ic]"); if (!kap) return;
+    const z = parseFloat(kap.style.zoom) || 1; if (Math.abs(z - 1) < .01) return;
+    $$(".tip, .tt", kap).forEach(tip => {
+      if (getComputedStyle(tip).display === "none" || !tip.offsetParent) return;
+      const r = tip.offsetParent.getBoundingClientRect(), rw = r.width / z, tw = tip.offsetWidth, th = tip.offsetHeight;
+      const x = (ev.clientX - r.left) / z, y = (ev.clientY - r.top) / z;
+      let L = x + 14; if (L + tw > rw) L = x - tw - 14; tip.style.left = Math.max(0, Math.min(rw - tw, L)) + "px";
+      if ((parseFloat(tip.style.top) || 0) > 10) tip.style.top = Math.max(0, y - th - 10) + "px";
+    });
+  }, { passive: true });
   if (IZOLE) addEventListener("message", e => {
     const m = e.data; if (!m || e.origin !== location.origin || !m.ssIc) return;
     const yeni = m.ssIc.ic || {}; if (JSON.stringify(yeni) === JSON.stringify(icAyar)) return;
