@@ -584,6 +584,7 @@ html.ss-mod .kc .t span:last-child{opacity:0!important}
 html.ss-izole,html.ss-izole body{background:transparent!important;margin:0!important;padding:0!important;overflow:hidden!important;min-height:0!important;height:auto!important}
 html.ss-izole [data-ss-gizle]{display:none!important}
 html.ss-izole [data-ss-yol]{display:block!important;padding:0!important;margin:0!important;border:0!important;max-width:none!important;width:auto!important;min-width:0!important;min-height:0!important;height:auto!important;max-height:none!important;box-shadow:none!important;background:transparent!important;position:static!important;transform:none!important;overflow:visible!important;columns:auto!important}
+html.ss-izole [data-ss-vkut] table{width:100%!important;margin-left:0!important;margin-right:0!important}html.ss-izole [data-ss-vkut] .tw,html.ss-izole [data-ss-vkut] .tblwrap,html.ss-izole [data-ss-vkut] .tdw{margin-left:0!important;width:100%!important;max-width:none!important}html.ss-izole [data-ss-vkut] th:first-child,html.ss-izole [data-ss-vkut] td:first-child{text-align:left!important}
 html.ss-izole [data-ss-hedef]{margin:0!important;width:100%!important;max-width:none!important;position:relative!important;inset:auto!important;transform:none!important;box-sizing:border-box!important;max-height:none!important;cursor:default!important}
 html.ss-izole [data-ss-hedef].kc .t span:last-child{display:none!important}
 html.ss-izole .tw,html.ss-izole [data-ss-hedef] .tw{overflow:visible!important}
