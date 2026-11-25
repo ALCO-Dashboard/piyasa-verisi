@@ -618,6 +618,9 @@ function dogalGen(c) {
   return Math.max(...L.map(o => o.w));
 }
 const ifrGen = (c, bw, gen) => Math.max(Math.max(gen || 0, dogalGen(c)) + 40, c.ogeler[0].vw || 1400);
+// iframe yüksekliği her ölçümde değişirse sayfa "pencere boyu değişti" sanıp kendini baştan çiziyor, yeni ölçü yine yüksekliği
+// değiştiriyor ve alan sürekli titriyordu (rezerv kutucukları). Yükseklik yalnız gerektiğinde ve paylı büyütülür, nadiren küçültülür.
+function ifrYuk(f, bh) { const su = parseFloat(f.style.height) || 0, gerek = bh + 30; if (gerek > su || gerek < su - 700) f.style.height = Math.ceil(gerek + 160) + "px"; }
 const sabitMi = c => (!!ARSIV && !ARSIV.canli) || foto(c.ogeler[0]);       // görüntü olan alan yeniden çizilemez: yalnızca köşeden orantılı boyutlanır
 function genGonder(f, g) { if (!f || f._gen === g) return; f._gen = g; try { f.contentWindow.postMessage({ ssGen: g }, location.origin); } catch (e) {} }
 // tek ortak ölçekle satırlara dizme: sitede küçük olan kutucuk küçük, büyük grafik büyük kalır
@@ -720,7 +723,7 @@ function hucreleriGuncelle(el, s) {
     Object.assign(c.style, { left: h.x + "px", top: h.y + "px", width: h.w + "px", height: h.h + "px" });
     Object.assign(c.querySelector(".kes").style, { left: "0px", top: "0px", width: h.w + "px", height: h.h + "px" });
     const ifr = c.querySelector("iframe");
-    if (ifr) { ifr.style.transform = `scale(${h.k})`; ifr.style.width = ifrGen(h.c, h.bw, h.gen) + "px"; ifr.style.height = (h.bh + 30) + "px";
+    if (ifr) { ifr.style.transform = `scale(${h.k})`; ifr.style.width = ifrGen(h.c, h.bw, h.gen) + "px"; ifrYuk(ifr, h.bh);
       clearTimeout(ifr._gT); const g = Math.round(h.gen || 0); ifr._gT = setTimeout(() => genGonder(ifr, g), sahne.classList.contains("suruk") ? 140 : 0); }
     c._f = h;
   });
@@ -750,7 +753,7 @@ function yukle(el) {      // slayttaki iframe'leri oluştur (tembel yükleme)
     }
     const f = document.createElement("iframe"), b = hucreBoyut(h);
     f.setAttribute("title", hucreAd(h)); f.setAttribute("loading", "eager"); f.dataset.id = h.id;
-    f.style.width = ifrGen(h, b.w, yerBul(h.id)?.gen) + "px"; f.style.height = (b.h + 30) + "px";
+    f.style.width = ifrGen(h, b.w, yerBul(h.id)?.gen) + "px"; ifrYuk(f, b.h);
     if (c._f) f.style.transform = `scale(${c._f.k})`;
     f.src = iframeSrc(h);
     f._gen = Math.round(yerBul(h.id)?.gen || 0);
@@ -1252,9 +1255,17 @@ $("#kListe").addEventListener("click", e => { const b = e.target.closest("button
 const KS = "alco-sunum-sablonlar";
 const kisisel = () => { try { return JSON.parse(localStorage.getItem(KS)) || []; } catch (e) { return []; } };
 const kisiselYaz = a => { try { localStorage.setItem(KS, JSON.stringify(a)); } catch (e) { toast("Tarayıcı depolaması dolu"); } };
-function temizKopya(d) {     // şablon: güncel ölçüler ve seçim zamanı olmadan, yeni kimliklerle
-  const c = JSON.parse(JSON.stringify(d)); delete c.degisti;
-  c.slaytlar.forEach(s => { s.id = A.uid(); s.ogeler.forEach(o => { if (!foto(o)) o.id = A.uid(); }); delete s.yer; });
+function temizKopya(d) {     // şablon: yeni kimliklerle; elle yapılan konum ve boyutlar (yer) yeni kimliklere taşınarak korunur
+  const c = JSON.parse(JSON.stringify(d)); delete c.degisti; delete c.sonSlayt;
+  c.slaytlar.forEach(s => {
+    s.id = A.uid(); const es = {};
+    s.ogeler.forEach(o => { if (!foto(o)) { const y = A.uid(); es[o.id] = y; o.id = y; } });
+    const cevir = k => es[k] || (k.startsWith("g-") && es[k.slice(2)] ? "g-" + es[k.slice(2)] : k);
+    if (s.yer) s.yer = Object.fromEntries(Object.entries(s.yer).map(([k, v]) => [cevir(k), v]));
+    const kc = k => k.startsWith("y:") ? k.replace(/^y:(.*):(\d+)$/, (m, id, i) => `y:${cevir(id)}:${i}`) : k;
+    if (s.ocHaric) s.ocHaric = s.ocHaric.map(kc); if (s.ocEk) s.ocEk = s.ocEk.map(kc);
+    if (s.ocMetin) s.ocMetin = Object.fromEntries(Object.entries(s.ocMetin).map(([k, v]) => [kc(k), v]));
+  });
   return c;
 }
 // ortak şablonlar: GitHub deposundaki ortak/sunum_sablon.json; kaydedilen şablon site yeniden yayımlanana kadar (birkaç dakika) bu tarayıcıda "bekleyen" olarak gösterilir
