@@ -616,7 +616,7 @@ function htmlMd(m) {
 }
 
 // ---------------------------------------------------------------- yerleşim (canlı slayt, PDF, PowerPoint ve HTML aynı ölçüleri kullanır)
-const W = 1920, H = 1080, C = { x: 80, y: 164, w: 1760, h: 864 }, ARA = 26, KMAKS = 2.2;
+const W = 1920, H = 1080, Y1S = 1032, C = { x: 80, y: 164, w: 1760, h: 864 }, ARA = 26, KMAKS = 2.2;
 // Hücre: slayttaki tek bir görünüm. Aynı sayfa ve sekmeden gelen alanlar tek hücrede, tek sayfa kopyasında gösterilir;
 // böylece sitedeki yerleşim ve oranlar korunur, kutucuğa tıklayınca grafik değişir.
 const sekImza = st => (st?.b || []).filter(x => x.v && x.sek).map(x => x.g + ":" + x.k).sort().join("|") + "#" + (st?.h || "")
@@ -655,6 +655,13 @@ function dogalGen(c) {
 const ifrGen = (c, bw, gen) => Math.max(Math.max(gen || 0, dogalGen(c)) + 40, c.ogeler[0].vw || 1400);
 // iframe yüksekliği her ölçümde değişirse sayfa "pencere boyu değişti" sanıp kendini baştan çiziyor, yeni ölçü yine yüksekliği
 // değiştiriyor ve alan sürekli titriyordu (rezerv kutucukları). Yükseklik yalnız gerektiğinde ve paylı büyütülür, nadiren küçültülür.
+// boyutlandırma bitince: sayfa, içeriği çerçevenin en-boy oranına gelecek genişlikte (gen) yeniden çizilir.
+// Grafik yüksekliği genişlikle pek değişmediğinden genişlik, içeriğin oranı çerçeveninkine eşitlenecek kadar değiştirilir.
+function genAyarla(b, Yh) {
+  const B = hucreBoyut(Yh.c), g0 = b.gen || B.w; if (!(B.h > 0) || !(B.w > 0) || !(b.w > 0) || !(b.h > 0)) return;
+  const g = Math.round(Math.max(260, Math.min(4000, g0 * (b.w / b.h) / (B.w / B.h))));
+  if (Math.abs(g - g0) / g0 > .03) b.gen = g;
+}
 function ifrYuk(f, bh) { const su = parseFloat(f.style.height) || 0, gerek = bh + 30; if (gerek > su || gerek < su - 700) f.style.height = Math.ceil(gerek + 160) + "px"; }
 const sabitMi = c => (!!ARSIV && !ARSIV.canli) || foto(c.ogeler[0]);       // görüntü olan alan yeniden çizilemez: yalnızca köşeden orantılı boyutlanır
 // ---- iç düzen: tek görünümdeki kutucuk ve grafikler alanın içinde ayrı taşınır / boyutlanır (yer[alan].ic = {öğe: {x, y, w, z}})
@@ -674,6 +681,7 @@ function icCiz() {
   const x = sira()[aktif], c = x && DOM[x.id]?.querySelector(`.hucre[data-id="${CSS.escape(IC_DUZ)}"]`), h = c?._f; if (!c || !h) return;
   const R = olcu[IC_DUZ]?.ic || [], ad = id => hucreAd({ ogeler: h.ogeler.filter(o => o.id === id) }) || "";
   let ov = c.querySelector(".icler"); if (!ov) { ov = document.createElement("div"); ov.className = "icler"; c.appendChild(ov); }
+  { const kt = h.kutu || h; Object.assign(ov.style, { inset: "auto", left: h.x - kt.x + "px", top: h.y - kt.y + "px", width: h.w + "px", height: h.h + "px" }); }
   if (ov._suruk) return;
   ov.innerHTML = `<div class="icbar"><button data-icb="bitti">✓ Bitti</button><button data-icb="sifirla" title="Kutucuk ve grafiği sitedeki yerleşimine döndür">↺ Sitedeki düzen</button></div>` +
     R.map(r => `<div class="icK" data-ic="${esc(r.id)}" style="left:${r.x * h.k}px;top:${r.y * h.k}px;width:${r.w * h.k}px;height:${r.h * h.k}px"><span>${esc(ad(r.id))}</span><i class="icS" title="Genişlik"></i><i class="icB" title="Büyüt / küçült"></i></div>`).join("");
@@ -774,8 +782,16 @@ function yerlesim(s) {
   const hucre = hc.map((c, i) => {
     const y = yer && yer[c.id], sb = sabitMi(c), o = { id: c.id, c, ogeler: c.ogeler, bw: B[i].w, bh: B[i].h, gen: 0 };
     // kenardan uzatılmış alan: genişlik (gen) sayfanın yeniden çizildiği sanal genişliktir; ölçek kutu genişliğinden, yükseklik içerikten gelir
-    if (y && y.gen) { const k = y.w / (sb ? B[i].w : Math.max(y.gen, B[i].w)); return { ...o, gen: sb ? 0 : y.gen, x: y.x, y: y.y, w: y.w, h: B[i].h * k, k }; }
-    return { ...o, ...sigdir(y || K[i], B[i].w, B[i].h) };
+    // elle çizilen kutu (x, y, w, h) esastır: sayfanın ölçüsü açılıştan açılışa biraz değişse de kutu yerinden oynamaz,
+    // içerik kutunun içine sığdırılır (taşmaz, slayt dışına çıkmaz)
+    if (y) {
+      const kx = Math.max(0, Math.min(y.x, W - 80)), ky = Math.max(0, Math.min(y.y, H - 80)), kw = Math.max(60, Math.min(y.w, W - kx)), kh0 = y.h > 0 ? y.h : 0;
+      const gw = y.gen && !sb ? Math.max(y.gen, B[i].w) : B[i].w, kh = Math.max(40, Math.min(kh0 || (Y1S - ky), H - ky));
+      const k = Math.min(kw / gw, kh / B[i].h), w = B[i].w * k, h = B[i].h * k;
+      const kutu = { x: kx, y: ky, w: kw, h: kh0 ? kh : h };
+      return { ...o, gen: y.gen && !sb ? y.gen : 0, x: kx + (kw - w) / 2, y: ky + (kutu.h - h) / 2, w, h, k, kutu };
+    }
+    return { ...o, ...sigdir(K[i], B[i].w, B[i].h) };
   });
   return { icerik, panel, oc, nt, hucre, metin, elle: !!yer };
 }
@@ -811,10 +827,11 @@ function hucreleriGuncelle(el, s) {
   const var_ = new Map($$(".hucre", kap).map(h => [h.dataset.id, h]));
   Y.hucre.forEach(h => {
     let c = var_.get(h.id); var_.delete(h.id);
-    if (!c) { c = document.createElement("div"); c.className = "hucre"; c.dataset.id = h.id; c.innerHTML = `<div class="kes"><div class="yuk">Yükleniyor…</div></div><i class="el-tasi" title="Sürükleyerek taşıyın · soldaki listede başka bir slaytın üzerine bırakırsanız o slayta taşınır">✥ Taşı</i><i class="el-sag" title="Yandan uzatın: genişlik (grafik yeni genişliğe göre yeniden çizilir)"></i><i class="el-alt" title="Alttan uzatın: yükseklik"></i><i class="el-boy" title="Köşeden sürükleyerek orantılı büyütün / küçültün"></i><i class="el-sil" title="Slayttan çıkar (Ctrl+Z ile geri alınır)">✕</i><i class="el-ayir" title="Kutucukları ve grafiği bu alanın içinde ayrı ayrı taşıyıp boyutlandırın (kutucuğa tıklayınca grafik yine değişir)">▦ İçini düzenle</i>`; kap.appendChild(c); }
+    if (!c) { c = document.createElement("div"); c.className = "hucre"; c.dataset.id = h.id; c.innerHTML = `<div class="kes"><div class="yuk">Yükleniyor…</div></div><i class="el-tasi" title="Sürükleyerek taşıyın · soldaki listede başka bir slaytın üzerine bırakırsanız o slayta taşınır">✥ Taşı</i><i class="el-sag" title="Yandan uzatın: genişlik (grafik yeni genişliğe göre yeniden çizilir)"></i><i class="el-alt" title="Alttan uzatın: yükseklik"></i><i class="el-boy" title="Köşeden sürükleyerek istediğiniz boyuta getirin (Shift basılıyken orantılı)"></i><i class="el-sil" title="Slayttan çıkar (Ctrl+Z ile geri alınır)">✕</i><i class="el-ayir" title="Kutucukları ve grafiği bu alanın içinde ayrı ayrı taşıyıp boyutlandırın (kutucuğa tıklayınca grafik yine değişir)">▦ İçini düzenle</i>`; kap.appendChild(c); }
     c.classList.toggle("sabit", sabitMi(h.c)); c.classList.toggle("grup", h.ogeler.length > 1);
-    Object.assign(c.style, { left: h.x + "px", top: h.y + "px", width: h.w + "px", height: h.h + "px" });
-    Object.assign(c.querySelector(".kes").style, { left: "0px", top: "0px", width: h.w + "px", height: h.h + "px" });
+    const kt = h.kutu || h;      // çerçeve: elle çizilen kutu; içerik onun içinde ortalanır
+    Object.assign(c.style, { left: kt.x + "px", top: kt.y + "px", width: kt.w + "px", height: kt.h + "px" });
+    Object.assign(c.querySelector(".kes").style, { left: h.x - kt.x + "px", top: h.y - kt.y + "px", width: h.w + "px", height: h.h + "px" });
     const ifr = c.querySelector("iframe");
     if (ifr) { ifr.style.transform = `scale(${h.k})`; ifr.style.width = ifrGen(h.c, h.bw, h.gen) + "px"; ifrYuk(ifr, h.bh);
       clearTimeout(ifr._gT); const g = Math.round(h.gen || 0); ifr._gT = setTimeout(() => { genGonder(ifr, g); icGonder(ifr, h.id); }, sahne.classList.contains("suruk") ? 140 : 0); }
@@ -937,7 +954,7 @@ function tutamakCiz() {
   sahne.classList.toggle("konumla", kon);
   if (!kon || !DOM[x.id]) return;
   const Y = yerlesim(x.s), k = document.createElement("div"); k.className = "tutk";
-  const kenar = `<i class="boyS" title="Yandan uzat"></i><i class="boyA" title="Alttan uzat"></i><i class="boy" title="Köşeden orantılı boyutlandır"></i>`;
+  const kenar = `<i class="boyS" title="Yandan uzat"></i><i class="boyA" title="Alttan uzat"></i><i class="boy" title="Köşeden boyutlandır (Shift: orantılı)"></i>`;
   Y.hucre.forEach(h => k.insertAdjacentHTML("beforeend", `<div class="tut${sabitMi(h.c) ? " sabit" : ""}" data-id="${esc(h.id)}" style="left:${h.x}px;top:${h.y}px;width:${h.w}px;height:${h.h}px"><span>${esc(hucreAd(h))}</span>${kenar}</div>`));
   if (Y.panel) k.insertAdjacentHTML("beforeend", `<div class="tut pnl" data-id="_panel" style="left:${Y.panel.x}px;top:${Y.panel.y}px;width:${Y.panel.w}px;height:${Y.panel.h}px"><span>Not ve öne çıkanlar</span>${kenar}</div>`);
   if (Y.metin) k.insertAdjacentHTML("beforeend", `<div class="tut mtn" data-id="_metin" style="left:${Y.metin.x}px;top:${Y.metin.y}px;width:${Y.metin.w}px;height:${Y.metin.h}px"><span>Metin</span>${kenar}</div>`);
@@ -953,7 +970,7 @@ function panelTut(el) {     // düzenleme tutamakları (HTML dosyasına yazılma
   const m = el.querySelector(".metin .mtk");
   if (m) m.insertAdjacentHTML("beforeend", `<i class="el-tasi" data-pid="_metin" title="Metin kutusunu taşıyın">✥ Taşı</i><i class="el-sag" data-pid="_metin" title="Yandan uzatın"></i><i class="el-alt" data-pid="_metin" title="Alttan uzatın"></i><i class="el-boy" data-pid="_metin" title="Boyutlandırın"></i><i class="el-sil" data-sil="metin" title="Metin kutusunu sil">✕</i>`);
 }
-const kutuBul = (Y, id) => id === "_panel" ? Y.panel : id === "_metin" ? Y.metin : Y.hucre.find(h => h.id === id);
+const kutuBul = (Y, id) => { if (id === "_panel") return Y.panel; if (id === "_metin") return Y.metin; const h = Y.hucre.find(z => z.id === id); return h && (h.kutu || h); };
 function anlikCiz() {
   cancelAnimationFrame(anT);
   anT = requestAnimationFrame(() => {
@@ -1003,15 +1020,17 @@ sahne.addEventListener("pointerdown", e => {
   e.preventDefault(); e.stopPropagation();
   const s = x.s, Y = yerlesim(s);
   if (!s.yer) {      // ilk dokunuşta mevcut düzen sabitlenir; böylece diğer alanlar yerinden oynamaz
-    s.yer = {}; Y.hucre.forEach(h => { s.yer[h.id] = { x: h.x, y: h.y, w: h.w, h: h.h }; });
+    s.yer = {}; Y.hucre.forEach(h => { const k = h.kutu || h; s.yer[h.id] = { x: k.x, y: k.y, w: k.w, h: k.h }; });
     if (Y.panel) s.yer._panel = { x: Y.panel.x, y: Y.panel.y, w: Y.panel.w, h: Y.panel.h };
     if (Y.metin) s.yer._metin = { x: Y.metin.x, y: Y.metin.y, w: Y.metin.w, h: Y.metin.h };
   }
   const id = t === tut ? t.dataset.id : (t.dataset.pid || t.closest(".hucre")?.dataset.id); if (!id) return;
   if (!s.yer[id]) { const r = kutuBul(Y, id); if (!r) return; s.yer[id] = { x: r.x, y: r.y, w: r.w, h: r.h }; }
-  const cl = e.target.classList, b0 = { ...s.yer[id] }, oran = b0.w / b0.h, pnl = id === "_panel" || id === "_metin";
+  const cl = e.target.classList, b0 = { ...s.yer[id] }, pnl = id === "_panel" || id === "_metin";
+  if (!pnl && !(b0.h > 0)) { const r = kutuBul(Y, id); if (r) b0.h = r.h; }
+  const oran = b0.w / b0.h;
   const tip = cl.contains("boy") || cl.contains("el-boy") ? "kose" : cl.contains("boyS") || cl.contains("el-sag") ? "sag" : cl.contains("boyA") || cl.contains("el-alt") ? "alt" : "tasi", boy = tip !== "tasi";
-  const Yh = pnl ? null : Y.hucre.find(h => h.id === id), k0 = Yh ? Yh.k : 1, nh0 = Yh ? Yh.bh : 1;
+  const Yh = pnl ? null : Y.hucre.find(h => h.id === id);
   let hedefSl = null;
   if (!boy && !pnl) document.body.classList.add("hucreSuruk");
   const kk = parseFloat(getComputedStyle(sahne).getPropertyValue("--k")) || .5, x0 = e.clientX, y0 = e.clientY;
@@ -1022,16 +1041,15 @@ sahne.addEventListener("pointerdown", e => {
     const dx = (ev.clientX - x0) / kk, dy = (ev.clientY - y0) / kk; let b;
     if (tip === "sag" && pnl) b = { ...b0, w: sin(yuv(b0.w + dx), 160, X1 - b0.x) };
     else if (tip === "alt" && pnl) b = { ...b0, h: sin(yuv(b0.h + dy), 100, Y1 - b0.y) };
-    else if (tip === "sag") {      // genişlik: ölçek aynı kalır, sayfa daha geniş/dar çizilir
-      const w = sin(yuv(b0.w + dx), 160, X1 - b0.x); b = { ...b0, w, gen: Math.round(w / k0), h: nh0 * k0 };
-    } else if (tip === "alt") {    // yükseklik: kutu genişliği aynı kalır; içerik büyütülüp daha dar çizilir, böylece grafik uzar
-      let hh = sin(yuv(b0.h + dy), 80, Y1 - b0.y), k = hh / nh0, gen = b0.w / k;
-      if (gen < 260) { gen = 260; k = b0.w / gen; hh = nh0 * k; }
-      b = { ...b0, gen: Math.round(gen), h: hh };
-    } else if (boy) {
-      let w = Math.max(120, yuv(b0.w + dx)), h = pnl ? Math.max(100, yuv(b0.h + dy)) : w / oran;
-      if (b0.x + w > X1) { w = X1 - b0.x; if (!pnl) h = w / oran; }
-      if (b0.y + h > Y1) { h = Y1 - b0.y; if (!pnl) w = h * oran; }
+    // Alan boyutlanırken çerçeve fareyi birebir izler; sürükleme sırasında sayfa yeniden çizilmez (içerik çerçeveye sığdırılır),
+    // bırakınca sayfa çerçevenin oranına göre bir kez yeniden çizilir ve çerçeveyi doldurur. Böylece boyut zıplamaz.
+    else if (tip === "sag") b = { ...b0, w: sin(yuv(b0.w + dx), 120, X1 - b0.x) };
+    else if (tip === "alt") b = { ...b0, h: sin(yuv(b0.h + dy), 60, Y1 - b0.y) };
+    else if (boy) {
+      let w = Math.max(120, yuv(b0.w + dx)), h = Math.max(pnl ? 100 : 60, yuv(b0.h + dy));
+      if (ev.shiftKey) h = w / oran;      // Shift: orantılı
+      if (b0.x + w > X1) { w = X1 - b0.x; if (ev.shiftKey) h = w / oran; }
+      if (b0.y + h > Y1) { h = Y1 - b0.y; if (ev.shiftKey) w = h * oran; }
       b = { ...b0, w, h };
     } else {
       // soldaki slayt listesinin üzerine gelindiyse alan o slayta taşınacak
@@ -1054,6 +1072,7 @@ sahne.addEventListener("pointerdown", e => {
     t.classList.remove("tasi"); sahne.classList.remove("suruk"); document.body.classList.remove("hucreSuruk"); tasiEt.style.display = "none"; $$("#liste .birak").forEach(z => z.classList.remove("birak"));
     if (hedefSl && ev.type === "pointerup") { s.yer[id] = b0; hucreTasi(s, id, hedefSl); return; }
     $$(".hucre.disari").forEach(z => z.classList.remove("disari"));
+    if (boy && !pnl && Yh && !sabitMi(Yh.c)) genAyarla(s.yer[id], Yh);
     kaydet(true); ayarCiz();
   };
   addEventListener("pointermove", tasi); addEventListener("pointerup", birak); addEventListener("pointercancel", birak);
