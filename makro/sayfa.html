@@ -71,6 +71,7 @@ details.bidet>summary{cursor:pointer;list-style:revert}
 .dtb td{white-space:nowrap;font-family:var(--mono);font-size:12.5px}.dtb td.l{font-family:inherit}
 .dtf{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:12.5px;color:var(--muted)}
 .bisel{font:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.eua{margin:0 0 6px;align-items:center}.eua .eual{font-size:12px;font-weight:600;color:var(--ink-2);margin-right:2px}.eua .eusp{width:10px}
 div.kpi[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent);border-top-color:var(--accent)}
 .kpi .k2{font-size:12.5px;font-weight:600;color:var(--ink-2);margin-top:3px}
 .kpi .tn{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
@@ -622,7 +623,7 @@ function chart(el, o) {
   const W = Math.max(320, el.clientWidth || 700), H = o.height || 320;
   const hasR = ser.some(s => s.axis === "r");
   const m = { t: 10, r: hasR ? 58 : 14, b: 26, l: 52 };
-  const ext = ax => { const ss = ser.filter(s => (s.axis || "l") === ax), v = ss.flatMap(s => s.vals.filter(ok));
+  const ext = ax => { const ss = ser.filter(s => (s.axis || "l") === ax), v = ss.flatMap(s => s.vals.filter(ok)).concat(ax === "l" ? (o.pts || []).map(p => p.y).filter(ok) : []);
     if (o.stack) { const bb = ss.filter(s => s.type === "bar"); for (let i = 0; i < n; i++) { let p = 0, q = 0; bb.forEach(b => { const x = b.vals[i]; if (ok(x)) x > 0 ? p += x : q += x; }); v.push(p, q); } }
     if (!v.length) return null; let lo = Math.min(...v), hi = Math.max(...v);
     if (ser.some(s => (s.axis || "l") === ax && s.type === "bar") || (o.zero && ax === "l")) { lo = Math.min(0, lo); hi = Math.max(0, hi); }
@@ -656,6 +657,7 @@ function chart(el, o) {
     if (l.dots && n <= 40) l.vals.forEach((v, i) => { if (ok(v)) s += `<circle cx="${X(i).toFixed(2)}" cy="${Y(v).toFixed(2)}" r="${i === o.hi ? 4.5 : 2.6}" fill="${i === o.hi ? "var(--surface)" : l.color}" stroke="${l.color}" stroke-width="${i === o.hi ? 2 : 0}"/>`; });
     const li = l.vals.map(ok).lastIndexOf(true); if (li >= 0 && !l.noDot && !l.dots) s += `<circle cx="${X(li)}" cy="${Y(l.vals[li])}" r="3" fill="${l.color}"/>`;
   }
+  for (const p of o.pts || []) if (ok(p.y)) s += `<circle cx="${(m.l + bw * (p.x + .5)).toFixed(2)}" cy="${YL(p.y).toFixed(2)}" r="5" fill="${p.color}" stroke="var(--surface)" stroke-width="1.5"><title>${esc(p.title || "")}</title></circle>`;
   s += `<line class="cur" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" stroke="var(--axis)" stroke-dasharray="3 3" visibility="hidden"/></svg>`;
   el.insertAdjacentHTML("beforeend", s);
   const svg = el.querySelector("svg"), tip = el.appendChild(Object.assign(document.createElement("div"), { className: "tip" })), cur = svg.querySelector(".cur");
@@ -911,7 +913,7 @@ $("#pKpi").onkeydown = e => { const b = e.target.closest('div[role="button"][dat
 // ---------------------------------------------------------------- OIS (Bloomberg)
 const OIS = { TRY: "TLOIS", USD: "USD OIS", EUR: "EUR OIS" };
 const OIS_ON = { TRY: "TLREF", USD: "SOFR", EUR: "€STR" };
-const VADE = { ON: "O/N", "O/N": "O/N", "T/N": "T/N", "1W": "1H", "2W": "2H", "1M": "1A", "2M": "2A", "3M": "3A", "6M": "6A", "9M": "9A", "1Y": "1Y", "18M": "18A", "2Y": "2Y", "3Y": "3Y", "4Y": "4Y", "5Y": "5Y", "8Y": "8Y", "10Y": "10Y", "15Y": "15Y", "30Y": "30Y" };
+const VADE = { ON: "O/N", "O/N": "O/N", "T/N": "T/N", "1W": "1H", "2W": "2H", "1M": "1A", "2M": "2A", "3M": "3A", "6M": "6A", "9M": "9A", "1Y": "1Y", "18M": "18A", "2Y": "2Y", "3Y": "3Y", "4Y": "4Y", "5Y": "5Y", "8Y": "8Y", "10Y": "10Y", "15Y": "15Y", "20Y": "20Y", "30Y": "30Y" };
 const VGUN = { ON: 1, "1W": 7, "2W": 14, "1M": 30, "2M": 61, "3M": 91, "6M": 182, "9M": 273, "1Y": 365, "18M": 548, "2Y": 730, "3Y": 1095, "5Y": 1825, "10Y": 3650 };
 const sonSatir = t => { for (let i = t.dates.length - 1; i >= 0; i--) { const n = t.v.filter(c => ok(c[i])).length; if (n >= Math.max(1, t.v.length / 2)) return i; } return -1; };
 const OCMP = [["YB", "Yılbaşı"], ["1A", "1 Ay"], ["3A", "3 Ay"], ["6A", "6 Ay"], ["1Y", "1 Yıl"]];
@@ -930,6 +932,8 @@ function karsGun(t, i, c) {
 // Getiri eğrisi kartı: eğri (son gün + seçilen günle karşılaştırma) ya da tek vadenin tarihsel seyri.
 // cfg: { id, sekmeler: [[kod, tablo, renkDeğişkeni]], baslik(kod, mod), alt(kod), butonlar: [vade etiketleri] }
 const EGRI = {};
+// "2027-02-24 00:00:00" ya da "26.04.2030" → "2027-02-24"
+const vadeTarih = e => { let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(e); if (m) return `${m[1]}-${m[2]}-${m[3]}`; m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(String(e).trim()); return m ? `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}` : null; };
 function egriKart(cfg) {
   EGRI[cfg.id] = cfg;
   const box = $("#" + cfg.id), st = (S.EG[cfg.id] ||= { c: null, v: "egri", r: "6A", cmp: null });
@@ -951,9 +955,22 @@ function egriKart(cfg) {
     q(".eu").innerHTML = UL.map(u => { const kap = u.ccy && u.ccy !== kod;    // bu para biriminde verisi yok
       return `<button class="chip" data-u="${u.k}" aria-pressed="${!kap && US.has(u.k)}"${kap ? ` disabled title="${u.ad} için ${kod} getirisi yok" style="opacity:.4;cursor:not-allowed"` : ""}><i style="background:${u.tb ? css(u.rk) : col}"></i>${u.ad}</button>`; }).join("");
   }
-  const dis = UL ? UL.filter(u => u.tb && u.ccy === kod && US.has(u.k)).map(u => { const tt = B.tablolar[u.tb]; return { u, t: tt, et: tt.kolonlar.map(k => k.etiket), fade: false, color: css(u.rk) }; }) : [];
-  const trVar = !UL || US.has("tr") || !dis.length;
-  if (UL) q('.eu button[data-u="tr"]')?.setAttribute("aria-pressed", trVar);
+  // alt sekmeler (ör. Türkiye: Eurobond / Hazine Kira Sertifikası · ABD: ABD Hazine / ABD Kurumsal Tahvil); ccy'si uyanlar gösterilir
+  const AS = UL ? (S.gAlt ||= new Set(UL.flatMap(u => (u.alt || []).filter(a => !a.kapali).map(a => a.k)))) : null;
+  const altlar = u => (u.alt || []).filter(a => (!a.ccy || a.ccy === kod) && (!a.tb || B?.tablolar?.[a.tb]?.dates?.length));
+  const altVar = u => altlar(u).length > 1, acik = (u, a) => !altVar(u) || AS.has(a.k), anaAcik = u => { const a = altlar(u).find(x => x.ana); return !a || acik(u, a); };
+  if (UL) { const ea = q(".eua") || q(".ctl").insertAdjacentElement("afterend", Object.assign(document.createElement("div"), { className: "chips eua" }));
+    const sat = UL.filter(u => US.has(u.k) && (!u.ccy || u.ccy === kod) && altVar(u));
+    ea.innerHTML = sat.map(u => `<span class="eual">${u.ad}:</span>` + altlar(u).map(a => `<button class="chip" data-alt="${a.k}" aria-pressed="${AS.has(a.k)}"><i style="background:${css(a.rk || u.rk || rk)}"></i>${a.ad}</button>`).join("")).join('<span class="eusp"></span>');
+    ea.classList.toggle("hidden", !sat.length); }
+  const dis = UL ? UL.filter(u => u.tb && u.ccy === kod && US.has(u.k) && anaAcik(u)).map(u => { const tt = B.tablolar[u.tb]; return { u, t: tt, et: tt.kolonlar.map(k => k.etiket), fade: false, color: css(u.rk) }; }) : [];
+  // ek çizgiler (aynı vade ekseni) ve noktalar (vadesi tarihli kıymetler)
+  const ekAlt = UL ? UL.filter(u => US.has(u.k) && (!u.ccy || u.ccy === kod)).flatMap(u => altlar(u).filter(a => a.tb && AS.has(a.k)).map(a => ({ u, a }))) : [];
+  for (const { u, a } of ekAlt.filter(x => !x.a.nokta)) { const tt = B.tablolar[a.tb]; dis.push({ u: { ...u, ad: a.ad }, t: tt, et: tt.kolonlar.map(k => k.etiket), fade: false, color: css(a.rk) }); }
+  const noktalar = ekAlt.filter(x => x.a.nokta);
+  const trAna = !UL || (US.has("tr") && anaAcik(UL.find(u => u.k === "tr")));
+  const trVar = trAna || (!dis.length && !noktalar.length);
+  if (UL) q('.eu button[data-u="tr"]')?.setAttribute("aria-pressed", US.has("tr") || trVar);
   const vg = e => { const m = /^(\d+)([WMY])$/.exec(e); return m ? +m[1] * { W: 7, M: 30, Y: 365 }[m[2]] : 0; };
   if (st.v === "egri") {
     const i = sonSatir(t); if (i < 0) { q(".er").innerHTML = ""; ch.innerHTML = '<div class="empty">Veri yok.</div>'; return true; }
@@ -967,16 +984,24 @@ function egriKart(cfg) {
     const series = trVar ? [{ name: UL ? `Türkiye ${kod} · ${gunAd(son)}` : gunAd(son), vals, color: col, width: 2.6, dots: true, span: true, fmt: v => pct(v, 3) }] : [];
     if (cv && trVar) series.push({ name: gunAd(t.dates[j]), vals: cv, color: css("--muted"), width: 2, dash: "5 4", dots: true, span: true, fmt: v => pct(v, 3) });
     for (const d of dis) { const k = sonSatir(d.t); if (k >= 0) series.push({ name: `${d.u.ad} · ${gunAd(d.t.dates[k])}`, vals: hiz(d.t, d.et, k), color: d.color, width: d.fade ? 1.6 : 2.4, dots: true, span: true, fmt: v => pct(v, 3) }); }
+    // vadesi tarihli kıymetler (Hazine kira sertifikası eurobondları): vadeye kalan süreye göre eksende konumlanır
+    const pts = [], ptLeg = [];
+    for (const { a } of noktalar) { const tt = B.tablolar[a.tb], k = sonSatir(tt); if (k < 0) continue; const t0 = Date.parse(tt.dates[k]);
+      const gx = etU.map(vg), kon = g => { if (g <= gx[0]) return 0; for (let q2 = 1; q2 < gx.length; q2++) if (g <= gx[q2]) return q2 - 1 + (g - gx[q2 - 1]) / (gx[q2] - gx[q2 - 1]); return gx.length - 1; };
+      tt.kolonlar.forEach((c, q2) => { const vd = vadeTarih(c.etiket), y = tt.v[q2][k]; if (!vd || !ok(y)) return; const g = (Date.parse(vd) - t0) / 864e5; if (g <= 0) return;
+        pts.push({ x: kon(g), y, color: css(a.rk), title: `${a.ad} · vade ${gunAd(vd)} · ${pct(y, 3)} (${gunAd(tt.dates[k])})` }); });
+      if (pts.length) ptLeg.push({ name: `${a.ad} · ${gunAd(tt.dates[k])}`, color: css(a.rk) }); }
     q(".et").textContent = cfg.baslik(kod, "egri");
     q(".es").textContent = (cv ? `${gunAd(son)} ile ${gunAd(t.dates[j])} karşılaştırması` : gunAd(son)) + (cfg.alt ? " · " + cfg.alt(kod) : "") + " · Bloomberg · vadeye tıklayınca tarihsel seyir";
-    const all = series.flatMap(x => x.vals).filter(ok);
-    if (UL) { const lg = q(".eleg") || q(".ctl").insertAdjacentElement("afterend", Object.assign(document.createElement("div"), { className: "legend eleg" }));
-      lg.innerHTML = series.length > 1 ? series.map(x => `<span class="chip" style="cursor:default"><i style="background:${x.color}"></i>${esc(x.name)}</span>`).join("") : ""; }
+    const all = series.flatMap(x => x.vals).concat(pts.map(p => p.y)).filter(ok);
+    if (UL) { const lg = q(".eleg") || q(".eua").insertAdjacentElement("afterend", Object.assign(document.createElement("div"), { className: "legend eleg" }));
+      const L_ = [...series, ...ptLeg]; lg.innerHTML = L_.length > 1 ? L_.map(x => `<span class="chip" style="cursor:default"><i style="background:${x.color}${ptLeg.includes(x) ? ";border-radius:50%" : ""}"></i>${esc(x.name)}</span>`).join("") : ""; }
     chart(ch, { xs, height: cfg.height || 300, label: q(".et").textContent, yFmt: v => nf(v, Math.max(...all) - Math.min(...all) < 3 ? 2 : 1), maxX: 14,
       tipX: x => { const k = xs.indexOf(x), d = cv && ok(vals[k]) && ok(cv[k]) ? vals[k] - cv[k] : null; return x + (ok(d) ? ` · değişim ${bp(d)}` : ""); },
-      series, onClick: k => { if (etU[k]) { st.v = etU[k]; egriKart(cfg); } } });
+      series, pts, onClick: k => { if (etU[k]) { st.v = etU[k]; egriKart(cfg); } } });
     if (q(".everi")) { const a = j != null ? j : Math.max(0, i - 1);   // karşılaştırma tarihi seçili değilse bir önceki gün
-      if (trVar) veriIS(q(".everi"), cfg.id, et.map(e => VADE[e] || e), t.dates[a], son, t.v.map(c => c[a]), t.v.map(c => c[i]), v => pct(v, 2), (b, a_) => bp(b - a_), () => egriKart(cfg));
+      if (UL && trVar) veriKutu(q(".everi"), cfg.id, et.map(e => VADE[e] || e), [[gunAd(t.dates[a]), t.v.map(c => ok(c[a]) ? pct(c[a], 2) : "—")], [gunAd(son), t.v.map(c => ok(c[i]) ? pct(c[i], 2) : "—")]], () => egriKart(cfg));
+      else if (trVar) veriIS(q(".everi"), cfg.id, et.map(e => VADE[e] || e), t.dates[a], son, t.v.map(c => c[a]), t.v.map(c => c[i]), v => pct(v, 2), (b, a_) => bp(b - a_), () => egriKart(cfg));
       else q(".everi").innerHTML = ""; }
   } else {
     tarihChips(q(".er"), "e" + cfg.id, st.r, t.dates, k => { st.r = k; egriKart(cfg); });
@@ -985,12 +1010,13 @@ function egriKart(cfg) {
     const ekS = dis.filter(d => d.et.includes(st.v)).map(d => { const m = new Map(d.t.dates.map((x, k) => [x, d.t.v[d.et.indexOf(st.v)][k]]));
       return { name: `${d.u.ad} ${VADE[st.v] || st.v}`, vals: xs.map(x => m.get(x) ?? null), color: d.color, width: d.fade ? 1.6 : 2.2, span: true, fmt: v => pct(v, 3) }; });
     q(".et").textContent = cfg.baslik(kod, VADE[st.v] || st.v);
-    if (UL) { const lg = q(".eleg"); if (lg) lg.innerHTML = ""; }
+    if (UL) { const lg = q(".eleg"); if (lg) lg.innerHTML = ""; const ea = q(".eua"); if (ea) ea.classList.add("hidden"); }
     q(".es").textContent = `${j >= 0 ? t.kolonlar[j].ticker : ""} · son ${li >= 0 ? pct(vals[li], 3) + " (" + gunAd(xs[li]) + ")" : "—"} · Bloomberg`;
     chart(ch, { xs, height: cfg.height || 300, label: q(".et").textContent, xFmt: gun > 400 ? (d => `${AY[+d.slice(5, 7) - 1]} ${d.slice(2, 4)}`) : gunKisa, tipX: gunAd,
       yFmt: v => nf(v, v % 1 ? 1 : 0), series: [...(trVar && j >= 0 ? [{ name: `${UL ? "Türkiye " : ""}${kod} ${VADE[st.v] || st.v}`, vals, color: col, width: 2.2, span: true, fmt: v => pct(v, 3) }] : []), ...ekS] });
     if (q(".everi") && ix.length && j >= 0) { const a = ix[0], b = ix[ix.length - 1];   // tüm vadeler: grafikteki ilk ve son tarih
-      veriIS(q(".everi"), cfg.id, et.map(e => VADE[e] || e), t.dates[a], t.dates[b], t.v.map(c => c[a]), t.v.map(c => c[b]), v => pct(v, 2), (y, x) => bp(y - x), () => egriKart(cfg)); }
+      if (UL) veriKutu(q(".everi"), cfg.id, et.map(e => VADE[e] || e), [[gunAd(t.dates[a]), t.v.map(c => ok(c[a]) ? pct(c[a], 2) : "—")], [gunAd(t.dates[b]), t.v.map(c => ok(c[b]) ? pct(c[b], 2) : "—")]], () => egriKart(cfg));
+      else veriIS(q(".everi"), cfg.id, et.map(e => VADE[e] || e), t.dates[a], t.dates[b], t.v.map(c => c[a]), t.v.map(c => c[b]), v => pct(v, 2), (y, x) => bp(y - x), () => egriKart(cfg)); }
   }
   return true;
 }
@@ -998,7 +1024,8 @@ document.addEventListener("click", e => {
   const box = e.target.closest(".card.egri"); if (!box || !EGRI[box.id]) return;
   const st = S.EG[box.id], b = e.target.closest("button");
   if (!b || b.closest(".chips.er") && b.dataset.k) return;      // dönem düğmeleri kendi işleyicisiyle
-  if (b.dataset.u && b.closest(".eu")) { if (b.disabled) return; const U = S.gUs, k = b.dataset.u; if (U.has(k)) U.delete(k); else U.add(k); }
+  if (b.dataset.alt && b.closest(".eua")) { const A = S.gAlt, k = b.dataset.alt; if (A.has(k)) A.delete(k); else A.add(k); }
+  else if (b.dataset.u && b.closest(".eu")) { if (b.disabled) return; const U = S.gUs, k = b.dataset.u; if (U.has(k)) U.delete(k); else U.add(k); }
   else if (b.dataset.c) st.c = b.dataset.c;
   else if (b.dataset.v) st.v = b.dataset.v;
   else if (b.dataset.cmp) st.cmp = b.dataset.cmp === "x" || st.cmp?.k === b.dataset.cmp ? null : { k: b.dataset.cmp };
@@ -1009,7 +1036,7 @@ document.addEventListener("change", e => {
   if (!e.target.classList.contains("edt")) return; const box = e.target.closest(".card.egri"); if (!box || !EGRI[box.id]) return;
   S.EG[box.id].cmp = e.target.value ? { k: "d", d: e.target.value } : null; egriKart(EGRI[box.id]);
 });
-const OBTN = ["ON", "1W", "2W", "1M", "3M", "6M", "1Y", "3Y", "5Y"];
+const OBTN = ["ON", "1W", "1M", "3M", "6M", "1Y", "2Y", "3Y", "5Y", "10Y"];
 const renderOis = () => egriKart({ id: "E_ois", sekmeler: [["TRY", "TLOIS", "--c1"], ["USD", "USD OIS", "--c6"], ["EUR", "EUR OIS", "--c3"]], butonlar: OBTN,
   baslik: (c, m) => m === "egri" ? `${c} OIS getiri eğrisi (%)` : `${c} OIS · ${m} (%)`, alt: c => `O/N: ${OIS_ON[c]}` });
 
@@ -1020,7 +1047,9 @@ function renderGosterge() {
   $("#gTr").classList.remove("hidden"); $("#gAbd").classList.add("hidden"); $("#gDe").classList.add("hidden");
   {
     egriKart({ id: "E_tahvil", sekmeler: [["TRY", "TRY TAHVİL GÖSTERGE", "--c1"], ["USD", "USD EUROBOND GÖSTERGE", "--c6"], ["EUR", "EUR EUROBOND GÖSTERGE", "--c3"]],
-      ulkeler: [{ k: "tr", ad: "Türkiye" }, { k: "abd", ad: "ABD", tb: "ABD GÖSTERGE", ccy: "USD", rk: "--c5" }, { k: "de", ad: "Almanya", tb: "ALMANYA GÖSTERGE", ccy: "EUR", rk: "--c4" }],
+      ulkeler: [{ k: "tr", ad: "Türkiye", alt: [{ k: "tr_ana", ad: "Eurobond", ana: true, ccy: "USD" }, { k: "tr_hks", ad: "Hazine Kira Sertifikası", tb: "EUROBOND SUKUK GÖSTERGELER", ccy: "USD", rk: "--up", nokta: true }] },
+        { k: "abd", ad: "ABD", tb: "ABD GÖSTERGE", ccy: "USD", rk: "--c5", alt: [{ k: "abd_ana", ad: "ABD Hazine", ana: true }, { k: "abd_ig", ad: "ABD Kurumsal Tahvil", tb: "ABD Corp IG", ccy: "USD", rk: "--c2", kapali: true }] },
+        { k: "de", ad: "Almanya", tb: "ALMANYA GÖSTERGE", ccy: "EUR", rk: "--c4" }],
       baslik: (c, m) => `Tahvil/Eurobond · ${TAHVIL_AD[c]}${m === "egri" ? "" : " · " + m} (%)` });
     egriKart({ id: "E_basabas", sekmeler: [["TÜFE", "TÜFE BAŞABAŞ ORANLAR", "--c4"]],
       baslik: (c, m) => `TÜFE başabaş oranları${m === "egri" ? "" : " · " + m} (%)`, alt: () => "nominal DİBS ile TÜFE'ye endeksli DİBS getiri farkı" });

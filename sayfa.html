@@ -27,6 +27,8 @@ h2{font-size:14px;margin:0 0 10px;font-weight:600}
 .trh{display:flex;align-items:flex-start;gap:10px}.trh h2{flex:1;min-width:0}
 .ov{position:relative;flex:none}.ov .b{font-size:12.5px;padding:5px 10px;white-space:nowrap}.ov .b.on{border-color:var(--acc);color:var(--acc)}
 .ovp{position:absolute;right:0;top:calc(100% + 6px);z-index:15;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.15);padding:10px 12px;min-width:300px;font-size:13px}
+.cfp{position:absolute;right:auto;z-index:40;min-width:260px;max-width:min(380px,calc(100vw - 16px))}.cfp input[type=text]{width:100%;box-sizing:border-box;margin:4px 0 6px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:inherit}
+.cfl{max-height:300px;overflow:auto;border-top:1px solid var(--line);margin-top:4px}.cfp label{justify-content:flex-start}.cfp label span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cfp small{color:var(--mut);font-size:11px}.cfa{font-weight:600}.cfb{display:flex;justify-content:space-between;gap:8px;margin-top:8px}
 .pfp{min-width:min(340px,calc(100vw - 24px));text-align:left}.pfp input[type=text]{width:100%;box-sizing:border-box;margin:4px 0 6px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:inherit}
 .pfl{max-height:320px;overflow:auto}.pfl label{justify-content:flex-start}.pfl label span{flex:1}.pfl small{color:var(--mut);font-size:11.5px;white-space:nowrap}
 td small.pfa{display:block;color:var(--mut);font-size:11px}
@@ -183,7 +185,7 @@ const $=id=>document.getElementById(id);
 
 const UC={USD:'#059669',EUR:'#2563eb',TL:'#4f46e5',XAG:'#64748b',GBP:'#7c3aed',XAU:'#b45309'},UN={TL:'TL',USD:'Dolar',EUR:'Euro',GBP:'Pound',XAU:'Altın',XAG:'Gümüş'},UO=['USD','EUR','TL','XAG','GBP','XAU'];
 const FXI={USD:0,EUR:1,GBP:2,XAU:3,XAG:4},N=DATES.length,YB=Math.max(0,DATES.indexOf('2025-12-31'));
-let cmp=false,own=false,i1=N-1,i0=YB,sortK='v1',dir=-1,page=0,colF={},LCUR=[];let PS=25;try{const x=+localStorage.getItem('fd-ps');if([25,50,100,250].includes(x))PS=x}catch(e){}
+let cmp=false,own=false,i1=N-1,i0=YB,sortK='v1',dir=-1,page=0,colF={},colS={},LCUR=[];let PS=25;try{const x=+localStorage.getItem('fd-ps');if([25,50,100,250].includes(x))PS=x}catch(e){}
 // kutucuk seçimi (trend grafiğine katman) ve kategori çipleri
 let KSEL=new Set(),COFF=new Set(),DOFF=new Set();try{KSEL=new Set(JSON.parse(localStorage.getItem('fd-ksel2')||'["deger"]'))}catch(e){}if(!KSEL.size)KSEL.add('deger');const FUN='<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M1 2h14l-5.5 6.5V14l-3-1.5V8.5z" fill="currentColor"/></svg>';const sp=v=>v==null?'—':(v>0?'+':v<0?'-':'')+'%'+nf(Math.abs(v),1);
 const snap=s=>{let k=-1;for(let i=0;i<N;i++)if(DATES[i]<=s)k=i;return k<0?0:k};const snapU=s=>Math.max(YB,snap(s));
@@ -248,10 +250,14 @@ function mk(expr,type){const s=expr.trim();if(!s)return null;if(type=='t'){const
  if(m=s.match(/^(>=|<=|>|<|=)?\s*(-?[\d.,]+)$/)){const x=num(m[2])*sc,op=m[1]||'>=';return v=>v!=null&&(op=='>'?v>x:op=='<'?v<x:op=='<='?v<=x:op=='='?Math.abs(v-x)<=Math.abs(x)*.005+1e-9:v>=x)}
  return ()=>true}
 function head(){COLS=pfEk(cmp?colsKar():colsTek());if(!COLS.some(c=>c[1]===sortK)){sortK='v1';dir=-1}
- $('th').innerHTML='<tr id="hd">'+COLS.map((c,i)=>`<th data-i="${i}" class="${c[3]||''} ${c[1]===sortK?'on':''}">${c[0]}${c[1]===sortK?(dir<0?' ↓':' ↑'):''}</th>`).join('')+'</tr><tr class="fr">'+COLS.map(c=>{const s=!!(colF[c[1]]&&colF[c[1]].trim());return `<th class="${c[3]=='g'?'g':''}"><span class="fc"><input id="cf-${c[1]}" data-k="${c[1]}" class="${s?'set':''}" value="${(colF[c[1]]||'').replace(/"/g,'&quot;')}" aria-label="${c[0]} filtresi" title="${c[2]=='t'?'İçerir araması':c[2]=='m'?'Milyon cinsinden: >100, <5, 1..3':'>5, <=10, 1..3'}"><button class="fi ${s?'set':''}" data-fk="${c[1]}" aria-label="${c[0]} filtresi${s?'ni kaldır':''}" title="${s?'Filtreyi kaldır':'Filtrele'}">${s?'✕':FUN}</button></span></th>`}).join('')+'</tr>'}
+ $('th').innerHTML='<tr id="hd">'+COLS.map((c,i)=>`<th data-i="${i}" class="${c[3]||''} ${c[1]===sortK?'on':''}">${c[0]}${c[1]===sortK?(dir<0?' ↓':' ↑'):''}</th>`).join('')+'</tr><tr class="fr">'+COLS.map(c=>{const s=!!(colF[c[1]]&&colF[c[1]].trim())||!!(colS[c[1]]&&colS[c[1]].size);return `<th class="${c[3]=='g'?'g':''}"><span class="fc"><input id="cf-${c[1]}" data-k="${c[1]}" class="${s?'set':''}" value="${(colF[c[1]]||'').replace(/"/g,'&quot;')}" aria-label="${c[0]} filtresi" title="${c[2]=='t'?'İçerir araması':c[2]=='m'?'Milyon cinsinden: >100, <5, 1..3':'>5, <=10, 1..3'}"><button class="fi ${s?'set':''}" data-fk="${c[1]}" aria-label="${c[0]} filtresi${s?'ni kaldır':''}" title="${s?'Filtreyi kaldır':'Filtrele'}">${s?'✕':FUN}</button></span></th>`}).join('')+'</tr>'}
 let RCUR=[];
-function table(){const fs=COLS.filter(c=>colF[c[1]]&&colF[c[1]].trim()).map(c=>[G[c[1]],mk(colF[c[1]],c[2])]);
- let L=RCUR.filter(f=>V[f][i1]||(cmp&&V[f][i0]));const pn=PSEL.filter(n=>PD.k.includes(n));if(pn.length)L=L.filter(f=>pn.some(n=>pdPay(f,n)>0));if(fs.length)L=L.filter(f=>fs.every(([g,t])=>t(g(f))));
+// sütun değer listesi (Excel tarzı çoklu seçim): görünen metin anahtar
+const vk=(c,f)=>{const k=c[1],v=G[k](f);if(c[2]=='t')return v==null?'':String(v);if(v==null)return '—';if(k.startsWith('pf'))return '%'+nf(v,1);return String(cell(f,k)).replace(/<[^>]+>/g,'').trim()};
+function filtre(L,haric){const fs=COLS.filter(c=>c[1]!==haric&&colF[c[1]]&&colF[c[1]].trim()).map(c=>[G[c[1]],mk(colF[c[1]],c[2])]),ss=COLS.filter(c=>c[1]!==haric&&colS[c[1]]&&colS[c[1]].size).map(c=>[c,colS[c[1]]]);
+ if(fs.length)L=L.filter(f=>fs.every(([g,t])=>t(g(f))));if(ss.length)L=L.filter(f=>ss.every(([c,S])=>S.has(vk(c,f))));return L}
+function table(){
+ let L=RCUR.filter(f=>V[f][i1]||(cmp&&V[f][i0]));const pn=PSEL.filter(n=>PD.k.includes(n));if(pn.length)L=L.filter(f=>pn.some(n=>pdPay(f,n)>0));L=filtre(L);
  const sv=new Map(L.map(f=>[f,G[sortK](f)]));
  L.sort((a,b)=>{const x=sv.get(a),y=sv.get(b);if(x==null)return 1;if(y==null)return -1;return typeof x=='string'?dir*x.localeCompare(y,'tr'):dir*(x-y)});
  LCUR=L;const np=Math.max(1,Math.ceil(L.length/PS));if(page>=np)page=np-1;
@@ -374,14 +380,34 @@ function draw(){const R=rows(),all=R.filter(f=>V[f][i1]);RCUR=R;CH.forEach(c=>c.
  $('fx').innerHTML='Kur (₺, önceki iş günü): '+['USD','EUR','GBP','XAU','XAG'].map(cmp?f2:f1).join(' · ')+' <span>(altın, gümüş: gram)</span>';
  quick();head();table();void document.body.offsetHeight;PEND.forEach(([el,cfg])=>{CH.push(mkChart(el,cfg));if(cfg.type=='doughnut')DN1=true});PEND=[]}
 $('th').addEventListener('click',e=>{const th=e.target.closest('#hd th');if(!th)return;const c=COLS[th.dataset.i];if(c[1]===sortK)dir=-dir;else{sortK=c[1];dir=c[2]=='t'?1:-1}page=0;head();table()});
-$('th').addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;colF[k]=e.target.value;const s=!!e.target.value.trim(),b=e.target.nextElementSibling;e.target.classList.toggle('set',s);b.classList.toggle('set',s);b.innerHTML=s?'✕':FUN;b.title=s?'Filtreyi kaldır':'Filtrele';page=0;table()});
-$('th').addEventListener('click',e=>{const b=e.target.closest('.fi');if(!b)return;const k=b.dataset.fk,inp=$('cf-'+k);if(colF[k]&&colF[k].trim()){colF[k]='';inp.value='';inp.classList.remove('set');b.classList.remove('set');b.innerHTML=FUN;b.title='Filtrele';page=0;table()}else inp.focus()});
+$('th').addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;colF[k]=e.target.value;cfDurum(k);page=0;table()});
+$('th').addEventListener('click',e=>{const b=e.target.closest('.fi');if(!b)return;e.stopPropagation();cfAc(b.dataset.fk,b)});
+const CFP=document.body.appendChild(Object.assign(document.createElement('div'),{className:'ovp cfp'}));CFP.hidden=true;CFP.onclick=e=>e.stopPropagation();
+document.addEventListener('click',()=>{CFP.hidden=true});
+function cfDurum(k){const s=!!(colF[k]&&colF[k].trim())||!!(colS[k]&&colS[k].size),b=document.querySelector(`#th .fi[data-fk="${k}"]`),i=$('cf-'+k);if(b){b.classList.toggle('set',s);b.innerHTML=s?'✕':FUN;b.title=s?'Filtre uygulanıyor · düzenle':'Filtrele'}if(i)i.classList.toggle('set',s)}
+function cfAc(k,btn){const c=COLS.find(x=>x[1]===k);if(!c)return;
+ let base=RCUR.filter(f=>V[f][i1]||(cmp&&V[f][i0]));const pn=PSEL.filter(n=>PD.k.includes(n));if(pn.length)base=base.filter(f=>pn.some(n=>pdPay(f,n)>0));base=filtre(base,k);
+ const M=new Map();base.forEach(f=>{const t=vk(c,f);if(!M.has(t))M.set(t,[G[k](f),0]);M.get(t)[1]++});
+ const V_=[...M.entries()].sort((x,y)=>c[2]=='t'?x[0].localeCompare(y[0],'tr'):(x[1][0]==null)-(y[1][0]==null)||(x[1][0]-y[1][0]));
+ const sec=()=>colS[k]||new Set(V_.map(x=>x[0]));
+ CFP.innerHTML=`<div class="ovh">${esc(c[0])} · değer seçimi</div><input type="text" placeholder="Ara" autocomplete="off" aria-label="${esc(c[0])} değerlerinde ara"><label class="cfa"><input type="checkbox"><span>Tümünü seç</span><small></small></label><div class="cfl"></div><div class="cfb"><button class="b" data-a="tem" type="button">Filtreyi temizle</button><button class="b" data-a="bul" type="button" hidden>Yalnızca bulunanlar</button><button class="b" data-a="kap" type="button">Kapat</button></div>`;
+ const q=CFP.querySelector('input[type=text]'),l=CFP.querySelector('.cfl'),ta=CFP.querySelector('.cfa input'),tn=CFP.querySelector('.cfa small');
+ const gor=()=>{const t=q.value.trim().toLocaleLowerCase('tr');return V_.filter(x=>!t||x[0].toLocaleLowerCase('tr').includes(t))};
+ const ciz=()=>{const S=sec(),G_=gor();l.innerHTML=G_.slice(0,400).map(([v,[,n]])=>`<label><input type="checkbox" value="${esc(v)}"${S.has(v)?' checked':''}><span>${esc(v||'(boş)')}</span><small>${n}</small></label>`).join('')+(G_.length>400?`<div class="ovs">${G_.length-400} değer daha · aramayı daraltın</div>`:'')+(G_.length?'':'<div class="ovs">Eşleşen değer yok.</div>');
+  CFP.querySelector('[data-a=bul]').hidden=!q.value.trim();
+  const n=G_.filter(x=>S.has(x[0])).length;ta.checked=G_.length>0&&n===G_.length;ta.indeterminate=n>0&&n<G_.length;tn.textContent=`${n}/${G_.length}`};
+ const uygula=S=>{if(S.size>=V_.length&&V_.every(x=>S.has(x[0])))delete colS[k];else colS[k]=S;cfDurum(k);page=0;table()};
+ q.oninput=ciz;
+ l.onchange=e=>{const i=e.target.closest('input');if(!i)return;const S=new Set(sec());i.checked?S.add(i.value):S.delete(i.value);uygula(S);ciz()};
+ ta.onchange=()=>{const S=new Set(sec()),G_=gor();G_.forEach(x=>ta.checked?S.add(x[0]):S.delete(x[0]));uygula(S);ciz()};
+ CFP.querySelector('.cfb').onclick=e=>{const b=e.target.closest('button[data-a]');if(!b)return;if(b.dataset.a=='bul'){uygula(new Set(gor().map(x=>x[0])));ciz()}else if(b.dataset.a=='tem'){delete colS[k];colF[k]='';const i=$('cf-'+k);if(i)i.value='';cfDurum(k);page=0;table();ciz()}else CFP.hidden=true};
+ ciz();CFP.hidden=false;const r=btn.getBoundingClientRect(),w=CFP.offsetWidth;CFP.style.top=(r.bottom+scrollY+6)+'px';CFP.style.left=Math.max(8,Math.min(r.right-w,innerWidth-8-w))+scrollX+'px';q.focus()}
 const DL={save:async({filename,data})=>{const a=document.createElement('a');a.href=URL.createObjectURL(data);a.download=filename;document.body.appendChild(a);a.click();a.remove();return {status:'saved'}}};$('xl').hidden=!window.XLSX;
 $('xl').onclick=async()=>{if(!DL||!window.XLSX)return;const X=[...COLS,['Birim','_u'],['PYŞ','_p'],['Katılım','_k'],['Özel fon','_o'],["TEFAS'ta işlem",'_t']];
  const aoa=[X.map(c=>c[0])].concat(LCUR.map(f=>X.map(c=>{const k=c[1];if(k=='_u')return own?UN[U(f)]:'TL';if(k=='_p')return META[f][4];if(k=='_k')return META[f][5]?'Katılım':'Konvansiyonel';if(k=='_o')return META[f][6]?'Özel':'Genel';if(k=='_t')return META[f][7]?'Evet':'Hayır';const v=G[k](f);return v==null?'':typeof v=='number'?+v.toPrecision(12):v})));
  const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=X.map((c,i)=>({wch:i==1?48:16}));XLSX.utils.book_append_sheet(wb,ws,'Fonlar');
  try{await DL.save({filename:`fon-detay-${TAB.toLowerCase()}-${cmp?DATES[i0]+'_':''}${DATES[i1]}.xlsx`,data:new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})])});$('xs').textContent=`${LCUR.length} fon Excel'e aktarıldı`}catch(err){$('xs').textContent=err&&err.code=='declined'?'':'Excel dosyası oluşturulamadı'+(err&&err.code?' ('+err.code+')':'')}};
-$('clr').onclick=()=>{colF={};page=0;head();table()};
+$('clr').onclick=()=>{colF={};colS={};CFP.hidden=true;page=0;head();table()};
 ['f-cat','f-kat','f-oz','f-cur','f-pys','f-tf'].forEach(i=>$(i).addEventListener('change',()=>{page=0;draw()}));
 $('pv').onclick=()=>{page--;table()};
 $('ps').value=String(PS);$('ps').onchange=e=>{PS=+e.target.value;try{localStorage.setItem('fd-ps',PS)}catch(x){}page=0;table()};
@@ -416,7 +442,7 @@ function useTab(k){TAB=k;const d=DSETS[k];META=d.m;V=d.v;P=d.p;KS=d.k;PD=d.pd;CC
  ['f-cat','f-kat','f-oz','f-cur','f-pys','f-tf','f-oks'].forEach(i=>$(i).value='');
  FI={};META.forEach((r,f)=>FI[r[0]]=f);$('f-fon').innerHTML='<option value=""></option>'+META.map(r=>`<option value="${esc(r[0])}">${esc(r[0])}</option>`).join('');fonSec('',1);
  fill($('f-cat'),'Tüm Kategoriler',Object.keys(CC));fill($('f-pys'),k=='EMK'?'Tüm Emeklilik Şirketleri':"Tüm PYŞ'ler",[...new Set(META.map(r=>r[4]))].sort((a,b)=>a.localeCompare(b,'tr')));
- $('f-oks').hidden=k!='EMK';$('f-oz').hidden=$('f-tf').hidden=k!='YAT';colF={};page=0;sortK='v1';dir=-1;draw()}
+ $('f-oks').hidden=k!='EMK';$('f-oz').hidden=$('f-tf').hidden=k!='YAT';colF={};colS={};page=0;sortK='v1';dir=-1;draw()}
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.dataset.t!=TAB)useTab(b.dataset.t)});
 $('f-oks').addEventListener('change',()=>{page=0;draw()});
 // fon bazlı filtre: kod/ad ile ara, listeden seç; tüm kutucuk, grafik ve tablo o fona göre çizilir
