@@ -27,7 +27,7 @@ h2{font-size:14px;margin:0 0 10px;font-weight:600}
 .trh{display:flex;align-items:flex-start;gap:10px}.trh h2{flex:1;min-width:0}
 .ov{position:relative;flex:none}.ov .b{font-size:12.5px;padding:5px 10px;white-space:nowrap}.ov .b.on{border-color:var(--acc);color:var(--acc)}
 .ovp{position:absolute;right:0;top:calc(100% + 6px);z-index:15;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.15);padding:10px 12px;min-width:300px;font-size:13px}
-.pfp{left:0;right:auto;min-width:330px}.pfp input[type=text]{width:100%;box-sizing:border-box;margin:4px 0 6px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:inherit}
+.pfp{min-width:min(340px,calc(100vw - 24px));text-align:left}.pfp input[type=text]{width:100%;box-sizing:border-box;margin:4px 0 6px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:inherit}
 .pfl{max-height:320px;overflow:auto}.pfl label{justify-content:flex-start}.pfl label span{flex:1}.pfl small{color:var(--mut);font-size:11.5px;white-space:nowrap}
 td small.pfa{display:block;color:var(--mut);font-size:11px}
 .ovp label{display:flex;gap:8px;align-items:center;padding:5px 0;cursor:pointer}.ovh{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}.ovs{font-size:11.5px;color:var(--mut);margin-top:4px}
@@ -142,7 +142,6 @@ details.note summary{cursor:pointer;font-weight:600;color:var(--acc);list-style-
 <select id="f-oks" aria-label="OKS" hidden><option value="">OKS / Bireysel</option><option value="1">OKS</option><option value="0">Bireysel (OKS dışı)</option></select>
 <select id="f-cur" aria-label="Döviz"><option value="">Tüm Döviz</option><option value="TL">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="GBP">Pound</option><option value="XAU">Altın</option><option value="XAG">Gümüş</option></select>
 <select id="f-pys" aria-label="PYŞ"></select>
-<span class="ov" id="pf"><button class="b" id="pf-b" aria-expanded="false" aria-controls="pf-p" title="Seçilen portföy varlıklarını taşıyan fonlar listede kalır; payı Fon toplam değerinin yanında sütun olarak görünür">Portföy varlığı</button><div class="ovp pfp" id="pf-p" hidden><div class="ovh">Portföy dağılımı · alttaki fon listesine filtre</div><input id="pf-q" type="text" placeholder="Varlık ara" autocomplete="off" aria-label="Portföy varlığı ara"><div class="pfl" id="pf-l"></div><div class="ovs"><button class="b" id="pf-x" type="button">Seçimi temizle</button></div></div></span>
 <select id="f-tf" aria-label="TEFAS"><option value="">TEFAS'ta işlem: hepsi</option><option value="1">İşlem görüyor</option><option value="0">Görmüyor</option></select>
 <span class="fon" id="fon"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="f-fon-q" type="text" placeholder="Fon seç: kod veya ad" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="fon-l" aria-label="Fon bazlı filtre"><button type="button" id="fon-x" aria-label="Fon filtresini kaldır" title="Fon filtresini kaldır" hidden>✕</button><div class="fonl" id="fon-l" role="listbox" aria-label="Fonlar" hidden></div><select id="f-fon" aria-label="Fon" hidden></select></span>
 <div class="seg right" role="group" aria-label="Görünüm"><button id="m-tl" aria-pressed="true">TL</button><button id="m-own" aria-pressed="false">Kendi Para Cinsinden</button></div>
@@ -166,7 +165,7 @@ details.note summary{cursor:pointer;font-weight:600;color:var(--acc);list-style-
 </div>
 <div class="box row">
 <span class="tot" id="tot"></span>
-<span class="row right pg"><span id="xs" class="xtot"></span><button class="b" id="xl" hidden>Excel'e aktar</button><button class="b" id="clr">Sütun filtrelerini temizle</button><label class="fx">Göster <select id="ps" class="psz" aria-label="Sayfada gösterilecek fon sayısı"><option>25</option><option>50</option><option>100</option><option>250</option></select></label><button class="b" id="pv">‹ Önceki</button><span id="pi" class="fx"></span><button class="b" id="nx">Sonraki ›</button></span>
+<span class="row right pg"><span id="xs" class="xtot"></span><span class="ov" id="pf"><button class="b" id="pf-b" aria-expanded="false" aria-controls="pf-p" title="Seçilen portföy varlıklarını taşıyan fonlar listede kalır; payı Fon toplam değerinin yanında sütun olarak görünür">Portföy varlığı</button><div class="ovp pfp" id="pf-p" hidden><div class="ovh">Portföy dağılımı · alttaki fon listesine filtre</div><input id="pf-q" type="text" placeholder="Varlık ara" autocomplete="off" aria-label="Portföy varlığı ara"><div class="pfl" id="pf-l"></div><div class="ovs"><button class="b" id="pf-x" type="button">Seçimi temizle</button></div></div></span><button class="b" id="xl" hidden>Excel'e aktar</button><button class="b" id="clr">Sütun filtrelerini temizle</button><label class="fx">Göster <select id="ps" class="psz" aria-label="Sayfada gösterilecek fon sayısı"><option>25</option><option>50</option><option>100</option><option>250</option></select></label><button class="b" id="pv">‹ Önceki</button><span id="pi" class="fx"></span><button class="b" id="nx">Sonraki ›</button></span>
 </div>
 <div class="tw"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div>
 <details class="note"><summary>Açıklamaları göster</summary><p id="note"></p></details>
@@ -446,11 +445,11 @@ $('f-oks').addEventListener('change',()=>{page=0;draw()});
   for(let f=0;f<NF;f++){const x=S[f],w=V[f][di>=0?di:i1];if(!x)continue;for(let j=0;j<x.length;j+=2){cnt[x[j]]++;if(w)acc[x[j]]+=w*x[j+1]/100}}
   const t=q.value.trim().toLocaleLowerCase('tr'),o=PD.k.map((n,j)=>[n,acc[j],cnt[j]]).filter(x=>x[2]&&(!t||x[0].toLocaleLowerCase('tr').includes(t))).sort((x,y)=>PSEL.includes(y[0])-PSEL.includes(x[0])||y[1]-x[1]);
   l.innerHTML=o.map(([n,a,c])=>`<label><input type="checkbox" value="${esc(n)}"${PSEL.includes(n)?' checked':''}><span>${esc(n)}</span><small>${c} fon · ${big(a*1000)} ₺</small></label>`).join('')||'<div class="ovs">Eşleşen varlık yok.</div>'};
- b.onclick=e=>{e.stopPropagation();p.hidden=!p.hidden;b.setAttribute('aria-expanded',String(!p.hidden));if(!p.hidden){liste();q.focus()}};
+ b.onclick=e=>{e.stopPropagation();p.hidden=!p.hidden;b.setAttribute('aria-expanded',String(!p.hidden));if(!p.hidden){liste();const br=b.getBoundingClientRect();p.style.right='auto';p.style.left=Math.max(8-br.left,Math.min(br.width-p.offsetWidth,innerWidth-8-br.left-p.offsetWidth))+'px';q.focus()}};
  p.onclick=e=>e.stopPropagation();document.addEventListener('click',()=>{if(!p.hidden){p.hidden=true;b.setAttribute('aria-expanded','false')}});
  q.oninput=liste;
  l.onchange=e=>{const i=e.target.closest('input');if(!i)return;const n=i.value;PSEL=i.checked?[...PSEL,n]:PSEL.filter(x=>x!==n);
-  if(i.checked){sortK='pf'+(PSEL.filter(x=>PD.k.includes(x)).length-1);dir=-1}else if(String(sortK).startsWith('pf')){sortK='v1';dir=-1}
+  {const n=PSEL.filter(x=>PD.k.includes(x)).length;if(n){sortK='pf'+(n-1);dir=-1}else{sortK='v1';dir=-1}}   // son seçilen varlığın payına göre büyükten küçüğe
   lab();page=0;head();table()};
  $('pf-x').onclick=()=>{PSEL=[];if(String(sortK).startsWith('pf')){sortK='v1';dir=-1}lab();liste();page=0;head();table()};
  window.pfLab=lab}
