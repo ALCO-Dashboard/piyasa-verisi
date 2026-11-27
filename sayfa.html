@@ -27,6 +27,9 @@ h2{font-size:14px;margin:0 0 10px;font-weight:600}
 .trh{display:flex;align-items:flex-start;gap:10px}.trh h2{flex:1;min-width:0}
 .ov{position:relative;flex:none}.ov .b{font-size:12.5px;padding:5px 10px;white-space:nowrap}.ov .b.on{border-color:var(--acc);color:var(--acc)}
 .ovp{position:absolute;right:0;top:calc(100% + 6px);z-index:15;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.15);padding:10px 12px;min-width:300px;font-size:13px}
+.pfp{left:0;right:auto;min-width:330px}.pfp input[type=text]{width:100%;box-sizing:border-box;margin:4px 0 6px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:inherit}
+.pfl{max-height:320px;overflow:auto}.pfl label{justify-content:flex-start}.pfl label span{flex:1}.pfl small{color:var(--mut);font-size:11.5px;white-space:nowrap}
+td small.pfa{display:block;color:var(--mut);font-size:11px}
 .ovp label{display:flex;gap:8px;align-items:center;padding:5px 0;cursor:pointer}.ovh{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}.ovs{font-size:11.5px;color:var(--mut);margin-top:4px}
 .box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
@@ -139,6 +142,7 @@ details.note summary{cursor:pointer;font-weight:600;color:var(--acc);list-style-
 <select id="f-oks" aria-label="OKS" hidden><option value="">OKS / Bireysel</option><option value="1">OKS</option><option value="0">Bireysel (OKS dışı)</option></select>
 <select id="f-cur" aria-label="Döviz"><option value="">Tüm Döviz</option><option value="TL">TL</option><option value="USD">Dolar</option><option value="EUR">Euro</option><option value="GBP">Pound</option><option value="XAU">Altın</option><option value="XAG">Gümüş</option></select>
 <select id="f-pys" aria-label="PYŞ"></select>
+<span class="ov" id="pf"><button class="b" id="pf-b" aria-expanded="false" aria-controls="pf-p" title="Seçilen portföy varlıklarını taşıyan fonlar listede kalır; payı Fon toplam değerinin yanında sütun olarak görünür">Portföy varlığı</button><div class="ovp pfp" id="pf-p" hidden><div class="ovh">Portföy dağılımı · alttaki fon listesine filtre</div><input id="pf-q" type="text" placeholder="Varlık ara" autocomplete="off" aria-label="Portföy varlığı ara"><div class="pfl" id="pf-l"></div><div class="ovs"><button class="b" id="pf-x" type="button">Seçimi temizle</button></div></div></span>
 <select id="f-tf" aria-label="TEFAS"><option value="">TEFAS'ta işlem: hepsi</option><option value="1">İşlem görüyor</option><option value="0">Görmüyor</option></select>
 <span class="fon" id="fon"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="7" cy="7" r="4.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="f-fon-q" type="text" placeholder="Fon seç: kod veya ad" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="fon-l" aria-label="Fon bazlı filtre"><button type="button" id="fon-x" aria-label="Fon filtresini kaldır" title="Fon filtresini kaldır" hidden>✕</button><div class="fonl" id="fon-l" role="listbox" aria-label="Fonlar" hidden></div><select id="f-fon" aria-label="Fon" hidden></select></span>
 <div class="seg right" role="group" aria-label="Görünüm"><button id="m-tl" aria-pressed="true">TL</button><button id="m-own" aria-pressed="false">Kendi Para Cinsinden</button></div>
@@ -216,6 +220,12 @@ const G={kod:f=>META[f][0],ad:f=>META[f][1],kat:f=>META[f][2],cur:f=>UN[U(f)],
  px:f=>P[f][i1]?P[f][i1]/(own?fx(U(f),i1):1):null,
  gp:f=>ret(f,i0,i1,own),gpa:f=>ann(ret(f,i0,i1,own),i0,i1),g1:f=>ret(f,m1(),i1,own),g1a:f=>ann(ret(f,m1(),i1,own),m1(),i1),gy:f=>i1>YB?ann(ret(f,YB,i1,own),YB,i1):null,
  ak:f=>V[f][i1]?flow(f,pa(),i1,own):null,yat:f=>KS[f][i1]||null,fee:f=>META[f][9],risk:f=>META[f][8]};
+// portföy varlığı: seçilen varlıkların fon içindeki payı (%), bitiş tarihine en yakın önceki portföy dağılımı
+let PSEL=[];
+const pdSi=()=>{let si=-1;PD.d.forEach((d,j)=>{if(d<=DATES[i1])si=j});return si<0?0:si};
+function pdPay(f,ad){const j=PD.k.indexOf(ad),x=PD.s[pdSi()]&&PD.s[pdSi()][f];if(j<0||!x)return null;for(let q=0;q<x.length;q+=2)if(x[q]===j)return x[q+1];return null}
+const pfCols=()=>PSEL.filter(n=>PD.k.includes(n)).map((n,q)=>{const k='pf'+q;G[k]=f=>pdPay(f,n);return [n+' %',k,'n','pf']});
+const pfEk=c=>{const i=c.findIndex(x=>x[1]=='v1');return i<0?c:[...c.slice(0,i+1),...pfCols(),...c.slice(i+1)]};
 // sütun: [başlık, anahtar, tür t|n|m (m: milyon ölçekli), sınıf]
 const colsTek=()=>[['Kod','kod','t','l'],['Fon adı','ad','t','l'],['Kategori','kat','t','l'],['Döviz','cur','t','l'],['Fon toplam değeri','v1','m','g'],['Yatırımcı','yat','n'],['Pay adedi','p1','m'],['Pay fiyatı','px','n'],['1A getiri','g1','n','g'],['1A yıllık','g1a','n'],['Yılbaşından yıllık','gy','n'],['1A akım','ak','m','g'],['Yön. ücreti','fee','n'],['Risk','risk','n']];
 const colsKar=()=>[['Kod','kod','t','l'],['Fon adı','ad','t','l'],['Kategori','kat','t','l'],['Döviz','cur','t','l'],['Değer '+tr(DATES[i0]),'v0','m','g'],['Değer '+tr(DATES[i1]),'v1','m'],['Değ. %','vd','n'],['Yatırımcı','yat','n'],['Pay '+tr(DATES[i0]),'p0','m','g'],['Pay '+tr(DATES[i1]),'p1','m'],['Değ. %','pd','n'],['Dönem getiri','gp','n','g'],['Dönem yıllık','gpa','n'],['1A yıllık','g1a','n'],['Dönem akım','ak','m','g'],['Yön. ücreti','fee','n'],['Risk','risk','n']];
@@ -224,6 +234,7 @@ function fill(sel,first,vals){sel.innerHTML=`<option value="">${first}</option>`
 function rows(fo=true){if(fo&&FON){const f=FI[FON];return f==null?[]:[f]}const c=$('f-cat').value,k=$('f-kat').value,o=$('f-oz').value,u=$('f-cur').value,p=$('f-pys').value,t=$('f-tf').value,ok=$('f-oks').value;const R=[];
  for(let f=0;f<NF;f++){const r=META[f];if((!c||r[2]==c)&&(k===''||r[5]==k)&&(o===''||r[6]==o)&&(!u||r[3]==u)&&(!p||r[4]==p)&&(t===''||r[7]==t)&&(ok===''||r[10]==ok))R.push(f)}return R}
 const cell=(f,k)=>{const v=G[k](f),c=own?U(f):'TL';
+ if(k.startsWith('pf'))return v==null?'—':`<b>%${nf(v,1)}</b><small class="pfa">${fU(aum(f,i1,own)*v/100,c)}</small>`;
  switch(k){case'v0':return fU(v,c);case'v1':return '<b>'+fU(v,c)+'</b>';case'p0':case'p1':return big(v);case'yat':return v==null?'—':nf(v,0);
  case'px':return v==null?'—':nf(v,v<10?6:4)+(c=='XAU'||c=='XAG'?' gr':'');
  case'ak':return v==null?'—':`<span class="${cls(v)}">${sgn(fU(v,c),v)}</span>`;
@@ -237,11 +248,11 @@ function mk(expr,type){const s=expr.trim();if(!s)return null;if(type=='t'){const
  if(m=s.match(/^(-?[\d.,]+)\s*\.\.\s*(-?[\d.,]+)$/)){const a=num(m[1])*sc,b=num(m[2])*sc;return v=>v!=null&&v>=a&&v<=b}
  if(m=s.match(/^(>=|<=|>|<|=)?\s*(-?[\d.,]+)$/)){const x=num(m[2])*sc,op=m[1]||'>=';return v=>v!=null&&(op=='>'?v>x:op=='<'?v<x:op=='<='?v<=x:op=='='?Math.abs(v-x)<=Math.abs(x)*.005+1e-9:v>=x)}
  return ()=>true}
-function head(){COLS=cmp?colsKar():colsTek();if(!COLS.some(c=>c[1]===sortK)){sortK='v1';dir=-1}
+function head(){COLS=pfEk(cmp?colsKar():colsTek());if(!COLS.some(c=>c[1]===sortK)){sortK='v1';dir=-1}
  $('th').innerHTML='<tr id="hd">'+COLS.map((c,i)=>`<th data-i="${i}" class="${c[3]||''} ${c[1]===sortK?'on':''}">${c[0]}${c[1]===sortK?(dir<0?' ↓':' ↑'):''}</th>`).join('')+'</tr><tr class="fr">'+COLS.map(c=>{const s=!!(colF[c[1]]&&colF[c[1]].trim());return `<th class="${c[3]=='g'?'g':''}"><span class="fc"><input id="cf-${c[1]}" data-k="${c[1]}" class="${s?'set':''}" value="${(colF[c[1]]||'').replace(/"/g,'&quot;')}" aria-label="${c[0]} filtresi" title="${c[2]=='t'?'İçerir araması':c[2]=='m'?'Milyon cinsinden: >100, <5, 1..3':'>5, <=10, 1..3'}"><button class="fi ${s?'set':''}" data-fk="${c[1]}" aria-label="${c[0]} filtresi${s?'ni kaldır':''}" title="${s?'Filtreyi kaldır':'Filtrele'}">${s?'✕':FUN}</button></span></th>`}).join('')+'</tr>'}
 let RCUR=[];
 function table(){const fs=COLS.filter(c=>colF[c[1]]&&colF[c[1]].trim()).map(c=>[G[c[1]],mk(colF[c[1]],c[2])]);
- let L=RCUR.filter(f=>V[f][i1]||(cmp&&V[f][i0]));if(fs.length)L=L.filter(f=>fs.every(([g,t])=>t(g(f))));
+ let L=RCUR.filter(f=>V[f][i1]||(cmp&&V[f][i0]));const pn=PSEL.filter(n=>PD.k.includes(n));if(pn.length)L=L.filter(f=>pn.some(n=>pdPay(f,n)>0));if(fs.length)L=L.filter(f=>fs.every(([g,t])=>t(g(f))));
  const sv=new Map(L.map(f=>[f,G[sortK](f)]));
  L.sort((a,b)=>{const x=sv.get(a),y=sv.get(b);if(x==null)return 1;if(y==null)return -1;return typeof x=='string'?dir*x.localeCompare(y,'tr'):dir*(x-y)});
  LCUR=L;const np=Math.max(1,Math.ceil(L.length/PS));if(page>=np)page=np-1;
@@ -250,7 +261,8 @@ function table(){const fs=COLS.filter(c=>colF[c[1]]&&colF[c[1]].trim()).map(c=>[
  const us=UO.filter(c=>L.some(f=>U(f)==c)),sum=(c,g)=>L.reduce((s,f)=>s+(!c||U(f)==c?(g(f)||0):0),0),dc=c=>own?c:'TL';
  const pill=(c,v,k)=>`<span class="tp" style="--c:${c?UC[c]:'var(--fg)'}"><i class="dot"></i><span>${c?UN[c]:'Toplam'}</span><b ${k?`class="${cls(v)}"`:'style="color:var(--c)"'}>${k?sgn(fU(v,c?dc(c):'TL'),v):fU(v,c?dc(c):'TL')}</b></span>`;
  const line=(lbl,g,k)=>`<span class="tl"><span class="lbl">${lbl}</span>`+(own||us.length<2?'':pill('',sum('',g),k))+us.map(c=>pill(c,sum(c,g),k)).join('')+'</span>';
- $('tot').innerHTML=line('Fon değeri',G.v1,0)+line(cmp?'Dönem akım':'1A akım',G.ak,1)}
+ $('tot').innerHTML=line('Fon değeri',G.v1,0)+line(cmp?'Dönem akım':'1A akım',G.ak,1)
+  +pn.map(n=>{const t=L.reduce((x,f)=>{const v=pdPay(f,n);return x+(v?aum(f,i1,false)*v/100:0)},0);return `<span class="tl"><span class="lbl">${esc(n)}</span><span class="tp" style="--c:var(--fg)"><i class="dot"></i><span>${L.filter(f=>pdPay(f,n)>0).length} fon</span><b style="color:var(--c)">${fU(t,'TL')}</b></span></span>`}).join('')}
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function countUp(el,x,f){if(RM||x==null||!isFinite(x))return;const t0=performance.now(),D=800;el.textContent=f(0);const st=n=>{const p=Math.min(1,(n-t0)/D),e=1-Math.pow(1-p,3);el.textContent=f(x*e);if(p<1)requestAnimationFrame(st);else el.textContent=f(x)};requestAnimationFrame(st)}
 const prog=()=>false,barAn=()=>false;
@@ -400,7 +412,7 @@ try{const s=localStorage.getItem('fd-theme');if(s)root.dataset.theme=s}catch(e){
 $('thm').onclick=()=>{const n=isDark()?'light':'dark';root.dataset.theme=n;try{localStorage.setItem('fd-theme',n)}catch(e){}thl();draw()};thl();
 $('note').textContent='Fon toplam değeri ve pay adedi TEFAS "Fon Büyüklükleri" verisinden, her iş günü için alındı; seçilen tarihte veri yoksa bir önceki iş gününe yuvarlanır. Getiriler pay fiyatından (fon toplam değeri / pay adedi) hesaplanır; "1A yıllık" son 1 aylık getirinin basit yöntemle yıla çevrilmiş halidir (getiri × 365 / gün). Net para akımı, günlük fon değeri değişiminden fiyat etkisi çıkarılarak hesaplanır. Ağırlıklı ortalamalar seçili tarihteki fon değeriyle ağırlıklandırılır; dönem getirisi %200 üzerinde olan fonlar (yeni fonlardaki başlangıç fiyatı sıçramaları) ortalamaya katılmaz. "Kendi Para Cinsinden" görünümünde dolar, euro ve pound fonları bir önceki iş günü ilan edilen TCMB döviz alış kuruyla, altın ve gümüş fonları bir önceki günün ons fiyatı × dolar kuru / 31,1035 ile bulunan gram fiyatıyla çevrilir; altın ve gümüş fonları TL ile fiyatlanır; ton karşılığı fonun büyüklüğünü ve akımını metal cinsinden ifade eder, bu fonların getirileri ise her görünümde TL bazındadır. Fonun birimi fon adından belirlendi, adında yalnızca "DÖVİZ" yazan fonlarda fiyat serisinin hangi kurda en düzgün seyrettiğine bakılarak doğrulandı. Adında "PARA PİYASASI" geçen tüm fonlar (serbest olanlar dahil) Para Piyasası kategorisindedir. Sütun filtrelerinde metin alanları "içerir" araması yapar; sayı alanlarında >5, <=10, 1..3 veya düz sayı (en az) yazılabilir; değer, pay ve akım sütunları milyon cinsindendir (altın ve gümüşte ton). Huni işareti filtre yazılınca ✕ olur ve o sütunun filtresini kaldırır. Excel çıktısı, o an filtrelenmiş tüm fonları ham sayılarla verir. Kategoriler referans paneldeki sınıflamayı izler; borsa yatırım fonlarında kategori fon adından belirlenir. Trend grafiğinde her çizgi o kategorinin kendi toplamıdır (üst üste yığılmaz). Emeklilik ve borsa yatırım fonlarının tamamı TL ile fiyatlanır; altın ve gümüş fonları metal karşılığıyla ayrıca gösterilir. Portföy dağılımı TEFAS "Portföy Dağılımı" verisinden ay sonları ve en güncel tarih için alındı; seçili tarihten önceki en yakın tarih gösterilir ve oranlar o tarihteki fon toplam değeriyle ağırlıklandırılır. Yatırımcı sayısı TEFAS "Fon Verileri" ekranındaki kişi sayısıdır ve seçili tarihe aittir. Net para akımı pay adedi değişimi × pay fiyatı ile aynı sonucu verir. "Yılbaşından yıllık", 31.12.2025 fiyatı ile seçili tarihteki fiyat arasındaki getirinin aynı basit yöntemle yıla çevrilmiş halidir. Yönetim ücreti ve risk değeri veri çekim anındaki güncel değerlerdir.';
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{thl();draw()});
-function useTab(k){TAB=k;const d=DSETS[k];META=d.m;V=d.v;P=d.p;KS=d.k;PD=d.pd;CC=d.cc;NF=META.length;FL=d.fl||(d.fl=mkFL());
+function useTab(k){TAB=k;const d=DSETS[k];META=d.m;V=d.v;P=d.p;KS=d.k;PD=d.pd;CC=d.cc;NF=META.length;FL=d.fl||(d.fl=mkFL());if(window.pfLab)pfLab();
  [...$('tabs').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.t==k));
  ['f-cat','f-kat','f-oz','f-cur','f-pys','f-tf','f-oks'].forEach(i=>$(i).value='');
  FI={};META.forEach((r,f)=>FI[r[0]]=f);$('f-fon').innerHTML='<option value=""></option>'+META.map(r=>`<option value="${esc(r[0])}">${esc(r[0])}</option>`).join('');fonSec('',1);
@@ -428,6 +440,20 @@ $('f-oks').addEventListener('change',()=>{page=0;draw()});
  L.addEventListener('mousedown',e=>{const o=e.target.closest('[role=option]');e.preventDefault();if(o){fonSec(o.dataset.k);q.blur()}});
  $('fon-x').onclick=()=>{fonSec('');q.focus()};
  $('f-fon').addEventListener('change',e=>{if(e.target.value!==FON)fonSec(e.target.value)})}
+{const b=$('pf-b'),p=$('pf-p'),q=$('pf-q'),l=$('pf-l');
+ const lab=()=>{const n=PSEL.filter(x=>PD.k.includes(x)).length;b.textContent=n?`Portföy varlığı (${n})`:'Portföy varlığı';b.classList.toggle('on',n>0)};
+ const liste=()=>{const si=pdSi(),S=PD.s[si]||[],acc=new Float64Array(PD.k.length),cnt=new Int32Array(PD.k.length),di=DATES.indexOf(PD.d[si]);
+  for(let f=0;f<NF;f++){const x=S[f],w=V[f][di>=0?di:i1];if(!x)continue;for(let j=0;j<x.length;j+=2){cnt[x[j]]++;if(w)acc[x[j]]+=w*x[j+1]/100}}
+  const t=q.value.trim().toLocaleLowerCase('tr'),o=PD.k.map((n,j)=>[n,acc[j],cnt[j]]).filter(x=>x[2]&&(!t||x[0].toLocaleLowerCase('tr').includes(t))).sort((x,y)=>PSEL.includes(y[0])-PSEL.includes(x[0])||y[1]-x[1]);
+  l.innerHTML=o.map(([n,a,c])=>`<label><input type="checkbox" value="${esc(n)}"${PSEL.includes(n)?' checked':''}><span>${esc(n)}</span><small>${c} fon · ${big(a*1000)} ₺</small></label>`).join('')||'<div class="ovs">Eşleşen varlık yok.</div>'};
+ b.onclick=e=>{e.stopPropagation();p.hidden=!p.hidden;b.setAttribute('aria-expanded',String(!p.hidden));if(!p.hidden){liste();q.focus()}};
+ p.onclick=e=>e.stopPropagation();document.addEventListener('click',()=>{if(!p.hidden){p.hidden=true;b.setAttribute('aria-expanded','false')}});
+ q.oninput=liste;
+ l.onchange=e=>{const i=e.target.closest('input');if(!i)return;const n=i.value;PSEL=i.checked?[...PSEL,n]:PSEL.filter(x=>x!==n);
+  if(i.checked){sortK='pf'+(PSEL.filter(x=>PD.k.includes(x)).length-1);dir=-1}else if(String(sortK).startsWith('pf')){sortK='v1';dir=-1}
+  lab();page=0;head();table()};
+ $('pf-x').onclick=()=>{PSEL=[];if(String(sortK).startsWith('pf')){sortK='v1';dir=-1}lab();liste();page=0;head();table()};
+ window.pfLab=lab}
 useTab('YAT');
 
 }
