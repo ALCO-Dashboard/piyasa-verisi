@@ -1,0 +1,64 @@
+{
+ "katilim": {
+  "son_veri": "2026-11-19",
+  "guncelleme": "2026-11-27T22:33:55.960Z"
+ },
+ "bddk_haftalik": {
+  "son_veri": "2026-11-20",
+  "guncelleme": "2026-11-27T22:33:56Z"
+ },
+ "bddk_aylik": {
+  "son_veri": "2026-09",
+  "guncelleme": "2026-11-27T22:33:56Z"
+ },
+ "evds": {
+  "son_veri": "2026-11-20",
+  "guncelleme": "2026-11-27T22:33:56Z"
+ },
+ "politika": {
+  "son_veri": "2026-11-27",
+  "guncelleme": "2026-11-27T22:33:56Z"
+ },
+ "ppk_sonraki": "2026-12-10",
+ "tefas": {
+  "son_veri": "2026-11-27",
+  "guncelleme": "2026-11-27T22:33:42Z"
+ },
+ "tufe": {
+  "son_veri": "2026-10",
+  "guncelleme": "2026-11-27T22:01:55Z"
+ },
+ "piyasa": {
+  "son_veri": "2026-11-27",
+  "guncelleme": "2026-11-27T22:01:55Z"
+ },
+ "takvim_son": "2026-11-28T01:04+03:00",
+ "rezerv": {
+  "son_veri": "2026-11-26",
+  "guncelleme": "2026-11-27T22:02:13Z"
+ },
+ "hazine": {
+  "son_veri": "2026-11-20",
+  "guncelleme": "2026-11-27T22:03:16Z"
+ },
+ "ekonomi": {
+  "son_veri": "2026-09",
+  "guncelleme": "2026-11-27T22:04:06Z"
+ },
+ "zk": {
+  "son_veri": "2026-11-27",
+  "guncelleme": "2026-11-27T22:02:47Z"
+ },
+ "ozet": {
+  "son_veri": "2026-11-28",
+  "guncelleme": "2026-11-27T22:04:24Z"
+ },
+ "bilanco": {
+  "son_veri": "2026-11-13",
+  "guncelleme": "2026-11-27T22:04:18Z"
+ },
+ "bist": {
+  "son_veri": "2026-11-26",
+  "guncelleme": "2026-11-27T14:26:34Z"
+ }
+}
